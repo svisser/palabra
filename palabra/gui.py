@@ -24,7 +24,7 @@ from clue import (
 )
 from files import (
     import_puzzle,
-    export_puzzle,
+    export_puzzle_to_xml,
     export_template,
     export_to_png,
     export_to_csv,
@@ -692,11 +692,11 @@ class PalabraWindow(gtk.Window):
             if response == gtk.RESPONSE_OK:
                 filename = dialog.get_filename()
                 self.puzzle_manager.current_puzzle.filename = filename
-                export_puzzle(self.puzzle_manager.current_puzzle)
+                export_puzzle_to_xml(self.puzzle_manager.current_puzzle)
                 self.update_title(self.puzzle_manager.current_puzzle.filename)
             dialog.destroy()
         else:
-            export_puzzle(self.puzzle_manager.current_puzzle)
+            export_puzzle_to_xml(self.puzzle_manager.current_puzzle)
         action.stack.distance_from_saved_puzzle = 0
     
     def export_as_template(self):

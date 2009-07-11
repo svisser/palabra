@@ -148,7 +148,7 @@ def parse_clues(e, direction):
             clues[x, y, direction]["explanation"] = explanation
     return clues
         
-def export_puzzle(puzzle):
+def export_puzzle_to_xml(puzzle):
     palabra = etree.Element("palabra")
     palabra.set("version", PALABRA_VERSION)
     
