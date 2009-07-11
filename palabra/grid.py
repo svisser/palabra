@@ -120,7 +120,7 @@ class Grid:
         status["block_percentage"] = block_percentage
         
         if full:
-            status["average_word_length"] = self.average_word_length()
+            status["mean_word_length"] = self.mean_word_length()
             
             status["word_counts"] = {}
             status["across_word_count"] = 0
@@ -274,7 +274,7 @@ class Grid:
                     total += 1
         return total
             
-    def average_word_length(self):
+    def mean_word_length(self):
         word_count = self.count_words()
         if word_count == 0:
             return 0

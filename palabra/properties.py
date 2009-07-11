@@ -123,7 +123,7 @@ class PropertiesWindow(gtk.Dialog):
             ,"Checked cells: ", str(status["checked_count"]), "\n"
             ,"Unchecked cells: ", str(status["unchecked_count"]), "\n"
             ,"Blocks: ", str(status["block_count"]), " (", "%.2f" % status["block_percentage"], "%)\n"
-            ,"Average word length: ", "%.2f" % status["average_word_length"], "\n"
+            ,"Mean word length: ", "%.2f" % status["mean_word_length"], "\n"
             ,"\n"
             ,"Word counts:\n"
             ,''.join(word_counts)
