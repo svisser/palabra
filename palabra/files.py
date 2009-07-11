@@ -401,39 +401,32 @@ def export_to_txt(puzzle, filename):
             f.write("Down\n")
             for n, explanation in down_explanations:
                 f.write(str(n) + "\t" + explanation + "\n")
-        
     f.close()
     
-def export_to_csv(puzzle, filename):
+def export_to_csv(puzzle, filename, options):
     f = open(filename, 'w')
-    for n, x, y in puzzle.grid.horizontal_words():
-        f.write("across,")
-        try:
-            clue = puzzle.grid.cell(x, y)["clues"]["across"]["text"]
-        except KeyError:
-            clue = ""
-        f.write(clue + ",")
-
-        try:
-            explanation = puzzle.grid.cell(x, y)["clues"]["across"]["explanation"]
-        except KeyError:
-            explanation = ""
-        f.write(explanation + "\n")
     
-    for n, x, y in puzzle.grid.vertical_words():
-        f.write("down,")
-        try:
-            clue = puzzle.grid.cell(x, y)["clues"]["down"]["text"]
-        except KeyError:
-            clue = ""
-        f.write(clue + ",")
+    clues = \
+        [("across", puzzle.grid.horizontal_clues())
+        ,("down", puzzle.grid.vertical_clues())
+        ]
+        
+    for direction, clue_iterable in clues:
+        for clue in clue_iterable:
+            line = [direction, options["separator"]]
 
-        try:
-            explanation = puzzle.grid.cell(x, y)["clues"]["down"]["explanation"]
-        except KeyError:
-            explanation = ""
-        f.write(explanation + "\n")
-    
+            try:
+                line.append(clue["text"])
+            except KeyError:
+                line.append("")
+            line.append(options["separator"])
+            
+            try:
+                line.append(clue["explanation"])
+            except KeyError:
+                line.append("")
+            line.append("\n")
+            f.write(''.join(line))
     f.close()
                     
 def export_to_pdf(puzzle, filename):

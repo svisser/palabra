@@ -800,7 +800,7 @@ class PalabraWindow(gtk.Window):
             export_to_png(self.puzzle_manager.current_puzzle, filename, mode)
         dialog.destroy()
     
-    def export_clues(self, export_title, export_function):
+    def export_clues(self, export_title, export_function, **args):
         dialog = gtk.FileChooserDialog(export_title
             , self
             , gtk.FILE_CHOOSER_ACTION_SAVE
@@ -812,7 +812,7 @@ class PalabraWindow(gtk.Window):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             filename = dialog.get_filename()
-            export_function(self.puzzle_manager.current_puzzle, filename)
+            export_function(self.puzzle_manager.current_puzzle, filename, **args)
         dialog.destroy()
         
     def view_puzzle_properties(self):
@@ -1033,7 +1033,8 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        activate = lambda item: self.export_clues("Export to CSV", export_to_csv);
+        activate = lambda item: self.export_clues("Export to CSV"
+            , export_to_csv, options={"separator": ","});
         select = lambda item: self.update_status(STATUS_MENU
             , "Export the clues of the puzzle to a comma-separated values file")
         deselect = lambda item: self.pop_status(STATUS_MENU)
