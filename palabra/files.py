@@ -350,58 +350,6 @@ def export_template(grid, filename):
         , pretty_print=True)
     file = open(filename, "w")
     file.write(contents)
-                    
-# tab delimited text file
-def export_to_txt(puzzle, filename):
-    f = open(filename, 'w')
-    
-    f.write("Clues\n\n")
-    
-    f.write("Across\n")
-    for n, x, y in puzzle.grid.horizontal_words():
-        try:
-            clue = puzzle.grid.cell(x, y)["clues"]["across"]["text"]
-        except KeyError:
-            clue = ""
-        f.write(str(n) + "\t" + clue + "\n")
-        
-    f.write("Down\n")
-    for n, x, y in puzzle.grid.vertical_words():
-        try:
-            clue = puzzle.grid.cell(x, y)["clues"]["down"]["text"]
-        except KeyError:
-            clue = ""
-        f.write(str(n) + "\t" + clue + "\n")
-    
-    across_explanations = []
-    for n, x, y in puzzle.grid.horizontal_words():
-        try:
-            explanation = puzzle.grid.cell(x, y)["clues"]["across"]["explanation"]
-            across_explanations.append((n, explanation))
-        except KeyError:
-            pass
-            
-    down_explanations = []
-    for n, x, y in puzzle.grid.vertical_words():
-        try:
-            explanation = puzzle.grid.cell(x, y)["clues"]["down"]["explanation"]
-            down_explanations.append((n, explanation))
-        except KeyError:
-            pass
-            
-    if (len(across_explanations) + len(down_explanations) > 0):
-        f.write("\nExplanations\n\n")
-        
-        if (len(across_explanations) > 0):
-            f.write("Across\n")
-            for n, explanation in across_explanations:
-                f.write(str(n) + "\t" + explanation + "\n")
-                
-        if (len(down_explanations) > 0):
-            f.write("Down\n")
-            for n, explanation in down_explanations:
-                f.write(str(n) + "\t" + explanation + "\n")
-    f.close()
     
 def export_to_csv(puzzle, filename, options):
     f = open(filename, 'w')
@@ -412,7 +360,7 @@ def export_to_csv(puzzle, filename, options):
         ]
         
     for direction, clue_iterable in clues:
-        for clue in clue_iterable:
+        for n, x, y, clue in clue_iterable:
             line = [direction, options["separator"]]
 
             try:

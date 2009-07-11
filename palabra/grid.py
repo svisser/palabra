@@ -205,16 +205,16 @@ class Grid:
     def horizontal_clues(self):
         for n, x, y in self.horizontal_words():
             try:
-                yield self.cell(x, y)["clues"]["across"]
+                yield n, x, y, self.cell(x, y)["clues"]["across"]
             except KeyError:
-                yield {}
+                yield n, x, y, {}
                 
     def vertical_clues(self):
         for n, x, y in self.vertical_words():
             try:
-                yield self.cell(x, y)["clues"]["down"]
+                yield n, x, y, self.cell(x, y)["clues"]["down"]
             except KeyError:
-                yield {}
+                yield n, x, y, {}
                     
     def words(self):
         n = 0

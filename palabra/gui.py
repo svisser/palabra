@@ -27,7 +27,6 @@ from files import (
     export_puzzle,
     export_template,
     export_to_png,
-    export_to_txt,
     export_to_csv,
 )
 import grid
@@ -1023,7 +1022,8 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: self.export_clues("Export to TXT", export_to_txt);
+        activate = lambda item: self.export_clues("Export to TXT"
+            , export_to_csv, options={"separator": "\t"});
         select = lambda item: self.update_status(STATUS_MENU
             , "Export the clues of the puzzle to a text file")
         deselect = lambda item: self.pop_status(STATUS_MENU)
