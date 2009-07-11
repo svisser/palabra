@@ -55,28 +55,28 @@ class Grid:
         if self.is_block(x, y):
             return False
             
-        return (x == 0 and self.width > 1 and not self.is_block(1, y)) or \
-            (x > 0 and x < self.width - 1 and self.is_block(x - 1, y) and \
-            not self.is_block(x + 1, y))
+        return ((x == 0 and self.width > 1 and not self.is_block(1, y))
+            or (x > 0 and x < self.width - 1 and self.is_block(x - 1, y)
+            and not self.is_block(x + 1, y)))
             
     def is_start_vertical_word(self, x, y):
         if self.is_block(x, y):
             return False
             
-        return (y == 0 and self.height > y + 1 and not self.is_block(x, y + 1)) or \
-            (y > 0 and y < self.height - 1 and self.is_block(x, y - 1) and \
-            not self.is_block(x, y + 1))
+        return ((y == 0 and self.height > y + 1 and not self.is_block(x, y + 1))
+            or (y > 0 and y < self.height - 1 and self.is_block(x, y - 1)
+            and not self.is_block(x, y + 1)))
             
     def is_start_word(self, x, y):
-        return self.is_start_horizontal_word(x, y) or \
-            self.is_start_vertical_word(x, y)
+        return (self.is_start_horizontal_word(x, y) or
+            self.is_start_vertical_word(x, y))
             
     def get_start_horizontal_word(self, x, y):
         while x >= 0:
             if self.is_start_horizontal_word(x, y):
                 return x, y
-            if not self.is_available(x, y) or \
-                (x > 0 and not self.is_available(x - 1, y)):
+            if (not self.is_available(x, y) or
+                (x > 0 and not self.is_available(x - 1, y))):
                 return x, y
             x -= 1
         if x < 0:
@@ -87,8 +87,8 @@ class Grid:
         while y >= 0:
             if self.is_start_vertical_word(x, y):
                 return x, y
-            if not self.is_available(x, y) or \
-                (y > 0 and not self.is_available(x, y - 1)):
+            if (not self.is_available(x, y) or
+                (y > 0 and not self.is_available(x, y - 1))):
                 return x, y
             y -= 1
         if y < 0:
@@ -115,7 +115,9 @@ class Grid:
         status["block_count"] = self.count_blocks()
         status["char_count"] = size - status["block_count"]
         status["word_count"] = self.count_words()
-        status["block_percentage"] = (float(status["block_count"]) / float(size)) * 100
+        
+        block_percentage = (float(status["block_count"]) / float(size)) * 100
+        status["block_percentage"] = block_percentage
         
         if full:
             status["average_word_length"] = self.average_word_length()
@@ -175,7 +177,8 @@ class Grid:
         
         return ''.join(
             ["Words: ", str(status["word_count"]), ", ",
-             "Blocks: ", str(status["block_count"]), " (", "%.2f" % status["block_percentage"], "%), "
+             "Blocks: ", str(status["block_count"]), " ("
+             , "%.2f" % status["block_percentage"], "%), "
              "Letters: ", str(status["char_count"])
             ])
             

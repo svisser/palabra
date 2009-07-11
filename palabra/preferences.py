@@ -123,7 +123,8 @@ def write_config_file():
 
 class PreferencesWindow(gtk.Dialog):
     def __init__(self, palabra_window):
-        gtk.Dialog.__init__(self, "Palabra preferences", palabra_window, gtk.DIALOG_MODAL)
+        gtk.Dialog.__init__(self, "Palabra preferences", palabra_window
+            , gtk.DIALOG_MODAL)
         self.set_size_request(480, 420)
         self.current_item = None
         

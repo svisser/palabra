@@ -229,19 +229,21 @@ class Tool(gtk.HBox):
         elif self.settings["direction"] == "vertical":
             self.puzzle.view.update_vertical_line(drawing_area, prev_x)
             
-        if event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK) and \
-            prev_x == current_x and \
-            prev_y == current_y and \
-            event.type == gtk.gdk.BUTTON_PRESS:
+        if (event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK)
+            and prev_x == current_x
+            and prev_y == current_y
+            and event.type == gtk.gdk.BUTTON_PRESS):
             if self.settings["direction"] == "horizontal":
                 self.settings["direction"] = "vertical"
             elif self.settings["direction"] == "vertical":
                 self.settings["direction"] = "horizontal"
         
         if self.settings["direction"] == "horizontal":
-            self.puzzle.view.update_horizontal_line(drawing_area, self.settings["selection_y"])
+            self.puzzle.view.update_horizontal_line(drawing_area
+                , self.settings["selection_y"])
         elif self.settings["direction"] == "vertical":
-            self.puzzle.view.update_vertical_line(drawing_area, self.settings["selection_x"])
+            self.puzzle.view.update_vertical_line(drawing_area
+                , self.settings["selection_x"])
         
         return True
         
@@ -283,12 +285,13 @@ class Tool(gtk.HBox):
         self.settings["keep_vertical_symmetry"] = False
         self.settings["keep_point_symmetry"] = False
         
-        if "keep_horizontal_symmetry" in options:
-            self.settings["keep_horizontal_symmetry"] = True
-        if "keep_vertical_symmetry" in options:
-            self.settings["keep_vertical_symmetry"] = True
-        if "keep_point_symmetry" in options:
-            self.settings["keep_point_symmetry"] = True
+        symmetries = \
+            ["keep_horizontal_symmetry"
+            ,"keep_vertical_symmetry"
+            ,"keep_point_symmetry"
+            ]
+        for key in symmetries:
+            self.settings[key] = key in options
         
     def update_symmetry(self, drawing_area, main_x, main_y):
         if self.settings["keep_horizontal_symmetry"]:
@@ -329,7 +332,9 @@ class Tool(gtk.HBox):
                 blocks.append((p, q, status))
         if len(blocks) > 0:
             self.palabra_window.transform_grid(transform.modify_blocks, blocks=blocks)
-            if (self.settings["selection_x"], self.settings["selection_y"], True) in blocks:
+            sel_x = self.settings["selection_x"]
+            sel_y = self.settings["selection_y"]
+            if (sel_x, sel_y, True) in blocks:
                 self.set_selection(-1, -1)
 
     def on_key_press_event(self, drawing_area, event):
@@ -940,8 +945,6 @@ class PalabraWindow(gtk.Window):
             , "Save the grid as a template without the words and clues")
         deselect = lambda item: self.pop_status(STATUS_MENU)
         item = gtk.MenuItem("Export as _template...", True)
-        #key, mod = gtk.accelerator_parse("<Shift><Ctrl>S")
-        #item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)

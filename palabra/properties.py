@@ -19,7 +19,8 @@ import gtk
 
 class PropertiesWindow(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
-        gtk.Dialog.__init__(self, "Puzzle properties", palabra_window, gtk.DIALOG_MODAL)
+        gtk.Dialog.__init__(self, "Puzzle properties", palabra_window
+            , gtk.DIALOG_MODAL)
         self.puzzle = puzzle
         self.set_size_request(480, 420)
         

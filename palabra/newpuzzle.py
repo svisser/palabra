@@ -689,9 +689,6 @@ class TemplateWindow(gtk.Dialog):
                 ,str(template["width"])
                 ," x "
                 ,str(template["height"])
-                #,", "
-                #,str(template["block_count"])
-                #," blocks"
                 ,")"
                 ])])
         self.reset()

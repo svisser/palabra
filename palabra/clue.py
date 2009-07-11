@@ -19,7 +19,8 @@ import gtk
 
 class ClueEditor(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
-        gtk.Dialog.__init__(self, "Palabra Clue Editor", palabra_window, gtk.DIALOG_MODAL)
+        gtk.Dialog.__init__(self, "Palabra Clue Editor"
+            , palabra_window, gtk.DIALOG_MODAL)
         self.puzzle = puzzle
         self.set_size_request(640, 480)
         
@@ -90,13 +91,15 @@ class ClueEditor(gtk.Dialog):
         
         word = self.puzzle.grid.gather_word(x, y, direction)
         self.grid_entry.set_text(word)
+
+        clues = self.puzzle.grid.cell(x, y)["clues"]
         try:
-            text = self.puzzle.grid.cell(x, y)["clues"][direction]["text"] 
+            text = clues[direction]["text"] 
             self.clue_entry.set_text(text)
         except KeyError:
             self.clue_entry.set_text("")
         try:
-            explanation = self.puzzle.grid.cell(x, y)["clues"][direction]["explanation"]
+            explanation = clues[direction]["explanation"]
             self.explanation_entry.set_text(explanation)
         except KeyError:
             self.explanation_entry.set_text("")        
@@ -118,7 +121,7 @@ class ClueEditor(gtk.Dialog):
         
     def update_clue_label(self, number, direction):
         text = ''.join(
-            ["<b>Currently editting</b>: "
+            ["<b>Currently editing</b>: "
             , str(number)
             , ", "
             , direction
