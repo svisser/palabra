@@ -169,29 +169,12 @@ def export_puzzle(puzzle):
 def export_metadata(puzzle_elem, metadata):
     metadata_elem = etree.SubElement(puzzle_elem, "metadata")
 
-    title = etree.SubElement(metadata_elem, "title")
-    try:
-        title.text = metadata["title"]
-    except KeyError:
-        pass
-    
-    author = etree.SubElement(metadata_elem, "author")
-    try:
-        author.text = metadata["author"]
-    except KeyError:
-        pass
-        
-    copyright = etree.SubElement(metadata_elem, "copyright")
-    try:
-        copyright.text = metadata["copyright"]
-    except KeyError:
-        pass
-        
-    description = etree.SubElement(metadata_elem, "description")
-    try:
-        description.text = metadata["description"]
-    except KeyError:
-        pass
+    for prop in ["title", "author", "copyright", "description"]:
+        elem = etree.SubElement(metadata_elem, prop)
+        try:
+            elem.text = metadata[prop]
+        except KeyError:
+            pass
     
 def export_grid(elem, grid, include_statistics=False):
     grid_elem = etree.SubElement(elem, "grid")
