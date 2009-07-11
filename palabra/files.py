@@ -221,53 +221,19 @@ def export_clues(elem, grid):
     down_clues = etree.SubElement(elem, "clues")
     down_clues.set("direction", "down")
     
-    for n, x, y in grid.horizontal_words():
-        clue = etree.SubElement(across_clues, "clue")
-        clue.set("x", str(x + 1))
-        clue.set("y", str(y + 1))
-        #clue.set("number", str(n))
-        
-        try:
-            clues = grid.get_clues(x, y)
-            text = clues["across"]["text"]
+    clues = \
+        [(across_clues, grid.horizontal_clues())
+        ,(down_clues, grid.vertical_clues())
+        ]
+    for elem, clue_iterable in clues:
+        for n, x, y, clue in clue_iterable:
+            clue_elem = etree.SubElement(elem, "clue")
+            clue_elem.set("x", str(x + 1))
+            clue_elem.set("y", str(y + 1))
             
-            clue_text = etree.SubElement(clue, "text")
-            clue_text.text = text
-        except KeyError:
-            pass
-            
-        try:
-            clues = grid.get_clues(x, y)
-            text = clues["across"]["explanation"]
-            
-            explanation = etree.SubElement(clue, "explanation")
-            explanation.text = text
-        except KeyError:
-            pass
-            
-    for n, x, y in grid.vertical_words():
-        clue = etree.SubElement(down_clues, "clue")
-        clue.set("x", str(x + 1))
-        clue.set("y", str(y + 1))
-        #clue.set("number", str(n))
-        
-        try:
-            clues = grid.get_clues(x, y)
-            text = clues["down"]["text"]
-            
-            clue_text = etree.SubElement(clue, "text")
-            clue_text.text = text
-        except KeyError:
-            pass
-            
-        try:
-            clues = grid.get_clues(x, y)
-            text = clues["down"]["explanation"]
-            
-            explanation = etree.SubElement(clue, "explanation")
-            explanation.text = text
-        except KeyError:
-            pass            
+            for key, value in clue.items():
+                prop = etree.SubElement(clue_elem, key)
+                prop.text = value
 
 def import_template(filename, index):
     try:
