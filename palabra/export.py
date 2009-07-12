@@ -17,6 +17,14 @@
 
 import gtk
 
+def verify_output_options(options):
+    for key, value in options["output"].items():
+        if value:
+            break
+    else:
+        return "No output options are selected."
+    return None
+
 class Format:
     def __init__(self, key, title, outputs, allow_multiple=True):
         self.key = key
@@ -47,10 +55,7 @@ class ExportWindow(gtk.Dialog):
         super(ExportWindow, self).__init__("Export puzzle", palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         
-        self.options = {}
-        self.options["format"] = None
-        self.options["output"] = {"grid": False, "solution": False, "clues": False}
-        self.options["settings"] = {}
+        self.reset_options()
         
         self.format = None
         self.formats = []
@@ -66,7 +71,7 @@ class ExportWindow(gtk.Dialog):
             combo.set_active(0)
         def callback(combo):
             separator = setting.properties[combo.get_active()][1]
-            self.options["separator"] = separator
+            self.options["settings"]["separator"] = separator
         setting.initialize = initialize
         setting.callback = callback        
         csv.register_setting(setting)
@@ -107,10 +112,18 @@ class ExportWindow(gtk.Dialog):
         tree.get_selection().select_path(starting_index)
         self.select_format(starting_index)
         
+    def reset_options(self):
+        self.options = {}
+        self.options["format"] = None
+        self.options["output"] = {"grid": False, "solution": False, "clues": False}
+        self.options["settings"] = {}
+        
     def select_format(self, index):
         if self.format is not None:
             self.options_window.remove(self.option)
         self.format = self.formats[index]
+        
+        self.reset_options()
         self.options["format"] = self.format.key
         
         def callback(widget, data=None):

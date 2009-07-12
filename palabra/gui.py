@@ -23,6 +23,7 @@ from clue import (
     ClueEditor,
 )
 from export import (
+    verify_output_options,
     ExportWindow,
 )
 from files import (
@@ -30,8 +31,6 @@ from files import (
     export_puzzle,
     export_puzzle_to_xml,
     export_template,
-    export_to_png,
-    export_to_csv,
 )
 import grid
 from grid import (
@@ -711,18 +710,28 @@ class PalabraWindow(gtk.Window):
         if response == gtk.RESPONSE_OK:
             window.hide()
             
-            dialog = gtk.FileChooserDialog("Export location"
-                , self
-                , gtk.FILE_CHOOSER_ACTION_SAVE
-                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-            dialog.set_do_overwrite_confirmation(True)
-            
-            dialog.show_all()
-            response = dialog.run()
-            if response == gtk.RESPONSE_OK:
-                export_puzzle(dialog.get_filename(), window.options)
-            dialog.destroy()
+            options = window.options
+            message = verify_output_options(options)
+            if message is not None:
+                mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
+                    , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
+                mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+                mdialog.run()
+                mdialog.destroy()
+            else:
+                dialog = gtk.FileChooserDialog("Export location"
+                    , self
+                    , gtk.FILE_CHOOSER_ACTION_SAVE
+                    , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+                    , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+                dialog.set_do_overwrite_confirmation(True)
+                
+                dialog.show_all()
+                response = dialog.run()
+                if response == gtk.RESPONSE_OK:
+                    export_puzzle(self.puzzle_manager.current_puzzle
+                        , dialog.get_filename(), options)
+                dialog.destroy()
         window.destroy()
     
     def export_as_template(self):
@@ -809,21 +818,6 @@ class PalabraWindow(gtk.Window):
                 need_to_save = False
             dialog.destroy()
         return need_to_close, need_to_save
-            
-    def export_to_png(self, mode):
-        dialog = gtk.FileChooserDialog("Export to PNG"
-            , self
-            , gtk.FILE_CHOOSER_ACTION_SAVE
-            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-            , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-        dialog.set_do_overwrite_confirmation(True)
-        dialog.show_all()
-        
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            filename = dialog.get_filename()
-            export_to_png(self.puzzle_manager.current_puzzle, filename, mode)
-        dialog.destroy()
     
     def export_clues(self, export_title, export_function, **args):
         dialog = gtk.FileChooserDialog(export_title
@@ -972,11 +966,6 @@ class PalabraWindow(gtk.Window):
         menu.append(item)
         self.puzzle_toggle_items += [item]
         
-        item = self.create_export_menu()
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
-        
         activate = lambda item: self.export_as_template()
         select = lambda item: self.update_status(STATUS_MENU
             , "Save the grid as a template without the words and clues")
@@ -1034,57 +1023,6 @@ class PalabraWindow(gtk.Window):
         file_menu = gtk.MenuItem("_File", True)
         file_menu.set_submenu(menu)
         return file_menu
-        
-    def create_export_menu(self):
-        menu = gtk.Menu()
-        
-        activate = lambda item: self.export_to_png(grid.VIEW_MODE_EMPTY);
-        select = lambda item: self.update_status(STATUS_MENU
-            , "Export the empty puzzle to PNG")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
-        item = gtk.MenuItem("_PNG (empty grid)", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: self.export_to_png(grid.VIEW_MODE_SOLUTION);
-        select = lambda item: self.update_status(STATUS_MENU
-            , "Export the solution of the puzzle to PNG")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
-        item = gtk.MenuItem("P_NG (solution)", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        activate = lambda item: self.export_clues("Export to TXT"
-            , export_to_csv, options={"separator": "\t"});
-        select = lambda item: self.update_status(STATUS_MENU
-            , "Export the clues of the puzzle to a text file")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
-        item = gtk.MenuItem("_TXT (clues, tab delimited)", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: self.export_clues("Export to CSV"
-            , export_to_csv, options={"separator": ","});
-        select = lambda item: self.update_status(STATUS_MENU
-            , "Export the clues of the puzzle to a comma-separated values file")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
-        item = gtk.MenuItem("_CSV (clues, comma-separated values)", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-       
-        export_grid_to_menu = gtk.MenuItem("_Export", True)
-        export_grid_to_menu.set_submenu(menu)
-        return export_grid_to_menu
         
     def edit_clues(self):
         editor = ClueEditor(self, self.puzzle_manager.current_puzzle)

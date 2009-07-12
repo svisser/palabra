@@ -31,8 +31,15 @@ from puzzle import (
 
 PALABRA_VERSION = "0.1"
 
-def export_puzzle(filename, options):
-    print filename, options
+def export_puzzle(puzzle, filename, options):
+    if options["format"] == "csv":
+        outputs = filter(lambda key: options["output"][key], options["output"])
+        export_to_csv(puzzle, filename, outputs, options["settings"])
+    elif options["format"] == "png":
+        if options["output"]["grid"]:
+            export_to_png(puzzle, filename, grid.VIEW_MODE_EMPTY)
+        elif options["output"]["solution"]:
+            export_to_png(puzzle, filename, grid.VIEW_MODE_SOLUTION)
 
 def import_puzzle(filename):
     try:
@@ -303,30 +310,35 @@ def export_template(grid, filename):
     file = open(filename, "w")
     file.write(contents)
     
-def export_to_csv(puzzle, filename, options):
+def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
     
-    clues = \
-        [("across", puzzle.grid.horizontal_clues())
-        ,("down", puzzle.grid.vertical_clues())
-        ]
-        
-    for direction, clue_iterable in clues:
-        for n, x, y, clue in clue_iterable:
-            line = [direction, options["separator"]]
-
-            try:
-                line.append(clue["text"])
-            except KeyError:
-                line.append("")
-            line.append(options["separator"])
+    if "grid" in outputs:
+        print "TODO grid"
+    if "solution" in outputs:
+        print "TODO solution"
+    if "clues" in outputs:
+        clues = \
+            [("across", puzzle.grid.horizontal_clues())
+            ,("down", puzzle.grid.vertical_clues())
+            ]
             
-            try:
-                line.append(clue["explanation"])
-            except KeyError:
-                line.append("")
-            line.append("\n")
-            f.write(''.join(line))
+        for direction, clue_iterable in clues:
+            for n, x, y, clue in clue_iterable:
+                line = [direction, settings["separator"]]
+
+                try:
+                    line.append(clue["text"])
+                except KeyError:
+                    line.append("")
+                line.append(settings["separator"])
+                
+                try:
+                    line.append(clue["explanation"])
+                except KeyError:
+                    line.append("")
+                line.append("\n")
+                f.write(''.join(line))
     f.close()
                     
 def export_to_pdf(puzzle, filename):
