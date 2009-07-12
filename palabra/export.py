@@ -17,6 +17,28 @@
 
 import gtk
 
+class Format:
+    def __init__(self, key, title, outputs, allow_multiple=True):
+        self.key = key
+        self.title = title
+        self.outputs = outputs
+        self.allow_multiple = allow_multiple
+        self.settings = []
+        
+    def register_setting(self, setting):
+        self.settings.append(setting)
+        
+class FormatSetting:
+    def __init__(self, type, title, name, default, properties):
+        self.type = type
+        self.title = title
+        self.name = name
+        self.default = default
+        self.properties = properties
+        
+        self.callback = None
+        self.initialize = None
+
 class ExportWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
@@ -24,31 +46,34 @@ class ExportWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_OK)
         super(ExportWindow, self).__init__("Export puzzle", palabra_window, flags, buttons)
         self.set_size_request(480, 420)
-        self.current_item = None
         
-        self.options = {"format": ""
-            , "output": {"grid": False, "solution": False, "clues": False}
-            , "settings": {}}
+        self.options = {}
+        self.options["format"] = None
+        self.options["output"] = {"grid": False, "solution": False, "clues": False}
+        self.options["settings"] = {}
         
-        self.default_settings = {}
-        self.default_settings["csv"] = {"separator": ","}
-        self.default_settings["png"] = {}
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        
-        main = gtk.HBox(False, 0)
-        main.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        
-        self.components = []
-        self.components.append(("csv", "CSV (csv)", self.create_csv_item()))
-        self.components.append(("png", "PNG (png)", self.create_png_item()))
+        self.format = None
+        self.formats = []
+
+        csv = Format("csv", "CSV (csv)", ["grid", "solution", "clues"])
+        self.formats.append(csv)
+        png = Format("png", "PNG (png)", ["grid", "solution"], False)
+        self.formats.append(png)
+
+        setting = FormatSetting("combo", "Separator:", "separator", ","
+            , [("Comma", ","), ("Tab", "\t")])
+        def initialize(combo):
+            combo.set_active(0)
+        def callback(combo):
+            separator = setting.properties[combo.get_active()][1]
+            self.options["separator"] = separator
+        setting.initialize = initialize
+        setting.callback = callback        
+        csv.register_setting(setting)
         
         items = gtk.ListStore(str)
-        for key, title, component in self.components:
-            items.append([title])
+        for format in self.formats:
+            items.append([format.title])
         
         tree = gtk.TreeView(items)
         tree.set_headers_visible(False)
@@ -66,13 +91,37 @@ class ExportWindow(gtk.Dialog):
         
         self.options_window = gtk.VBox(False, 0)
         
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        
+        main = gtk.HBox(False, 0)
+        main.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
         main.pack_start(tree_window, False, False, 9)
         main.pack_start(self.options_window, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
         starting_index = 0
         tree.get_selection().select_path(starting_index)
-        self._selection_component(starting_index)
+        self.select_format(starting_index)
+        
+    def select_format(self, index):
+        if self.format is not None:
+            self.options_window.remove(self.option)
+        self.format = self.formats[index]
+        self.options["format"] = self.format.key
+        
+        def callback(widget, data=None):
+            self.options["output"][data] = widget.get_active()
+        
+        self.option = gtk.VBox(False, 0)
+        self._create_output_options(self.option, self.format, callback)
+        self._create_settings(self.option, self.format)
+        
+        self.options_window.pack_start(self.option, False, False, 0)
+        self.options_window.show_all()
         
     def on_tree_clicked(self, treeview, event):
         if event.button == 1:
@@ -82,92 +131,63 @@ class ExportWindow(gtk.Dialog):
             item = treeview.get_path_at_pos(x, y)
             if item is not None:
                 path, col, cellx, celly = item
-                
-                if self.current_item is not None:
-                    self.options_window.remove(self.current_item)
-                
-                self._selection_component(path[0])
-                
-    def _selection_component(self, index):
-        format = self.components[index][0]
-        self.options["format"] = format
-        self.options["settings"] = self.default_settings[format]
-        
-        self.current_item = self.components[index][2]
-        self.options_window.pack_start(self.current_item, False, False, 0)
-        self.options_window.show_all()
-        
-    def create_csv_item(self):
-        main = gtk.VBox(False, 0)
-        main.set_spacing(6)
-        
+                self.select_format(path[0])
+            
+    @staticmethod    
+    def _create_output_options(main, format, callback):
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup("<b>Output</b>")
         main.pack_start(label, False, False, 6)
-        
-        def on_select_output(widget, data=None):
-            self.options["output"][data] = widget.get_active()
 
-        grid_button = gtk.CheckButton("Grid")
-        grid_button.connect("toggled", on_select_output, "grid")
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(grid_button)
-        main.pack_start(align, False, False, 0)
+        prev_option = None
+        options = {"grid": "Grid", "solution": "Solution", "clues": "Clues"}
+        for key, title in options.items():
+            if key in format.outputs:
+                if format.allow_multiple:
+                    button = gtk.CheckButton(title)
+                    button.connect("toggled", callback, key)
+                else:
+                    button = gtk.RadioButton(prev_option, title)
+                    button.connect("toggled", callback, key)
+                    if prev_option is None:
+                        button.set_active(True)
+                        callback(button, key)
+                    prev_option = button
+                
+                align = gtk.Alignment(0, 0.5)
+                align.set_padding(0, 0, 12, 0)
+                align.add(button)
+                main.pack_start(align, False, False, 0)
         
-        solution_button = gtk.CheckButton("Solution")
-        solution_button.connect("toggled", on_select_output, "solution")
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(solution_button)
-        main.pack_start(align, False, False, 0)
-        
-        clues_button = gtk.CheckButton("Clues")
-        clues_button.connect("toggled", on_select_output, "clues")
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(clues_button)
-        main.pack_start(align, False, False, 0)
-        
+    @staticmethod
+    def _create_settings(main, format):
+        if len(format.settings) == 0:
+            return
+            
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup("<b>Settings</b>")
         main.pack_start(label, False, False, 6)
         
-        settings_table = gtk.Table(1, 2)
-        settings_table.set_col_spacings(6)
-        main.pack_start(settings_table, False, False, 0)
+        table = gtk.Table(len(format.settings), 2)
+        table.set_col_spacings(6)
+        main.pack_start(table, False, False, 0)
         
-        def on_separator_combo_changed(combo):
-            try:
-                index = combo.get_active()
-                separator = separators[index][1]
-                self.options["settings"]["separator"] = separator
-            except KeyError:
-                pass
-        
-        separators = [("Comma", ","), ("Tab", "\t")]
-        separator_combo = gtk.combo_box_new_text()
-        for title, separator in separators:
-            separator_combo.append_text(title)
-        separator_combo.connect("changed", on_separator_combo_changed)
-        
-        for i, (title, separator) in enumerate(separators):
-            if separator == self.default_settings["csv"]["separator"]:
-                separator_combo.set_active(i)
-                break
-        
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Separator:"))
-        settings_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
-        settings_table.attach(separator_combo, 1, 2, 0, 1)
-        
-        return main
-        
-    def create_png_item(self):
-        main = gtk.VBox(False, 0)
-        main.set_spacing(6)
-        
-        return main
+        row = 0
+        for setting in format.settings:
+            if setting.type == "combo":
+                widget = gtk.combo_box_new_text()
+                for title, value in setting.properties:
+                    widget.append_text(title)
+                widget.connect("changed", setting.callback)
+                
+                align = gtk.Alignment(0, 0.5)
+                align.set_padding(0, 0, 12, 0)
+                align.add(gtk.Label(setting.title))
+                table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
+                table.attach(widget, 1, 2, row, row + 1)
+                
+            if setting.initialize is not None:
+                setting.initialize(widget)
+            row += 1
