@@ -20,12 +20,7 @@ import math
 import pango
 import pangocairo
 
-MINIMUM_WIDTH = 3
-MAXIMUM_WIDTH = 35
-
-VIEW_MODE_EDITOR = "editor"
-VIEW_MODE_EMPTY = "empty"
-VIEW_MODE_SOLUTION = "solution"
+import constants
 
 class Grid:
     def __init__(self, width, height):
@@ -503,18 +498,18 @@ class GridView:
         
     def update_view(self, context, mode=None):
         if mode is None:
-            mode = "editor"
+            mode = constants.VIEW_MODE_EDITOR
             
         settings = {}
-        if mode == "editor":
+        if mode == constants.VIEW_MODE_EDITOR:
             settings["padding_around_puzzle"] = True
             settings["show_chars"] = True
             settings["show_numbers"] = False
-        elif mode == "empty":
+        elif mode == constants.VIEW_MODE_EMPTY:
             settings["padding_around_puzzle"] = False
             settings["show_chars"] = False
             settings["show_numbers"] = True
-        elif mode == "solution":
+        elif mode == constants.VIEW_MODE_SOLUTION:
             settings["padding_around_puzzle"] = False
             settings["show_chars"] = True
             settings["show_numbers"] = True

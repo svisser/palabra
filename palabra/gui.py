@@ -22,6 +22,7 @@ import action
 from clue import (
     ClueEditor,
 )
+import constants
 from export import (
     verify_output_options,
     ExportWindow,
@@ -53,11 +54,6 @@ from puzzle import (
     PuzzleManager,
 )
 import transform
-
-STATUS_MENU = "STATUS_MENU"
-STATUS_GRID = "STATUS_GRID"
-
-PALABRA_VERSION = "0.1"
 
 class Tool(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
@@ -98,7 +94,7 @@ class Tool(gtk.HBox):
         self.key_release_event_id = \
             self.drawing_area.connect("key_release_event", self.on_key_release_event)
             
-        self.palabra_window.update_status(STATUS_GRID, self.puzzle.grid.determine_status_message())
+        self.palabra_window.update_status(constants.STATUS_GRID, self.puzzle.grid.determine_status_message())
                 
     def cleanup(self):
         self.drawing_area.unset_flags(gtk.CAN_FOCUS)
@@ -770,7 +766,7 @@ class PalabraWindow(gtk.Window):
             
             self.reset_title()
             self.to_empty_panel()
-            self.pop_status(STATUS_GRID)
+            self.pop_status(constants.STATUS_GRID)
             
             for item in self.puzzle_toggle_items:
                 item.set_sensitive(False)
@@ -899,9 +895,9 @@ class PalabraWindow(gtk.Window):
         self.add_accel_group(accel_group)
         
         activate = lambda item: self.new_puzzle()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Create a new puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_NEW, None)
         key, mod = gtk.accelerator_parse("<Ctrl>N")
         item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -911,9 +907,9 @@ class PalabraWindow(gtk.Window):
         menu.append(item)
         
         activate = lambda item: self.open_puzzle()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Open a puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_OPEN, None)
         key, mod = gtk.accelerator_parse("<Ctrl>O")
         item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -925,9 +921,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.save_puzzle(False)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Save the current puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_SAVE, None)
         key, mod = gtk.accelerator_parse("<Ctrl>S")
         item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -939,9 +935,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.save_puzzle(True)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Save the current puzzle with a different name")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_SAVE_AS, None)
         key, mod = gtk.accelerator_parse("<Shift><Ctrl>S")
         item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -955,9 +951,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.export_puzzle()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Export the puzzle to various file formats")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("_Export...", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -967,9 +963,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.export_as_template()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Save the grid as a template without the words and clues")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Export as _template...", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -981,9 +977,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.view_puzzle_properties()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "View the properties of the current puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_PROPERTIES, None)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -995,9 +991,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.close_puzzle()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Close the current puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_CLOSE, None)
         key, mod = gtk.accelerator_parse("<Ctrl>W")
         item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -1009,9 +1005,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: quit()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Quit the application")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_QUIT, None)
         key, mod = gtk.accelerator_parse("<Ctrl>Q")
         item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -1071,9 +1067,9 @@ class PalabraWindow(gtk.Window):
         self.add_accel_group(accel_group)
         
         activate = lambda item: self.undo_action()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Undo the last action")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         self.undo_menu_item = gtk.ImageMenuItem(gtk.STOCK_UNDO, None)
         key, mod = gtk.accelerator_parse("<Ctrl>Z")
         self.undo_menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -1084,9 +1080,9 @@ class PalabraWindow(gtk.Window):
         menu.append(self.undo_menu_item)
         
         activate = lambda item: self.redo_action()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Redo the last undone action")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         self.redo_menu_item = gtk.ImageMenuItem(gtk.STOCK_REDO, None)
         key, mod = gtk.accelerator_parse("<Shift><Ctrl>Z")
         self.redo_menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
@@ -1099,9 +1095,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.edit_clues()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Edit clues")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Edit _clues", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1113,9 +1109,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.transform_grid(transform.shift_grid_up)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Move the content of the grid up by one square")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Move content _up", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1125,9 +1121,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.transform_grid(transform.shift_grid_down)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Move the content of the grid down by one square")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Move content _down", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1137,9 +1133,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.transform_grid(transform.shift_grid_left)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Move the content of the grid left by one square")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Move content _left", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1149,9 +1145,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.transform_grid(transform.shift_grid_right)
-        select = lambda item: self.update_status(STATUS_MENU            
+        select = lambda item: self.update_status(constants.STATUS_MENU            
             , "Move the content of the grid right by one square")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Move content _right", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1165,9 +1161,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.resize_grid()
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Change the size of the grid")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("_Resize grid", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1181,9 +1177,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.perform_selection_based_transform(transform.insert_row_above)
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Insert an empty row above this cell")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Insert row (above)", False)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1195,9 +1191,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.perform_selection_based_transform(transform.insert_row_below)
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Insert an empty row below this cell")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Insert row (below)", False)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1209,9 +1205,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.perform_selection_based_transform(transform.insert_column_left)
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Insert an empty column to the left of this cell")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Insert column (left)", False)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1223,9 +1219,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.perform_selection_based_transform(transform.insert_column_right)
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Insert an empty column to the right of this cell")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Insert column (right)", False)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1239,9 +1235,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.perform_selection_based_transform(transform.remove_row)
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Remove the row containing this cell")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Remove row", False)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1253,9 +1249,9 @@ class PalabraWindow(gtk.Window):
         activate = lambda item: \
             self.perform_selection_based_transform(transform.remove_column)
         select = lambda item: \
-            self.update_status(STATUS_MENU
+            self.update_status(constants.STATUS_MENU
                 , "Remove the column containing this cell")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Remove column", False)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1267,9 +1263,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.transform_grid(transform.clear_all)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Clear the blocks, the letters and the clues of the puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Clear _all", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1279,9 +1275,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.transform_grid(transform.clear_chars)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Clear the letters and the clues of the puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Clear _letters", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1291,9 +1287,9 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         activate = lambda item: self.transform_grid(transform.clear_clues)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Clear the clues of the puzzle")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem("Clear clu_es", True)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1305,9 +1301,9 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         activate = lambda item: self.view_preferences()
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Configure the application")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES, None)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1336,7 +1332,7 @@ class PalabraWindow(gtk.Window):
     def update_window(self):
         message = self.puzzle_manager.current_puzzle.grid.determine_status_message()
         self.update_undo_redo()
-        self.update_status(STATUS_GRID, message)
+        self.update_status(constants.STATUS_GRID, message)
         
         selection = self.get_selection()
         if selection is not None:
@@ -1349,9 +1345,9 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         activate = lambda item: self.toggle_toolbar(item)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Show or hide the toolbar")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.CheckMenuItem("_Toolbar", True)
         item.set_active(True)
         item.connect("activate", activate)
@@ -1360,9 +1356,9 @@ class PalabraWindow(gtk.Window):
         menu.append(item)
         
         activate = lambda item: self.toggle_statusbar(item)
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "Show or hide the statusbar")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.CheckMenuItem("_Statusbar", True)
         item.set_active(True)
         item.connect("activate", activate)
@@ -1390,9 +1386,9 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         activate = self.on_help_about_activate
-        select = lambda item: self.update_status(STATUS_MENU
+        select = lambda item: self.update_status(constants.STATUS_MENU
             , "About this application")
-        deselect = lambda item: self.pop_status(STATUS_MENU)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.ImageMenuItem(gtk.STOCK_ABOUT, None)
         item.connect("activate", activate)
         item.connect("select", select)
@@ -1408,7 +1404,7 @@ class PalabraWindow(gtk.Window):
         dialog.set_title("About Palabra")
         dialog.set_program_name("Palabra")
         dialog.set_comments("Crossword creation software")
-        dialog.set_version(PALABRA_VERSION)
+        dialog.set_version(constants.VERSION)
         dialog.set_authors(["Simeon Visser"])
         dialog.set_copyright("Copyright 2009 Simeon Visser")
         dialog.set_license("""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

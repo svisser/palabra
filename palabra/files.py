@@ -20,6 +20,7 @@ import gtk
 
 from lxml import etree
 
+import constants
 import grid
 from grid import (
     Grid,
@@ -29,14 +30,13 @@ from puzzle import (
     Puzzle,
 )
 
-PALABRA_VERSION = "0.1"
-
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])
+    settings = options["settings"]
     if options["format"] == "csv":
-        export_to_csv(puzzle, filename, outputs, options["settings"])
+        export_to_csv(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
-        export_to_png(puzzle, filename, outputs[0])
+        export_to_png(puzzle, filename, outputs[0], settings)
 
 def import_puzzle(filename):
     try:
@@ -157,7 +157,7 @@ def parse_clues(e, direction):
         
 def export_puzzle_to_xml(puzzle):
     palabra = etree.Element("palabra")
-    palabra.set("version", PALABRA_VERSION)
+    palabra.set("version", constants.VERSION)
     
     puzzle_elem = etree.SubElement(palabra, "puzzle")
     puzzle_elem.set("type", "crossword")
@@ -289,7 +289,7 @@ def parse_template(template, include_grid=False):
 
 def export_template(grid, filename):
     palabra = etree.Element("palabra")
-    palabra.set("version", PALABRA_VERSION)
+    palabra.set("version", constants.VERSION)
     
     template = etree.SubElement(palabra, "template")
     template.set("type", "crossword")
@@ -368,9 +368,9 @@ def export_to_pdf(puzzle, filename):
     context = cairo.Context(surface)
     
     view = GridView(puzzle.grid)
-    view.update_view(context, grid.VIEW_MODE_EMPTY)
+    view.update_view(context, constants.VIEW_MODE_EMPTY)
     context.show_page()
-    view.update_view(context, grid.VIEW_MODE_SOLUTION)
+    view.update_view(context, constants.VIEW_MODE_SOLUTION)
     context.show_page()
     
     surface.finish()
@@ -388,9 +388,9 @@ def export_to_png(puzzle, filename, output):
     context.fill()
     
     if output == "grid":
-        view.update_view(context, grid.VIEW_MODE_EMPTY)
+        view.update_view(context, constants.VIEW_MODE_EMPTY)
     elif output == "solution":
-        view.update_view(context, grid.VIEW_MODE_SOLUTION)
+        view.update_view(context, constants.VIEW_MODE_SOLUTION)
     
     surface.write_to_png(filename)
     surface.finish()

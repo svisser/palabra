@@ -17,6 +17,7 @@
 
 import gtk
 
+import constants
 import grid
 from grid import (
     Grid,
@@ -44,12 +45,12 @@ class SizeComponent(gtk.VBox):
         initial_height = preferences.prefs["new_initial_height"]
         
         adj = gtk.Adjustment(initial_width
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.width_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.width_spinner.connect("output", self.on_spinner_changed)
         
         adj = gtk.Adjustment(initial_height
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.height_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.height_spinner.connect("output", self.on_spinner_changed)
         
@@ -225,7 +226,7 @@ class FilterTemplateDialog(gtk.Dialog):
             self.min_width_spinner.set_sensitive(widget.get_active() == 1)
         self.check_min_width.connect("toggled", on_width_toggled)
         adj = gtk.Adjustment(15
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.min_width_spinner = gtk.SpinButton(adj, 0.0, 0)
         filter_table.attach(self.check_min_width, 0, 1, 0, 1)
         filter_table.attach(self.min_width_spinner, 1, 2, 0, 1)
@@ -244,7 +245,7 @@ class FilterTemplateDialog(gtk.Dialog):
             self.max_width_spinner.set_sensitive(widget.get_active() == 1)
         self.check_max_width.connect("toggled", on_width_toggled)
         adj = gtk.Adjustment(15
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.max_width_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.max_width_spinner.set_sensitive(False)
         filter_table.attach(self.check_max_width, 2, 3, 0, 1)
@@ -264,7 +265,7 @@ class FilterTemplateDialog(gtk.Dialog):
             self.min_height_spinner.set_sensitive(widget.get_active() == 1)
         self.check_min_height.connect("toggled", on_height_toggled)
         adj = gtk.Adjustment(15
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.min_height_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.min_height_spinner.set_sensitive(False)
         filter_table.attach(self.check_min_height, 0, 1, 1, 2)
@@ -284,7 +285,7 @@ class FilterTemplateDialog(gtk.Dialog):
             self.max_height_spinner.set_sensitive(widget.get_active() == 1)
         self.check_max_height.connect("toggled", on_height_toggled)
         adj = gtk.Adjustment(15
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.max_height_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.max_height_spinner.set_sensitive(False)
         filter_table.attach(self.check_max_height, 2, 3, 1, 2)
@@ -304,7 +305,7 @@ class FilterTemplateDialog(gtk.Dialog):
             self.min_words_spinner.set_sensitive(widget.get_active() == 1)
         self.check_min_words.connect("toggled", on_words_toggled)
         adj = gtk.Adjustment(15
-            , 1, 2 * grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , 1, 2 * constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.min_words_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.min_words_spinner.set_sensitive(False)
         filter_table.attach(self.check_min_words, 0, 1, 2, 3)
@@ -324,7 +325,7 @@ class FilterTemplateDialog(gtk.Dialog):
             self.max_words_spinner.set_sensitive(widget.get_active() == 1)
         self.check_max_words.connect("toggled", on_words_toggled)
         adj = gtk.Adjustment(15
-            , 1, 2 * grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , 1, 2 * constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.max_words_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.max_words_spinner.set_sensitive(False)
         filter_table.attach(self.check_max_words, 2, 3, 2, 3)

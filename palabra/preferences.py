@@ -19,12 +19,10 @@ import gtk
 import os
 
 import action
+import constants
 import grid
 
 import ConfigParser
-
-APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
-CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config")
 
 color_schemes = []
 color_schemes.append(
@@ -95,7 +93,7 @@ defaults["color_current_word_blue"] = (color_schemes[0]["current_word"][2], int)
 
 def read_config_file():    
     parser = ConfigParser.RawConfigParser()
-    parser.read(CONFIG_FILE_LOCATION)
+    parser.read(constants.CONFIG_FILE_LOCATION)
     
     for key in defaults:
         if parser.has_option("DEFAULT", key):
@@ -114,10 +112,10 @@ def write_config_file():
         else:
             parser.set("DEFAULT", key, str(defaults[key][0]))
     
-    if not os.path.isdir(APPLICATION_DIRECTORY):
-        os.mkdir(APPLICATION_DIRECTORY)
+    if not os.path.isdir(constants.APPLICATION_DIRECTORY):
+        os.mkdir(constants.APPLICATION_DIRECTORY)
     
-    f = open(CONFIG_FILE_LOCATION, "wb")
+    f = open(constants.CONFIG_FILE_LOCATION, "wb")
     parser.write(f)
     f.close()
 
@@ -210,14 +208,14 @@ class PreferencesWindow(gtk.Dialog):
         def on_new_width_changed(spinner):
             prefs["new_initial_width"] = spinner.get_value_as_int()
         adj = gtk.Adjustment(prefs["new_initial_width"]
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         new_width_spinner = gtk.SpinButton(adj, 0.0, 0)
         new_width_spinner.connect("value-changed", on_new_width_changed)
         
         def on_new_height_changed(spinner):
             prefs["new_initial_height"] = spinner.get_value_as_int()
         adj = gtk.Adjustment(prefs["new_initial_height"]
-            , grid.MINIMUM_WIDTH, grid.MAXIMUM_WIDTH, 1, 0, 0)
+            , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         new_height_spinner = gtk.SpinButton(adj, 0.0, 0)
         new_height_spinner.connect("value-changed", on_new_height_changed)
         
