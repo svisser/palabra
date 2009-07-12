@@ -140,6 +140,14 @@ class Grid:
                 except KeyError:
                     status["word_counts"][length] = 1
                     
+            status["word_counts_total"] = []
+            for length in range(2, max(self.width, self.height) + 1):
+                try:
+                    count = status["word_counts"][length]
+                except KeyError:
+                    count = 0
+                status["word_counts_total"].append((length, count))
+                    
             status["char_counts"] = {}
             for x in range(self.width):
                 for y in range(self.height):
@@ -149,6 +157,14 @@ class Grid:
                             status["char_counts"][c] += 1
                         except KeyError:
                             status["char_counts"][c] = 1
+                            
+            status["char_counts_total"] = []
+            for c in map(chr, range(ord('A'), ord('Z') + 1)):
+                try:
+                    count = status["char_counts"][c]
+                except KeyError:
+                    count = 0
+                status["char_counts_total"].append((c, count))
                             
             status["checked_count"] = 0
             status["unchecked_count"] = 0
@@ -171,10 +187,10 @@ class Grid:
         status = self.determine_status(False)
         
         return ''.join(
-            ["Words: ", str(status["word_count"]), ", ",
-             "Blocks: ", str(status["block_count"]), " ("
-             , "%.2f" % status["block_percentage"], "%), "
-             "Letters: ", str(status["char_count"])
+            ["Words: ", str(status["word_count"]), ", "
+            ,"Blocks: ", str(status["block_count"]), " ("
+            ,"%.2f" % status["block_percentage"]
+            , "%), Letters: ", str(status["char_count"])
             ])
             
     def horizontal_words(self):

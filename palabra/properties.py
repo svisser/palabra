@@ -85,9 +85,7 @@ class PropertiesWindow(gtk.Dialog):
             description_entry.set_text(puzzle.metadata["description"])
         
         status = puzzle.grid.determine_status(True)
-        word_counts = self.determine_word_counts(status, puzzle)
-        char_counts = self.determine_char_counts(status, puzzle)
-        message = self.determine_message(status, puzzle, word_counts, char_counts)
+        message = self.determine_message(status, puzzle)
 
         text = gtk.TextView()
         text.set_editable(False)        
@@ -112,14 +110,14 @@ class PropertiesWindow(gtk.Dialog):
         self.vbox.add(hbox)
         
     @staticmethod
-    def determine_message(status, puzzle, word_counts, char_counts):
+    def determine_message(status, puzzle):
         count_to_str = lambda (c, count): ''.join([c, ": ", str(count), "\n"])
-        char_counts_strings = map(count_to_str, char_counts)
+        word_count_to_str = lambda (length, count): ''.join([str(length), ": ", str(count), "\n"])
         
-        letters_in_use = filter(lambda (_, count): count > 0, char_counts)
+        letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
         letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
         
-        letters_not_in_use = filter(lambda (_, count): count == 0, char_counts)
+        letters_not_in_use = filter(lambda (_, count): count == 0, status["char_counts_total"])
         letters_not_in_use_strings = map(lambda (c, _): c, letters_not_in_use)
         
         message = ''.join(
@@ -135,34 +133,12 @@ class PropertiesWindow(gtk.Dialog):
             ,"Mean word length: ", "%.2f" % status["mean_word_length"], "\n"
             ,"\n"
             ,"Word counts:\n"
-            ,''.join(word_counts)
+            ,''.join(map(word_count_to_str, status["word_counts_total"]))
             ,"\n"
             ,"Letters in use: ", ''.join(letters_in_use_strings), "\n"
             ,"Letters not in use: ", ''.join(letters_not_in_use_strings), "\n"
             ,"\n"
             ,"Letter counts:\n"
-            ,''.join(char_counts_strings)
+            ,''.join(map(count_to_str, status["char_counts_total"]))
             ])
         return message
-        
-    @staticmethod
-    def determine_word_counts(status, puzzle):
-        word_counts = []
-        for length in range(2, max(puzzle.grid.width, puzzle.grid.height) + 1):
-            try:
-                count = status["word_counts"][length]
-            except KeyError:
-                count = 0
-            word_counts.append(''.join([str(length), ": ", str(count), "\n"]))
-        return word_counts
-        
-    @staticmethod
-    def determine_char_counts(status, puzzle):
-        char_counts = []
-        for c in map(chr, range(ord('A'), ord('Z') + 1)):
-            try:
-                count = status["char_counts"][c]
-            except KeyError:
-                count = 0
-            char_counts.append((c, count))
-        return char_counts
