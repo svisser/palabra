@@ -123,8 +123,10 @@ def write_config_file():
 
 class PreferencesWindow(gtk.Dialog):
     def __init__(self, palabra_window):
-        gtk.Dialog.__init__(self, "Palabra preferences", palabra_window
-            , gtk.DIALOG_MODAL)
+        flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
+        buttons = (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        gtk.Dialog.__init__(self, "Palabra preferences"
+            , palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         self.current_item = None
         
@@ -145,7 +147,6 @@ class PreferencesWindow(gtk.Dialog):
         self.components.append(("Editor", self.create_editor_item()))
         
         items = gtk.ListStore(str)
-        
         for title, component in self.components:
             items.append([title])
         
@@ -167,9 +168,6 @@ class PreferencesWindow(gtk.Dialog):
         
         main.pack_start(tree_window, False, False, 9)
         main.pack_start(self.preference_window, True, True, 0)
-        
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
-        
         self.vbox.add(hbox)
         
         starting_index = 0

@@ -22,8 +22,12 @@ import action
 from clue import (
     ClueEditor,
 )
+from export import (
+    ExportWindow,
+)
 from files import (
     import_puzzle,
+    export_puzzle,
     export_puzzle_to_xml,
     export_template,
     export_to_png,
@@ -626,7 +630,7 @@ class PalabraWindow(gtk.Window):
     def open_puzzle(self):
         self.close_puzzle()
         if not self.puzzle_manager.has_puzzle():
-            dialog = gtk.FileChooserDialog("Open Puzzle"
+            dialog = gtk.FileChooserDialog("Open puzzle"
                 , self
                 , gtk.FILE_CHOOSER_ACTION_OPEN
                 , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
@@ -676,7 +680,7 @@ class PalabraWindow(gtk.Window):
     
     def save_puzzle(self, save_as=False):
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
-            dialog = gtk.FileChooserDialog("Save Puzzle"
+            dialog = gtk.FileChooserDialog("Save puzzle"
                 , self
                 , gtk.FILE_CHOOSER_ACTION_SAVE
                 , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
@@ -698,6 +702,28 @@ class PalabraWindow(gtk.Window):
         else:
             export_puzzle_to_xml(self.puzzle_manager.current_puzzle)
         action.stack.distance_from_saved_puzzle = 0
+        
+    def export_puzzle(self):
+        window = ExportWindow(self)
+        window.show_all()
+        
+        response = window.run()
+        if response == gtk.RESPONSE_OK:
+            window.hide()
+            
+            dialog = gtk.FileChooserDialog("Export location"
+                , self
+                , gtk.FILE_CHOOSER_ACTION_SAVE
+                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+            dialog.set_do_overwrite_confirmation(True)
+            
+            dialog.show_all()
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                export_puzzle(dialog.get_filename(), window.options)
+            dialog.destroy()
+        window.destroy()
     
     def export_as_template(self):
         dialog = gtk.FileChooserDialog("Export as template"
@@ -933,6 +959,18 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         menu.append(gtk.SeparatorMenuItem())
+        
+        activate = lambda item: self.export_puzzle()
+        select = lambda item: self.update_status(STATUS_MENU
+            , "Export the puzzle to various file formats")
+        deselect = lambda item: self.pop_status(STATUS_MENU)
+        item = gtk.MenuItem("_Export...", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        item.set_sensitive(False)
+        menu.append(item)
+        self.puzzle_toggle_items += [item]
         
         item = self.create_export_menu()
         item.set_sensitive(False)

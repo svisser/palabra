@@ -31,6 +31,9 @@ from puzzle import (
 
 PALABRA_VERSION = "0.1"
 
+def export_puzzle(filename, options):
+    print filename, options
+
 def import_puzzle(filename):
     try:
         tree = etree.parse(filename)
