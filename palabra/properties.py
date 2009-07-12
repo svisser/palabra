@@ -159,7 +159,7 @@ class PropertiesWindow(gtk.Dialog):
     @staticmethod
     def determine_char_counts(status, puzzle):
         char_counts = []
-        for c in map(chr, range(65, 91)):
+        for c in map(chr, range(ord('A'), ord('Z') + 1)):
             try:
                 count = status["char_counts"][c]
             except KeyError:
