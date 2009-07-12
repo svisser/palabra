@@ -113,6 +113,15 @@ class PropertiesWindow(gtk.Dialog):
         
     @staticmethod
     def determine_message(status, puzzle, word_counts, char_counts):
+        count_to_str = lambda (c, count): ''.join([c, ": ", str(count), "\n"])
+        char_counts_strings = map(count_to_str, char_counts)
+        
+        letters_in_use = filter(lambda (_, count): count > 0, char_counts)
+        letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
+        
+        letters_not_in_use = filter(lambda (_, count): count == 0, char_counts)
+        letters_not_in_use_strings = map(lambda (c, _): c, letters_not_in_use)
+        
         message = ''.join(
             ["Dimensions: ", str(puzzle.grid.width), " x ", str(puzzle.grid.height), "\n"
             ,"Words: ", str(status["word_count"]), "\n"
@@ -128,8 +137,11 @@ class PropertiesWindow(gtk.Dialog):
             ,"Word counts:\n"
             ,''.join(word_counts)
             ,"\n"
+            ,"Letters in use: ", ''.join(letters_in_use_strings), "\n"
+            ,"Letters not in use: ", ''.join(letters_not_in_use_strings), "\n"
+            ,"\n"
             ,"Letter counts:\n"
-            ,''.join(char_counts)
+            ,''.join(char_counts_strings)
             ])
         return message
         
@@ -152,5 +164,5 @@ class PropertiesWindow(gtk.Dialog):
                 count = status["char_counts"][c]
             except KeyError:
                 count = 0
-            char_counts.append(''.join([c, ": ", str(count), "\n"]))
+            char_counts.append((c, count))
         return char_counts
