@@ -32,14 +32,11 @@ from puzzle import (
 PALABRA_VERSION = "0.1"
 
 def export_puzzle(puzzle, filename, options):
+    outputs = filter(lambda key: options["output"][key], options["output"])
     if options["format"] == "csv":
-        outputs = filter(lambda key: options["output"][key], options["output"])
         export_to_csv(puzzle, filename, outputs, options["settings"])
     elif options["format"] == "png":
-        if options["output"]["grid"]:
-            export_to_png(puzzle, filename, grid.VIEW_MODE_EMPTY)
-        elif options["output"]["solution"]:
-            export_to_png(puzzle, filename, grid.VIEW_MODE_SOLUTION)
+        export_to_png(puzzle, filename, outputs[0])
 
 def import_puzzle(filename):
     try:
@@ -313,10 +310,30 @@ def export_template(grid, filename):
 def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
     
+    def write_csv_grid(output):
+        for y in xrange(puzzle.grid.height):
+            line = []
+            for x in xrange(puzzle.grid.width):
+                if puzzle.grid.is_block(x, y):
+                    line.append(".")
+                else:
+                    if output == "grid":
+                        line.append(" ")
+                    elif output == "solution":
+                        char = puzzle.grid.get_char(x, y)
+                        if char != "":
+                            line.append(char)
+                        else:
+                            line.append(" ")
+                if x < puzzle.grid.width - 1:
+                    line.append(settings["separator"])
+            line.append("\n")
+            f.write(''.join(line))
+    
     if "grid" in outputs:
-        print "TODO grid"
+        write_csv_grid("grid")
     if "solution" in outputs:
-        print "TODO solution"
+        write_csv_grid("solution")
     if "clues" in outputs:
         clues = \
             [("across", puzzle.grid.horizontal_clues())
@@ -325,7 +342,8 @@ def export_to_csv(puzzle, filename, outputs, settings):
             
         for direction, clue_iterable in clues:
             for n, x, y, clue in clue_iterable:
-                line = [direction, settings["separator"]]
+                line = [direction, settings["separator"]
+                    , str(n), settings["separator"]]
 
                 try:
                     line.append(clue["text"])
@@ -351,29 +369,28 @@ def export_to_pdf(puzzle, filename):
     
     view = GridView(puzzle.grid)
     view.update_view(context, grid.VIEW_MODE_EMPTY)
-    
     context.show_page()
-    
     view.update_view(context, grid.VIEW_MODE_SOLUTION)
-    
     context.show_page()
     
     surface.finish()
     
-def export_to_png(puzzle, filename, view_mode=grid.VIEW_MODE_EMPTY):
+def export_to_png(puzzle, filename, output):
     view = GridView(puzzle.grid)
     width = view.visual_width(False)
     height = view.visual_height(False)
     
-    surface = canvas = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+
     context = cairo.Context(surface)
-    
     context.rectangle(0, 0, width, height)
     context.set_source_rgb(1, 1, 1)
     context.fill()
     
-    view.update_view(context, view_mode)
+    if output == "grid":
+        view.update_view(context, grid.VIEW_MODE_EMPTY)
+    elif output == "solution":
+        view.update_view(context, grid.VIEW_MODE_SOLUTION)
     
     surface.write_to_png(filename)
-    
     surface.finish()
