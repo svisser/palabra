@@ -21,6 +21,12 @@ from grid import (
 import preferences
 
 class Action():
+    """
+    A general action performed by the user.
+    
+    Each action is represented through undo/redo functions
+    that respectively undo and redo the modification of the puzzle.
+    """
     def __init__(self, undo_functions=None, redo_functions=None):
         if undo_functions is None:
             undo_functions = []
@@ -30,20 +36,27 @@ class Action():
         self.redo_functions = redo_functions
         
     def add_undo_function(self, function):
+        """Add a function to the list of undo functions."""
         self.undo_functions.append(function)
         
     def add_redo_function(self, function):
+        """Add a function to the list of redo functions."""
         self.redo_functions.append(function)
 
     def perform_undo(self, puzzle):
+        """Undo this action."""
         for f in self.undo_functions:
             f(puzzle)
             
     def perform_redo(self, puzzle):
+        """Redo this action."""
         for f in self.redo_functions:
             f(puzzle)
 
 class FullTransformAction(Action):
+    """
+    An action that is stored by fully saving the grids (before and after).
+    """
     def __init__(self, from_grid, to_grid):
         Action.__init__(self)
         self.from_grid = from_grid
@@ -53,10 +66,12 @@ class FullTransformAction(Action):
             from_grid.height != to_grid.height
         
     def perform_undo(self, puzzle):
+        """Undo this action."""
         Action.perform_undo(self, puzzle)
         self._perform_action(puzzle, self.from_grid)
         
     def perform_redo(self, puzzle):
+        """Redo this action."""
         Action.perform_redo(self, puzzle)
         self._perform_action(puzzle, self.to_grid)
         
@@ -68,22 +83,43 @@ class FullTransformAction(Action):
                 puzzle.grid.set_cell(x, y, source_grid.cell(x, y))
 
 class ActionStack:
+    """
+    Contains two stacks with the actions that can be undone or redone.
+    """
     def __init__(self):
         self.clear()
         
     def push_action(self, action):
-        if preferences.prefs["undo_use_finite_buffer"] and \
-            len(self.undo_stack) >= preferences.prefs["undo_buffer_size"]:
+        """
+        Push an action onto the undo stack and clear the redo stack.
+        
+        If a finite undo stack is used, the oldest action
+        in the undo stack will be removed first.
+        """
+        if preferences.prefs["undo_use_finite_stack"] and \
+            len(self.undo_stack) >= preferences.prefs["undo_stack_size"]:
             self.undo_stack = self.undo_stack[1:]
         self.undo_stack.append(action)
         self.redo_stack = []
         self.distance_from_saved_puzzle += 1
         
     def undo_action(self, puzzle):
+        """
+        Perform the most recent action in the undo stack.
+        
+        After performing the action, it will be placed in
+        the redo stack.
+        
+        If a finite redo stack is used, the oldest action
+        in the redo stack will be removed first.
+        """
         if len(self.undo_stack) > 0:
             a = self.undo_stack.pop()
             a.perform_undo(puzzle)
             
+            # since states of the puzzle are represented by
+            # undo/redo functions, we also need to redo the
+            # action currently on top
             if len(self.undo_stack) > 0:
                 b = self.undo_stack.pop()
                 b.perform_redo(puzzle)
@@ -91,24 +127,34 @@ class ActionStack:
                 
             self.distance_from_saved_puzzle -= 1
             
-            if preferences.prefs["undo_use_finite_buffer"] and \
-                len(self.redo_stack) >= preferences.prefs["undo_buffer_size"]:
+            if preferences.prefs["undo_use_finite_stack"] and \
+                len(self.redo_stack) >= preferences.prefs["undo_stack_size"]:
                 self.redo_stack = self.redo_stack[1:]
             self.redo_stack.append(a)
             
     def redo_action(self, puzzle):
+        """
+        Perform the most recent action in the redo stack.
+        
+        After performing the action, it will be placed in
+        the undo stack.
+        
+        If a finite undo stack is used, the oldest action
+        in the undo stack will be removed first.
+        """
         if len(self.redo_stack) > 0:
             a = self.redo_stack.pop()
             a.perform_redo(puzzle)
             
             self.distance_from_saved_puzzle += 1
             
-            if preferences.prefs["undo_use_finite_buffer"] and \
-                len(self.undo_stack) >= preferences.prefs["undo_buffer_size"]:
+            if preferences.prefs["undo_use_finite_stack"] and \
+                len(self.undo_stack) >= preferences.prefs["undo_stack_size"]:
                 self.undo_stack = self.undo_stack[1:]
             self.undo_stack.append(a)
     
     def cap_stack(self, max_size):
+        """Limit the size of the undo and redo stacks to max_size."""
         if len(self.undo_stack) > max_size:
             self.undo_stack = self.undo_stack[-max_size:]
         if len(self.redo_stack) > max_size:

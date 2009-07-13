@@ -73,8 +73,8 @@ prefs = {}
 defaults = {}
 defaults["new_initial_height"] = (15, int)
 defaults["new_initial_width"] = (15, int)
-defaults["undo_buffer_size"] = (50, int)
-defaults["undo_use_finite_buffer"] = (True, bool)
+defaults["undo_stack_size"] = (50, int)
+defaults["undo_use_finite_stack"] = (True, bool)
 defaults["color_primary_selection_red"] = (color_schemes[0]["primary_selection"][0], int)
 defaults["color_primary_selection_green"] = (color_schemes[0]["primary_selection"][1], int)
 defaults["color_primary_selection_blue"] = (color_schemes[0]["primary_selection"][2], int)
@@ -233,10 +233,6 @@ class PreferencesWindow(gtk.Dialog):
         
         return main
     
-    def on_undo_buffer_size_changed(self, spinner):
-        prefs["undo_buffer_size"] = spinner.get_value_as_int()
-        action.stack.cap_stack(prefs["undo_buffer_size"])
-        
     def create_editor_item(self):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
