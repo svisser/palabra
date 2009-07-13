@@ -22,7 +22,7 @@ class PropertiesWindow(gtk.Dialog):
         gtk.Dialog.__init__(self, "Puzzle properties", palabra_window
             , gtk.DIALOG_MODAL)
         self.puzzle = puzzle
-        self.set_size_request(480, 420)
+        self.set_size_request(480, 480)
         
         details = gtk.Table(1, 2, False)
         
@@ -85,8 +85,85 @@ class PropertiesWindow(gtk.Dialog):
             description_entry.set_text(puzzle.metadata["description"])
         
         status = puzzle.grid.determine_status(True)
-        message = self.determine_message(status, puzzle)
+        
+        tabs = gtk.Notebook()
+        tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label("General"))
+        
+        message = self.determine_letters_message(status, puzzle)
+        tabs.append_page(self.create_stats_tab(message), gtk.Label("Letters"))
 
+        message = self.determine_words_message(status, puzzle)
+        tabs.append_page(self.create_stats_tab(message), gtk.Label("Words"))
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(details, False, False, 0)
+        main.pack_start(tabs, True, True, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        self.vbox.add(hbox)
+    
+    def create_general_tab(self, status, puzzle):
+        table = gtk.Table(6, 4, False)
+        table.set_col_spacings(18)
+        table.set_row_spacings(6)
+        
+        def create_statistic(table, title, value, x, y):
+            label = gtk.Label(title)
+            label.set_alignment(0, 0)
+            table.attach(label, x, x + 1, y, y + 1)
+            label = gtk.Label(value)
+            label.set_alignment(1, 0)
+            table.attach(label, x + 1, x + 2, y, y + 1)
+            
+        create_statistic(table, "Columns", str(puzzle.grid.width), 0, 0)
+        create_statistic(table, "Rows", str(puzzle.grid.height), 0, 1)
+        create_statistic(table, "Blocks", str(status["block_count"]), 0, 2)
+        message = ''.join(["%.2f" % status["block_percentage"], "%"])
+        create_statistic(table, "Block percentage", message, 0, 3)
+        create_statistic(table, "Letters", str(status["char_count"]), 0, 4)
+        create_statistic(table, "Clues", str(status["clue_count"]), 0, 5)
+        
+        create_statistic(table, "Checked cells", str(status["checked_count"]), 2, 0)
+        create_statistic(table, "Unchecked cells", str(status["unchecked_count"]), 2, 1)
+        create_statistic(table, "Total words", str(status["word_count"]), 2, 2)
+        create_statistic(table, "Across words", str(status["across_word_count"]), 2, 3)
+        create_statistic(table, "Down words", str(status["down_word_count"]), 2, 4)
+        message = "%.2f" % status["mean_word_length"]
+        create_statistic(table, "Mean word length", message, 2, 5)
+        
+        letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
+        letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
+        
+        letters_not_in_use = filter(lambda (_, count): count == 0, status["char_counts_total"])
+        letters_not_in_use_strings = map(lambda (c, _): c, letters_not_in_use)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(6)
+        main.pack_start(table, False, False, 0)
+        
+        text = ''.join(["Letters in use: ", ''.join(letters_in_use_strings)])
+        label = gtk.Label(text)
+        label.set_alignment(0, 0)
+        main.pack_start(label, False, False, 0)
+        
+        text = ''.join(["Letters not in use: ", ''.join(letters_not_in_use_strings)])
+        label = gtk.Label(text)
+        label.set_alignment(0, 0)
+        main.pack_start(label, False, False, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, False, False, 0)
+        return hbox
+        
+    def create_stats_tab(self, message):
         text = gtk.TextView()
         text.set_editable(False)        
         data = text.get_buffer()
@@ -98,47 +175,49 @@ class PropertiesWindow(gtk.Dialog):
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
-        main.pack_start(details, False, False, 0)
         main.pack_start(scrolled_window, True, True, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
+        return hbox
         
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
-        self.vbox.add(hbox)
+    def create_letters_stats_tab(self, puzzle):
+        pass
         
     @staticmethod
-    def determine_message(status, puzzle):
-        count_to_str = lambda (c, count): ''.join([c, ": ", str(count), "\n"])
-        word_count_to_str = lambda (length, count): ''.join([str(length), ": ", str(count), "\n"])
-        
-        letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
-        letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
-        
-        letters_not_in_use = filter(lambda (_, count): count == 0, status["char_counts_total"])
-        letters_not_in_use_strings = map(lambda (c, _): c, letters_not_in_use)
-        
+    def determine_general_message(status, puzzle):
         message = ''.join(
             ["Dimensions: ", str(puzzle.grid.width), " x ", str(puzzle.grid.height), "\n"
-            ,"Words: ", str(status["word_count"]), "\n"
-            ,"Across words: ", str(status["across_word_count"]), "\n"
-            ,"Down words: ", str(status["down_word_count"]), "\n"
-            ,"Clues: ", str(status["clue_count"]), "\n"
             ,"Letters: ", str(status["char_count"]), "\n"
             ,"Checked cells: ", str(status["checked_count"]), "\n"
             ,"Unchecked cells: ", str(status["unchecked_count"]), "\n"
             ,"Blocks: ", str(status["block_count"]), " (", "%.2f" % status["block_percentage"], "%)\n"
-            ,"Mean word length: ", "%.2f" % status["mean_word_length"], "\n"
             ,"\n"
-            ,"Word counts:\n"
-            ,''.join(map(word_count_to_str, status["word_counts_total"]))
-            ,"\n"
-            ,"Letters in use: ", ''.join(letters_in_use_strings), "\n"
-            ,"Letters not in use: ", ''.join(letters_not_in_use_strings), "\n"
-            ,"\n"
-            ,"Letter counts:\n"
+            ,"Words: ", str(status["word_count"]), "\n"
+            ,"Across words: ", str(status["across_word_count"]), "\n"
+            ,"Down words: ", str(status["down_word_count"]), "\n"
+            ,"Clues: ", str(status["clue_count"]), "\n"
+            ,"Mean word length: ", "%.2f" % status["mean_word_length"]
+            ])
+        return message
+        
+    @staticmethod
+    def determine_letters_message(status, puzzle):
+        count_to_str = lambda (c, count): ''.join([c, ": ", str(count), "\n"])
+        message = ''.join(
+            ["Letter counts:\n"
             ,''.join(map(count_to_str, status["char_counts_total"]))
+            ])
+        return message
+        
+    @staticmethod
+    def determine_words_message(status, puzzle):
+        word_count_to_str = lambda (length, count): ''.join([str(length), ": ", str(count), "\n"])
+
+        message = ''.join(
+            ["Word counts:\n"
+            ,''.join(map(word_count_to_str, status["word_counts_total"]))
             ])
         return message
