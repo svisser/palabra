@@ -375,7 +375,7 @@ def export_to_pdf(puzzle, filename):
     
     surface.finish()
     
-def export_to_png(puzzle, filename, output):
+def export_to_png(puzzle, filename, output, settings):
     view = GridView(puzzle.grid)
     width = view.visual_width(False)
     height = view.visual_height(False)
