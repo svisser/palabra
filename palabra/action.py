@@ -61,9 +61,8 @@ class FullTransformAction(Action):
         Action.__init__(self)
         self.from_grid = from_grid
         self.to_grid = to_grid
-        self.size_changed = \
-            from_grid.width != to_grid.width or \
-            from_grid.height != to_grid.height
+        self.size_changed = (from_grid.width != to_grid.width or
+            from_grid.height != to_grid.height)
         
     def perform_undo(self, puzzle):
         """Undo this action."""
@@ -96,8 +95,8 @@ class ActionStack:
         If a finite undo stack is used, the oldest action
         in the undo stack will be removed first.
         """
-        if preferences.prefs["undo_use_finite_stack"] and \
-            len(self.undo_stack) >= preferences.prefs["undo_stack_size"]:
+        if (preferences.prefs["undo_use_finite_stack"] and
+            len(self.undo_stack) >= preferences.prefs["undo_stack_size"]):
             self.undo_stack = self.undo_stack[1:]
         self.undo_stack.append(action)
         self.redo_stack = []
@@ -127,8 +126,8 @@ class ActionStack:
                 
             self.distance_from_saved_puzzle -= 1
             
-            if preferences.prefs["undo_use_finite_stack"] and \
-                len(self.redo_stack) >= preferences.prefs["undo_stack_size"]:
+            if (preferences.prefs["undo_use_finite_stack"] and
+                len(self.redo_stack) >= preferences.prefs["undo_stack_size"]):
                 self.redo_stack = self.redo_stack[1:]
             self.redo_stack.append(a)
             
@@ -148,8 +147,8 @@ class ActionStack:
             
             self.distance_from_saved_puzzle += 1
             
-            if preferences.prefs["undo_use_finite_stack"] and \
-                len(self.undo_stack) >= preferences.prefs["undo_stack_size"]:
+            if (preferences.prefs["undo_use_finite_stack"] and
+                len(self.undo_stack) >= preferences.prefs["undo_stack_size"]):
                 self.undo_stack = self.undo_stack[1:]
             self.undo_stack.append(a)
     
