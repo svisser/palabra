@@ -88,10 +88,9 @@ class PropertiesWindow(gtk.Dialog):
         
         tabs = gtk.Notebook()
         tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label("General"))
+        tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label("Letters"))
         
-        message = self.determine_letters_message(status, puzzle)
-        tabs.append_page(self.create_stats_tab(message), gtk.Label("Letters"))
-
+        #message = self.determine_letters_message(status, puzzle)
         message = self.determine_words_message(status, puzzle)
         tabs.append_page(self.create_stats_tab(message), gtk.Label("Words"))
         
@@ -109,7 +108,7 @@ class PropertiesWindow(gtk.Dialog):
         self.vbox.add(hbox)
     
     def create_general_tab(self, status, puzzle):
-        table = gtk.Table(6, 4, False)
+        table = gtk.Table(8, 4, False)
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
@@ -147,15 +146,39 @@ class PropertiesWindow(gtk.Dialog):
         main.set_spacing(6)
         main.pack_start(table, False, False, 0)
         
-        text = ''.join(["Letters in use: ", ''.join(letters_in_use_strings)])
-        label = gtk.Label(text)
+        label = gtk.Label("Letters in use")
         label.set_alignment(0, 0)
-        main.pack_start(label, False, False, 0)
+        table.attach(label, 0, 2, 6, 7)
+        label = gtk.Label(''.join(letters_in_use_strings))
+        label.set_alignment(0, 0)
+        table.attach(label, 2, 4, 6, 7)
         
-        text = ''.join(["Letters not in use: ", ''.join(letters_not_in_use_strings)])
-        label = gtk.Label(text)
+        label = gtk.Label("Letters not in use")
         label.set_alignment(0, 0)
-        main.pack_start(label, False, False, 0)
+        table.attach(label, 0, 2, 7, 8)
+        label = gtk.Label(''.join(letters_not_in_use_strings))
+        label.set_alignment(0, 0)
+        table.attach(label, 2, 4, 7, 8)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, False, False, 0)
+        return hbox
+        
+    def create_letters_tab(self, status, puzzle):
+        table = gtk.Table(5, 6, False)
+        table.set_col_spacings(18)
+        table.set_row_spacings(6)
+        
+        for y in xrange(0, 26, 6):
+            for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
+                label = gtk.Label(''.join([char, ": ", str(count)]))
+                table.attach(label, x, x + 1, y / 6, y / 6 + 1)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(6)
+        main.pack_start(table, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
