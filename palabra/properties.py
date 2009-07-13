@@ -16,6 +16,60 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
+import pangocairo
+
+class Histogram:
+    def __init__(self, totals, width, height):
+        self.totals = totals
+        self.width = width
+        self.height = height
+        
+        maximum = max([value for key, value in totals])
+        
+        self.bar_width = 15
+        self.minimum_height = 3
+        
+        self.bars = []
+        for key, value in totals:
+            try:
+                ratio = value / float(maximum)
+                available = (self.height - self.minimum_height)
+                bar_item_height = int(ratio * available)
+            except ZeroDivisionError:
+                bar_item_height = 0
+            
+            width = self.bar_width
+            height = self.minimum_height + bar_item_height
+            self.bars.append((key, width, height))
+        
+    def draw(self, context):
+        for i, (key, width, height) in enumerate(self.bars):
+            x = i * (self.bar_width + 1)
+            y = self.height - height
+            
+            red = green = blue = 0
+            if height == self.minimum_height:
+                red = 1
+            else:
+                red = 0
+            context.set_source_rgb(red, green, blue)
+            context.rectangle(x, y, width, height)
+            context.fill()
+            
+            context.set_source_rgb(0, 0, 0)
+            self.draw_key(context, key, x + width / 4, self.height)
+        
+    def draw_key(self, context, key, x, y):
+        xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(key)
+
+        pcr = pangocairo.CairoContext(context)
+        layout = pcr.create_layout()
+        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 10", key))
+        
+        context.save()
+        context.move_to(x, y)
+        pcr.show_layout(layout)
+        context.restore()
 
 class PropertiesWindow(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
@@ -90,7 +144,6 @@ class PropertiesWindow(gtk.Dialog):
         tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label("General"))
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label("Letters"))
         
-        #message = self.determine_letters_message(status, puzzle)
         message = self.determine_words_message(status, puzzle)
         tabs.append_page(self.create_stats_tab(message), gtk.Label("Words"))
         
@@ -171,6 +224,8 @@ class PropertiesWindow(gtk.Dialog):
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
+        self.histogram = Histogram(status["char_counts_total"], 390, 60)
+        
         for y in xrange(0, 26, 6):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
                 label = gtk.Label(''.join([char, ": ", str(count)]))
@@ -180,12 +235,23 @@ class PropertiesWindow(gtk.Dialog):
         main.set_spacing(6)
         main.pack_start(table, False, False, 0)
         
+        def on_expose_event(drawing_area, event):
+            context = drawing_area.window.cairo_create()
+            self.histogram.draw(context)
+            return True
+        
+        drawing_area = gtk.DrawingArea()
+        drawing_area.set_size_request(390, 60)
+        drawing_area.connect("expose_event", on_expose_event)
+        
+        main.pack_start(drawing_area, True, True, 0)
+        
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        hbox.pack_start(main, False, False, 0)
+        hbox.pack_start(main, True, True, 0)
         return hbox
-        
+                
     def create_stats_tab(self, message):
         text = gtk.TextView()
         text.set_editable(False)        
