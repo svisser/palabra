@@ -19,36 +19,32 @@ import gtk
 import pangocairo
 
 class Histogram:
-    def __init__(self, totals, width, height):
-        self.totals = totals
-        self.width = width
-        self.height = height
-        
+    def __init__(self, totals, total_width, total_height):
+        bar_spacing = 1
+        minimum_height = 3
         maximum = max([value for key, value in totals])
-        
-        self.bar_width = 15
-        self.minimum_height = 3
-        
+
         self.bars = []
-        for key, value in totals:
+        for i, (key, value) in enumerate(totals):
             try:
                 ratio = value / float(maximum)
-                available = (self.height - self.minimum_height)
+                available = (total_height - minimum_height)
                 bar_item_height = int(ratio * available)
             except ZeroDivisionError:
                 bar_item_height = 0
             
-            width = self.bar_width
-            height = self.minimum_height + bar_item_height
-            self.bars.append((key, width, height))
-        
-    def draw(self, context):
-        for i, (key, width, height) in enumerate(self.bars):
-            x = i * (self.bar_width + 1)
-            y = self.height - height
+            bar_width = int(float(total_width) / len(totals))
+            bar_height = minimum_height + bar_item_height
+            x = i * (bar_width + bar_spacing)
+            y = total_height - bar_height
             
+            bar = (key, value, x, y, bar_width, bar_height)
+            self.bars.append(bar)
+        
+    def draw(self, context, total_height):
+        for key, value, x, y, width, height in self.bars:
             red = green = blue = 0
-            if height == self.minimum_height:
+            if value == 0:
                 red = 1
             else:
                 red = 0
@@ -57,7 +53,7 @@ class Histogram:
             context.fill()
             
             context.set_source_rgb(0, 0, 0)
-            self.draw_key(context, key, x + width / 4, self.height)
+            self.draw_key(context, key, x + width / 4, total_height)
         
     def draw_key(self, context, key, x, y):
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(key)
@@ -224,7 +220,11 @@ class PropertiesWindow(gtk.Dialog):
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
-        self.histogram = Histogram(status["char_counts_total"], 390, 60)
+        histo_width = 390
+        histo_height = 90
+        
+        self.histogram = Histogram(status["char_counts_total"]
+            , histo_width, histo_height)
         
         for y in xrange(0, 26, 6):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
@@ -237,11 +237,11 @@ class PropertiesWindow(gtk.Dialog):
         
         def on_expose_event(drawing_area, event):
             context = drawing_area.window.cairo_create()
-            self.histogram.draw(context)
+            self.histogram.draw(context, histo_height)
             return True
         
         drawing_area = gtk.DrawingArea()
-        drawing_area.set_size_request(390, 60)
+        drawing_area.set_size_request(histo_width, histo_height)
         drawing_area.connect("expose_event", on_expose_event)
         
         main.pack_start(drawing_area, True, True, 0)
@@ -271,35 +271,6 @@ class PropertiesWindow(gtk.Dialog):
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         return hbox
-        
-    def create_letters_stats_tab(self, puzzle):
-        pass
-        
-    @staticmethod
-    def determine_general_message(status, puzzle):
-        message = ''.join(
-            ["Dimensions: ", str(puzzle.grid.width), " x ", str(puzzle.grid.height), "\n"
-            ,"Letters: ", str(status["char_count"]), "\n"
-            ,"Checked cells: ", str(status["checked_count"]), "\n"
-            ,"Unchecked cells: ", str(status["unchecked_count"]), "\n"
-            ,"Blocks: ", str(status["block_count"]), " (", "%.2f" % status["block_percentage"], "%)\n"
-            ,"\n"
-            ,"Words: ", str(status["word_count"]), "\n"
-            ,"Across words: ", str(status["across_word_count"]), "\n"
-            ,"Down words: ", str(status["down_word_count"]), "\n"
-            ,"Clues: ", str(status["clue_count"]), "\n"
-            ,"Mean word length: ", "%.2f" % status["mean_word_length"]
-            ])
-        return message
-        
-    @staticmethod
-    def determine_letters_message(status, puzzle):
-        count_to_str = lambda (c, count): ''.join([c, ": ", str(count), "\n"])
-        message = ''.join(
-            ["Letter counts:\n"
-            ,''.join(map(count_to_str, status["char_counts_total"]))
-            ])
-        return message
         
     @staticmethod
     def determine_words_message(status, puzzle):
