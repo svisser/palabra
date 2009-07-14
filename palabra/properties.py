@@ -16,11 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
+import operator
 import pangocairo
 
+import constants
+
 class Histogram:
-    def __init__(self, totals, total_width, total_height):
-        bar_spacing = 1
+    def __init__(self, totals, width, height):
+        self.width = width
+        self.height = height
+        
+        self.bar_spacing = 1
         minimum_height = 3
         maximum = max([value for key, value in totals])
 
@@ -28,32 +34,39 @@ class Histogram:
         for i, (key, value) in enumerate(totals):
             try:
                 ratio = value / float(maximum)
-                available = (total_height - minimum_height)
+                available = (self.height - minimum_height)
                 bar_item_height = int(ratio * available)
             except ZeroDivisionError:
                 bar_item_height = 0
             
-            bar_width = int(float(total_width) / len(totals))
+            bar_width = int(float(self.width) / len(totals))
             bar_height = minimum_height + bar_item_height
-            x = i * (bar_width + bar_spacing)
-            y = total_height - bar_height
             
-            bar = (key, value, x, y, bar_width, bar_height)
+            bar = (key, value, bar_width, bar_height)
             self.bars.append(bar)
         
-    def draw(self, context, total_height):
-        for key, value, x, y, width, height in self.bars:
+    def set_ordering(self, ordering):
+        if ordering == constants.ORDERING_ALPHABET:
+            self.bars.sort(key=operator.itemgetter(0))
+        elif ordering == constants.ORDERING_FREQUENCY:
+            self.bars.sort(key=operator.itemgetter(1), reverse=True)
+        
+    def draw(self, context):
+        for i, (key, value, bar_width, bar_height) in enumerate(self.bars):
+            x = i * (bar_width + self.bar_spacing)
+            y = self.height - bar_height
+            
             red = green = blue = 0
             if value == 0:
                 red = 1
             else:
                 red = 0
             context.set_source_rgb(red, green, blue)
-            context.rectangle(x, y, width, height)
+            context.rectangle(x, y, bar_width, bar_height)
             context.fill()
             
             context.set_source_rgb(0, 0, 0)
-            self.draw_key(context, key, x + width / 4, total_height)
+            self.draw_key(context, key, x + bar_width / 4, self.height)
         
     def draw_key(self, context, key, x, y):
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(key)
@@ -72,7 +85,7 @@ class PropertiesWindow(gtk.Dialog):
         gtk.Dialog.__init__(self, "Puzzle properties", palabra_window
             , gtk.DIALOG_MODAL)
         self.puzzle = puzzle
-        self.set_size_request(480, 480)
+        self.set_size_request(512, 512)
         
         details = gtk.Table(1, 2, False)
         
@@ -220,11 +233,7 @@ class PropertiesWindow(gtk.Dialog):
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
-        histo_width = 390
-        histo_height = 90
-        
-        self.histogram = Histogram(status["char_counts_total"]
-            , histo_width, histo_height)
+        self.histogram = Histogram(status["char_counts_total"], 312, 90)
         
         for y in xrange(0, 26, 6):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
@@ -237,20 +246,44 @@ class PropertiesWindow(gtk.Dialog):
         
         def on_expose_event(drawing_area, event):
             context = drawing_area.window.cairo_create()
-            self.histogram.draw(context, histo_height)
+            self.histogram.draw(context)
             return True
         
-        drawing_area = gtk.DrawingArea()
-        drawing_area.set_size_request(histo_width, histo_height)
-        drawing_area.connect("expose_event", on_expose_event)
+        combo = gtk.combo_box_new_text()
+        combo.append_text("Alphabet")
+        combo.append_text("Frequency")
+        combo.set_active(0)
+        combo.connect("changed", self.on_ordering_changed)
         
-        main.pack_start(drawing_area, True, True, 0)
+        self.drawing_area = gtk.DrawingArea()
+        self.drawing_area.set_size_request(self.histogram.width, self.histogram.height)
+        self.drawing_area.connect("expose_event", on_expose_event)
+        
+        histo_hbox = gtk.HBox(False, 0)
+        histo_hbox.pack_start(self.drawing_area, True, True, 0)
+        
+        histo_options = gtk.VBox(False, 0)
+        
+        label = gtk.Label("Order by:")
+        label.set_alignment(0, 0.5)
+        histo_options.pack_start(label, False, False, 3)
+        histo_options.pack_start(combo, False, False, 3)
+        histo_hbox.pack_start(histo_options, False, False, 0)
+        
+        main.pack_start(histo_hbox, True, True, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         return hbox
+        
+    def on_ordering_changed(self, combo):
+        if combo.get_active() == 0:
+            self.histogram.set_ordering(constants.ORDERING_ALPHABET)
+        elif combo.get_active() == 1:
+            self.histogram.set_ordering(constants.ORDERING_FREQUENCY)
+        self.drawing_area.queue_draw()
                 
     def create_stats_tab(self, message):
         text = gtk.TextView()

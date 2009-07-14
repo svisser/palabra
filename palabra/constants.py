@@ -32,6 +32,10 @@ STATUS_GRID = "STATUS_GRID"
 MINIMUM_WIDTH = 3
 MAXIMUM_WIDTH = 35
 
+# ordering of a histogram
+ORDERING_ALPHABET = 0
+ORDERING_FREQUENCY = 1
+
 # modes for viewing a grid
 VIEW_MODE_EDITOR = "editor"
 VIEW_MODE_EMPTY = "empty"
