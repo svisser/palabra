@@ -16,17 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import action
-from action import (
-    Action,
-    FullTransformAction,
-)
-from grid import (
-    Grid,
-)
+from action import Action, FullTransformAction
+from grid import Grid
 
 import copy
 
 def _delta_transform(puzzle, undo_function, redo_function):
+    """Return an Action based on the given undo/redo functions."""
     redo_function(puzzle)
     
     a = Action()
@@ -36,6 +32,7 @@ def _delta_transform(puzzle, undo_function, redo_function):
     return a
 
 def _full_transform(puzzle, transform):
+    """Return a FullTransformAction based on the given transform function."""
     from_grid = copy.deepcopy(puzzle.grid)
     transform(puzzle)
     to_grid = copy.deepcopy(puzzle.grid)
@@ -43,6 +40,7 @@ def _full_transform(puzzle, transform):
     return FullTransformAction(from_grid, to_grid)
 
 def modify_blocks(puzzle, blocks=[]):
+    """Modify the blocks and return an Action."""
     redo_blocks = []
     undo_blocks = []
     for x, y, status in blocks:
@@ -62,61 +60,76 @@ def modify_blocks(puzzle, blocks=[]):
     return _delta_transform(puzzle, undo_function, redo_function)
 
 def modify_char(puzzle, x, y, next_char):
+    """Modify the character at the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.set_char(x, y, next_char)
     return _full_transform(puzzle, transform)
 
 def clear_all(puzzle):
+    """Clear the content of the grid and return an Action."""
     transform = lambda puzzle: puzzle.grid.clear()
     return _full_transform(puzzle, transform)
     
 def clear_chars(puzzle):
+    """Clear the characters of the grid and return an Action."""
     transform = lambda puzzle: puzzle.grid.clear_chars()
     return _full_transform(puzzle, transform)
     
 def clear_clues(puzzle):
+    """Clear the clues of the grid and return an Action."""
     transform = lambda puzzle: puzzle.grid.clear_clues()
     return _full_transform(puzzle, transform)
     
 def shift_grid_up(puzzle):
+    """Shift the grid's content up and return an Action."""
     transform = lambda puzzle: puzzle.grid.shift_up()
     return _full_transform(puzzle, transform)
     
 def shift_grid_down(puzzle):
+    """Shift the grid's content down and return an Action."""
     transform = lambda puzzle: puzzle.grid.shift_down()
     return _full_transform(puzzle, transform)
 
 def shift_grid_left(puzzle):
+    """Shift the grid's content left and return an Action."""
     transform = lambda puzzle: puzzle.grid.shift_left()
     return _full_transform(puzzle, transform)
     
 def shift_grid_right(puzzle):
+    """Shift the grid's content right and return an Action."""
     transform = lambda puzzle: puzzle.grid.shift_right()
     return _full_transform(puzzle, transform)
 
 def resize_grid(puzzle, width, height):
+    """Resize the grid and return an Action."""
     transform = lambda puzzle: puzzle.grid.resize(width, height)
     return _full_transform(puzzle, transform)
     
 def insert_row_above(puzzle, x, y):
+    """Insert a row above the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.insert_row(y, True)
     return _full_transform(puzzle, transform)
 
 def insert_row_below(puzzle, x, y):
+    """Insert a row below the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.insert_row(y, False)
     return _full_transform(puzzle, transform)
     
 def insert_column_left(puzzle, x, y):
+    """Insert a column left of the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.insert_column(x, True)
     return _full_transform(puzzle, transform)
 
 def insert_column_right(puzzle, x, y):
+    """Insert a column right of the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.insert_column(x, False)
     return _full_transform(puzzle, transform)
 
 def remove_row(puzzle, x, y):
+    """Remove a row and return an Action."""
     transform = lambda puzzle: puzzle.grid.remove_row(y)
     return _full_transform(puzzle, transform)
 
 def remove_column(puzzle, x, y):
+    """Remove a column and return an Action."""
     transform = lambda puzzle: puzzle.grid.remove_column(x)
     return _full_transform(puzzle, transform)
