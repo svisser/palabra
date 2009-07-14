@@ -675,7 +675,10 @@ class PalabraWindow(gtk.Window):
     
     def save_puzzle(self, save_as=False):
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
-            dialog = gtk.FileChooserDialog("Save puzzle"
+            title = "Save puzzle"
+            if save_as:
+                title="Save puzzle as"
+            dialog = gtk.FileChooserDialog(title
                 , self
                 , gtk.FILE_CHOOSER_ACTION_SAVE
                 , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
@@ -887,6 +890,38 @@ class PalabraWindow(gtk.Window):
         self.puzzle_toggle_items += [item]
         
         return toolbar
+        
+    def _create_menu_item(self, activate, tooltip
+        , title=None
+        , image=None
+        , accelerator=None
+        , accel_group=None
+        , condition=None
+        , is_puzzle_sensitive=False
+        , is_selection_sensitive=False):
+        select = lambda item: self.update_status(constants.STATUS_MENU, tooltip)
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        if title is not None:
+            item = gtk.MenuItem(title, True)
+        elif image is not None:
+            item = gtk.ImageMenuItem(image, None)
+        if accelerator is not None and accel_group is not None:
+            key, mod = gtk.accelerator_parse(accelerator)
+            item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        
+        if is_puzzle_sensitive:
+            item.set_sensitive(False)
+            self.puzzle_toggle_items += [item]
+        if is_selection_sensitive:
+            item.set_sensitive(False)
+            if condition is None:
+                condition = lambda puzzle: True
+            self.selection_toggle_items.append((item, condition))
+
+        return item
     
     def create_file_menu(self):
         menu = gtk.Menu()
@@ -894,127 +929,72 @@ class PalabraWindow(gtk.Window):
         accel_group = gtk.AccelGroup()
         self.add_accel_group(accel_group)
         
-        activate = lambda item: self.new_puzzle()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Create a new puzzle")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_NEW, None)
-        key, mod = gtk.accelerator_parse("<Ctrl>N")
-        item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: self.open_puzzle()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Open a puzzle")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_OPEN, None)
-        key, mod = gtk.accelerator_parse("<Ctrl>O")
-        item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
+        menu.append(self._create_menu_item(
+            lambda item: self.new_puzzle()
+            , "Create a new puzzle"
+            , image=gtk.STOCK_NEW
+            , accelerator="<Ctrl>N"
+            , accel_group=accel_group))
+        menu.append(self._create_menu_item(
+            lambda item: self.open_puzzle()
+            , "Open a puzzle"
+            , image=gtk.STOCK_OPEN
+            , accelerator="<Ctrl>O"
+            , accel_group=accel_group))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: self.save_puzzle(False)
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Save the current puzzle")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_SAVE, None)
-        key, mod = gtk.accelerator_parse("<Ctrl>S")
-        item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
-        
-        activate = lambda item: self.save_puzzle(True)
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Save the current puzzle with a different name")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_SAVE_AS, None)
-        key, mod = gtk.accelerator_parse("<Shift><Ctrl>S")
-        item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
+        menu.append(self._create_menu_item(
+            lambda item: self.save_puzzle(False)
+            , "Save the current puzzle"
+            , image=gtk.STOCK_SAVE
+            , accelerator="<Ctrl>S"
+            , accel_group=accel_group
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.save_puzzle(True)
+            , "Save the current puzzle with a different name"
+            , image=gtk.STOCK_SAVE_AS
+            , accelerator="<Shift><Ctrl>S"
+            , accel_group=accel_group
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: self.export_puzzle()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Export the puzzle to various file formats")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem("_Export...", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
-        
-        activate = lambda item: self.export_as_template()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Save the grid as a template without the words and clues")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem("Export as _template...", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
+        menu.append(self._create_menu_item(
+            lambda item: self.export_puzzle()
+            , "Export the puzzle to various file formats"
+            , title="_Export..."
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.export_as_template()
+            , "Save the grid as a template without the words and clues"
+            , title="Export as _template..."
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: self.view_puzzle_properties()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "View the properties of the current puzzle")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_PROPERTIES, None)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
+        menu.append(self._create_menu_item(
+            lambda item: self.view_puzzle_properties()
+            , "View the properties of the current puzzle"
+            , image=gtk.STOCK_PROPERTIES
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: self.close_puzzle()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Close the current puzzle")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_CLOSE, None)
-        key, mod = gtk.accelerator_parse("<Ctrl>W")
-        item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_sensitive(False)
-        menu.append(item)
-        self.puzzle_toggle_items += [item]
-        
-        activate = lambda item: quit()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Quit the application")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_QUIT, None)
-        key, mod = gtk.accelerator_parse("<Ctrl>Q")
-        item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
+        menu.append(self._create_menu_item(
+            lambda item: self.close_puzzle()
+            , "Close the current puzzle"
+            , image=gtk.STOCK_CLOSE
+            , accelerator="<Ctrl>W"
+            , accel_group=accel_group
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: quit()
+            , "Quit the application"
+            , image=gtk.STOCK_QUIT
+            , accelerator="<Ctrl>Q"
+            , accel_group=accel_group))
         
         file_menu = gtk.MenuItem("_File", True)
         file_menu.set_submenu(menu)
@@ -1061,143 +1041,141 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
     def create_edit_menu(self):
-        # for menu items that are only active when a puzzle is visible
-        def create_puzzle_menu_item(activate, tooltip, title):
-            select = lambda item: self.update_status(constants.STATUS_MENU, tooltip)
-            deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-            item = gtk.MenuItem(title, True)
-            item.connect("activate", activate)
-            item.connect("select", select)
-            item.connect("deselect", deselect)
-            item.set_sensitive(False)
-            menu.append(item)
-            self.puzzle_toggle_items += [item]
-            
-        # for menu items that are only active when something is selected
-        def create_selection_menu_item(transform, tooltip, title, condition=None):
-            activate = lambda item: \
-            self.perform_selection_based_transform(transform)
-            select = lambda item: \
-                self.update_status(constants.STATUS_MENU, tooltip)
-            deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-            item = gtk.MenuItem(title, True)
-            item.connect("activate", activate)
-            item.connect("select", select)
-            item.connect("deselect", deselect)
-            item.set_sensitive(False)
-            menu.append(item)
-            
-            if condition is None:
-                condition = lambda puzzle: True
-            self.selection_toggle_items.append((item, condition))
-            
         menu = gtk.Menu()
         
         accel_group = gtk.AccelGroup()
         self.add_accel_group(accel_group)
         
-        activate = lambda item: self.undo_action()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Undo the last action")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        self.undo_menu_item = gtk.ImageMenuItem(gtk.STOCK_UNDO, None)
-        key, mod = gtk.accelerator_parse("<Ctrl>Z")
-        self.undo_menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        self.undo_menu_item.connect("activate", activate)
-        self.undo_menu_item.connect("select", select)
-        self.undo_menu_item.connect("deselect", deselect)
+        self.undo_menu_item = self._create_menu_item(
+            lambda item: self.undo_action()
+            , "Undo the last action"
+            , image=gtk.STOCK_UNDO
+            , accelerator="<Ctrl>Z"
+            , accel_group=accel_group)
         self.undo_menu_item.set_sensitive(False)
         menu.append(self.undo_menu_item)
         
-        activate = lambda item: self.redo_action()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Redo the last undone action")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        self.redo_menu_item = gtk.ImageMenuItem(gtk.STOCK_REDO, None)
-        key, mod = gtk.accelerator_parse("<Shift><Ctrl>Z")
-        self.redo_menu_item.add_accelerator("activate", accel_group, key, mod, gtk.ACCEL_VISIBLE)
-        self.redo_menu_item.connect("activate", activate)
-        self.redo_menu_item.connect("select", select)
-        self.redo_menu_item.connect("deselect", deselect)
+        self.redo_menu_item = self._create_menu_item(
+            lambda item: self.redo_action()
+            , "Redo the last undone action"
+            , image=gtk.STOCK_REDO
+            , accelerator="<Shift><Ctrl>Z"
+            , accel_group=accel_group)
         self.redo_menu_item.set_sensitive(False)
         menu.append(self.redo_menu_item)
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_puzzle_menu_item(lambda item: self.edit_clues()
+        menu.append(self._create_menu_item(
+            lambda item: self.edit_clues()
             , "Edit clues"
-            , "Edit _clues")
+            , title="Edit _clues"
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.shift_grid_up)
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_up)
             , "Move the content of the grid up by one square"
-            , "Move content _up")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.shift_grid_down)
+            , title="Move content _up"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_down)
             , "Move the content of the grid down by one square"
-            , "Move content _down")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.shift_grid_left)
+            , title="Move content _down"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_left)
             , "Move the content of the grid left by one square"
-            , "Move content _left")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.shift_grid_right)
+            , title="Move content _left"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_right)
             , "Move the content of the grid right by one square"
-            , "Move content _right")
+            , title="Move content _right"
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_puzzle_menu_item(lambda item: self.resize_grid()
+        menu.append(self._create_menu_item(
+            lambda item: self.resize_grid()
             , "Change the size of the grid"
-            , "_Resize grid")
+            , title="_Resize grid"
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_selection_menu_item(transform.insert_row_above
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_row_above)
             , "Insert an empty row above this cell"
-            , "Insert row (above)")
-        create_selection_menu_item(transform.insert_row_below
+            , title="Insert row (above)"
+            , is_selection_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_row_below)
             , "Insert an empty row below this cell"
-            , "Insert row (below)")
-        create_selection_menu_item(transform.insert_column_left
+            , title="Insert row (below)"
+            , is_selection_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_column_left)
             , "Insert an empty column to the left of this cell"
-            , "Insert column (left)")
-        create_selection_menu_item(transform.insert_column_right
+            , title="Insert column (left)"
+            , is_selection_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_column_right)
             , "Insert an empty column to the right of this cell"
-            , "Insert column (right)")
+            , title="Insert column (right)"
+            , is_selection_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_selection_menu_item(transform.remove_row
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.remove_row)
             , "Remove the row containing this cell"
-            , "Remove row"
-            , lambda puzzle: puzzle.grid.height > 3)
-        create_selection_menu_item(transform.remove_column
+            , title="Remove row"
+            , is_selection_sensitive=True
+            , condition=lambda puzzle: puzzle.grid.height > 3))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.remove_column)
             , "Remove the column containing this cell"
-            , "Remove column"
-            , lambda puzzle: puzzle.grid.width > 3)
+            , title="Remove column"
+            , is_selection_sensitive=True
+            , condition=lambda puzzle: puzzle.grid.width > 3))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.horizontal_flip)
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.horizontal_flip)
             , "Flip the content of the grid horizontally and clear the clues"
-            , "Flip _horizontally")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.vertical_flip)
+            , title="Flip _horizontally"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.vertical_flip)
             , "Flip the content of the grid vertically and clear the clues"
-            , "Flip _vertically")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.diagonal_flip)
+            , title="Flip _vertically"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.diagonal_flip)
             , "Flip the content of the grid diagonally"
-            , "Flip _diagonally")
+            , title="Flip _diagonally"
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.clear_all)
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_all)
             , "Clear the blocks, the letters and the clues of the puzzle"
-            , "Clear _all")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.clear_chars)
+            , title="Clear _all"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_chars)
             , "Clear the letters and the clues of the puzzle"
-            , "Clear _letters")
-        create_puzzle_menu_item(lambda item: self.transform_grid(transform.clear_clues)
+            , title="Clear _letters"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_clues)
             , "Clear the clues of the puzzle"
-            , "Clear clu_es")
+            , title="Clear clu_es"
+            , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
