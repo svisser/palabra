@@ -1179,15 +1179,10 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: self.view_preferences()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Configure the application")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES, None)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
+        menu.append(self._create_menu_item(
+            lambda item: self.view_preferences()
+            , "Configure the application"
+            , image=gtk.STOCK_PREFERENCES))
                 
         edit_menu = gtk.MenuItem("_Edit", True)
         edit_menu.set_submenu(menu)
