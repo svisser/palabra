@@ -523,25 +523,8 @@ class PalabraWindow(gtk.Window):
         options = gtk.VBox(False, 0)
         options_vbox.pack_start(options, True, True, 0)
         
-        edit_clues_button = gtk.Button("Edit clues")
-        edit_clues_button.connect("clicked", lambda button: self.edit_clues())
-        
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup("<b>Clues</b>")
-        options.pack_start(label, False, False, 6)
-        align = gtk.Alignment(0, 0)
-        align.set_padding(0, 0, 12, 0)
-        align.add(edit_clues_button)
-        options.pack_start(align, False, False, 0)
-        
-        scrolled_options = gtk.ScrolledWindow(None, None)
-        scrolled_options.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        scrolled_options.add_with_viewport(options_hbox)
-        
         main = gtk.HBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
-        main.pack_start(scrolled_options, False, False, 0)
         
         all_vbox = gtk.VBox(False, 0)
         all_vbox.pack_start(main, True, True, 0)
@@ -835,6 +818,17 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item.show()
         toolbar.insert(self.redo_tool_item, -1)
         self.redo_tool_item.set_sensitive(False)
+        
+        toolbar.insert(gtk.SeparatorToolItem(), -1)
+        
+        item = gtk.ToolButton()
+        item.set_stock_id(gtk.STOCK_EDIT)
+        item.set_label("Edit clues")
+        item.connect("clicked", lambda item: self.edit_clues())
+        item.show()
+        item.set_sensitive(False)
+        toolbar.insert(item, -1)
+        self.puzzle_toggle_items += [item]
         
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         
