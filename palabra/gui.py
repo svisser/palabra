@@ -1288,6 +1288,22 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
+        menu.append(gtk.SeparatorMenuItem())
+        
+        activate = lambda item: self.transform_grid(transform.diagonal_flip)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Flip the content of the grid diagonally")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.MenuItem("Flip _diagonally", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        item.set_sensitive(False)
+        menu.append(item)
+        self.puzzle_toggle_items += [item]
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
         activate = lambda item: self.transform_grid(transform.clear_all)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , "Clear the blocks, the letters and the clues of the puzzle")

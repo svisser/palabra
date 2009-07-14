@@ -434,6 +434,15 @@ class Grid:
                 self.data[self.height - 1 - y][x] = first
         self.clear_clues()
         
+    def diagonal_flip(self):
+        """Flip the content of the grid diagonally."""
+        for x in xrange(self.width):
+            for y in xrange(x, self.height):
+                first = self.data[y][x]
+                second = self.data[x][y]
+                self.data[y][x] = second
+                self.data[x][y] = first
+        
     def clear(self):
         """Clear the content of the grid."""
         self.initialize(self.width, self.height)

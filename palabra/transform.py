@@ -143,3 +143,8 @@ def vertical_flip(puzzle):
     """Flip the grid vertically and return an Action."""
     transform = lambda puzzle: puzzle.grid.vertical_flip()
     return _full_transform(puzzle, transform)
+    
+def diagonal_flip(puzzle):
+    """Flip the grid diagonally and return and Action."""
+    transform = lambda puzzle: puzzle.grid.diagonal_flip()
+    return _full_transform(puzzle, transform)
