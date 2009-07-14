@@ -1259,15 +1259,10 @@ class PalabraWindow(gtk.Window):
     def create_help_menu(self):
         menu = gtk.Menu()
         
-        activate = self.on_help_about_activate
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , "About this application")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.ImageMenuItem(gtk.STOCK_ABOUT, None)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
+        menu.append(self._create_menu_item(
+            self.on_help_about_activate
+            , "About this application"
+            , image=gtk.STOCK_ABOUT))
         
         help_menu = gtk.MenuItem("_Help", True)
         help_menu.set_submenu(menu)
