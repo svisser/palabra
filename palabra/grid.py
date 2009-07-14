@@ -414,6 +414,26 @@ class Grid:
         """
         self.data = map(lambda x: [self._default_cell()] + x[:-1], self.data)
         
+    def horizontal_flip(self):
+        """Flip the content of the grid horizontally and clear the clues."""
+        for y in xrange(self.height):
+            for x in xrange(self.width / 2):
+                first = self.data[y][x]
+                second = self.data[y][self.width - 1 - x]
+                self.data[y][x] = second
+                self.data[y][self.width - 1 - x] = first
+        self.clear_clues()
+        
+    def vertical_flip(self):
+        """Flip the content of the grid vertically and clear the clues."""
+        for x in xrange(self.width):
+            for y in xrange(self.height / 2):
+                first = self.data[y][x]
+                second = self.data[self.height -1 - y][x]
+                self.data[y][x] = second
+                self.data[self.height - 1 - y][x] = first
+        self.clear_clues()
+        
     def clear(self):
         """Clear the content of the grid."""
         self.initialize(self.width, self.height)

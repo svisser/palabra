@@ -133,3 +133,11 @@ def remove_column(puzzle, x, y):
     """Remove a column and return an Action."""
     transform = lambda puzzle: puzzle.grid.remove_column(x)
     return _full_transform(puzzle, transform)
+    
+def horizontal_flip(puzzle):
+    transform = lambda puzzle: puzzle.grid.horizontal_flip()
+    return _full_transform(puzzle, transform)
+    
+def vertical_flip(puzzle):
+    transform = lambda puzzle: puzzle.grid.vertical_flip()
+    return _full_transform(puzzle, transform)
