@@ -24,9 +24,11 @@ import constants
 
 class Grid:
     def __init__(self, width, height):
+        """Construct a grid with the given dimensions."""
         self.initialize(width, height)
         
     def initialize(self, width, height):
+        """Reset the grid to the given dimensions with all empty cells."""
         self.width = width
         self.height = height
         self.data = [[self._default_cell() for x in range(width)] for y in range(height)]
@@ -39,6 +41,7 @@ class Grid:
         return cell
 
     def set_data(self, width, height, chars, blocks):
+        """Set the grid's data to the given data."""
         self.initialize(width, height)
         
         for x in range(width):
@@ -47,6 +50,7 @@ class Grid:
                 self.data[y][x]["block"] = blocks[y][x]
 
     def is_start_horizontal_word(self, x, y):
+        """Return True when a horizontal words begins in the cell at (x, y)."""
         if self.is_block(x, y):
             return False
             
@@ -55,6 +59,7 @@ class Grid:
             and not self.is_block(x + 1, y)))
             
     def is_start_vertical_word(self, x, y):
+        """Return True when a vertical word begins in the cell at (x, y)."""
         if self.is_block(x, y):
             return False
             
@@ -63,10 +68,12 @@ class Grid:
             and not self.is_block(x, y + 1)))
             
     def is_start_word(self, x, y):
+        """Return True when a word begins in either direction in the cell (x, y)."""
         return (self.is_start_horizontal_word(x, y) or
             self.is_start_vertical_word(x, y))
             
     def get_start_horizontal_word(self, x, y):
+        """Return the first cell of a horizontal word that contains the cell (x, y)."""
         while x >= 0:
             if self.is_start_horizontal_word(x, y):
                 return x, y
@@ -79,6 +86,7 @@ class Grid:
         return x, y
         
     def get_start_vertical_word(self, x, y):
+        """Return the first cell of a vertical word that contains the cell (x, y)."""
         while y >= 0:
             if self.is_start_vertical_word(x, y):
                 return x, y
@@ -91,19 +99,27 @@ class Grid:
         return x, y
         
     def get_check_count(self, x, y):
+        """
+        Return the number of words that contain the cell (x, y).
+        
+        Return values:
+        -1 : A block
+        0 : An isolated cell: no words contain this cell
+        1 : One word contains this cell
+        2 : Two words contain this cell
+        """
         if self.is_block(x, y):
             return -1
             
         check_count = 0
         if self.is_available(x, y + 1) or self.is_available(x, y - 1):
             check_count += 1
-            
         if self.is_available(x + 1, y) or self.is_available(x - 1, y):
             check_count += 1
-            
         return check_count
 
     def determine_status(self, full=False):
+        """Return a dictionary with the grid's properties."""
         size = self.width * self.height
         
         status = {}
@@ -194,6 +210,7 @@ class Grid:
             ])
             
     def horizontal_words(self):
+        """Iterate over the horizontal words in the grid."""
         n = 0
         for y in range(self.height):
             for x in range(self.width):
@@ -204,6 +221,7 @@ class Grid:
                     yield n, x, y
                     
     def vertical_words(self):
+        """Iterate over the vertical words in the grid."""
         n = 0
         for y in range(self.height):
             for x in range(self.width):
@@ -214,6 +232,7 @@ class Grid:
                     yield n, x, y
                     
     def horizontal_clues(self):
+        """Iterate over the horizontal clues of the grid."""
         for n, x, y in self.horizontal_words():
             try:
                 yield n, x, y, self.cell(x, y)["clues"]["across"]
@@ -221,6 +240,7 @@ class Grid:
                 yield n, x, y, {}
                 
     def vertical_clues(self):
+        """Iterate over the vertical clues of the grid."""
         for n, x, y in self.vertical_words():
             try:
                 yield n, x, y, self.cell(x, y)["clues"]["down"]
@@ -228,6 +248,7 @@ class Grid:
                 yield n, x, y, {}
                     
     def words(self):
+        """Iterate over the words of the grid."""
         n = 0
         for y in range(self.height):
             for x in range(self.width):
@@ -236,6 +257,7 @@ class Grid:
                     yield n, x, y
                     
     def gather_word(self, x, y, direction, empty_char="_"):
+        """Return the word starting at (x, y) in the given direction."""
         word = ""
         if direction == "across":
             while x < self.width and not self.is_block(x, y):
@@ -256,6 +278,7 @@ class Grid:
         return word
         
     def word_length(self, x, y, direction):
+        """Return the length of the word starting at (x, y) in the given direction."""
         length = 0
         if direction == "across":
             while x < self.width and not self.is_block(x, y):
@@ -268,6 +291,7 @@ class Grid:
         return length
             
     def count_blocks(self):
+        """Return the number of blocks in the grid."""
         total = 0
         for x in range(self.width):
             for y in range(self.height):
@@ -276,6 +300,7 @@ class Grid:
         return total
         
     def count_words(self):
+        """Return the number of words in the grid."""
         total = 0
         for x in range(self.width):
             for y in range(self.height):
@@ -286,6 +311,7 @@ class Grid:
         return total
             
     def mean_word_length(self):
+        """Return the mean length of the words in the grid."""
         word_count = self.count_words()
         if word_count == 0:
             return 0
@@ -301,6 +327,12 @@ class Grid:
         return float(char_count) / float(word_count)
             
     def resize(self, width, height):
+        """
+        Resize the grid to the given dimensions.
+        
+        Content of the grid within these boundaries will be preserved.
+        Content of the grid outside these boundaries will be lost.
+        """
         ndata = [[self._default_cell() for x in range(width)] for y in range(height)]
         
         for x in range(width):
@@ -319,6 +351,7 @@ class Grid:
         self.data[y][x] = cell
         
     def insert_row(self, y, insert_above=True):
+        """Insert a row above or below the row at vertical coordinate y."""
         self.resize(self.width, self.height + 1)
         row = [[self._default_cell() for x in range(self.width)]]
         if insert_above:
@@ -327,38 +360,62 @@ class Grid:
             self.data = self.data[:y + 1] + row + self.data[y + 1:]
             
     def insert_column(self, x, insert_left=True):
+        """Insert a column to the left or right of the horizontal coordinate x."""
         self.resize(self.width + 1, self.height)
         if insert_left:
-            self.data = map(lambda row: row[:x] + [self._default_cell()] + row[x:], self.data)
+            f = lambda row: row[:x] + [self._default_cell()] + row[x:]
         else:
-            self.data = map(lambda row: row[:x + 1] + [self._default_cell()] + row[x + 1:], self.data)
+            f = lambda row: row[:x + 1] + [self._default_cell()] + row[x + 1:]
+        self.data = map(f, self.data)
             
     def remove_column(self, x):
+        """Remove the column at horizontal coordinate x."""
         self.data = map(lambda row: row[:x] + row[x + 1:], self.data)
         self.width -= 1
             
     def remove_row(self, y):
+        """Remove the row at vertical coordinate y."""
         self.data = self.data[:y] + self.data[y + 1:]
         self.height -= 1
         
-    def move_cell(self, x, y, delta):
-        self.data[y + delta[1]][x + delta[0]] = self.data[y][x]
-        if delta[0] != 0 or delta[1] != 0:
-            self.data[y][x] = self._default_cell()
-        
     def shift_up(self):
+        """
+        Move the content of the grid up by one cell.
+        
+        The content of the top row will be lost.
+        An empty row will be inserted at the bottom.
+        """
         self.data = self.data[1:] + [[self._default_cell() for x in range(self.width)]]
         
     def shift_down(self):
+        """
+        Move the content of the grid down by one cell.
+        
+        The content of the bottom row will be lost.
+        An empty row will be inserted at the top.
+        """
         self.data = [[self._default_cell() for x in range(self.width)]] + self.data[:-1]
         
     def shift_left(self):
+        """
+        Move the content of the grid left by one cell.
+        
+        The content of the left column will be lost.
+        An empty column will be inserted at the right.
+        """
         self.data = map(lambda x: x[1:] + [self._default_cell()], self.data)
 
     def shift_right(self):
+        """
+        Move the content of the grid right by one cell.
+        
+        The content of the right column will be lost.
+        An empty column will be inserted at the left.
+        """
         self.data = map(lambda x: [self._default_cell()] + x[:-1], self.data)
         
     def clear(self):
+        """Clear the content of the grid."""
         self.initialize(self.width, self.height)
                 
     def clear_chars(self):

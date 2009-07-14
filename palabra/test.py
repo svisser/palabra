@@ -246,30 +246,6 @@ class GridTest(unittest.TestCase):
         for i in [3, 5, 7]:
             self.assertEqual(self.grid.get_char(i, i), "")
             
-    def testMoveCell(self):
-        self.grid.set_block(5, 5, True)
-        self.grid.set_char(3, 3, "Q")
-        
-        deltas = [(x,y) for x in [-1, 0, 1] for y in [-1, 0, 1]]
-        for delta in deltas:
-            self.grid.move_cell(5, 5, delta)
-            if delta != (0,0):
-                self.assertEqual(self.grid.is_block(5, 5), False)
-            self.assertEqual(self.grid.is_block(5 + delta[0], 5 + delta[1]), True)
-            
-            # reset
-            self.grid.set_block(5 + delta[0], 5 + delta[1], False)
-            self.grid.set_block(5, 5, True)
-            
-            self.grid.move_cell(3, 3, delta)
-            if delta != (0,0):
-                self.assertEqual(self.grid.get_char(3, 3), "")
-            self.assertEqual(self.grid.get_char(3 + delta[0], 3 + delta[1]), "Q")
-            
-            # reset
-            self.grid.set_char(3 + delta[0], 3 + delta[1], "")
-            self.grid.set_char(3, 3, "Q")
-            
     def testShiftGridUpDown(self):
         for i in range(self.grid.width):
             self.grid.set_block(i, 0, True)

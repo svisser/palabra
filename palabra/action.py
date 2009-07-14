@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from grid import (
-    Grid,
-)
+from grid import Grid
 import preferences
 
 class Action():
@@ -160,6 +158,7 @@ class ActionStack:
             self.redo_stack = self.redo_stack[-max_size:]
             
     def clear(self):
+        """Remove all actions from the stacks."""
         self.undo_stack = []
         self.redo_stack = []
         
