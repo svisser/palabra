@@ -22,13 +22,9 @@ from lxml import etree
 
 import constants
 import grid
-from grid import (
-    Grid,
-    GridView,
-)
-from puzzle import (
-    Puzzle,
-)
+from grid import Grid
+from puzzle import Puzzle
+from view import GridView
 
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])

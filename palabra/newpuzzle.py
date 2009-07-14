@@ -19,15 +19,10 @@ import gtk
 
 import constants
 import grid
-from grid import (
-    Grid,
-    GridView,
-)
-from files import (
-    import_template,
-    import_templates,
-)
+from grid import Grid
+from files import import_template, import_templates
 import preferences
+from view import GridView
 
 class SizeComponent(gtk.VBox):
     def __init__(self, callback=None):

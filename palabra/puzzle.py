@@ -18,10 +18,8 @@
 import gtk
 
 import action
-from grid import (
-    Grid,
-    GridView,
-)
+from grid import Grid
+from view import GridView
 
 class Puzzle:
     def __init__(self, grid):
