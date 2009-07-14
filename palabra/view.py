@@ -22,6 +22,21 @@ import pangocairo
 
 import constants
 
+SETTINGS_EDITOR = {
+    "has_padding": True
+    , "show_chars": True
+    , "show_numbers": False
+}
+SETTINGS_EMPTY = {
+    "has_padding": False
+    , "show_chars": False
+    , "show_numbers": True
+}
+SETTINGS_SOLUTION = {
+    "has_padding": False
+    , "show_chars": True
+    , "show_numbers": True
+}
 class GridView:
     def __init__(self, grid):
         self.grid = grid
@@ -137,24 +152,15 @@ class GridView:
             drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
         
     def update_view(self, context, mode=None):
-        if mode is None:
-            mode = constants.VIEW_MODE_EDITOR
-            
-        settings = {}
+        settings = SETTINGS_EDITOR
         if mode == constants.VIEW_MODE_EDITOR:
-            settings["padding_around_puzzle"] = True
-            settings["show_chars"] = True
-            settings["show_numbers"] = False
+            settings = SETTINGS_EDITOR
         elif mode == constants.VIEW_MODE_EMPTY:
-            settings["padding_around_puzzle"] = False
-            settings["show_chars"] = False
-            settings["show_numbers"] = True
+            settings = SETTINGS_EMPTY
         elif mode == constants.VIEW_MODE_SOLUTION:
-            settings["padding_around_puzzle"] = False
-            settings["show_chars"] = True
-            settings["show_numbers"] = True
+            settings = SETTINGS_SOLUTION
 
-        if settings["padding_around_puzzle"]:
+        if settings["has_padding"]:
             context.translate(self.margin_x, self.margin_y)
         
         # excluding borders
@@ -203,7 +209,7 @@ class GridView:
         if settings["show_numbers"]:
             self.draw_numbers(context)
         
-        if settings["padding_around_puzzle"]:
+        if settings["has_padding"]:
             context.translate(-self.margin_x, -self.margin_y)
 
     def draw_chars(self, context):
@@ -230,11 +236,6 @@ class GridView:
             (fheight / 2)
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
-        #font = pango.FontDescription()
-        #font.set_family("Sans")
-        #font.set_absolute_size(12 * pango.SCALE)
-        #layout.set_font_description(font)
-        #layout.set_markup('''<span>%s</span>''' % c)
         
         layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 12", c))
         context.save()
@@ -254,8 +255,8 @@ class GridView:
                     self.draw_number(context, x, y, counter, fheight, fdescent)
 
     def draw_number(self, context, x, y, number, fheight, fdescent):
-        draw_x = self.line_width + x * (self.tile_size + self.line_width) + 1 #+ fdescent / 2 - 1
-        draw_y = self.line_width + y * (self.tile_size + self.line_width) #+ fheight / 2 - 1
+        draw_x = self.line_width + x * (self.tile_size + self.line_width) + 1
+        draw_y = self.line_width + y * (self.tile_size + self.line_width)
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
         layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 7", str(number)))
