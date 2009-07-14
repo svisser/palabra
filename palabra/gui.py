@@ -523,24 +523,6 @@ class PalabraWindow(gtk.Window):
         options = gtk.VBox(False, 0)
         options_vbox.pack_start(options, True, True, 0)
         
-        combo_symmetry = gtk.combo_box_new_text()
-        combo_symmetry.append_text("None")
-        combo_symmetry.append_text("Horizontal axis")
-        combo_symmetry.append_text("Vertical axis")
-        combo_symmetry.append_text("Both axes")
-        combo_symmetry.append_text("Point symmetry")
-        combo_symmetry.connect("changed", self.on_combo_symmetry_changed)
-        combo_symmetry.set_active(4)
-        
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup("<b>Symmetry mode</b>")
-        options.pack_start(label, False, False, 6)
-        align = gtk.Alignment(0, 0)
-        align.set_padding(0, 0, 12, 0)
-        align.add(combo_symmetry)
-        options.pack_start(align, False, False, 0)
-        
         edit_clues_button = gtk.Button("Edit clues")
         edit_clues_button.connect("clicked", lambda button: self.edit_clues())
         
@@ -565,22 +547,6 @@ class PalabraWindow(gtk.Window):
         all_vbox.pack_start(main, True, True, 0)
         self.panel.pack_start(all_vbox, True, True, 0)
         self.panel.show_all()
-        
-    def on_combo_symmetry_changed(self, combo):
-        options = []
-        
-        if combo.get_active() == 0:
-            pass
-        elif combo.get_active() == 1:
-            options.append("keep_horizontal_symmetry")
-        elif combo.get_active() == 2:
-            options.append("keep_vertical_symmetry")
-        elif combo.get_active() == 3:
-            options.append("keep_horizontal_symmetry")
-            options.append("keep_vertical_symmetry")
-        elif combo.get_active() == 4:
-            options.append("keep_point_symmetry")
-        self.tool.set_symmetry(options)
         
     def get_selection(self):
         try:
@@ -1064,6 +1030,13 @@ class PalabraWindow(gtk.Window):
             , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
+
+        item = self.create_edit_symmetry_menu()
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
+        menu.append(item)
+        
+        menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.shift_grid_up)
@@ -1178,6 +1151,74 @@ class PalabraWindow(gtk.Window):
         edit_menu = gtk.MenuItem("_Edit", True)
         edit_menu.set_submenu(menu)
         return edit_menu
+        
+    def create_edit_symmetry_menu(self):
+        menu = gtk.Menu()
+        
+        def set_symmetry(options):
+            try:
+                self.tool.set_symmetry(options)
+            except AttributeError:
+                pass
+        
+        activate = lambda item: set_symmetry([])
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Use no symmetry rules when modifying the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.RadioMenuItem(None, "_None", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        
+        horizontal = ["keep_horizontal_symmetry"]
+        activate = lambda item: set_symmetry(horizontal)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Use horizontal symmetry when modifying the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.RadioMenuItem(item, "_Horizontal axis", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        
+        vertical = ["keep_vertical_symmetry"]
+        activate = lambda item: set_symmetry(vertical)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Use vertical symmetry when modifying the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.RadioMenuItem(item, "_Vertical axis", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        
+        both = ["keep_horizontal_symmetry", "keep_vertical_symmetry"]
+        activate = lambda item: set_symmetry(both)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Use horizontal and vertical symmetry when modifying the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.RadioMenuItem(item, "_Horizontal and vertical", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+
+        point = ["keep_point_symmetry"]
+        activate = lambda item: set_symmetry(point)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Use point symmetry when modifying the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.RadioMenuItem(item, "_Point symmetry", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        item.set_active(True)
+        menu.append(item)
+        
+        symmetry_menu = gtk.MenuItem("_Symmetry", True)
+        symmetry_menu.set_submenu(menu)
+        return symmetry_menu
         
     def perform_selection_based_transform(self, transform):
         selection = self.get_selection()
