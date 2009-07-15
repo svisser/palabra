@@ -878,7 +878,7 @@ class PalabraWindow(gtk.Window):
         
         activate = lambda item: toggle_numbers(item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Show the word numbers in the editor")
+            , "Show or hide the word numbers in the editor")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.CheckMenuItem("Show _word numbers", True)
         item.connect("activate", activate)
