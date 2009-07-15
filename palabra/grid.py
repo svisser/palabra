@@ -435,6 +435,20 @@ class Grid:
                 second = self.data[x][y]
                 self.data[y][x] = second
                 self.data[x][y] = first
+                
+                # also flip the clues
+                other = {"across": "down", "down": "across"}
+                for p, q in [(x, y), (y, x)]:
+                    for dir1 in ["across", "down"]:
+                        try:
+                            clue1 = self.data[p][q]["clues"][dir1]
+                            dir2 = other[dir1]
+                            if dir2 in self.data[p][q]["clues"]:
+                                clue2 = self.data[p][q]["clues"][dir2]
+                                self.data[p][q]["clues"][dir1] = clue2
+                            self.data[p][q]["clues"][dir2] = clue1
+                        except KeyError:
+                            pass
         
     def clear(self):
         """Clear the content of the grid."""
