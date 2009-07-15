@@ -22,10 +22,15 @@ import pangocairo
 
 import constants
 
+SETTINGS_PREVIEW = {
+    "has_padding": True
+    , "show_chars": False
+    , "show_numbers": False
+}
 SETTINGS_EDITOR = {
     "has_padding": True
     , "show_chars": True
-    , "show_numbers": False
+    , "show_numbers": True
 }
 SETTINGS_EMPTY = {
     "has_padding": False
@@ -157,6 +162,8 @@ class GridView:
             settings = SETTINGS_EDITOR
         elif mode == constants.VIEW_MODE_EMPTY:
             settings = SETTINGS_EMPTY
+        elif mode == constants.VIEW_MODE_PREVIEW:
+            settings = SETTINGS_PREVIEW
         elif mode == constants.VIEW_MODE_SOLUTION:
             settings = SETTINGS_SOLUTION
 

@@ -39,4 +39,5 @@ ORDERING_FREQUENCY = 1
 # modes for viewing a grid
 VIEW_MODE_EDITOR = "editor"
 VIEW_MODE_EMPTY = "empty"
+VIEW_MODE_PREVIEW = "preview"
 VIEW_MODE_SOLUTION = "solution"

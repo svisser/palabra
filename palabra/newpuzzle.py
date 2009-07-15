@@ -572,7 +572,7 @@ class GridPreview(gtk.VBox):
         if self.view is not None:
             context = drawing_area.window.cairo_create()
             self.view.draw_background(context)
-            self.view.update_view(context)
+            self.view.update_view(context, mode=constants.VIEW_MODE_PREVIEW)
         
 class TemplateWindow(gtk.Dialog):
     def __init__(self, palabra_window, templates):
