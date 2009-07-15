@@ -42,6 +42,8 @@ SETTINGS_SOLUTION = {
     , "show_chars": True
     , "show_numbers": True
 }
+custom_settings = {}
+
 class GridView:
     def __init__(self, grid):
         self.grid = grid
@@ -157,15 +159,16 @@ class GridView:
             drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
         
     def update_view(self, context, mode=None):
-        settings = SETTINGS_EDITOR
+        settings = {}
         if mode == constants.VIEW_MODE_EDITOR:
-            settings = SETTINGS_EDITOR
+            settings.update(SETTINGS_EDITOR)
+            settings.update(user_settings)
         elif mode == constants.VIEW_MODE_EMPTY:
-            settings = SETTINGS_EMPTY
+            settings.update(SETTINGS_EMPTY)
         elif mode == constants.VIEW_MODE_PREVIEW:
-            settings = SETTINGS_PREVIEW
+            settings.update(SETTINGS_PREVIEW)
         elif mode == constants.VIEW_MODE_SOLUTION:
-            settings = SETTINGS_SOLUTION
+            settings.update(SETTINGS_SOLUTION)
 
         if settings["has_padding"]:
             context.translate(self.margin_x, self.margin_y)

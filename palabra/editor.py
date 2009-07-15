@@ -151,7 +151,7 @@ class Editor(gtk.HBox):
                 , self.current_x, self.current_y \
                 , primary_active_red, primary_active_green, primary_active_blue)
         
-        self.puzzle.view.update_view(context)
+        self.puzzle.view.update_view(context, mode=constants.VIEW_MODE_EDITOR)
         
         return True
         
