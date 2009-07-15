@@ -30,7 +30,7 @@ SETTINGS_PREVIEW = {
 SETTINGS_EDITOR = {
     "has_padding": True
     , "show_chars": True
-    , "show_numbers": True
+    , "show_numbers": False
 }
 SETTINGS_EMPTY = {
     "has_padding": False
