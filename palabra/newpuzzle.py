@@ -25,14 +25,10 @@ import preferences
 from view import GridView
 
 class SizeComponent(gtk.VBox):
-    def __init__(self, callback=None):
+    def __init__(self, title=None, callback=None):
         gtk.VBox.__init__(self)
         
         self.callback = callback
-        
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup("<b>Empty grid</b>")
         
         size_vbox = gtk.VBox(False, 0)
         
@@ -127,7 +123,11 @@ class SizeComponent(gtk.VBox):
         align.set_padding(0, 0, 12, 0)
         align.add(size_vbox)
         
-        self.pack_start(label, False, False, 6)
+        if title is not None:
+            label = gtk.Label()
+            label.set_alignment(0, 0)
+            label.set_markup(title)
+            self.pack_start(label, False, False, 6)
         self.pack_start(align, False, False, 0)
         
     def on_spinner_changed(self, widget, data=None):
@@ -442,7 +442,9 @@ class NewWindow(gtk.Dialog):
         
         self.vbox.pack_start(hbox, True, True, 0)
         
-        self.size_component = SizeComponent(self.size_callback)
+        self.size_component = SizeComponent(
+            title="<b>Empty grid</b>"
+            , callback=self.size_callback)
         
         self.template_label = gtk.Label()
         self.template_label.set_alignment(0, 0)
