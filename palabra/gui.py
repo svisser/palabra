@@ -55,6 +55,7 @@ from puzzle import (
     PuzzleManager,
 )
 import transform
+import view
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -865,6 +866,27 @@ class PalabraWindow(gtk.Window):
         item.connect("select", select)
         item.connect("deselect", deselect)
         menu.append(item)
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        def toggle_numbers(status):
+            view.custom_settings["show_numbers"] = status
+            try:
+                self.panel.queue_draw()
+            except AttributeError:
+                pass
+        
+        activate = lambda item: toggle_numbers(item.active)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Show the word numbers in the editor")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.CheckMenuItem("Show _word numbers", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        item.set_active(True)
+        toggle_numbers(True)
         
         view_menu = gtk.MenuItem("_View", True)
         view_menu.set_submenu(menu)

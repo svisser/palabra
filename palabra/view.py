@@ -162,7 +162,7 @@ class GridView:
         settings = {}
         if mode == constants.VIEW_MODE_EDITOR:
             settings.update(SETTINGS_EDITOR)
-            settings.update(user_settings)
+            settings.update(custom_settings)
         elif mode == constants.VIEW_MODE_EMPTY:
             settings.update(SETTINGS_EMPTY)
         elif mode == constants.VIEW_MODE_PREVIEW:
