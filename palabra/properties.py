@@ -308,9 +308,18 @@ class PropertiesWindow(gtk.Dialog):
     @staticmethod
     def determine_words_message(status, puzzle):
         word_count_to_str = lambda (length, count): ''.join([str(length), ": ", str(count), "\n"])
+        
+        a = [word for (n, x, y, word, clue) in puzzle.grid.gather_words("across")]
+        d = [word for (n, x, y, word, clue) in puzzle.grid.gather_words("down")]
+        words = (a + d)
+        words.sort()
+        words.sort(key=len)
 
         message = ''.join(
             ["Word counts:\n"
             ,''.join(map(word_count_to_str, status["word_counts_total"]))
+            ,"\n"
+            ,"Words:\n"
+            ,''.join(map(lambda word: ''.join([word, "\n"]), words))
             ])
         return message

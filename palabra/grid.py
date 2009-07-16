@@ -248,7 +248,7 @@ class Grid:
             for x in xrange(self.width):
                 yield x, y
                     
-    def gather_word(self, x, y, direction, empty_char="_"):
+    def gather_word(self, x, y, direction, empty_char="?"):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
         for p, q in self.in_direction(direction, x, y):
