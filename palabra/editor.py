@@ -153,8 +153,10 @@ class Editor(gtk.HBox):
         if event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_valid(x, y):
                 self.set_selection(x, y)
+            if (prev_x, prev_y) == (x, y):
+                self.change_typing_direction()
         
-        if (event.state & gtk.gdk.SHIFT_MASK) or event.type == gtk.gdk._2BUTTON_PRESS:
+        if (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_valid(x, y):
                 if event.button == 1:
                     self.transform_blocks(x, y, True)
@@ -165,6 +167,12 @@ class Editor(gtk.HBox):
             self.puzzle.view.refresh_horizontal_line(drawing_area, prev_y)
         elif self.settings["direction"] == "vertical":
             self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
+            
+        if (event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK)
+            and prev_x == x
+            and prev_y == y
+            and event.type == gtk.gdk.BUTTON_PRESS):
+            self.change_typing_direction()
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
