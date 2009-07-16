@@ -22,6 +22,14 @@ import pangocairo
 
 import constants
 
+COLORS = {
+    "background": (0, 0, 0)
+    , "border": (0, 0, 0)
+    , "block": (0, 0, 0)
+    , "line": (0, 0, 0)
+    , "char": (0, 0, 0)
+    , "number": (0, 0, 0)
+}
 SETTINGS_PREVIEW = {
     "has_padding": True
     , "show_chars": False
@@ -177,15 +185,9 @@ class GridView:
         total_width = self.grid.width * (self.tile_size + self.line_width)
         total_height = self.grid.height * (self.tile_size + self.line_width)
         
-        context.set_source_rgb(0, 0, 0)
-        
-        # border
-        context.set_line_width(self.line_width)
-        context.rectangle(0.5 * self.line_width, 0.5 * self.line_width, \
-            total_width, total_height)
-        context.stroke()
-        
         # blocks
+        r, g, b = COLORS["block"]
+        context.set_source_rgb(r, g, b)
         for x in range(self.grid.width):
             for y in range(self.grid.height):
                 if self.grid.is_block(x, y):
@@ -197,6 +199,8 @@ class GridView:
         context.fill()
         
         # lines
+        r, g, b = COLORS["line"]
+        context.set_source_rgb(r, g, b)
         context.set_line_width(self.line_width)
         context.move_to(self.tile_size + 1.5 * self.line_width, self.line_width)
         for i in range(self.grid.width - 1):
@@ -213,16 +217,27 @@ class GridView:
             context.rel_move_to(-line_length, self.tile_size + self.line_width)
         context.stroke()
         
+        # border
+        r, g, b = COLORS["border"]
+        context.set_source_rgb(r, g, b)
+        context.set_line_width(self.line_width)
+        context.rectangle(0.5 * self.line_width, 0.5 * self.line_width, \
+            total_width, total_height)
+        context.stroke()
+        
         if settings["show_chars"]:
             self.draw_chars(context)
         
         if settings["show_numbers"]:
             self.draw_numbers(context)
-        
+
         if settings["has_padding"]:
             context.translate(-self.margin_x, -self.margin_y)
 
     def draw_chars(self, context):
+        r, g, b = COLORS["char"]
+        context.set_source_rgb(r, g, b)
+        
         fascent, fdescent, fheight, fxadvance, fyadvance = context.font_extents()
         fe = context.font_extents()
         context.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
@@ -254,6 +269,9 @@ class GridView:
         context.restore()
     
     def draw_numbers(self, context):
+        r, g, b = COLORS["number"]
+        context.set_source_rgb(r, g, b)
+        
         fascent, fdescent, fheight, fxadvance, fyadvance = context.font_extents()
         context.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         
@@ -290,6 +308,9 @@ class GridView:
         context.translate(-self.margin_x, -self.margin_y)
     
     def draw_background(self, context):
+        r, g, b = COLORS["background"]
+        context.set_source_rgb(r, g, b)
+    
         context.translate(self.margin_x, self.margin_y)
         
         context.set_source_rgb(1, 1, 1)
