@@ -251,24 +251,14 @@ class Grid:
     def gather_word(self, x, y, direction, empty_char="_"):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
-        if direction == "across":
-            while x < self.width and not self.is_block(x, y):
-                c = self.get_char(x, y)
-                if c == "":
-                    word += empty_char
-                else:
-                    word += c
-                x += 1
-        elif direction == "down":
-            while y < self.height and not self.is_block(x, y):
-                c = self.get_char(x, y)
-                if c == "":
-                    word += empty_char
-                else:
-                    word += c
-                y += 1
+        for p, q in self.in_direction(direction, x, y):
+            c = self.get_char(p, q)
+            if c == "":
+                word += empty_char
+            else:
+                word += c
         return word
-        
+                
     def gather_words(self, direction):
         """Iterate over the word data in the given direction."""
         if direction == "across":
@@ -287,16 +277,17 @@ class Grid:
         
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""
-        length = 0
-        if direction == "across":
-            while x < self.width and not self.is_block(x, y):
-                length += 1
+        return sum([1 for x, y in self.in_direction(direction, x, y)])
+        
+    def in_direction(self, direction, x, y):
+        """Iterate in the given direction from (x, y) while cells are available."""
+        while self.is_available(x, y):
+            yield x, y
+            
+            if direction == "across":
                 x += 1
-        elif direction == "down":
-            while y < self.height and not self.is_block(x, y):
-                length += 1
+            elif direction == "down":
                 y += 1
-        return length
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
@@ -344,12 +335,6 @@ class Grid:
         self.data = ndata
         self.width = width
         self.height = height
-        
-    def cell(self, x, y):
-        return self.data[y][x]
-    
-    def set_cell(self, x, y, cell):
-        self.data[y][x] = cell
         
     def insert_row(self, y, insert_above=True):
         """Insert a row above or below the row at vertical coordinate y."""
@@ -478,7 +463,7 @@ class Grid:
         
         This function cleans the 'clues' dictionary if needed: if a value
         is empty, the key will be deleted. If no key/value pairs remain,
-        the clue itself for this direction will be deleted.
+        the clue entry for this direction will be deleted.
         """
         clues = self.cell(x, y)["clues"]
         try:
@@ -502,6 +487,12 @@ class Grid:
     def is_available(self, x, y):
         """Return True if the given (x, y) is valid and not a block."""
         return self.is_valid(x, y) and not self.is_block(x, y)
+    
+    def cell(self, x, y):
+        return self.data[y][x]
+    
+    def set_cell(self, x, y, cell):
+        self.data[y][x] = cell
         
     def get_clues(self, x, y):
         return self.data[y][x]["clues"]
