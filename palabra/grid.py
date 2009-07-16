@@ -187,16 +187,6 @@ class Grid:
                 status["clue_count"] += len(self.data[y][x]["clues"])
         
         return status
-        
-    def determine_status_message(self):
-        status = self.determine_status(False)
-        
-        return ''.join(
-            ["Words: ", str(status["word_count"]), ", "
-            ,"Blocks: ", str(status["block_count"]), " ("
-            ,"%.2f" % status["block_percentage"]
-            , "%), Letters: ", str(status["char_count"])
-            ])
             
     def horizontal_words(self):
         """Iterate over the horizontal words in the grid."""
@@ -291,7 +281,7 @@ class Grid:
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
-        return len([(x, y) for x, y in self.cells() if self.is_block(x, y)])
+        return sum([1 for x, y in self.cells() if self.is_block(x, y)])
         
     def count_words(self):
         """Return the number of words in the grid."""

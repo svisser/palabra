@@ -811,8 +811,10 @@ class PalabraWindow(gtk.Window):
             self.set_title("Palabra")
             self.pop_status(constants.STATUS_GRID)
         else:
-            message = puzzle.grid.determine_status_message()
+            status = puzzle.grid.determine_status(False)
+            message = self.determine_status_message(status)
             self.update_status(constants.STATUS_GRID, message)
+            
             selection = self.get_selection()
             if selection is not None:
                 sel_x, sel_y = selection
@@ -830,6 +832,15 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
         self.panel.queue_draw()
+        
+    @staticmethod
+    def determine_status_message(status):
+        return ''.join(
+            ["Words: ", str(status["word_count"]), ", "
+            ,"Blocks: ", str(status["block_count"]), " ("
+            ,"%.2f" % status["block_percentage"]
+            , "%), Letters: ", str(status["char_count"])
+            ])
         
     def create_view_menu(self):
         menu = gtk.Menu()

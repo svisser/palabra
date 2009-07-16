@@ -57,8 +57,6 @@ class Editor(gtk.HBox):
             self.drawing_area.connect("key_press_event", self.on_key_press_event)
         self.key_release_event_id = \
             self.drawing_area.connect("key_release_event", self.on_key_release_event)
-            
-        self.palabra_window.update_status(constants.STATUS_GRID, self.puzzle.grid.determine_status_message())
                 
     def cleanup(self):
         self.drawing_area.unset_flags(gtk.CAN_FOCUS)
