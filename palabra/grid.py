@@ -158,14 +158,13 @@ class Grid:
                 status["word_counts_total"].append((length, count))
                     
             status["char_counts"] = {}
-            for x in range(self.width):
-                for y in range(self.height):
-                    c = self.get_char(x, y)
-                    if c != "":
-                        try:
-                            status["char_counts"][c] += 1
-                        except KeyError:
-                            status["char_counts"][c] = 1
+            for x, y in self.cells():
+                c = self.get_char(x, y)
+                if c != "":
+                    try:
+                        status["char_counts"][c] += 1
+                    except KeyError:
+                        status["char_counts"][c] = 1
                             
             status["char_counts_total"] = []
             for c in map(chr, range(ord('A'), ord('Z') + 1)):
@@ -177,18 +176,16 @@ class Grid:
                             
             status["checked_count"] = 0
             status["unchecked_count"] = 0
-            for y in range(self.height):
-                for x in range(self.width):
-                    check_count = self.get_check_count(x, y)
-                    if 0 <= check_count <= 1:
-                        status["unchecked_count"] += 1
-                    if check_count == 2:
-                        status["checked_count"] += 1
+            for x, y in self.cells():
+                check_count = self.get_check_count(x, y)
+                if 0 <= check_count <= 1:
+                    status["unchecked_count"] += 1
+                if check_count == 2:
+                    status["checked_count"] += 1
                         
             status["clue_count"] = 0
-            for y in range(self.height):
-                for x in range(self.width):
-                    status["clue_count"] += len(self.data[y][x]["clues"])
+            for x, y in self.cells():
+                status["clue_count"] += len(self.data[y][x]["clues"])
         
         return status
         
@@ -205,24 +202,22 @@ class Grid:
     def horizontal_words(self):
         """Iterate over the horizontal words in the grid."""
         n = 0
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.is_start_word(x, y):
-                    n += 1
-                    
-                if self.is_start_horizontal_word(x, y):
-                    yield n, x, y
+        for x, y in self.cells():
+            if self.is_start_word(x, y):
+                n += 1
+                
+            if self.is_start_horizontal_word(x, y):
+                yield n, x, y
                     
     def vertical_words(self):
         """Iterate over the vertical words in the grid."""
         n = 0
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.is_start_word(x, y):
-                    n += 1
-                    
-                if self.is_start_vertical_word(x, y):
-                    yield n, x, y
+        for x, y in self.cells():
+            if self.is_start_word(x, y):
+                n += 1
+                
+            if self.is_start_vertical_word(x, y):
+                yield n, x, y
                     
     def horizontal_clues(self):
         """Iterate over the horizontal clues of the grid."""
@@ -243,11 +238,16 @@ class Grid:
     def words(self):
         """Iterate over the words of the grid."""
         n = 0
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.is_start_word(x, y):
-                    n += 1
-                    yield n, x, y
+        for x, y in self.cells():
+            if self.is_start_word(x, y):
+                n += 1
+                yield n, x, y
+                    
+    def cells(self):
+        """Iterate over the cells of the grid."""
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                yield x, y
                     
     def gather_word(self, x, y, direction, empty_char="_"):
         """Return the word starting at (x, y) in the given direction."""
@@ -302,21 +302,19 @@ class Grid:
     def count_blocks(self):
         """Return the number of blocks in the grid."""
         total = 0
-        for x in range(self.width):
-            for y in range(self.height):
-                if self.is_block(x, y):
-                    total += 1
+        for x, y in self.cells():
+            if self.is_block(x, y):
+                total += 1
         return total
         
     def count_words(self):
         """Return the number of words in the grid."""
         total = 0
-        for x in range(self.width):
-            for y in range(self.height):
-                if self.is_start_horizontal_word(x, y):
-                    total += 1
-                if self.is_start_vertical_word(x, y):
-                    total += 1
+        for x, y in self.cells():
+            if self.is_start_horizontal_word(x, y):
+                total += 1
+            if self.is_start_vertical_word(x, y):
+                total += 1
         return total
             
     def mean_word_length(self):
@@ -326,12 +324,11 @@ class Grid:
             return 0
         
         char_count = 0
-        for x in range(self.width):
-            for y in range(self.height):
-                if self.is_start_horizontal_word(x, y):
-                    char_count += self.word_length(x, y, "across")
-                if self.is_start_vertical_word(x, y):
-                    char_count += self.word_length(x, y, "down")
+        for x, y in self.cells():
+            if self.is_start_horizontal_word(x, y):
+                char_count += self.word_length(x, y, "across")
+            if self.is_start_vertical_word(x, y):
+                char_count += self.word_length(x, y, "down")
         
         return float(char_count) / float(word_count)
             
@@ -445,40 +442,37 @@ class Grid:
         
     def diagonal_flip(self):
         """Flip the content of the grid diagonally."""
-        for x in xrange(self.width):
-            for y in xrange(x, self.height):
-                first = self.data[y][x]
-                second = self.data[x][y]
-                self.data[y][x] = second
-                self.data[x][y] = first
-                
-                # also flip the clues
-                other = {"across": "down", "down": "across"}
-                for p, q in [(x, y), (y, x)]:
-                    for dir1 in ["across", "down"]:
-                        try:
-                            clue1 = self.data[p][q]["clues"][dir1]
-                            dir2 = other[dir1]
-                            if dir2 in self.data[p][q]["clues"]:
-                                clue2 = self.data[p][q]["clues"][dir2]
-                                self.data[p][q]["clues"][dir1] = clue2
-                            self.data[p][q]["clues"][dir2] = clue1
-                        except KeyError:
-                            pass
+        for x, y in self.cells():
+            first = self.data[y][x]
+            second = self.data[x][y]
+            self.data[y][x] = second
+            self.data[x][y] = first
+            
+            # also flip the clues
+            other = {"across": "down", "down": "across"}
+            for p, q in [(x, y), (y, x)]:
+                for dir1 in ["across", "down"]:
+                    try:
+                        clue1 = self.data[p][q]["clues"][dir1]
+                        dir2 = other[dir1]
+                        if dir2 in self.data[p][q]["clues"]:
+                            clue2 = self.data[p][q]["clues"][dir2]
+                            self.data[p][q]["clues"][dir1] = clue2
+                        self.data[p][q]["clues"][dir2] = clue1
+                    except KeyError:
+                        pass
         
     def clear(self):
         """Clear the content of the grid."""
         self.initialize(self.width, self.height)
                 
     def clear_chars(self):
-        for x in range(self.width):
-            for y in range(self.height):
-                self.clear_char(x, y)
+        for x, y in self.cells():
+            self.clear_char(x, y)
                 
     def clear_clues(self):
-        for x in range(self.width):
-            for y in range(self.height):
-                self.cell(x, y)["clues"] = {}
+        for x, y in self.cells():
+            self.cell(x, y)["clues"] = {}
                 
     def store_clue(self, x, y, direction, key, value):
         """

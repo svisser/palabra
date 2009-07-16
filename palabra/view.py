@@ -187,14 +187,13 @@ class GridView:
         # blocks
         r, g, b = COLORS["block"]
         context.set_source_rgb(r, g, b)
-        for x in range(self.grid.width):
-            for y in range(self.grid.height):
-                if self.grid.is_block(x, y):
-                    # -0.5 for coordinates and +1 for size are needed to
-                    # render seamlessly in PDF
-                    draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
-                    draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
-                    context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
+        for x, y in self.grid.cells():
+            if self.grid.is_block(x, y):
+                # -0.5 for coordinates and +1 for size are needed to
+                # render seamlessly in PDF
+                draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
+                draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
+                context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
         context.fill()
         
         # lines
@@ -242,11 +241,10 @@ class GridView:
         context.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         
         fheight = 0
-        for x in range(self.grid.width):
-            for y in range(self.grid.height):
-                c = self.grid.get_char(x, y)
-                if c != '':
-                    self.render_char(context, x, y, c, fheight)
+        for x, y in self.grid.cells():
+            c = self.grid.get_char(x, y)
+            if c != '':
+                self.render_char(context, x, y, c, fheight)
     
     def render_char(self, context, x, y, c, fheight):
         xbearing, ybearing, width, height, xadvance, yadvance = ( \
@@ -274,12 +272,8 @@ class GridView:
         fascent, fdescent, fheight, fxadvance, fyadvance = context.font_extents()
         context.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         
-        counter = 0
-        for y in range(self.grid.height):
-            for x in range(self.grid.width):
-                if self.grid.is_start_word(x, y):
-                    counter += 1
-                    self.render_number(context, x, y, counter, fheight, fdescent)
+        for n, x, y in self.grid.words():
+            self.render_number(context, x, y, n, fheight, fdescent)
 
     def render_number(self, context, x, y, number, fheight, fdescent):
         draw_x = self.line_width + x * (self.tile_size + self.line_width) + 1
