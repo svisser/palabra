@@ -270,6 +270,22 @@ class Grid:
                 y += 1
         return word
         
+    def gather_words(self, direction):
+        """Iterate over the word data in the given direction."""
+        if direction == "across":
+            iter_words = self.horizontal_words()
+        elif direction == "down":
+            iter_words = self.vertical_words()
+            
+        for n, x, y in iter_words:
+            try:
+                clue = self.cell(x, y)["clues"][direction]["text"]
+            except KeyError:
+                clue = ""
+                
+            word = self.gather_word(x, y, direction)
+            yield n, x, y, word, clue
+        
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""
         length = 0

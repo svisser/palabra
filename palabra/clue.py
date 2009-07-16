@@ -46,13 +46,13 @@ class ClueEditor(gtk.Dialog):
             self.update_current_word()
         elif index == 1:
             counter = 0
-            for row in self.gather_words(self.puzzle.grid, "across"):
+            for row in self.puzzle.grid.gather_words("across"):
                 it = self.across_store.get_iter(counter)
                 self.across_store.set(it, 4, row[4])
                 counter += 1
                 
             counter = 0
-            for row in self.gather_words(self.puzzle.grid, "down"):
+            for row in self.puzzle.grid.gather_words("down"):
                 it = self.down_store.get_iter(counter)
                 self.down_store.set(it, 4, row[4])
                 counter += 1
@@ -275,20 +275,3 @@ class ClueEditor(gtk.Dialog):
         x = self.down_store.get_value(it, 1)
         y = self.down_store.get_value(it, 2)
         self._store_property(x, y, "down", "text", new_text.strip())
-        
-    def gather_words(self, grid, direction):
-        if direction == "across":
-            iter_words = grid.horizontal_words()
-        elif direction == "down":
-            iter_words = grid.vertical_words()
-            
-        words = []
-        for n, x, y in iter_words:
-            try:
-                clue = grid.cell(x, y)["clues"][direction]["text"]
-            except KeyError:
-                clue = ""
-                
-            word = grid.gather_word(x, y, direction)
-            words.append([n, x, y, word, clue])
-        return words
