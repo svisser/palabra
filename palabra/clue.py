@@ -184,9 +184,9 @@ class ClueEditor(gtk.Dialog):
         self.across_store = gtk.ListStore(int, int, int, str, str)
         self.down_store = gtk.ListStore(int, int, int, str, str)
         
-        for row in self.gather_words(self.puzzle.grid, "across"):
+        for row in self.puzzle.grid.gather_words("across"):
             self.across_store.append(row)
-        for row in self.gather_words(self.puzzle.grid, "down"):
+        for row in self.puzzle.grid.gather_words("down"):
             self.down_store.append(row)
         
         self.across_tree = gtk.TreeView(self.across_store)
