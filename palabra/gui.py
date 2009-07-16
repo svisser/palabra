@@ -60,7 +60,7 @@ import view
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
-        self.reset_title()
+        self.set_title("Palabra")
         self.set_size_request(800, 600)
         
         self.puzzle_toggle_items = []
@@ -203,9 +203,6 @@ class PalabraWindow(gtk.Window):
                     self.load_puzzle()
             dialog.destroy()
             
-    def reset_title(self):
-        self.set_title("Palabra")
-            
     def update_title(self, path=None):
         title = "Unsaved puzzle - Palabra"
         if path is not None:
@@ -296,9 +293,7 @@ class PalabraWindow(gtk.Window):
     
     def load_puzzle(self):
         self.to_edit_panel()
-
-        for item in self.puzzle_toggle_items:
-            item.set_sensitive(True)
+        self.update_window()
     
     def close_puzzle(self):
         need_to_close, need_to_save = self.check_close_puzzle()
@@ -307,17 +302,10 @@ class PalabraWindow(gtk.Window):
                 self.save_puzzle(False)
             
             self.puzzle_manager.current_puzzle = None
-            
-            self.reset_title()
-            self.to_empty_panel()
-            self.pop_status(constants.STATUS_GRID)
-            
-            for item in self.puzzle_toggle_items:
-                item.set_sensitive(False)
-                
             action.stack.clear()
-            self.update_undo_redo()
-            self.update_selection_based_tools(False)
+            
+            self.to_empty_panel()
+            self.update_window()
 
     def check_close_puzzle(self):
         if not self.puzzle_manager.has_puzzle():
@@ -328,7 +316,7 @@ class PalabraWindow(gtk.Window):
         if action.stack.distance_from_saved_puzzle != 0:
             image = gtk.Image()
             image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
-            dialog = gtk.Dialog("Close puzzle" \
+            dialog = gtk.Dialog("Close puzzle"
                 , self
                 , gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_MODAL
                 , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
@@ -555,7 +543,6 @@ class PalabraWindow(gtk.Window):
     def edit_clues(self):
         editor = ClueEditor(self, self.puzzle_manager.current_puzzle)
         editor.show_all()
-        
         editor.run()
         editor.destroy()
 
@@ -565,15 +552,14 @@ class PalabraWindow(gtk.Window):
         response = window.run()
         if response == gtk.RESPONSE_ACCEPT:
             width, height = window.get_size()
-            if self.puzzle_manager.current_puzzle.grid.width != width or \
-                self.puzzle_manager.current_puzzle.grid.height != height:
+            if (self.puzzle_manager.current_puzzle.grid.width != width or
+                self.puzzle_manager.current_puzzle.grid.height != height):
                 self.transform_grid(transform.resize_grid, width=width, height=height)
         window.destroy()
         
     def view_preferences(self):
         preferences = PreferencesWindow(self)
         preferences.show_all()
-        
         preferences.run()
         preferences.destroy()
         
@@ -584,13 +570,6 @@ class PalabraWindow(gtk.Window):
     def redo_action(self):
         action.stack.redo_action(self.puzzle_manager.current_puzzle)
         self.update_window()
-        
-    def update_undo_redo(self):
-        self.undo_menu_item.set_sensitive(len(action.stack.undo_stack) > 0)
-        self.redo_menu_item.set_sensitive(len(action.stack.redo_stack) > 0)
-        
-        self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
-        self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
     def create_edit_menu(self):
         menu = gtk.Menu()
@@ -821,25 +800,35 @@ class PalabraWindow(gtk.Window):
             sel_x, sel_y = selection
             self.transform_grid(transform, x=sel_x, y=sel_y)
         
-    def update_selection_based_tools(self, status):
-        for item, predicate in self.selection_toggle_items:
-            item.set_sensitive(status and predicate(self.puzzle_manager.current_puzzle))
-        
     def transform_grid(self, transform, **args):
         a = transform(self.puzzle_manager.current_puzzle, **args)
         action.stack.push_action(a)
         self.update_window()
         
     def update_window(self):
-        message = self.puzzle_manager.current_puzzle.grid.determine_status_message()
-        self.update_undo_redo()
-        self.update_status(constants.STATUS_GRID, message)
+        puzzle = self.puzzle_manager.current_puzzle
+        if puzzle is None:
+            self.set_title("Palabra")
+            self.pop_status(constants.STATUS_GRID)
+        else:
+            message = puzzle.grid.determine_status_message()
+            self.update_status(constants.STATUS_GRID, message)
+            selection = self.get_selection()
+            if selection is not None:
+                sel_x, sel_y = selection
+                valid = puzzle.grid.is_valid(sel_x, sel_y)
+                
+                for item, predicate in self.selection_toggle_items:
+                    item.set_sensitive(valid and predicate(puzzle))
+                
+        for item in self.puzzle_toggle_items:
+            item.set_sensitive(puzzle is not None)
+                
+        self.undo_menu_item.set_sensitive(len(action.stack.undo_stack) > 0)
+        self.redo_menu_item.set_sensitive(len(action.stack.redo_stack) > 0)
+        self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
+        self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
-        selection = self.get_selection()
-        if selection is not None:
-            sel_x, sel_y = selection
-            valid = self.puzzle_manager.current_puzzle.grid.is_valid(sel_x, sel_y)
-            self.update_selection_based_tools(valid)
         self.panel.queue_draw()
         
     def create_view_menu(self):
