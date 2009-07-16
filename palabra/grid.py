@@ -37,10 +37,9 @@ class Grid:
         """Set the grid's data to the given data."""
         self.initialize(width, height)
         
-        for x in range(width):
-            for y in range(height):
-                self.data[y][x]["char"] = chars[y][x]
-                self.data[y][x]["block"] = blocks[y][x]
+        for x, y in self.cells():
+            self.data[y][x]["char"] = chars[y][x]
+            self.data[y][x]["block"] = blocks[y][x]
 
     def is_start_horizontal_word(self, x, y):
         """Return True when a horizontal words begins in the cell at (x, y)."""
@@ -301,11 +300,7 @@ class Grid:
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
-        total = 0
-        for x, y in self.cells():
-            if self.is_block(x, y):
-                total += 1
-        return total
+        return len([(x, y) for x, y in self.cells() if self.is_block(x, y)])
         
     def count_words(self):
         """Return the number of words in the grid."""
@@ -468,10 +463,12 @@ class Grid:
         self.initialize(self.width, self.height)
                 
     def clear_chars(self):
+        """Clear the characters of the grid."""
         for x, y in self.cells():
             self.clear_char(x, y)
                 
     def clear_clues(self):
+        """Clear the clues of the grid."""
         for x, y in self.cells():
             self.cell(x, y)["clues"] = {}
                 
