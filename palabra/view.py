@@ -23,7 +23,7 @@ import pangocairo
 import constants
 
 COLORS = {
-    "background": (0, 0, 0)
+    "background": (1, 1, 1)
     , "border": (0, 0, 0)
     , "block": (0, 0, 0)
     , "line": (0, 0, 0)
@@ -81,10 +81,10 @@ class GridView:
         return self.get_grid_height()
 
     def get_grid_width(self):
-        return self.grid.width * (self.tile_size + self.line_width) + self.line_width # * 2
+        return self.grid.width * (self.tile_size + self.line_width) + self.line_width
         
     def get_grid_height(self):
-        return self.grid.height * (self.tile_size + self.line_width) + self.line_width # * 2
+        return self.grid.height * (self.tile_size + self.line_width) + self.line_width
         
     def screen_to_grid_x(self, screen_x):
         for x in range(self.grid.width):
@@ -108,13 +108,12 @@ class GridView:
     def grid_to_screen_y(self, y):
         return self.margin_y + y * self.tile_size + (y + 1) * self.line_width
         
-    def update_location(self, drawing_area, x, y):
+    def refresh_location(self, drawing_area, x, y):
         draw_x = self.grid_to_screen_x(x)
         draw_y = self.grid_to_screen_y(y)
-        drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, \
-            self.tile_size)
+        drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
             
-    def draw_horizontal_line(self, context, x, y, red, green, blue):
+    def render_horizontal_line(self, context, x, y, red, green, blue):
         context.translate(self.margin_x, self.margin_y)
         context.set_source_rgb(red, green, blue)
         
@@ -134,7 +133,7 @@ class GridView:
         
         context.translate(-self.margin_x, -self.margin_y)
         
-    def draw_vertical_line(self, context, x, y, red, green, blue):
+    def render_vertical_line(self, context, x, y, red, green, blue):
         context.translate(self.margin_x, self.margin_y)
         context.set_source_rgb(red, green, blue)
         
@@ -154,19 +153,19 @@ class GridView:
         
         context.translate(-self.margin_x, -self.margin_y)
         
-    def update_horizontal_line(self, drawing_area, y):
+    def refresh_horizontal_line(self, drawing_area, y):
         draw_y = self.grid_to_screen_y(y)
         for x in range(self.grid.width):
             draw_x = self.grid_to_screen_x(x)
             drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
         
-    def update_vertical_line(self, drawing_area, x):
+    def refresh_vertical_line(self, drawing_area, x):
         draw_x = self.grid_to_screen_x(x)
         for y in range(self.grid.height):
             draw_y = self.grid_to_screen_y(y)
             drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
         
-    def update_view(self, context, mode=None):
+    def render(self, context, mode=None):
         settings = {}
         if mode == constants.VIEW_MODE_EDITOR:
             settings.update(SETTINGS_EDITOR)
@@ -226,15 +225,15 @@ class GridView:
         context.stroke()
         
         if settings["show_chars"]:
-            self.draw_chars(context)
+            self.render_chars(context)
         
         if settings["show_numbers"]:
-            self.draw_numbers(context)
+            self.render_numbers(context)
 
         if settings["has_padding"]:
             context.translate(-self.margin_x, -self.margin_y)
 
-    def draw_chars(self, context):
+    def render_chars(self, context):
         r, g, b = COLORS["char"]
         context.set_source_rgb(r, g, b)
         
@@ -247,9 +246,9 @@ class GridView:
             for y in range(self.grid.height):
                 c = self.grid.get_char(x, y)
                 if c != '':
-                    self.draw_char(context, x, y, c, fheight)
+                    self.render_char(context, x, y, c, fheight)
     
-    def draw_char(self, context, x, y, c, fheight):
+    def render_char(self, context, x, y, c, fheight):
         xbearing, ybearing, width, height, xadvance, yadvance = ( \
                     context.text_extents(c))
                     
@@ -268,7 +267,7 @@ class GridView:
         pcr.show_layout(layout)
         context.restore()
     
-    def draw_numbers(self, context):
+    def render_numbers(self, context):
         r, g, b = COLORS["number"]
         context.set_source_rgb(r, g, b)
         
@@ -280,9 +279,9 @@ class GridView:
             for x in range(self.grid.width):
                 if self.grid.is_start_word(x, y):
                     counter += 1
-                    self.draw_number(context, x, y, counter, fheight, fdescent)
+                    self.render_number(context, x, y, counter, fheight, fdescent)
 
-    def draw_number(self, context, x, y, number, fheight, fdescent):
+    def render_number(self, context, x, y, number, fheight, fdescent):
         draw_x = self.line_width + x * (self.tile_size + self.line_width) + 1
         draw_y = self.line_width + y * (self.tile_size + self.line_width)
         pcr = pangocairo.CairoContext(context)
@@ -293,7 +292,7 @@ class GridView:
         pcr.show_layout(layout)
         context.restore()
         
-    def draw_location(self, context, x, y, red, green, blue):
+    def render_location(self, context, x, y, red, green, blue):
         context.translate(self.margin_x, self.margin_y)
         
         context.set_source_rgb(red, green, blue)
@@ -307,13 +306,11 @@ class GridView:
         
         context.translate(-self.margin_x, -self.margin_y)
     
-    def draw_background(self, context):
+    def render_background(self, context):
         r, g, b = COLORS["background"]
         context.set_source_rgb(r, g, b)
     
         context.translate(self.margin_x, self.margin_y)
-        
-        context.set_source_rgb(1, 1, 1)
         
         context.new_path()
         total_width = self.grid.width * (self.tile_size + self.line_width)

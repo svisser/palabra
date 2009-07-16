@@ -364,9 +364,9 @@ def export_to_pdf(puzzle, filename):
     context = cairo.Context(surface)
     
     view = GridView(puzzle.grid)
-    view.update_view(context, constants.VIEW_MODE_EMPTY)
+    view.render(context, constants.VIEW_MODE_EMPTY)
     context.show_page()
-    view.update_view(context, constants.VIEW_MODE_SOLUTION)
+    view.render(context, constants.VIEW_MODE_SOLUTION)
     context.show_page()
     
     surface.finish()
@@ -384,9 +384,9 @@ def export_to_png(puzzle, filename, output, settings):
     context.fill()
     
     if output == "grid":
-        view.update_view(context, constants.VIEW_MODE_EMPTY)
+        view.render(context, constants.VIEW_MODE_EMPTY)
     elif output == "solution":
-        view.update_view(context, constants.VIEW_MODE_SOLUTION)
+        view.render(context, constants.VIEW_MODE_SOLUTION)
     
     surface.write_to_png(filename)
     surface.finish()

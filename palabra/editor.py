@@ -80,7 +80,7 @@ class Editor(gtk.HBox):
     def on_expose_event(self, drawing_area, event):
         context = drawing_area.window.cairo_create()
         
-        self.puzzle.view.draw_background(context)
+        self.puzzle.view.render_background(context)
         
         #secondary_selection_red = preferences.prefs["color_secondary_selection_red"] / 65535.0
         #secondary_selection_green = preferences.prefs["color_secondary_selection_green"] / 65535.0
@@ -94,14 +94,14 @@ class Editor(gtk.HBox):
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
                 if self.settings["direction"] == "horizontal":
-                    self.puzzle.view.draw_horizontal_line(context, x, y, r, g, b)
+                    self.puzzle.view.render_horizontal_line(context, x, y, r, g, b)
                 elif self.settings["direction"] == "vertical":
-                    self.puzzle.view.draw_vertical_line(context, x, y, r, g, b)
+                    self.puzzle.view.render_vertical_line(context, x, y, r, g, b)
                 
             r = preferences.prefs["color_primary_selection_red"] / 65535.0
             g = preferences.prefs["color_primary_selection_green"] / 65535.0
             b = preferences.prefs["color_primary_selection_blue"] / 65535.0
-            self.puzzle.view.draw_location(context, x, y, r, g, b)
+            self.puzzle.view.render_location(context, x, y, r, g, b)
         
         if self.current_x >= 0 and self.current_y >= 0:
             r = preferences.prefs["color_secondary_active_red"] / 65535.0
@@ -110,17 +110,17 @@ class Editor(gtk.HBox):
             if self.settings["keep_horizontal_symmetry"]:
                 x = self.current_x
                 y = (self.puzzle.grid.height - 1) - self.current_y
-                self.puzzle.view.draw_location(context, x, y, r, g, b)
+                self.puzzle.view.render_location(context, x, y, r, g, b)
             if self.settings["keep_vertical_symmetry"]:
                 x = (self.puzzle.grid.width - 1) - self.current_x
                 y = self.current_y
-                self.puzzle.view.draw_location(context, x, y, r, g, b)
+                self.puzzle.view.render_location(context, x, y, r, g, b)
             if ((self.settings["keep_horizontal_symmetry"] and
                 self.settings["keep_vertical_symmetry"]) or
                 self.settings["keep_point_symmetry"]):
                 x = (self.puzzle.grid.width - 1) - self.current_x
                 y = (self.puzzle.grid.height - 1) - self.current_y
-                self.puzzle.view.draw_location(context, x, y, r, g, b)
+                self.puzzle.view.render_location(context, x, y, r, g, b)
                 
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
@@ -129,9 +129,9 @@ class Editor(gtk.HBox):
             r = preferences.prefs["color_primary_active_red"] / 65535.0
             g = preferences.prefs["color_primary_active_green"] / 65535.0
             b = preferences.prefs["color_primary_active_blue"] / 65535.0
-            self.puzzle.view.draw_location(context, x, y, r, g, b)
+            self.puzzle.view.render_location(context, x, y, r, g, b)
         
-        self.puzzle.view.update_view(context, mode=constants.VIEW_MODE_EDITOR)
+        self.puzzle.view.render(context, mode=constants.VIEW_MODE_EDITOR)
         
         return True
         
@@ -162,16 +162,16 @@ class Editor(gtk.HBox):
                     self.transform_blocks(x, y, False)
         
         if self.settings["direction"] == "horizontal":
-            self.puzzle.view.update_horizontal_line(drawing_area, prev_y)
+            self.puzzle.view.refresh_horizontal_line(drawing_area, prev_y)
         elif self.settings["direction"] == "vertical":
-            self.puzzle.view.update_vertical_line(drawing_area, prev_x)
+            self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         if self.settings["direction"] == "horizontal":
-            self.puzzle.view.update_horizontal_line(drawing_area, y)
+            self.puzzle.view.refresh_horizontal_line(drawing_area, y)
         elif self.settings["direction"] == "vertical":
-            self.puzzle.view.update_vertical_line(drawing_area, x)
+            self.puzzle.view.refresh_vertical_line(drawing_area, x)
         
         return True
         
@@ -184,8 +184,8 @@ class Editor(gtk.HBox):
         prev_x = self.current_x
         prev_y = self.current_y
         
-        self.puzzle.view.update_horizontal_line(drawing_area, prev_y)
-        self.puzzle.view.update_vertical_line(drawing_area, prev_x)
+        self.puzzle.view.refresh_horizontal_line(drawing_area, prev_y)
+        self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
         self.update_symmetry(drawing_area, prev_x, prev_y)
         
         self.current_x = self.puzzle.view.screen_to_grid_x(event.x)
@@ -195,7 +195,7 @@ class Editor(gtk.HBox):
         cy = self.current_y
         
         if (prev_x, prev_y) != (cx, cy):
-            self.puzzle.view.update_location(drawing_area, cx, cy)
+            self.puzzle.view.refresh_location(drawing_area, cx, cy)
             self.update_symmetry(drawing_area, cx, cy)
         
         if self.puzzle.grid.is_valid(cx, cy):
@@ -219,17 +219,17 @@ class Editor(gtk.HBox):
         if self.settings["keep_horizontal_symmetry"]:
             x = main_x
             y = (self.puzzle.grid.height - 1) - main_y
-            self.puzzle.view.update_location(drawing_area, x, y)
+            self.puzzle.view.refresh_location(drawing_area, x, y)
         if self.settings["keep_vertical_symmetry"]:
             x = (self.puzzle.grid.width - 1) - main_x
             y = main_y
-            self.puzzle.view.update_location(drawing_area, x, y)
+            self.puzzle.view.refresh_location(drawing_area, x, y)
         if ((self.settings["keep_horizontal_symmetry"] and
             self.settings["keep_vertical_symmetry"]) or
             self.settings["keep_point_symmetry"]):
             x = (self.puzzle.grid.width - 1) - main_x
             y = (self.puzzle.grid.height - 1) - main_y
-            self.puzzle.view.update_location(drawing_area, x, y)
+            self.puzzle.view.refresh_location(drawing_area, x, y)
 
     def transform_blocks(self, x, y, status):
         blocks = []
@@ -309,7 +309,7 @@ class Editor(gtk.HBox):
                 else:
                     if not self.puzzle.grid.is_block(0, y):
                         self.settings["selection_x"] = 0
-                self.puzzle.view.update_horizontal_line(drawing_area, y)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
             elif self.settings["direction"] == "vertical":
                 for i in reversed(range(y)):
                     if self.puzzle.grid.is_block(x, i):
@@ -318,35 +318,35 @@ class Editor(gtk.HBox):
                 else:
                     if not self.puzzle.grid.is_block(x, 0):
                         self.settings["selection_y"] = 0
-                self.puzzle.view.update_vertical_line(drawing_area, x)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x)
         elif event.keyval == gtk.keysyms.Left:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x - 1, y):
-                self.puzzle.view.update_vertical_line(drawing_area, x)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x)
                 self.settings["selection_x"] -=1
-                self.puzzle.view.update_vertical_line(drawing_area, x - 1)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x - 1)
         elif event.keyval == gtk.keysyms.Up:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x, y - 1):
-                self.puzzle.view.update_horizontal_line(drawing_area, y)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
                 self.settings["selection_y"] -= 1
-                self.puzzle.view.update_horizontal_line(drawing_area, y - 1)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y - 1)
         elif event.keyval == gtk.keysyms.Right:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x + 1, y):
-                self.puzzle.view.update_vertical_line(drawing_area, x)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x)
                 self.settings["selection_x"] += 1
-                self.puzzle.view.update_vertical_line(drawing_area, x + 1)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x + 1)
         elif event.keyval == gtk.keysyms.Down:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x, y + 1):
-                self.puzzle.view.update_horizontal_line(drawing_area, y)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
                 self.settings["selection_y"] += 1
-                self.puzzle.view.update_horizontal_line(drawing_area, y + 1)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y + 1)
         elif event.keyval == gtk.keysyms.End:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
@@ -358,7 +358,7 @@ class Editor(gtk.HBox):
                 else:
                     if not self.puzzle.grid.is_block(self.puzzle.grid.width - 1, y):
                         self.settings["selection_x"] = self.puzzle.grid.width - 1
-                self.puzzle.view.update_horizontal_line(drawing_area, y)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
             elif self.settings["direction"] == "vertical":
                 for i in range(y, self.puzzle.grid.height):
                     if self.puzzle.grid.is_block(x, i):
@@ -367,12 +367,12 @@ class Editor(gtk.HBox):
                 else:
                     if not self.puzzle.grid.is_block(x, self.puzzle.grid.height - 1):
                         self.settings["selection_y"] = self.puzzle.grid.height - 1
-                self.puzzle.view.update_vertical_line(drawing_area, x)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x)
         elif event.keyval == gtk.keysyms.Delete:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             self.puzzle.grid.clear_char(x, y)
-            self.puzzle.view.update_location(drawing_area, x, y)
+            self.puzzle.view.refresh_location(drawing_area, x, y)
         else:
             if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
                 x = self.settings["selection_x"]
@@ -387,11 +387,11 @@ class Editor(gtk.HBox):
                     if self.settings["direction"] == "horizontal":
                         if self.puzzle.grid.is_available(x + 1, y):
                             self.settings["selection_x"] += 1
-                        self.puzzle.view.update_horizontal_line(drawing_area, y)
+                        self.puzzle.view.refresh_horizontal_line(drawing_area, y)
                     elif self.settings["direction"] == "vertical":
                         if self.puzzle.grid.is_available(x, y + 1):
                             self.settings["selection_y"] += 1
-                        self.puzzle.view.update_vertical_line(drawing_area, x)
+                        self.puzzle.view.refresh_vertical_line(drawing_area, x)
         return True
         
     def change_typing_direction(self):
