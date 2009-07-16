@@ -153,8 +153,6 @@ class Editor(gtk.HBox):
         if event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_valid(x, y):
                 self.set_selection(x, y)
-            if (prev_x, prev_y) == (x, y):
-                self.change_typing_direction()
         
         if (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_valid(x, y):
