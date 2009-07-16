@@ -71,20 +71,7 @@ class ClueEditor(gtk.Dialog):
         self._store_property(x, y, direction, "explanation", value)
         
     def _store_property(self, x, y, direction, key, value):
-        clues = self.puzzle.grid.cell(x, y)["clues"]
-        try:
-            clue = clues[direction]
-        except KeyError:
-            clues[direction] = {}
-            clue = clues[direction]
-        
-        if len(value) > 0:
-            clues[direction][key] = value
-        elif key in clue:
-            del clues[direction][key]
-         
-        if len(clue) == 0:
-            del clues[direction]
+        self.puzzle.grid.store_clue(x, y, direction, key, value)
         
     def update_current_word(self):
         n, x, y, direction = self.words[self.current_index]

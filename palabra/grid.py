@@ -463,11 +463,36 @@ class Grid:
         for x in range(self.width):
             for y in range(self.height):
                 self.cell(x, y)["clues"] = {}
+                
+    def store_clue(self, x, y, direction, key, value):
+        """
+        Store the given key/value pair as clue property of (x, y, direction).
+        
+        This function cleans the 'clues' dictionary if needed: if a value
+        is empty, the key will be deleted. If no key/value pairs remain,
+        the clue itself for this direction will be deleted.
+        """
+        clues = self.cell(x, y)["clues"]
+        try:
+            clue = clues[direction]
+        except KeyError:
+            clues[direction] = {}
+            clue = clues[direction]
+        
+        if len(value) > 0:
+            clues[direction][key] = value
+        elif key in clue:
+            del clues[direction][key]
+         
+        if len(clue) == 0:
+            del clues[direction]
         
     def is_valid(self, x, y):
+        """Return True if the given (x, y) is within the grid's boundaries."""
         return x >= 0 and x < self.width and y >= 0 and y < self.height
         
     def is_available(self, x, y):
+        """Return True if the given (x, y) is valid and not a block."""
         return self.is_valid(x, y) and not self.is_block(x, y)
         
     def get_clues(self, x, y):
