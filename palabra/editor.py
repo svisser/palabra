@@ -75,7 +75,6 @@ class Editor(gtk.HBox):
     def set_selection(self, x, y):
         self.settings["selection_x"] = x
         self.settings["selection_y"] = y
-        valid = self.puzzle.grid.is_valid(x, y)
         self.palabra_window.update_window()
 
     def on_expose_event(self, drawing_area, event):
