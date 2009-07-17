@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cairo
+from itertools import *
 import math
 import pango
 import pangocairo
@@ -109,61 +110,43 @@ class GridView:
         return self.margin_y + y * self.tile_size + (y + 1) * self.line_width
         
     def refresh_location(self, drawing_area, x, y):
-        draw_x = self.grid_to_screen_x(x)
-        draw_y = self.grid_to_screen_y(y)
-        drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
+        rx = self.grid_to_screen_x(x)
+        ry = self.grid_to_screen_y(y)
+        drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
             
-    def render_horizontal_line(self, context, x, y, red, green, blue):
-        context.translate(self.margin_x, self.margin_y)
-        context.set_source_rgb(red, green, blue)
+    def render_horizontal_line(self, context, x, y, r, g, b):
+        def render():
+            a = self.grid.in_direction("across", x, y)
+            b = self.grid.in_direction("across", x, y, reverse=True)
+            for p, q in chain(a, b):
+                rx = self.line_width + p * (self.tile_size + self.line_width)
+                ry = self.line_width + y * (self.tile_size + self.line_width)
+                context.rectangle(rx, ry, self.tile_size, self.tile_size)
+            context.fill()
+        self._render(context, (r, g, b), render)
         
-        draw_y = self.line_width + y * (self.tile_size + self.line_width)
-        
-        for k in reversed(range(x)):
-            if self.grid.is_block(k, y):
-                break
-            draw_x = self.line_width + k * (self.tile_size + self.line_width)
-            context.rectangle(draw_x, draw_y, self.tile_size, self.tile_size)
-        for k in range(x, self.grid.width):
-            if self.grid.is_block(k, y):
-                break
-            draw_x = self.line_width + k * (self.tile_size + self.line_width)
-            context.rectangle(draw_x, draw_y, self.tile_size, self.tile_size)
-        context.fill()
-        
-        context.translate(-self.margin_x, -self.margin_y)
-        
-    def render_vertical_line(self, context, x, y, red, green, blue):
-        context.translate(self.margin_x, self.margin_y)
-        context.set_source_rgb(red, green, blue)
-        
-        draw_x = self.line_width + x * (self.tile_size + self.line_width)
-        
-        for k in reversed(range(y)):
-            if self.grid.is_block(x, k):
-                break
-            draw_y = self.line_width + k * (self.tile_size + self.line_width)
-            context.rectangle(draw_x, draw_y, self.tile_size, self.tile_size)
-        for k in range(y, self.grid.height):
-            if self.grid.is_block(x, k):
-                break
-            draw_y = self.line_width + k * (self.tile_size + self.line_width)
-            context.rectangle(draw_x, draw_y, self.tile_size, self.tile_size)
-        context.fill()
-        
-        context.translate(-self.margin_x, -self.margin_y)
+    def render_vertical_line(self, context, x, y, r, g, b):
+        def render():
+            a = self.grid.in_direction("down", x, y)
+            b = self.grid.in_direction("down", x, y, reverse=True)
+            for p, q in chain(a, b):
+                rx = self.line_width + x * (self.tile_size + self.line_width)
+                ry = self.line_width + q * (self.tile_size + self.line_width)
+                context.rectangle(rx, ry, self.tile_size, self.tile_size)
+            context.fill()
+        self._render(context, (r, g, b), render)
         
     def refresh_horizontal_line(self, drawing_area, y):
-        draw_y = self.grid_to_screen_y(y)
-        for x in range(self.grid.width):
-            draw_x = self.grid_to_screen_x(x)
-            drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
+        for p, q in self.grid.in_direction("across", 0, y):
+            rx = self.grid_to_screen_x(p)
+            ry = self.grid_to_screen_y(y)
+            drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
         
     def refresh_vertical_line(self, drawing_area, x):
-        draw_x = self.grid_to_screen_x(x)
-        for y in range(self.grid.height):
-            draw_y = self.grid_to_screen_y(y)
-            drawing_area.queue_draw_area(draw_x, draw_y, self.tile_size, self.tile_size)
+        for p, q in self.grid.in_direction("down", x, 0):
+            rx = self.grid_to_screen_x(x)
+            ry = self.grid_to_screen_y(q)
+            drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
         
     def render(self, context, mode=None):
         settings = {}
@@ -189,8 +172,8 @@ class GridView:
         context.set_source_rgb(r, g, b)
         for x, y in self.grid.cells():
             if self.grid.is_block(x, y):
-                # -0.5 for coordinates and +1 for size are needed to
-                # render seamlessly in PDF
+                # -0.5 for coordinates and +1 for size
+                # are needed to render seamlessly in PDF
                 draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
                 draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
                 context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
@@ -282,30 +265,28 @@ class GridView:
         pcr.show_layout(layout)
         context.restore()
         
-    def render_location(self, context, x, y, red, green, blue):
-        context.translate(self.margin_x, self.margin_y)
-        
-        context.set_source_rgb(red, green, blue)
-        
-        draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
-        draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
-        
-        context.new_path()
-        context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
-        context.fill()
-        
-        context.translate(-self.margin_x, -self.margin_y)
+    def render_location(self, context, x, y, r, g, b):
+        def render():
+            # -0.5 for coordinates and +1 for size
+            # are needed to render seamlessly in PDF
+            draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
+            draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
+            context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
+            context.fill()
+        self._render(context, (r, g, b), render)
     
     def render_background(self, context):
-        r, g, b = COLORS["background"]
+        def render():
+            width = self.grid.width * (self.tile_size + self.line_width)
+            height = self.grid.height * (self.tile_size + self.line_width)
+            context.rectangle(self.line_width, self.line_width, width, height)
+            context.fill()
+        self._render(context, COLORS["background"], render)
+        
+    def _render(self, context, color, function):
+        r, g, b = color
         context.set_source_rgb(r, g, b)
-    
+        
         context.translate(self.margin_x, self.margin_y)
-        
-        context.new_path()
-        total_width = self.grid.width * (self.tile_size + self.line_width)
-        total_height = self.grid.height * (self.tile_size + self.line_width)
-        context.rectangle(self.line_width, self.line_width, total_width, total_height)
-        context.fill()
-        
+        function()
         context.translate(-self.margin_x, -self.margin_y)

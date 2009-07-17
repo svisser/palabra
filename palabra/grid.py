@@ -269,15 +269,21 @@ class Grid:
         """Return the length of the word starting at (x, y) in the given direction."""
         return sum([1 for x, y in self.in_direction(direction, x, y)])
         
-    def in_direction(self, direction, x, y):
+    def in_direction(self, direction, x, y, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
         while self.is_available(x, y):
             yield x, y
             
             if direction == "across":
-                x += 1
+                if reverse:
+                    x -= 1
+                else:
+                    x += 1
             elif direction == "down":
-                y += 1
+                if reverse:
+                    y -= 1
+                else:
+                    y += 1
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
