@@ -219,8 +219,7 @@ class GridView:
         r, g, b = COLORS["border"]
         context.set_source_rgb(r, g, b)
         context.set_line_width(self.line_width)
-        context.rectangle(0.5 * self.line_width, 0.5 * self.line_width, \
-            total_width, total_height)
+        context.rectangle(0.5 * self.line_width, 0.5 * self.line_width, total_width, total_height)
         context.stroke()
         
         if settings["show_chars"]:
@@ -249,12 +248,12 @@ class GridView:
     def render_char(self, context, x, y, c, fheight):
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
-        draw_x = self.line_width + \
-            (x + 0.5) * (self.tile_size + self.line_width) - \
-            xbearing - (width / 2)
-        draw_y = self.line_width + \
-            (y + 0.25) * (self.tile_size + self.line_width) + \
-            (fheight / 2)
+        draw_x = (self.line_width +
+            (x + 0.5) * (self.tile_size + self.line_width) -
+            xbearing - (width / 2))
+        draw_y = (self.line_width +
+            (y + 0.25) * (self.tile_size + self.line_width) +
+            (fheight / 2))
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
 
@@ -311,8 +310,7 @@ class GridView:
         context.new_path()
         total_width = self.grid.width * (self.tile_size + self.line_width)
         total_height = self.grid.height * (self.tile_size + self.line_width)
-        context.rectangle(self.line_width, self.line_width \
-            , total_width, total_height)
+        context.rectangle(self.line_width, self.line_width, total_width, total_height)
         context.fill()
         
         context.translate(-self.margin_x, -self.margin_y)
