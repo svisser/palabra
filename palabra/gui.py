@@ -555,6 +555,7 @@ class PalabraWindow(gtk.Window):
             if (self.puzzle_manager.current_puzzle.grid.width != width or
                 self.puzzle_manager.current_puzzle.grid.height != height):
                 self.transform_grid(transform.resize_grid, width=width, height=height)
+                self.editor.refresh_visual_size()
         window.destroy()
         
     def view_preferences(self):

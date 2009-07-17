@@ -74,6 +74,9 @@ class Editor(gtk.HBox):
         self.settings["selection_x"] = x
         self.settings["selection_y"] = y
         self.palabra_window.update_window()
+        
+    def refresh_visual_size(self):
+        self.puzzle.view.update_visual_size(self.drawing_area)
 
     def on_expose_event(self, drawing_area, event):
         context = drawing_area.window.cairo_create()

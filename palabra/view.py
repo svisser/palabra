@@ -64,56 +64,7 @@ class GridView:
         self.margin_x = 10
         self.margin_y = 10
         self.line_width = 1
-    
-    # needs manual queue_draw() on drawing_area afterwards
-    def update_visual_size(self, drawing_area):
-        visual_width = self.visual_width()
-        visual_height = self.visual_height()
-        drawing_area.set_size_request(visual_width, visual_height)
-
-    def visual_width(self, include_padding=True):
-        if include_padding:
-            return self.margin_x * 2 + self.get_grid_width()
-        return self.get_grid_width()
         
-    def visual_height(self, include_padding=True):
-        if include_padding:
-            return self.margin_y * 2 + self.get_grid_height()
-        return self.get_grid_height()
-
-    def get_grid_width(self):
-        return self.grid.width * (self.tile_size + self.line_width) + self.line_width
-        
-    def get_grid_height(self):
-        return self.grid.height * (self.tile_size + self.line_width) + self.line_width
-        
-    def screen_to_grid_x(self, screen_x):
-        for x in range(self.grid.width):
-            left_x = self.margin_x + self.line_width + x * (self.tile_size + self.line_width)
-            right_x = self.margin_x + (x + 1) * (self.tile_size + self.line_width)
-            if screen_x >= left_x and screen_x < right_x:
-                return x
-        return -1
-        
-    def screen_to_grid_y(self, screen_y):
-        for y in range(self.grid.height):
-            top_y = self.margin_y + self.line_width + y * (self.tile_size + self.line_width)
-            bottom_y = self.margin_y + (y + 1) * (self.tile_size + self.line_width)
-            if screen_y >= top_y and screen_y < bottom_y:
-                return y
-        return -1
-        
-    def grid_to_screen_x(self, x):
-        return self.margin_x + x * self.tile_size + (x + 1) * self.line_width
-    
-    def grid_to_screen_y(self, y):
-        return self.margin_y + y * self.tile_size + (y + 1) * self.line_width
-        
-    def refresh_location(self, drawing_area, x, y):
-        rx = self.grid_to_screen_x(x)
-        ry = self.grid_to_screen_y(y)
-        drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
-            
     def render_horizontal_line(self, context, x, y, r, g, b):
         def render():
             a = self.grid.in_direction("across", x, y)
@@ -135,18 +86,6 @@ class GridView:
                 context.rectangle(rx, ry, self.tile_size, self.tile_size)
             context.fill()
         self._render(context, (r, g, b), render)
-        
-    def refresh_horizontal_line(self, drawing_area, y):
-        for p, q in self.grid.in_direction("across", 0, y):
-            rx = self.grid_to_screen_x(p)
-            ry = self.grid_to_screen_y(y)
-            drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
-        
-    def refresh_vertical_line(self, drawing_area, x):
-        for p, q in self.grid.in_direction("down", x, 0):
-            rx = self.grid_to_screen_x(x)
-            ry = self.grid_to_screen_y(q)
-            drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
         
     def render(self, context, mode=None):
         settings = {}
@@ -290,3 +229,64 @@ class GridView:
         context.translate(self.margin_x, self.margin_y)
         function()
         context.translate(-self.margin_x, -self.margin_y)
+        
+    def refresh_horizontal_line(self, drawing_area, y):
+        cells = [(p, q) for p, q in self.grid.in_direction("across", 0, y)]
+        self._refresh(drawing_area, cells)
+        
+    def refresh_vertical_line(self, drawing_area, x):
+        cells = [(p, q) for p, q in self.grid.in_direction("down", x, 0)]
+        self._refresh(drawing_area, cells)
+        
+    def refresh_location(self, drawing_area, x, y):
+        self._refresh(drawing_area, [(x, y)])
+        
+    def _refresh(self, drawing_area, cells):
+        for x, y in cells:
+            rx = self.grid_to_screen_x(x)
+            ry = self.grid_to_screen_y(y)
+            drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
+            
+    # needs manual queue_draw() on drawing_area afterwards
+    def update_visual_size(self, drawing_area):
+        visual_width = self.visual_width()
+        visual_height = self.visual_height()
+        drawing_area.set_size_request(visual_width, visual_height)
+            
+    def screen_to_grid_x(self, screen_x):
+        for x in range(self.grid.width):
+            left_x = self.margin_x + self.line_width + x * (self.tile_size + self.line_width)
+            right_x = self.margin_x + (x + 1) * (self.tile_size + self.line_width)
+            if screen_x >= left_x and screen_x < right_x:
+                return x
+        return -1
+        
+    def screen_to_grid_y(self, screen_y):
+        for y in range(self.grid.height):
+            top_y = self.margin_y + self.line_width + y * (self.tile_size + self.line_width)
+            bottom_y = self.margin_y + (y + 1) * (self.tile_size + self.line_width)
+            if screen_y >= top_y and screen_y < bottom_y:
+                return y
+        return -1
+        
+    def grid_to_screen_x(self, x):
+        return self.margin_x + x * self.tile_size + (x + 1) * self.line_width
+    
+    def grid_to_screen_y(self, y):
+        return self.margin_y + y * self.tile_size + (y + 1) * self.line_width
+            
+    def visual_width(self, include_padding=True):
+        if include_padding:
+            return self.margin_x * 2 + self.get_grid_width()
+        return self.get_grid_width()
+        
+    def visual_height(self, include_padding=True):
+        if include_padding:
+            return self.margin_y * 2 + self.get_grid_height()
+        return self.get_grid_height()
+            
+    def get_grid_width(self):
+        return self.grid.width * (self.tile_size + self.line_width) + self.line_width
+        
+    def get_grid_height(self):
+        return self.grid.height * (self.tile_size + self.line_width) + self.line_width
