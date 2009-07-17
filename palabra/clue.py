@@ -56,36 +56,7 @@ class ClueEditor(gtk.Dialog):
                     , value=value)
         
         self.connect("destroy", lambda widget: quit())
-        
-    def on_tab_change(self, notebook, page, index):
-        if index == 0:
-            self.update_current_word()
-        elif index == 1:
-            counter = 0
-            for row in self.puzzle.grid.gather_words("across"):
-                it = self.across_store.get_iter(counter)
-                self.across_store.set(it, 4, row[4])
-                counter += 1
-                
-            counter = 0
-            for row in self.puzzle.grid.gather_words("down"):
-                it = self.down_store.get_iter(counter)
-                self.down_store.set(it, 4, row[4])
-                counter += 1
-            
-            self.across_tree.queue_draw()
-            self.down_tree.queue_draw()
     
-    def on_clue_changed(self, widget):
-        n, x, y, direction = self.words[self.current_index]
-        value = widget.get_text().strip()
-        self._store_property(x, y, direction, "text", value)
-
-    def on_explanation_changed(self, widget):
-        n, x, y, direction = self.words[self.current_index]
-        value = widget.get_text().strip()
-        self._store_property(x, y, direction, "explanation", value)
-        
     def _store_property(self, x, y, direction, key, value):
         try:
             clue = self.puzzle.grid.cell(x, y)["clues"]
@@ -129,10 +100,26 @@ class ClueEditor(gtk.Dialog):
             explanation = clues[direction]["explanation"]
             self.explanation_entry.set_text(explanation)
         except KeyError:
-            self.explanation_entry.set_text("")        
+            self.explanation_entry.set_text("")    
+            
+        # override stored values when the user has entered something
+        # that is not yet committed to the clues data structure
+        d = [("text", self.clue_entry), ("explanation", self.explanation_entry)]
+        for key, widget in d:
+            value = self._check_against_user_modifications(x, y, direction, key)
+            if value is not None:
+                widget.set_text(value)
         
         display_dir = {"across": "Across", "down": "Down"}[direction]
-        self.update_clue_label(n, display_dir)
+        content = ["<b>Currently editing</b>: ", str(n), ", ", display_dir]
+        self.clue_label.set_markup(''.join(content))
+        
+    def _check_against_user_modifications(self, x, y, direction, key):
+        result = None
+        for mx, my, mdirection, mkey, mvalue in self.modifications:
+            if (x, y, direction, key) == (mx, my, mdirection, mkey):
+                result = mvalue
+        return result
         
     def to_next_word(self):
         self.current_index += 1
@@ -145,15 +132,6 @@ class ClueEditor(gtk.Dialog):
         if self.current_index < 0:
             self.current_index = len(self.words) - 1
         self.update_current_word()
-        
-    def update_clue_label(self, number, direction):
-        text = ''.join(
-            ["<b>Currently editing</b>: "
-            , str(number)
-            , ", "
-            , direction
-            ])
-        self.clue_label.set_markup(text)
         
     def create_clue_editor(self):
         main = gtk.VBox(False, 0)
@@ -180,19 +158,21 @@ class ClueEditor(gtk.Dialog):
         main.pack_start(label, False, False, 3)
         main.pack_start(self.grid_entry, False, False, 0)
         
+        changed = lambda widget: self.on_clue_changed(widget, "text")
         label = gtk.Label()
         label.set_markup("<b>Clue</b>")
         label.set_alignment(0, 0.5)
         self.clue_entry = gtk.Entry(512)
-        self.clue_entry.connect("changed", self.on_clue_changed)
+        self.clue_entry.connect("changed", changed)
         main.pack_start(label, False, False, 3)
         main.pack_start(self.clue_entry, False, False, 0)
         
+        changed = lambda widget: self.on_clue_changed(widget, "explanation")
         label = gtk.Label()
         label.set_markup("<b>Explanation</b>")
         label.set_alignment(0, 0.5)
         self.explanation_entry = gtk.Entry(512)
-        self.explanation_entry.connect("changed", self.on_explanation_changed)
+        self.explanation_entry.connect("changed", changed)
         main.pack_start(label, False, False, 3)
         main.pack_start(self.explanation_entry, False, False, 0)
         
@@ -207,6 +187,12 @@ class ClueEditor(gtk.Dialog):
         label.set_text("Previous")
         buttons.pack_start(button, False, False, 0)
         
+        def to_next_word(self):
+            self.current_index += 1
+            if self.current_index >= len(self.words):
+                self.current_index = 0
+            self.update_current_word()
+        
         button = gtk.Button(stock=gtk.STOCK_GO_FORWARD)
         button.connect("clicked", lambda widget: self.to_next_word())
         align = button.get_children()[0]
@@ -216,7 +202,6 @@ class ClueEditor(gtk.Dialog):
         buttons.pack_start(button, False, False, 0)
         
         main.pack_start(buttons, False, False, 7)
-        
         return main
         
     def create_overview(self):
@@ -245,9 +230,12 @@ class ClueEditor(gtk.Dialog):
         column.set_attributes(cell, text=3)
         self.across_tree.append_column(column)
         
+        def on_across_clue_editted(cell, path, new_text):
+            self.on_clue_editted(cell, path, new_text, "across", self.across_store)
+        
         cell = gtk.CellRendererText()
         cell.set_property("editable", True)
-        cell.connect("edited", self.on_across_clue_editted)
+        cell.connect("edited", on_across_clue_editted)
         column = gtk.TreeViewColumn("Clue")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=4)
@@ -266,9 +254,12 @@ class ClueEditor(gtk.Dialog):
         column.set_attributes(cell, text=3)
         self.down_tree.append_column(column)
         
+        def on_down_clue_editted(cell, path, new_text):
+            self.on_clue_editted(cell, path, new_text, "down", self.down_store)
+        
         cell = gtk.CellRendererText()
         cell.set_property("editable", True)
-        cell.connect("edited", self.on_down_clue_editted)
+        cell.connect("edited", on_down_clue_editted)
         column = gtk.TreeViewColumn("Clue")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=4)
@@ -297,21 +288,39 @@ class ClueEditor(gtk.Dialog):
         main.pack_start(down_label, False, False, 0)
         main.pack_start(down_window, True, True, 0)
         main.set_border_width(7)
-        
         return main
         
-    def on_across_clue_editted(self, cell, path, new_text):
-        it = self.across_store.get_iter_from_string(path)
-        self.across_store.set_value(it, 4, new_text.strip())
+    def on_tab_change(self, notebook, page, index):
+        if index == 0:
+            self.update_current_word()
+        elif index == 1:
+            l = [("across", self.across_store), ("down", self.down_store)]
+            for direction, store in l:
+                counter = 0
+                for n, x, y, word, clue in self.puzzle.grid.gather_words(direction):
+                    it = store.get_iter(counter)
+                    
+                    # override stored values when the user has entered something
+                    # that is not yet committed to the clues data structure
+                    value = self._check_against_user_modifications(x, y, direction, "text")
+                    if value is not None:
+                        clue = value
+                    
+                    store.set(it, 4, clue)
+                    counter += 1
+            
+            self.across_tree.queue_draw()
+            self.down_tree.queue_draw()
+            
+    def on_clue_changed(self, widget, key):
+        n, x, y, direction = self.words[self.current_index]
+        value = widget.get_text().strip()
+        self._store_property(x, y, direction, key, value)
         
-        x = self.across_store.get_value(it, 1)
-        y = self.across_store.get_value(it, 2)
-        self._store_property(x, y, "across", "text", new_text.strip())
+    def on_clue_editted(self, cell, path, new_text, direction, store):
+        it = store.get_iter_from_string(path)
+        store.set_value(it, 4, new_text.strip())
         
-    def on_down_clue_editted(self, cell, path, new_text):
-        it = self.down_store.get_iter_from_string(path)
-        self.down_store.set_value(it, 4, new_text.strip())
-        
-        x = self.down_store.get_value(it, 1)
-        y = self.down_store.get_value(it, 2)
-        self._store_property(x, y, "down", "text", new_text.strip())
+        x = store.get_value(it, 1)
+        y = store.get_value(it, 2)
+        self._store_property(x, y, direction, "text", new_text.strip())
