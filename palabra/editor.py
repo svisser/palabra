@@ -193,7 +193,7 @@ class Editor(gtk.HBox):
         
         self.puzzle.view.refresh_horizontal_line(drawing_area, prev_y)
         self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
-        self.update_symmetry(drawing_area, prev_x, prev_y)
+        self.refresh_symmetry(drawing_area, prev_x, prev_y)
         
         self.current_x = self.puzzle.view.screen_to_grid_x(event.x)
         self.current_y = self.puzzle.view.screen_to_grid_y(event.y)
@@ -202,8 +202,9 @@ class Editor(gtk.HBox):
         cy = self.current_y
         
         if (prev_x, prev_y) != (cx, cy):
+            self.puzzle.view.refresh_location(drawing_area, prev_x, prev_y)
             self.puzzle.view.refresh_location(drawing_area, cx, cy)
-            self.update_symmetry(drawing_area, cx, cy)
+            self.refresh_symmetry(drawing_area, cx, cy)
         
         if self.puzzle.grid.is_valid(cx, cy):
             if self.mouse_buttons_down[0] and (event.state & gtk.gdk.SHIFT_MASK):
@@ -222,7 +223,7 @@ class Editor(gtk.HBox):
         for key in symmetries:
             self.settings[key] = key in options
         
-    def update_symmetry(self, drawing_area, main_x, main_y):
+    def refresh_symmetry(self, drawing_area, main_x, main_y):
         if self.settings["keep_horizontal_symmetry"]:
             x = main_x
             y = (self.puzzle.grid.height - 1) - main_y

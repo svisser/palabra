@@ -231,12 +231,10 @@ class GridView:
         context.translate(-self.margin_x, -self.margin_y)
         
     def refresh_horizontal_line(self, drawing_area, y):
-        cells = [(p, q) for p, q in self.grid.in_direction("across", 0, y)]
-        self._refresh(drawing_area, cells)
+        self._refresh(drawing_area, self.grid.in_direction("across", 0, y))
         
     def refresh_vertical_line(self, drawing_area, x):
-        cells = [(p, q) for p, q in self.grid.in_direction("down", x, 0)]
-        self._refresh(drawing_area, cells)
+        self._refresh(drawing_area, self.grid.in_direction("down", x, 0))
         
     def refresh_location(self, drawing_area, x, y):
         self._refresh(drawing_area, [(x, y)])
