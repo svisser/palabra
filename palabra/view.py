@@ -247,8 +247,7 @@ class GridView:
                 self.render_char(context, x, y, c, fheight)
     
     def render_char(self, context, x, y, c, fheight):
-        xbearing, ybearing, width, height, xadvance, yadvance = ( \
-                    context.text_extents(c))
+        xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
         draw_x = self.line_width + \
             (x + 0.5) * (self.tile_size + self.line_width) - \
@@ -258,8 +257,13 @@ class GridView:
             (fheight / 2)
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
+
+        try:        
+            font = custom_settings["editor_font"]
+        except KeyError:
+            font = "Sans 12"
         
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 12", c))
+        layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, c))
         context.save()
         context.move_to(draw_x, draw_y)
         pcr.show_layout(layout)
@@ -270,8 +274,6 @@ class GridView:
         context.set_source_rgb(r, g, b)
         
         fascent, fdescent, fheight, fxadvance, fyadvance = context.font_extents()
-        context.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-        
         for n, x, y in self.grid.words():
             self.render_number(context, x, y, n, fheight, fdescent)
 

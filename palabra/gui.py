@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
+import pango
 import os
 
 import action
@@ -887,6 +888,31 @@ class PalabraWindow(gtk.Window):
         menu.append(item)
         item.set_active(True)
         toggle_numbers(True)
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        def change_font():
+            dialog = gtk.FontSelectionDialog("Select font family")
+            if "editor_font" in view.custom_settings:
+                dialog.set_font_name(view.custom_settings["editor_font"])
+
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                l = dialog.get_font_name().split()
+                l[-1] = "12"
+                font_desc = pango.FontDescription(" ".join(l))
+                view.custom_settings["editor_font"] = font_desc.to_string()
+            dialog.destroy()
+        
+        activate = lambda item: change_font()
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Change the font used in the editor")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.MenuItem("Change _font...", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
         
         view_menu = gtk.MenuItem("_View", True)
         view_menu.set_submenu(menu)
