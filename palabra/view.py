@@ -257,12 +257,7 @@ class GridView:
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
 
-        try:        
-            font = custom_settings["editor_font"]
-        except KeyError:
-            font = "Sans 12"
-        
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, c))
+        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 12", c))
         context.save()
         context.move_to(draw_x, draw_y)
         pcr.show_layout(layout)
