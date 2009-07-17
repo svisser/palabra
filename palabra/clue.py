@@ -17,12 +17,17 @@
 
 import gtk
 
+import transform
+
 class ClueEditor(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
         gtk.Dialog.__init__(self, "Palabra Clue Editor"
             , palabra_window, gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
         self.puzzle = puzzle
         self.set_size_request(640, 480)
+        
+        self.modifications = []
         
         tabs = gtk.Notebook()
         tabs.append_page(self.create_clue_editor(), gtk.Label("Clue"))
@@ -40,6 +45,17 @@ class ClueEditor(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
+        
+        def quit():
+            for x, y, direction, key, value in self.modifications:
+                self.palabra_window.transform_grid(transform.modify_clue
+                    , x=x
+                    , y=y
+                    , direction=direction
+                    , key=key
+                    , value=value)
+        
+        self.connect("destroy", lambda widget: quit())
         
     def on_tab_change(self, notebook, page, index):
         if index == 0:
@@ -71,7 +87,31 @@ class ClueEditor(gtk.Dialog):
         self._store_property(x, y, direction, "explanation", value)
         
     def _store_property(self, x, y, direction, key, value):
-        self.puzzle.grid.store_clue(x, y, direction, key, value)
+        try:
+            clue = self.puzzle.grid.cell(x, y)["clues"]
+        except KeyError:
+            clue = self.puzzle.grid.cell(x, y)["clues"] = {}
+        try:
+            current = clue[direction][key]
+        except KeyError:
+            current = None
+        
+        # nothing is currently saved and nothing was entered
+        # so do not store this modification (this occurs when
+        # the program resets the text entry, which triggers
+        # the changed functions)
+        if current is None and len(value) == 0:
+            return
+            
+        if current != value:
+            if len(self.modifications) > 0:
+                tx, ty, tdirection, tkey, tvalue = self.modifications[-1]
+                if (tx, ty, tdirection, tkey) == (x, y, direction, key):
+                    self.modifications[-1] = (x, y, direction, key, value)
+                else:
+                    self.modifications.append((x, y, direction, key, value))
+            else:
+                self.modifications.append((x, y, direction, key, value))
         
     def update_current_word(self):
         n, x, y, direction = self.words[self.current_index]

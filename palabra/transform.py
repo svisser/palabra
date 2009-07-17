@@ -63,6 +63,11 @@ def modify_char(puzzle, x, y, next_char):
     """Modify the character at the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.set_char(x, y, next_char)
     return _full_transform(puzzle, transform)
+    
+def modify_clue(puzzle, x, y, direction, key, value):
+    """Store the given clue data at the given (x, y) and direction."""
+    transform = lambda puzzle: puzzle.grid.store_clue(x, y, direction, key, value)
+    return _full_transform(puzzle, transform)
 
 def clear_all(puzzle):
     """Clear the content of the grid and return an Action."""
