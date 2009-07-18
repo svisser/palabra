@@ -19,14 +19,18 @@
 import pstats
 
 import cProfile
-import gtk
 
-from gui import (
-    PalabraWindow,
-)
-from preferences import (
-    read_config_file,
-)
+# see http://faq.pygtk.org/index.py?req=show&file=faq02.006.htp
+try:
+    import pygtk
+    pygtk.require("2.0")
+    import gtk
+except (ImportError, AssertionError):
+    print "PyGTK 2.8 or higher is required for this application."
+    raise SystemExit
+
+from gui import PalabraWindow
+from preferences import read_config_file
 
 if __name__ == "__main__":
     read_config_file()
