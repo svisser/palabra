@@ -70,8 +70,8 @@ class GridView:
             a = self.grid.in_direction("across", x, y)
             b = self.grid.in_direction("across", x, y, reverse=True)
             for p, q in chain(a, b):
-                rx = self.line_width + p * (self.tile_size + self.line_width)
-                ry = self.line_width + y * (self.tile_size + self.line_width)
+                rx = self.grid_to_screen_x(p, False)
+                ry = self.grid_to_screen_y(y, False)
                 context.rectangle(rx, ry, self.tile_size, self.tile_size)
             context.fill()
         self._render(context, (r, g, b), render)
@@ -81,8 +81,8 @@ class GridView:
             a = self.grid.in_direction("down", x, y)
             b = self.grid.in_direction("down", x, y, reverse=True)
             for p, q in chain(a, b):
-                rx = self.line_width + x * (self.tile_size + self.line_width)
-                ry = self.line_width + q * (self.tile_size + self.line_width)
+                rx = self.grid_to_screen_x(x, False)
+                ry = self.grid_to_screen_y(q, False)
                 context.rectangle(rx, ry, self.tile_size, self.tile_size)
             context.fill()
         self._render(context, (r, g, b), render)
@@ -113,9 +113,9 @@ class GridView:
             if self.grid.is_block(x, y):
                 # -0.5 for coordinates and +1 for size
                 # are needed to render seamlessly in PDF
-                draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
-                draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
-                context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
+                rx = self.grid_to_screen_x(x, False) - 0.5
+                ry = self.grid_to_screen_y(y, False) - 0.5
+                context.rectangle(rx, ry, self.tile_size + 1, self.tile_size + 1)
         context.fill()
         
         # lines
@@ -125,14 +125,12 @@ class GridView:
         context.move_to(self.tile_size + 1.5 * self.line_width, self.line_width)
         for i in range(self.grid.width - 1):
             line_length = total_height
-            
             context.rel_line_to(0, line_length)
             context.rel_move_to(self.tile_size + self.line_width, -line_length)
             
         context.move_to(self.line_width, self.tile_size + 1.5 * self.line_width)
         for j in range(self.grid.height - 1):
             line_length = total_width
-            
             context.rel_line_to(line_length, 0)
             context.rel_move_to(-line_length, self.tile_size + self.line_width)
         context.stroke()
@@ -156,51 +154,40 @@ class GridView:
     def render_chars(self, context):
         r, g, b = COLORS["char"]
         context.set_source_rgb(r, g, b)
-        
-        fascent, fdescent, fheight, fxadvance, fyadvance = context.font_extents()
-        fe = context.font_extents()
-        context.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-        
-        fheight = 0
+
         for x, y in self.grid.cells():
             c = self.grid.get_char(x, y)
             if c != '':
-                self.render_char(context, x, y, c, fheight)
+                self.render_char(context, x, y, c)
     
-    def render_char(self, context, x, y, c, fheight):
+    def render_char(self, context, x, y, c):
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
-        draw_x = (self.line_width +
+        rx = (self.line_width +
             (x + 0.5) * (self.tile_size + self.line_width) -
             xbearing - (width / 2))
-        draw_y = (self.line_width +
-            (y + 0.25) * (self.tile_size + self.line_width) +
-            (fheight / 2))
-        pcr = pangocairo.CairoContext(context)
-        layout = pcr.create_layout()
-
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 12", c))
-        context.save()
-        context.move_to(draw_x, draw_y)
-        pcr.show_layout(layout)
-        context.restore()
+        ry = (self.line_width +
+            (y + 0.25) * (self.tile_size + self.line_width))
+        self._render_pango(context, rx, ry, "Sans 12", c)
     
     def render_numbers(self, context):
         r, g, b = COLORS["number"]
         context.set_source_rgb(r, g, b)
         
-        fascent, fdescent, fheight, fxadvance, fyadvance = context.font_extents()
         for n, x, y in self.grid.words():
-            self.render_number(context, x, y, n, fheight, fdescent)
+            self.render_number(context, x, y, n)
 
-    def render_number(self, context, x, y, number, fheight, fdescent):
-        draw_x = self.line_width + x * (self.tile_size + self.line_width) + 1
-        draw_y = self.line_width + y * (self.tile_size + self.line_width)
+    def render_number(self, context, x, y, n):
+        rx = self.grid_to_screen_x(x, False) + 1
+        ry = self.grid_to_screen_y(y, False)
+        self._render_pango(context, rx, ry, "Sans 7", str(n))
+        
+    def _render_pango(self, context, x, y, font, content):
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 7", str(number)))
+        layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
         context.save()
-        context.move_to(draw_x, draw_y)
+        context.move_to(x, y)
         pcr.show_layout(layout)
         context.restore()
         
@@ -208,9 +195,9 @@ class GridView:
         def render():
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
-            draw_x = -0.5 + self.line_width + x * (self.tile_size + self.line_width)
-            draw_y = -0.5 + self.line_width + y * (self.tile_size + self.line_width)
-            context.rectangle(draw_x, draw_y, self.tile_size + 1, self.tile_size + 1)
+            rx = self.grid_to_screen_x(x, False) - 0.5
+            ry = self.grid_to_screen_y(y, False) - 0.5
+            context.rectangle(rx, ry, self.tile_size + 1, self.tile_size + 1)
             context.fill()
         self._render(context, (r, g, b), render)
     
@@ -253,35 +240,43 @@ class GridView:
             
     def screen_to_grid_x(self, screen_x):
         for x in range(self.grid.width):
-            left_x = self.margin_x + self.line_width + x * (self.tile_size + self.line_width)
-            right_x = self.margin_x + (x + 1) * (self.tile_size + self.line_width)
+            left_x = self.grid_to_screen_x(x)
+            right_x = self.grid_to_screen_x(x) + self.tile_size
             if screen_x >= left_x and screen_x < right_x:
                 return x
         return -1
         
     def screen_to_grid_y(self, screen_y):
         for y in range(self.grid.height):
-            top_y = self.margin_y + self.line_width + y * (self.tile_size + self.line_width)
-            bottom_y = self.margin_y + (y + 1) * (self.tile_size + self.line_width)
+            top_y = self.grid_to_screen_y(y)
+            bottom_y = self.grid_to_screen_y(y) + self.tile_size
             if screen_y >= top_y and screen_y < bottom_y:
                 return y
         return -1
         
-    def grid_to_screen_x(self, x):
-        return self.margin_x + x * self.tile_size + (x + 1) * self.line_width
+    def grid_to_screen_x(self, x, include_padding=True):
+        result = x * self.tile_size + (x + 1) * self.line_width
+        if include_padding:
+            result += self.margin_x
+        return result
     
-    def grid_to_screen_y(self, y):
-        return self.margin_y + y * self.tile_size + (y + 1) * self.line_width
+    def grid_to_screen_y(self, y, include_padding=True):
+        result = y * self.tile_size + (y + 1) * self.line_width
+        if include_padding:
+            result += self.margin_y
+        return result
             
     def visual_width(self, include_padding=True):
+        width = self.get_grid_width()
         if include_padding:
-            return self.margin_x * 2 + self.get_grid_width()
-        return self.get_grid_width()
+            width += (self.margin_x * 2)
+        return width
         
     def visual_height(self, include_padding=True):
+        height = self.get_grid_height()
         if include_padding:
-            return self.margin_y * 2 + self.get_grid_height()
-        return self.get_grid_height()
+            height += (self.margin_y * 2)
+        return height
             
     def get_grid_width(self):
         return self.grid.width * (self.tile_size + self.line_width) + self.line_width
