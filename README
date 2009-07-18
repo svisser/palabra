@@ -5,7 +5,7 @@ Palabra is free software and it is released under the
 GNU General Public License.
 
 Requirements:
-- Python 2.3
+- Python 2.3 (for itertools module)
 - PyGTK 2.8 (for pangocairo module)
 
 Known to work with:
