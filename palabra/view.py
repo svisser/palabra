@@ -54,10 +54,10 @@ SETTINGS_SOLUTION = {
 custom_settings = {}
 
 class RenderTask:
-    def __init__(self, context, grid):
+    def __init__(self, context, settings, grid):
         self.context = context
         self.grid = grid
-        self.settings = {}
+        self.settings = settings
         
         # 0.5 for sharp lines
         self.origin_x = 0.5
@@ -178,6 +178,24 @@ class RenderNumbers(RenderPangoTask):
         rx = self.grid_to_screen_x(x, False) + 1
         ry = self.grid_to_screen_y(y, False)
         self._render_pango(rx, ry, "Sans 7", str(n))
+        
+class RenderCell(RenderTask):
+    def render(self):
+        x, y = self.settings["location"]
+        
+        # -0.5 for coordinates and +1 for size
+        # are needed to render seamlessly in PDF
+        rx = self.grid_to_screen_x(x, False) - 0.5
+        ry = self.grid_to_screen_y(y, False) - 0.5
+        self.context.rectangle(rx, ry, self.tile_size + 1, self.tile_size + 1)
+        self.context.fill()
+        
+class RenderBackground(RenderTask):
+    def render(self):
+        width = self.grid.width * (self.tile_size + self.line_width)
+        height = self.grid.height * (self.tile_size + self.line_width)
+        self.context.rectangle(self.line_width, self.line_width, width, height)
+        self.context.fill()
 
 class GridView:
     def __init__(self, grid):
@@ -192,14 +210,14 @@ class GridView:
         self.line_width = 1
         
     def render_horizontal_line(self, context, x, y, r, g, b):
-        task = RenderHorizontalLine(context, self.grid)
-        task.settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
-        self._render(context, [(task.settings, task.render)])
+        settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
+        task = RenderHorizontalLine(context, settings, self.grid)
+        self._render([task])
         
     def render_vertical_line(self, context, x, y, r, g, b):
-        task = RenderVerticalLine(context, self.grid)
-        task.settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
-        self._render(context, [(task.settings, task.render)])
+        settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
+        task = RenderVerticalLine(context, settings, self.grid)
+        self._render([task])
         
     def render(self, context, mode=None):
         settings = {}
@@ -212,64 +230,53 @@ class GridView:
             settings.update(SETTINGS_PREVIEW)
         elif mode == constants.VIEW_MODE_SOLUTION:
             settings.update(SETTINGS_SOLUTION)
-        
+            
+        tasks = []
+            
         # blocks
-        task = RenderBlocks(context, self.grid)
-        task.settings = {"has_padding": settings["has_padding"], "color": COLORS["block"]}
-        self._render(context, [(task.settings, task.render)])
+        settings.update({"color": COLORS["block"]})
+        tasks.append(RenderBlocks(context, settings, self.grid))
         
         # lines
-        task = RenderLines(context, self.grid)
-        task.settings = {"has_padding": settings["has_padding"], "color": COLORS["line"]}
-        self._render(context, [(task.settings, task.render)])
+        settings.update({"color": COLORS["line"]})
+        tasks.append(RenderLines(context, settings, self.grid))
         
         # border
-        task = RenderBorder(context, self.grid)
-        task.settings = {"has_padding": settings["has_padding"], "color": COLORS["border"]}
-        self._render(context, [(task.settings, task.render)])
+        settings.update({"color": COLORS["border"]})
+        tasks.append(RenderBorder(context, settings, self.grid))
         
         # chars
-        task = RenderChars(context, self.grid)
-        task.settings = {"has_padding": settings["has_padding"], "color": COLORS["char"]}
         if settings["show_chars"]:
-            self._render(context, [(task.settings, task.render)])
+            settings.update({"color": COLORS["char"]})
+            tasks.append(RenderChars(context, settings, self.grid))
         
         # numbers
-        task = RenderNumbers(context, self.grid)
-        task.settings = {"has_padding": settings["has_padding"], "color": COLORS["number"]}
         if settings["show_numbers"]:
-            self._render(context, [(task.settings, task.render)])
+            settings.update({"color": COLORS["number"]})
+            tasks.append(RenderNumbers(context, settings, self.grid))
+            
+        self._render(tasks)
     
     def render_location(self, context, x, y, r, g, b):
-        def render():
-            # -0.5 for coordinates and +1 for size
-            # are needed to render seamlessly in PDF
-            rx = self.grid_to_screen_x(x, False) - 0.5
-            ry = self.grid_to_screen_y(y, False) - 0.5
-            context.rectangle(rx, ry, self.tile_size + 1, self.tile_size + 1)
-            context.fill()
-        settings = {"has_padding": True, "color": (r, g, b)}
-        self._render(context, [(settings, render)])
+        settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
+        task = RenderCell(context, settings, self.grid)
+        self._render([task])
     
     def render_background(self, context):
-        def render():
-            width = self.grid.width * (self.tile_size + self.line_width)
-            height = self.grid.height * (self.tile_size + self.line_width)
-            context.rectangle(self.line_width, self.line_width, width, height)
-            context.fill()
         settings = {"has_padding": True, "color": COLORS["background"]}
-        self._render(context, [(settings, render)])
+        task = RenderBackground(context, settings, self.grid)
+        self._render([task])
         
-    def _render(self, context, tasks):
-        for settings, function in tasks:
-            r, g, b = settings["color"]
-            context.set_source_rgb(r, g, b)
+    def _render(self, tasks):
+        for task in tasks:
+            r, g, b = task.settings["color"]
+            task.context.set_source_rgb(r, g, b)
             
-            if settings["has_padding"]:
-                context.translate(self.margin_x, self.margin_y)
-            function()
-            if settings["has_padding"]:
-                context.translate(-self.margin_x, -self.margin_y)
+            if task.settings["has_padding"]:
+                task.context.translate(self.margin_x, self.margin_y)
+            task.render()
+            if task.settings["has_padding"]:
+                task.context.translate(-self.margin_x, -self.margin_y)
         
     def refresh_horizontal_line(self, drawing_area, y):
         self._refresh(drawing_area, self.grid.in_direction("across", 0, y))
