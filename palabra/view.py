@@ -53,11 +53,10 @@ SETTINGS_SOLUTION = {
 }
 custom_settings = {}
 
-class RenderTask:
-    def __init__(self, context, settings, grid):
-        self.context = context
-        self.grid = grid
-        self.settings = settings
+class GridViewProperties:
+    def __init__(self, grid):
+        self.width = grid.width
+        self.height = grid.height
         
         # 0.5 for sharp lines
         self.origin_x = 0.5
@@ -67,157 +66,68 @@ class RenderTask:
         self.margin_y = 10
         self.line_width = 1
         
+        self.recalculate()
+
+    # needs to run when properties mentioned in this function change
+    def recalculate(self):
         # excluding borders
-        self.total_width = self.grid.width * (self.tile_size + self.line_width)
-        self.total_height = self.grid.height * (self.tile_size + self.line_width)
+        self.total_width = self.width * (self.tile_size + self.line_width)
+        self.total_height = self.height * (self.tile_size + self.line_width)
+        
+        self.full_width = self.width * (self.tile_size + self.line_width) + self.line_width
+        self.full_height = self.height * (self.tile_size + self.line_width) + self.line_width
         
     def grid_to_screen_x(self, x, include_padding=True):
         result = x * self.tile_size + (x + 1) * self.line_width
         if include_padding:
             result += self.margin_x
         return result
-    
+        
     def grid_to_screen_y(self, y, include_padding=True):
         result = y * self.tile_size + (y + 1) * self.line_width
         if include_padding:
             result += self.margin_y
         return result
         
-class RenderHorizontalLine(RenderTask):
-    def render(self):
-        x, y = self.settings["location"]
+    def screen_to_grid_x(self, screen_x):
+        for x in range(self.width):
+            left_x = self.grid_to_screen_x(x)
+            right_x = self.grid_to_screen_x(x) + self.tile_size
+            if screen_x >= left_x and screen_x < right_x:
+                return x
+        return -1
         
-        a = self.grid.in_direction("across", x, y)
-        b = self.grid.in_direction("across", x, y, reverse=True)
-        for p, q in chain(a, b):
-            rx = self.grid_to_screen_x(p, False)
-            ry = self.grid_to_screen_y(y, False)
-            self.context.rectangle(rx, ry, self.tile_size, self.tile_size)
-        self.context.fill()
+    def screen_to_grid_y(self, screen_y):
+        for y in range(self.height):
+            top_y = self.grid_to_screen_y(y)
+            bottom_y = self.grid_to_screen_y(y) + self.tile_size
+            if screen_y >= top_y and screen_y < bottom_y:
+                return y
+        return -1
         
-class RenderVerticalLine(RenderTask):
-    def render(self):
-        x, y = self.settings["location"]
+    def visual_width(self, include_padding=True):
+        width = self.get_grid_width()
+        if include_padding:
+            width += (self.margin_x * 2)
+        return width
+    
+    def visual_height(self, include_padding=True):
+        height = self.get_grid_height()
+        if include_padding:
+            height += (self.margin_y * 2)
+        return height
         
-        a = self.grid.in_direction("down", x, y)
-        b = self.grid.in_direction("down", x, y, reverse=True)
-        for p, q in chain(a, b):
-            rx = self.grid_to_screen_x(x, False)
-            ry = self.grid_to_screen_y(q, False)
-            self.context.rectangle(rx, ry, self.tile_size, self.tile_size)
-        self.context.fill()
+    def get_grid_width(self):
+        return self.full_width
         
-class RenderBlocks(RenderTask):
-    def render(self):
-        for x, y in self.grid.cells():
-            if self.grid.is_block(x, y):
-                # -0.5 for coordinates and +1 for size
-                # are needed to render seamlessly in PDF
-                rx = self.grid_to_screen_x(x, False) - 0.5
-                ry = self.grid_to_screen_y(y, False) - 0.5
-                self.context.rectangle(rx, ry, self.tile_size + 1, self.tile_size + 1)
-        self.context.fill()
-        
-class RenderLines(RenderTask):
-    def render(self):
-        self.context.set_line_width(self.line_width)
-        self.context.move_to(self.tile_size + 1.5 * self.line_width, self.line_width)
-        for i in range(self.grid.width - 1):
-            line_length = self.total_height
-            self.context.rel_line_to(0, line_length)
-            self.context.rel_move_to(self.tile_size + self.line_width, -line_length)
-            
-        self.context.move_to(self.line_width, self.tile_size + 1.5 * self.line_width)
-        for j in range(self.grid.height - 1):
-            line_length = self.total_width
-            self.context.rel_line_to(line_length, 0)
-            self.context.rel_move_to(-line_length, self.tile_size + self.line_width)
-        self.context.stroke()
-        
-class RenderBorder(RenderTask):
-    def render(self):
-        self.context.set_line_width(self.line_width)
-        x = 0.5 * self.line_width
-        y = 0.5 * self.line_width
-        self.context.rectangle(x, y, self.total_width, self.total_height)
-        self.context.stroke()
-        
-class RenderPangoTask(RenderTask):
-    def _render_pango(self, x, y, font, content):
-        pcr = pangocairo.CairoContext(self.context)
-        layout = pcr.create_layout()
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
-        self.context.save()
-        self.context.move_to(x, y)
-        pcr.show_layout(layout)
-        self.context.restore()
-        
-class RenderChars(RenderPangoTask):
-    def render(self):
-        for x, y in self.grid.cells():
-            c = self.grid.get_char(x, y)
-            if c != '':
-                self._render_char(x, y, c)
-                
-    def _render_char(self, x, y, c):
-        xbearing, ybearing, width, height, xadvance, yadvance = self.context.text_extents(c)
-                    
-        rx = (self.line_width +
-            (x + 0.5) * (self.tile_size + self.line_width) -
-            xbearing - (width / 2))
-        ry = (self.line_width +
-            (y + 0.25) * (self.tile_size + self.line_width))
-        self._render_pango(rx, ry, "Sans 12", c)
-        
-class RenderNumbers(RenderPangoTask):
-    def render(self):
-        for n, x, y in self.grid.words():
-            self._render_number(x, y, n)
-            
-    def _render_number(self, x, y, n):
-        rx = self.grid_to_screen_x(x, False) + 1
-        ry = self.grid_to_screen_y(y, False)
-        self._render_pango(rx, ry, "Sans 7", str(n))
-        
-class RenderCell(RenderTask):
-    def render(self):
-        x, y = self.settings["location"]
-        
-        # -0.5 for coordinates and +1 for size
-        # are needed to render seamlessly in PDF
-        rx = self.grid_to_screen_x(x, False) - 0.5
-        ry = self.grid_to_screen_y(y, False) - 0.5
-        self.context.rectangle(rx, ry, self.tile_size + 1, self.tile_size + 1)
-        self.context.fill()
-        
-class RenderBackground(RenderTask):
-    def render(self):
-        width = self.grid.width * (self.tile_size + self.line_width)
-        height = self.grid.height * (self.tile_size + self.line_width)
-        self.context.rectangle(self.line_width, self.line_width, width, height)
-        self.context.fill()
+    def get_grid_height(self):
+        return self.full_height
 
 class GridView:
     def __init__(self, grid):
         self.grid = grid
-        
-        # 0.5 for sharp lines
-        self.origin_x = 0.5
-        self.origin_y = 0.5
-        self.tile_size = 32
-        self.margin_x = 10
-        self.margin_y = 10
-        self.line_width = 1
-        
-    def render_horizontal_line(self, context, x, y, r, g, b):
-        settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
-        task = RenderHorizontalLine(context, settings, self.grid)
-        self._render([task])
-        
-    def render_vertical_line(self, context, x, y, r, g, b):
-        settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
-        task = RenderVerticalLine(context, settings, self.grid)
-        self._render([task])
+        self.properties = GridViewProperties(self.grid)
+        self.settings = SETTINGS_EDITOR
         
     def render(self, context, mode=None):
         settings = {}
@@ -231,52 +141,145 @@ class GridView:
         elif mode == constants.VIEW_MODE_SOLUTION:
             settings.update(SETTINGS_SOLUTION)
             
-        tasks = []
-            
-        # blocks
-        settings.update({"color": COLORS["block"]})
-        tasks.append(RenderBlocks(context, settings, self.grid))
-        
-        # lines
-        settings.update({"color": COLORS["line"]})
-        tasks.append(RenderLines(context, settings, self.grid))
-        
-        # border
-        settings.update({"color": COLORS["border"]})
-        tasks.append(RenderBorder(context, settings, self.grid))
+        self.render_blocks(context)
+        self.render_lines(context)
+        self.render_border(context)
         
         # chars
         if settings["show_chars"]:
-            settings.update({"color": COLORS["char"]})
-            tasks.append(RenderChars(context, settings, self.grid))
-        
+            self.render_chars(context)
+
         # numbers
         if settings["show_numbers"]:
-            settings.update({"color": COLORS["number"]})
-            tasks.append(RenderNumbers(context, settings, self.grid))
-            
-        self._render(tasks)
+            self.render_numbers(context)
+        
+    def render_blocks(self, context):
+        def render(context, grid, settings):
+            for x, y in grid.cells():
+                if grid.is_block(x, y):
+                    # -0.5 for coordinates and +1 for size
+                    # are needed to render seamlessly in PDF
+                    rx = settings.grid_to_screen_x(x, False) - 0.5
+                    ry = settings.grid_to_screen_y(y, False) - 0.5
+                    context.rectangle(rx, ry, settings.tile_size + 1, settings.tile_size + 1)
+            context.fill()
+        self._render(context, render, color=COLORS["block"])
+        
+    def render_lines(self, context):
+        def render(context, grid, settings):
+            context.set_line_width(settings.line_width)
+            context.move_to(settings.tile_size + 1.5 * settings.line_width, settings.line_width)
+            for i in range(grid.width - 1):
+                line_length = settings.total_height
+                context.rel_line_to(0, line_length)
+                context.rel_move_to(settings.tile_size + settings.line_width, -line_length)
+                
+            context.move_to(settings.line_width, settings.tile_size + 1.5 * settings.line_width)
+            for j in range(grid.height - 1):
+                line_length = settings.total_width
+                context.rel_line_to(line_length, 0)
+                context.rel_move_to(-line_length, settings.tile_size + settings.line_width)
+            context.stroke()
+        self._render(context, render, color=COLORS["line"])
+        
+    def render_border(self, context):
+        def render(context, grid, settings):
+            context.set_line_width(settings.line_width)
+            x = 0.5 * settings.line_width
+            y = 0.5 * settings.line_width
+            context.rectangle(x, y, settings.total_width, settings.total_height)
+            context.stroke()
+        self._render(context, render, color=COLORS["border"])
+        
+    def render_horizontal_line(self, context, x, y, r, g, b):
+        def render(context, grid, props):
+            a = grid.in_direction("across", x, y)
+            b = grid.in_direction("across", x, y, reverse=True)
+            for p, q in chain(a, b):
+                rx = props.grid_to_screen_x(p, False)
+                ry = props.grid_to_screen_y(y, False)
+                context.rectangle(rx, ry, props.tile_size, props.tile_size)
+            context.fill()
+        self._render(context, render, color=(r, g, b))
+        
+    def render_vertical_line(self, context, x, y, r, g, b):
+        def render(context, grid, props):
+            a = grid.in_direction("down", x, y)
+            b = grid.in_direction("down", x, y, reverse=True)
+            for p, q in chain(a, b):
+                rx = props.grid_to_screen_x(x, False)
+                ry = props.grid_to_screen_y(q, False)
+                context.rectangle(rx, ry, props.tile_size, props.tile_size)
+            context.fill()
+        self._render(context, render, color=(r, g, b))
+        
+    def render_chars(self, context):
+        def render(context, grid, settings):
+            for x, y in grid.cells():
+                c = grid.get_char(x, y)
+                if c != '':
+                    self._render_char(context, settings, x, y, c)
+        self._render(context, render, color=COLORS["char"])
+        
+    def render_numbers(self, context):
+        def render(context, grid, settings):
+            for n, x, y in grid.words():
+                self._render_number(context, settings, x, y, n)
+        self._render(context, render, color=COLORS["number"])
     
     def render_location(self, context, x, y, r, g, b):
-        settings = {"has_padding": True, "location": (x, y), "color": (r, g, b)}
-        task = RenderCell(context, settings, self.grid)
-        self._render([task])
+        def render(context, grid, settings):
+            # -0.5 for coordinates and +1 for size
+            # are needed to render seamlessly in PDF
+            rx = settings.grid_to_screen_x(x, False) - 0.5
+            ry = settings.grid_to_screen_y(y, False) - 0.5
+            context.rectangle(rx, ry, settings.tile_size + 1, settings.tile_size + 1)
+            context.fill()
+        self._render(context, render, color=(r, g, b))
     
     def render_background(self, context):
-        settings = {"has_padding": True, "color": COLORS["background"]}
-        task = RenderBackground(context, settings, self.grid)
-        self._render([task])
+        def render(context, grid, settings):
+            width = grid.width * (settings.tile_size + settings.line_width)
+            height = grid.height * (settings.tile_size + settings.line_width)
+            context.rectangle(settings.line_width, settings.line_width, width, height)
+            context.fill()
+        self._render(context, render, color=COLORS["background"])
         
-    def _render(self, tasks):
-        for task in tasks:
-            r, g, b = task.settings["color"]
-            task.context.set_source_rgb(r, g, b)
+    def _render_pango(self, context, x, y, font, content):
+        pcr = pangocairo.CairoContext(context)
+        layout = pcr.create_layout()
+        layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
+        context.save()
+        context.move_to(x, y)
+        pcr.show_layout(layout)
+        context.restore()
+        
+    def _render_char(self, context, settings, x, y, c):
+        xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
+                    
+        rx = (settings.line_width +
+            (x + 0.5) * (settings.tile_size + settings.line_width) -
+            xbearing - (width / 2))
+        ry = (settings.line_width +
+            (y + 0.25) * (settings.tile_size + settings.line_width))
+        self._render_pango(context, rx, ry, "Sans 12", c)
+        
+    def _render_number(self, context, settings, x, y, n):
+        rx = settings.grid_to_screen_x(x, False) + 1
+        ry = settings.grid_to_screen_y(y, False)
+        self._render_pango(context, rx, ry, "Sans 7", str(n))
             
-            if task.settings["has_padding"]:
-                task.context.translate(self.margin_x, self.margin_y)
-            task.render()
-            if task.settings["has_padding"]:
-                task.context.translate(-self.margin_x, -self.margin_y)
+    def _render(self, context, render, **args):
+        r, g, b = args["color"]
+        context.set_source_rgb(r, g, b)
+        
+        if self.settings["has_padding"]:
+            context.translate(self.properties.margin_x, self.properties.margin_y)
+        
+        render(context, self.grid, self.properties)
+        
+        if self.settings["has_padding"]:
+            context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
     def refresh_horizontal_line(self, drawing_area, y):
         self._refresh(drawing_area, self.grid.in_direction("across", 0, y))
@@ -289,9 +292,9 @@ class GridView:
         
     def _refresh(self, drawing_area, cells):
         for x, y in cells:
-            rx = self.grid_to_screen_x(x)
-            ry = self.grid_to_screen_y(y)
-            drawing_area.queue_draw_area(rx, ry, self.tile_size, self.tile_size)
+            rx = self.properties.grid_to_screen_x(x)
+            ry = self.properties.grid_to_screen_y(y)
+            drawing_area.queue_draw_area(rx, ry, self.properties.tile_size, self.properties.tile_size)
             
     # needs manual queue_draw() on drawing_area afterwards
     def update_visual_size(self, drawing_area):
@@ -300,47 +303,25 @@ class GridView:
         drawing_area.set_size_request(visual_width, visual_height)
             
     def screen_to_grid_x(self, screen_x):
-        for x in range(self.grid.width):
-            left_x = self.grid_to_screen_x(x)
-            right_x = self.grid_to_screen_x(x) + self.tile_size
-            if screen_x >= left_x and screen_x < right_x:
-                return x
-        return -1
+        return self.properties.screen_to_grid_x(screen_x)
         
     def screen_to_grid_y(self, screen_y):
-        for y in range(self.grid.height):
-            top_y = self.grid_to_screen_y(y)
-            bottom_y = self.grid_to_screen_y(y) + self.tile_size
-            if screen_y >= top_y and screen_y < bottom_y:
-                return y
-        return -1
+        return self.properties.screen_to_grid_y(screen_y)
         
     def grid_to_screen_x(self, x, include_padding=True):
-        result = x * self.tile_size + (x + 1) * self.line_width
-        if include_padding:
-            result += self.margin_x
-        return result
+        return self.properties.grid_to_screen_x(x, include_padding)
     
     def grid_to_screen_y(self, y, include_padding=True):
-        result = y * self.tile_size + (y + 1) * self.line_width
-        if include_padding:
-            result += self.margin_y
-        return result
+        return self.properties.grid_to_screen_y(y, include_padding)
             
     def visual_width(self, include_padding=True):
-        width = self.get_grid_width()
-        if include_padding:
-            width += (self.margin_x * 2)
-        return width
+        return self.properties.visual_width(include_padding)
         
     def visual_height(self, include_padding=True):
-        height = self.get_grid_height()
-        if include_padding:
-            height += (self.margin_y * 2)
-        return height
+        return self.properties.visual_height(include_padding)
             
     def get_grid_width(self):
-        return self.grid.width * (self.tile_size + self.line_width) + self.line_width
+        return self.properties.get_grid_width()
         
     def get_grid_height(self):
-        return self.grid.height * (self.tile_size + self.line_width) + self.line_width
+        return self.properties.get_grid_height()

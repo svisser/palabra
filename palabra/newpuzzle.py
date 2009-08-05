@@ -560,7 +560,8 @@ class GridPreview(gtk.VBox):
         
     def refresh(self):
         if self.view is not None:
-            self.view.tile_size = self.tile_size
+            self.view.properties.tile_size = self.tile_size
+            self.view.properties.recalculate()
             self.view.update_visual_size(self.drawing_area)
             self.drawing_area.queue_draw()
         
