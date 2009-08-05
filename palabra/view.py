@@ -55,8 +55,7 @@ custom_settings = {}
 
 class GridViewProperties:
     def __init__(self, grid):
-        self.width = grid.width
-        self.height = grid.height
+        self.grid = grid
         
         # 0.5 for sharp lines
         self.origin_x = 0.5
@@ -65,17 +64,6 @@ class GridViewProperties:
         self.margin_x = 10
         self.margin_y = 10
         self.line_width = 1
-        
-        self.recalculate()
-
-    # needs to run when properties mentioned in this function change
-    def recalculate(self):
-        # excluding borders
-        self.total_width = self.width * (self.tile_size + self.line_width)
-        self.total_height = self.height * (self.tile_size + self.line_width)
-        
-        self.full_width = self.width * (self.tile_size + self.line_width) + self.line_width
-        self.full_height = self.height * (self.tile_size + self.line_width) + self.line_width
         
     def grid_to_screen_x(self, x, include_padding=True):
         result = x * self.tile_size + (x + 1) * self.line_width
@@ -90,7 +78,7 @@ class GridViewProperties:
         return result
         
     def screen_to_grid_x(self, screen_x):
-        for x in range(self.width):
+        for x in range(self.grid.width):
             left_x = self.grid_to_screen_x(x)
             right_x = self.grid_to_screen_x(x) + self.tile_size
             if screen_x >= left_x and screen_x < right_x:
@@ -98,7 +86,7 @@ class GridViewProperties:
         return -1
         
     def screen_to_grid_y(self, screen_y):
-        for y in range(self.height):
+        for y in range(self.grid.height):
             top_y = self.grid_to_screen_y(y)
             bottom_y = self.grid_to_screen_y(y) + self.tile_size
             if screen_y >= top_y and screen_y < bottom_y:
@@ -118,10 +106,10 @@ class GridViewProperties:
         return height
         
     def get_grid_width(self):
-        return self.full_width
+        return self.grid.width * (self.tile_size + self.line_width) + self.line_width
         
     def get_grid_height(self):
-        return self.full_height
+        return self.grid.height * (self.tile_size + self.line_width) + self.line_width
 
 class GridView:
     def __init__(self, grid):
@@ -173,13 +161,13 @@ class GridView:
             context.set_line_width(settings.line_width)
             context.move_to(settings.tile_size + 1.5 * settings.line_width, settings.line_width)
             for i in range(grid.width - 1):
-                line_length = settings.total_height
+                line_length = settings.get_grid_height() - settings.line_width
                 context.rel_line_to(0, line_length)
                 context.rel_move_to(settings.tile_size + settings.line_width, -line_length)
                 
             context.move_to(settings.line_width, settings.tile_size + 1.5 * settings.line_width)
             for j in range(grid.height - 1):
-                line_length = settings.total_width
+                line_length = settings.get_grid_width() - settings.line_width
                 context.rel_line_to(line_length, 0)
                 context.rel_move_to(-line_length, settings.tile_size + settings.line_width)
             context.stroke()
@@ -190,7 +178,9 @@ class GridView:
             context.set_line_width(settings.line_width)
             x = 0.5 * settings.line_width
             y = 0.5 * settings.line_width
-            context.rectangle(x, y, settings.total_width, settings.total_height)
+            width = settings.get_grid_width() - settings.line_width
+            height = settings.get_grid_height() - settings.line_width
+            context.rectangle(x, y, width, height)
             context.stroke()
         self._render(context, render, color=COLORS["border"])
         
