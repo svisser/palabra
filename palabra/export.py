@@ -51,7 +51,7 @@ class ExportWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-            gtk.STOCK_OK, gtk.RESPONSE_OK)
+            gtk.STOCK_SAVE, gtk.RESPONSE_OK)
         super(ExportWindow, self).__init__("Export puzzle", palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         
@@ -104,7 +104,14 @@ class ExportWindow(gtk.Dialog):
         main.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         
-        main.pack_start(tree_window, False, False, 9)
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup("<b>Export to:</b>")
+        format_vbox = gtk.VBox(False, 0)
+        format_vbox.pack_start(label, False, False, 6)
+        format_vbox.pack_start(tree_window, True, True, 6)
+        
+        main.pack_start(format_vbox, False, False, 0)
         main.pack_start(self.options_window, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
