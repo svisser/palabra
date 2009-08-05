@@ -127,30 +127,33 @@ class GridView:
     def __init__(self, grid):
         self.grid = grid
         self.properties = GridViewProperties(self.grid)
-        self.settings = SETTINGS_EDITOR
+        self.select_mode(constants.VIEW_MODE_EDITOR)
         
-    def render(self, context, mode=None):
-        settings = {}
+    def select_mode(self, mode):
+        self.settings = {}
         if mode == constants.VIEW_MODE_EDITOR:
-            settings.update(SETTINGS_EDITOR)
-            settings.update(custom_settings)
+            self.settings.update(SETTINGS_EDITOR)
+            self.settings.update(custom_settings)
         elif mode == constants.VIEW_MODE_EMPTY:
-            settings.update(SETTINGS_EMPTY)
+            self.settings.update(SETTINGS_EMPTY)
         elif mode == constants.VIEW_MODE_PREVIEW:
-            settings.update(SETTINGS_PREVIEW)
+            self.settings.update(SETTINGS_PREVIEW)
         elif mode == constants.VIEW_MODE_SOLUTION:
-            settings.update(SETTINGS_SOLUTION)
+            self.settings.update(SETTINGS_SOLUTION)
+        
+    def render(self, context, mode=constants.VIEW_MODE_EDITOR):
+        self.select_mode(mode)
             
         self.render_blocks(context)
         self.render_lines(context)
         self.render_border(context)
         
         # chars
-        if settings["show_chars"]:
+        if self.settings["show_chars"]:
             self.render_chars(context)
 
         # numbers
-        if settings["show_numbers"]:
+        if self.settings["show_numbers"]:
             self.render_numbers(context)
         
     def render_blocks(self, context):

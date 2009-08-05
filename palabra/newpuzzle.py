@@ -572,6 +572,7 @@ class GridPreview(gtk.VBox):
     def on_expose_event(self, drawing_area, event):
         if self.view is not None:
             context = drawing_area.window.cairo_create()
+            self.view.select_mode(constants.VIEW_MODE_PREVIEW)
             self.view.render_background(context)
             self.view.render(context, mode=constants.VIEW_MODE_PREVIEW)
         

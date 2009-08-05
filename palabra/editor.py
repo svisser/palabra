@@ -81,6 +81,8 @@ class Editor(gtk.HBox):
     def on_expose_event(self, drawing_area, event):
         context = drawing_area.window.cairo_create()
         
+        self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
+        
         self.puzzle.view.render_background(context)
         
         #secondary_selection_red = preferences.prefs["color_secondary_selection_red"] / 65535.0
