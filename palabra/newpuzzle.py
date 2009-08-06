@@ -504,10 +504,11 @@ class NewWindow(gtk.Dialog):
             
             templates = import_templates(dialog.get_filename())
             if len(templates) == 0:
-                message = "This file does not appear to be a valid Palabra template file."
+                message = u"This file does not appear to be a valid Palabra template file."
                 mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
                     , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
                 mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+                mdialog.set_title(u"Invalid file")
                 mdialog.run()
                 mdialog.destroy()
             else:

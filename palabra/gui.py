@@ -189,10 +189,11 @@ class PalabraWindow(gtk.Window):
                 filename = dialog.get_filename()
                 puzzle = import_puzzle(filename)
                 if puzzle is None:
-                    message = "This file does not appear to be a valid Palabra puzzle file."
+                    message = u"This file does not appear to be a valid Palabra puzzle file."
                     mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
                         , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
                     mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+                    mdialog.set_title(u"Invalid file")
                     mdialog.run()
                     mdialog.destroy()
                 else:
@@ -323,9 +324,9 @@ class PalabraWindow(gtk.Window):
                 , gtk.STOCK_NO, gtk.RESPONSE_NO
                 , gtk.STOCK_YES, gtk.RESPONSE_YES))
             dialog.set_default_response(gtk.RESPONSE_CLOSE)
-            dialog.set_title("Close without saving")
+            dialog.set_title(u"Close without saving")
 
-            label = gtk.Label("Save the changes to the current puzzle before closing?")
+            label = gtk.Label(u"Save the changes to the current puzzle before closing?")
             hbox = gtk.HBox(False, 0)
             hbox.pack_start(image, False, False, 0)
             hbox.pack_start(label, True, False, 10)
