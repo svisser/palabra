@@ -23,14 +23,6 @@ import pangocairo
 
 import constants
 
-COLORS = {
-    "background": (1, 1, 1)
-    , "border": (0, 0, 0)
-    , "block": (0, 0, 0)
-    , "line": (0, 0, 0)
-    , "char": (0, 0, 0)
-    , "number": (0, 0, 0)
-}
 SETTINGS_PREVIEW = {
     "has_padding": True
     , "show_chars": False
@@ -52,6 +44,15 @@ SETTINGS_SOLUTION = {
     , "show_numbers": True
 }
 custom_settings = {}
+custom_appearance = {}
+custom_appearance["colors"] = {
+    "background": (1, 1, 1)
+    , "border": (0, 0, 0)
+    , "block": (0, 0, 0)
+    , "line": (0, 0, 0)
+    , "char": (0, 0, 0)
+    , "number": (0, 0, 0)
+}
 
 class GridViewProperties:
     def __init__(self, grid):
@@ -119,6 +120,7 @@ class GridView:
         
     def select_mode(self, mode):
         self.settings = {}
+        self.settings.update(custom_appearance)
         if mode == constants.VIEW_MODE_EDITOR:
             self.settings.update(SETTINGS_EDITOR)
             self.settings.update(custom_settings)
@@ -154,7 +156,7 @@ class GridView:
                     ry = settings.grid_to_screen_y(y, False) - 0.5
                     context.rectangle(rx, ry, settings.tile_size + 1, settings.tile_size + 1)
             context.fill()
-        self._render(context, render, color=COLORS["block"])
+        self._render(context, render, color=self.settings["colors"]["block"])
         
     def render_lines(self, context):
         def render(context, grid, settings):
@@ -171,7 +173,7 @@ class GridView:
                 context.rel_line_to(line_length, 0)
                 context.rel_move_to(-line_length, settings.tile_size + settings.line_width)
             context.stroke()
-        self._render(context, render, color=COLORS["line"])
+        self._render(context, render, color=self.settings["colors"]["line"])
         
     def render_border(self, context):
         def render(context, grid, settings):
@@ -182,7 +184,7 @@ class GridView:
             height = settings.get_grid_height() - settings.line_width
             context.rectangle(x, y, width, height)
             context.stroke()
-        self._render(context, render, color=COLORS["border"])
+        self._render(context, render, color=self.settings["colors"]["border"])
         
     def render_horizontal_line(self, context, x, y, r, g, b):
         def render(context, grid, props):
@@ -212,13 +214,13 @@ class GridView:
                 c = grid.get_char(x, y)
                 if c != '':
                     self._render_char(context, settings, x, y, c)
-        self._render(context, render, color=COLORS["char"])
+        self._render(context, render, color=self.settings["colors"]["char"])
         
     def render_numbers(self, context):
         def render(context, grid, settings):
             for n, x, y in grid.words():
                 self._render_number(context, settings, x, y, n)
-        self._render(context, render, color=COLORS["number"])
+        self._render(context, render, color=self.settings["colors"]["number"])
     
     def render_location(self, context, x, y, r, g, b):
         def render(context, grid, settings):
@@ -236,7 +238,7 @@ class GridView:
             height = grid.height * (settings.tile_size + settings.line_width)
             context.rectangle(settings.line_width, settings.line_width, width, height)
             context.fill()
-        self._render(context, render, color=COLORS["background"])
+        self._render(context, render, color=self.settings["colors"]["background"])
         
     def _render_pango(self, context, x, y, font, content):
         pcr = pangocairo.CairoContext(context)
