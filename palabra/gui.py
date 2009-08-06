@@ -19,9 +19,8 @@ import gtk
 import os
 
 import action
-from clue import (
-    ClueEditor,
-)
+from appearance import AppearanceDialog
+from clue import ClueEditor
 import constants
 from export import (
     verify_output_options,
@@ -35,25 +34,15 @@ from files import (
     export_template,
 )
 import grid
-from grid import (
-    Grid,
-)
-from newpuzzle import (
-    NewWindow,
-    SizeWindow,
-)
+from grid import Grid
+from newpuzzle import NewWindow, SizeWindow
 import preferences
 from preferences import (
     PreferencesWindow,
     write_config_file,
 )
-from properties import (
-    PropertiesWindow,
-)
-from puzzle import (
-    Puzzle,
-    PuzzleManager,
-)
+from properties import PropertiesWindow
+from puzzle import Puzzle, PuzzleManager
 import transform
 import view
 
@@ -890,9 +879,29 @@ class PalabraWindow(gtk.Window):
         item.set_active(True)
         toggle_numbers(True)
         
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.edit_appearance()
+            , u"Modify the appearance of the puzzle"
+            , title=u"Modify _appearance"
+            , is_puzzle_sensitive=True))
+        
         view_menu = gtk.MenuItem("_View", True)
         view_menu.set_submenu(menu)
         return view_menu
+        
+    def edit_appearance(self):
+        editor = AppearanceDialog(self)
+        editor.show_all()
+        response = editor.run()
+        if response == gtk.RESPONSE_OK:
+            appearance = editor.gather_appearance()
+            
+            view = self.puzzle_manager.current_puzzle.view
+            view.properties.tile_size = appearance["tile_size"]
+            self.update_window()
+        editor.destroy()
 
     def toggle_toolbar(self, widget):
         if widget.active:
