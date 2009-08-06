@@ -63,7 +63,7 @@ class GridViewProperties:
         self.tile_size = 32
         self.margin_x = 10
         self.margin_y = 10
-        self.line_width = 10
+        self.line_width = 1
         
     def grid_to_screen_x(self, x, include_padding=True):
         result = x * self.tile_size + (x + 1) * self.line_width
