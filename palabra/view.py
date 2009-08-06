@@ -252,9 +252,10 @@ class GridView:
                     
         rx = (settings.line_width +
             (x + 0.5) * (settings.tile_size + settings.line_width) -
-            xbearing - (width / 2))
+            width - abs(xbearing))
         ry = (settings.line_width +
-            (y + 0.25) * (settings.tile_size + settings.line_width))
+            (y + 0.5) * (settings.tile_size + settings.line_width) -
+            height - abs(ybearing))
         self._render_pango(context, rx, ry, "Sans 12", c)
         
     def _render_number(self, context, settings, x, y, n):
