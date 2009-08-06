@@ -17,7 +17,8 @@ Known to work with:
 
 The following keyboard commands can be used for editing:
 
-- Hold SHIFT and click at a cell to place or remove a block.
+- Hold SHIFT and left-click at a cell to place a block.
+- Hold SHIFT and right-click at a cell to remove a block.
 - Use HOME and END to jump to the beginning or end of the current word.
 - Use TAB to switch the typing direction.
 - Use the ARROW KEYS to select the cell next to the current cell.
