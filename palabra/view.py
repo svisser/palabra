@@ -63,7 +63,7 @@ class GridViewProperties:
         self.tile_size = 32
         self.margin_x = 10
         self.margin_y = 10
-        self.line_width = 1
+        self.line_width = 10
         
     def grid_to_screen_x(self, x, include_padding=True):
         result = x * self.tile_size + (x + 1) * self.line_width
@@ -251,11 +251,11 @@ class GridView:
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
         rx = (settings.line_width +
-            (x + 0.5) * (settings.tile_size + settings.line_width) -
-            width - abs(xbearing))
+            (x + 0.55) * (settings.tile_size + settings.line_width) -
+            width - settings.line_width / 2 - abs(xbearing) / 2)
         ry = (settings.line_width +
-            (y + 0.5) * (settings.tile_size + settings.line_width) -
-            height - abs(ybearing))
+            (y + 0.55) * (settings.tile_size + settings.line_width) -
+            height - settings.line_width / 2 - abs(ybearing) / 2)
         self._render_pango(context, rx, ry, "Sans 12", c)
         
     def _render_number(self, context, settings, x, y, n):
