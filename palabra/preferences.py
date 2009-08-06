@@ -24,49 +24,44 @@ import grid
 
 import ConfigParser
 
-color_schemes = []
-color_schemes.append(
-    {"title": "Yellow"
+color_schemes_order = ["yellow", "red", "green", "blue", "purple", "cyan"]
+color_schemes = {}
+color_schemes["yellow"] = {"title": "Yellow"
     ,"primary_selection": (65535, 65535, 16383)
     ,"primary_active":    (65535, 65535, 16383)
     ,"secondary_active":  (65535, 65535, 49152)
     ,"current_word":      (65535, 65535, 49152)
-    })
-color_schemes.append(
-    {"title": "Red"
+    }
+color_schemes["red"] = {"title": "Red"
     ,"primary_selection": (65535, 16383, 16383)
     ,"primary_active":    (65535, 16383, 16383)
     ,"secondary_active":  (65535, 49152, 49152)
     ,"current_word":      (65535, 49152, 49152)
-    })
-color_schemes.append(
-    {"title": "Green"
+    }
+color_schemes["green"] = {"title": "Green"
     ,"primary_selection": (16383, 65535, 16383)
     ,"primary_active":    (16383, 65535, 16383)
     ,"secondary_active":  (49152, 65535, 49152)
     ,"current_word":      (49152, 65535, 49152)
-    })
-color_schemes.append(
-    {"title": "Blue"
+    }
+color_schemes["blue"] = {"title": "Blue"
     ,"primary_selection": (16383, 16383, 65535)
     ,"primary_active":    (16383, 16383, 65535)
     ,"secondary_active":  (49152, 49152, 65535)
     ,"current_word":      (49152, 49152, 65535)
-    })
-color_schemes.append(
-    {"title": "Purple"
+    }
+color_schemes["purple"] = {"title": "Purple"
     ,"primary_selection": (65535, 16383, 65535)
     ,"primary_active":    (65535, 16383, 65535)
     ,"secondary_active":  (65535, 49152, 65535)
     ,"current_word":      (65535, 49152, 65535)
-    })
-color_schemes.append(
-    {"title": "Cyan"
+    }
+color_schemes["cyan"] = {"title": "Cyan"
     ,"primary_selection": (16383, 65535, 65535)
     ,"primary_active":    (16383, 65535, 65535)
     ,"secondary_active":  (49152, 65535, 65535)
     ,"current_word":      (49152, 65535, 65535)
-    })    
+    }   
 
 prefs = {}
 
@@ -75,21 +70,21 @@ defaults["new_initial_height"] = (15, int)
 defaults["new_initial_width"] = (15, int)
 defaults["undo_stack_size"] = (50, int)
 defaults["undo_use_finite_stack"] = (True, bool)
-defaults["color_primary_selection_red"] = (color_schemes[0]["primary_selection"][0], int)
-defaults["color_primary_selection_green"] = (color_schemes[0]["primary_selection"][1], int)
-defaults["color_primary_selection_blue"] = (color_schemes[0]["primary_selection"][2], int)
+defaults["color_primary_selection_red"] = (color_schemes["yellow"]["primary_selection"][0], int)
+defaults["color_primary_selection_green"] = (color_schemes["yellow"]["primary_selection"][1], int)
+defaults["color_primary_selection_blue"] = (color_schemes["yellow"]["primary_selection"][2], int)
 #defaults["color_secondary_selection_red"] = (65535, int)
 #defaults["color_secondary_selection_green"] = (65535, int)
 #defaults["color_secondary_selection_blue"] = (49152, int)
-defaults["color_primary_active_red"] = (color_schemes[0]["primary_active"][0], int)
-defaults["color_primary_active_green"] = (color_schemes[0]["primary_active"][1], int)
-defaults["color_primary_active_blue"] = (color_schemes[0]["primary_active"][2], int)
-defaults["color_secondary_active_red"] = (color_schemes[0]["secondary_active"][0], int)
-defaults["color_secondary_active_green"] = (color_schemes[0]["secondary_active"][1], int)
-defaults["color_secondary_active_blue"] = (color_schemes[0]["secondary_active"][2], int)
-defaults["color_current_word_red"] = (color_schemes[0]["current_word"][0], int)
-defaults["color_current_word_green"] = (color_schemes[0]["current_word"][1], int)
-defaults["color_current_word_blue"] = (color_schemes[0]["current_word"][2], int)
+defaults["color_primary_active_red"] = (color_schemes["yellow"]["primary_active"][0], int)
+defaults["color_primary_active_green"] = (color_schemes["yellow"]["primary_active"][1], int)
+defaults["color_primary_active_blue"] = (color_schemes["yellow"]["primary_active"][2], int)
+defaults["color_secondary_active_red"] = (color_schemes["yellow"]["secondary_active"][0], int)
+defaults["color_secondary_active_green"] = (color_schemes["yellow"]["secondary_active"][1], int)
+defaults["color_secondary_active_blue"] = (color_schemes["yellow"]["secondary_active"][2], int)
+defaults["color_current_word_red"] = (color_schemes["yellow"]["current_word"][0], int)
+defaults["color_current_word_green"] = (color_schemes["yellow"]["current_word"][1], int)
+defaults["color_current_word_blue"] = (color_schemes["yellow"]["current_word"][2], int)
 
 def read_config_file():    
     parser = ConfigParser.RawConfigParser()
@@ -310,8 +305,8 @@ class PreferencesWindow(gtk.Dialog):
         colors_combo = gtk.combo_box_new_text()
         colors_combo.connect("changed", self.on_colors_combo_changed)
         colors_combo.append_text("")
-        for scheme in color_schemes:
-            colors_combo.append_text(scheme["title"])
+        for key in color_schemes_order:
+            colors_combo.append_text(color_schemes[key]["title"])
         colors_combo.set_active(0)
         
         align = gtk.Alignment(0, 0.5)
@@ -325,7 +320,7 @@ class PreferencesWindow(gtk.Dialog):
     def on_colors_combo_changed(self, combo, data=None):
         index = combo.get_active()
         if index > 0:
-            scheme = color_schemes[index - 1]
+            scheme = color_schemes[color_schemes_order[index - 1]]
             for key, value in scheme.items():
                 if key == "primary_selection":
                     color = gtk.gdk.Color(value[0], value[1], value[2])
