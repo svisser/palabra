@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import pstats
+#import pstats
 
-import cProfile
+#import cProfile
 
 # see http://faq.pygtk.org/index.py?req=show&file=faq02.006.htp
 try:
