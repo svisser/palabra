@@ -44,15 +44,6 @@ SETTINGS_SOLUTION = {
     , "show_numbers": True
 }
 custom_settings = {}
-custom_appearance = {}
-custom_appearance["colors"] = {
-    "background": (1, 1, 1)
-    , "border": (0, 0, 0)
-    , "block": (0, 0, 0)
-    , "line": (0, 0, 0)
-    , "char": (0, 0, 0)
-    , "number": (0, 0, 0)
-}
 
 class GridViewProperties:
     def __init__(self, grid):
@@ -65,6 +56,16 @@ class GridViewProperties:
         self.margin_x = 10
         self.margin_y = 10
         self.line_width = 1
+        
+        self.appearance = {}
+        self.appearance["colors"] = {
+            "background": (1, 1, 1)
+            , "border": (0, 0, 0)
+            , "block": (0, 0, 0)
+            , "line": (0, 0, 0)
+            , "char": (0, 0, 0)
+            , "number": (0, 0, 0)
+        }
         
     def grid_to_screen_x(self, x, include_padding=True):
         result = x * self.tile_size + (x + 1) * self.line_width
@@ -120,7 +121,6 @@ class GridView:
         
     def select_mode(self, mode):
         self.settings = {}
-        self.settings.update(custom_appearance)
         if mode == constants.VIEW_MODE_EDITOR:
             self.settings.update(SETTINGS_EDITOR)
             self.settings.update(custom_settings)
@@ -156,7 +156,8 @@ class GridView:
                     ry = settings.grid_to_screen_y(y, False) - 0.5
                     context.rectangle(rx, ry, settings.tile_size + 1, settings.tile_size + 1)
             context.fill()
-        self._render(context, render, color=self.settings["colors"]["block"])
+        color = self.properties.appearance["colors"]["block"]
+        self._render(context, render, color=color)
         
     def render_lines(self, context):
         def render(context, grid, settings):
@@ -173,7 +174,8 @@ class GridView:
                 context.rel_line_to(line_length, 0)
                 context.rel_move_to(-line_length, settings.tile_size + settings.line_width)
             context.stroke()
-        self._render(context, render, color=self.settings["colors"]["line"])
+        color = self.properties.appearance["colors"]["line"]
+        self._render(context, render, color=color)
         
     def render_border(self, context):
         def render(context, grid, settings):
@@ -184,7 +186,8 @@ class GridView:
             height = settings.get_grid_height() - settings.line_width
             context.rectangle(x, y, width, height)
             context.stroke()
-        self._render(context, render, color=self.settings["colors"]["border"])
+        color = self.properties.appearance["colors"]["border"]
+        self._render(context, render, color=color)
         
     def render_horizontal_line(self, context, x, y, r, g, b):
         def render(context, grid, props):
@@ -214,13 +217,15 @@ class GridView:
                 c = grid.get_char(x, y)
                 if c != '':
                     self._render_char(context, settings, x, y, c)
-        self._render(context, render, color=self.settings["colors"]["char"])
+        color = self.properties.appearance["colors"]["char"]
+        self._render(context, render, color=color)
         
     def render_numbers(self, context):
         def render(context, grid, settings):
             for n, x, y in grid.words():
                 self._render_number(context, settings, x, y, n)
-        self._render(context, render, color=self.settings["colors"]["number"])
+        color = self.properties.appearance["colors"]["number"]
+        self._render(context, render, color=color)
     
     def render_location(self, context, x, y, r, g, b):
         def render(context, grid, settings):
@@ -238,7 +243,8 @@ class GridView:
             height = grid.height * (settings.tile_size + settings.line_width)
             context.rectangle(settings.line_width, settings.line_width, width, height)
             context.fill()
-        self._render(context, render, color=self.settings["colors"]["background"])
+        color = self.properties.appearance["colors"]["background"]
+        self._render(context, render, color=color)
         
     def _render_pango(self, context, x, y, font, content):
         pcr = pangocairo.CairoContext(context)
