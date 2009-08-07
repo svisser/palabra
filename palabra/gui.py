@@ -895,9 +895,9 @@ class PalabraWindow(gtk.Window):
            
         activate = lambda item: toggle_predicate("warn_two_letter_words", item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Warn visually when two letter words exist in the grid")
+            , "Warn visually when two-letter words exist in the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.CheckMenuItem("Warn for _two letter words", True)
+        item = gtk.CheckMenuItem("Warn for tw_o-letter words", True)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)
