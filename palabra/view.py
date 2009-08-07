@@ -60,21 +60,24 @@ class GridViewProperties:
         self.appearance = {}
         self.appearance["colors"] = {
             "background": (1, 1, 1)
-            , "border": (0, 0, 0)
             , "block": (0, 0, 0)
             , "line": (0, 0, 0)
             , "char": (0, 0, 0)
             , "number": (0, 0, 0)
         }
         
+        self.border = {}
+        self.border["width"] = 1
+        self.border["color"] = (0, 0, 0)
+        
     def grid_to_screen_x(self, x, include_padding=True):
-        result = x * self.tile_size + (x + 1) * self.line_width
+        result = self.border["width"] + x * (self.tile_size + self.line_width)
         if include_padding:
             result += self.margin_x
         return result
         
     def grid_to_screen_y(self, y, include_padding=True):
-        result = y * self.tile_size + (y + 1) * self.line_width
+        result = self.border["width"] + y * (self.tile_size + self.line_width)
         if include_padding:
             result += self.margin_y
         return result
@@ -96,22 +99,22 @@ class GridViewProperties:
         return -1
         
     def visual_width(self, include_padding=True):
-        width = self.get_grid_width()
+        width = self.border["width"] + self.get_grid_width()
         if include_padding:
             width += (self.margin_x * 2)
         return width
     
     def visual_height(self, include_padding=True):
-        height = self.get_grid_height()
+        height = self.border["width"] + self.get_grid_height()
         if include_padding:
             height += (self.margin_y * 2)
         return height
         
     def get_grid_width(self):
-        return self.grid.width * (self.tile_size + self.line_width) + self.line_width
+        return self.border["width"] + self.grid.width * (self.tile_size + self.line_width)
         
     def get_grid_height(self):
-        return self.grid.height * (self.tile_size + self.line_width) + self.line_width
+        return self.border["width"] + self.grid.height * (self.tile_size + self.line_width)
 
 class GridView:
     def __init__(self, grid):
@@ -162,15 +165,20 @@ class GridView:
     def render_lines(self, context):
         def render(context, grid, settings):
             context.set_line_width(settings.line_width)
-            context.move_to(settings.tile_size + 1.5 * settings.line_width, settings.line_width)
+            
+            sx = self.properties.border["width"] + settings.tile_size + 0.5 * settings.line_width
+            sy = self.properties.border["width"]
+            line_length = settings.get_grid_height() - self.properties.line_width
+            context.move_to(sx, sy)
             for i in range(grid.width - 1):
-                line_length = settings.get_grid_height() - settings.line_width
                 context.rel_line_to(0, line_length)
                 context.rel_move_to(settings.tile_size + settings.line_width, -line_length)
                 
-            context.move_to(settings.line_width, settings.tile_size + 1.5 * settings.line_width)
+            sx = self.properties.border["width"]
+            sy = self.properties.border["width"] + settings.tile_size + 0.5 * settings.line_width
+            line_length = settings.get_grid_width() - self.properties.line_width
+            context.move_to(sx, sy)
             for j in range(grid.height - 1):
-                line_length = settings.get_grid_width() - settings.line_width
                 context.rel_line_to(line_length, 0)
                 context.rel_move_to(-line_length, settings.tile_size + settings.line_width)
             context.stroke()
@@ -179,14 +187,14 @@ class GridView:
         
     def render_border(self, context):
         def render(context, grid, settings):
-            context.set_line_width(settings.line_width)
-            x = 0.5 * settings.line_width
-            y = 0.5 * settings.line_width
-            width = settings.get_grid_width() - settings.line_width
-            height = settings.get_grid_height() - settings.line_width
+            context.set_line_width(self.properties.border["width"])
+            x = 0.5 * self.properties.border["width"]
+            y = 0.5 * self.properties.border["width"]
+            width = settings.get_grid_width() - self.properties.line_width
+            height = settings.get_grid_height() - self.properties.line_width
             context.rectangle(x, y, width, height)
             context.stroke()
-        color = self.properties.appearance["colors"]["border"]
+        color = self.properties.border["color"]
         self._render(context, render, color=color)
         
     def render_horizontal_line(self, context, x, y, r, g, b):
@@ -239,9 +247,11 @@ class GridView:
     
     def render_background(self, context):
         def render(context, grid, settings):
-            width = grid.width * (settings.tile_size + settings.line_width)
-            height = grid.height * (settings.tile_size + settings.line_width)
-            context.rectangle(settings.line_width, settings.line_width, width, height)
+            x = self.properties.border["width"]
+            y = self.properties.border["width"]
+            width = settings.get_grid_width() - self.properties.line_width
+            height = settings.get_grid_height() - self.properties.line_width
+            context.rectangle(x, y, width, height)
             context.fill()
         color = self.properties.appearance["colors"]["background"]
         self._render(context, render, color=color)
@@ -258,10 +268,10 @@ class GridView:
     def _render_char(self, context, settings, x, y, c):
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
-        rx = (settings.line_width +
+        rx = (settings.border["width"] +
             (x + 0.55) * (settings.tile_size + settings.line_width) -
             width - settings.line_width / 2 - abs(xbearing) / 2)
-        ry = (settings.line_width +
+        ry = (settings.border["width"] +
             (y + 0.55) * (settings.tile_size + settings.line_width) -
             height - settings.line_width / 2 - abs(ybearing) / 2)
         self._render_pango(context, rx, ry, "Sans 12", c)
