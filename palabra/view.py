@@ -152,14 +152,15 @@ class GridView:
         self.select_mode(mode)
             
         self.render_blocks(context)
-        self.render_lines(context)
-        self.render_border(context)
         
         if self.settings["warn_unchecked_cells"]:
             self.render_unchecked_cell_warnings(context)
         
         if self.settings["warn_two_letter_words"]:
             self.render_two_letter_warnings(context)
+        
+        self.render_lines(context)
+        self.render_border(context)
         
         if self.settings["show_chars"]:
             self.render_chars(context)
