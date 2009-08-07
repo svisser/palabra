@@ -343,6 +343,24 @@ class GridTest(unittest.TestCase):
         for x in range(self.grid.width):
             for y in range(self.grid.height):
                 self.assertEqual(self.grid.get_char(x, y), "")
+                
+    def testCells(self):
+        n = sum([1 for x, y in self.grid.cells()])
+        self.assertEquals(n, self.grid.width * self.grid.height)
+        
+    def testWords(self):
+        n = sum([1 for n, x, y in self.grid.words(False)])
+        self.assertEquals(n, self.grid.width + self.grid.height - 1)
+        
+        n = sum([1 for n, x, y in self.grid.words(True)])
+        self.assertEquals(n, self.grid.width + self.grid.height)
+        
+        self.grid.set_block(2, 2, True)
+        
+        n = sum([1 for n, x, y in self.grid.words(False)])
+        self.assertEquals(n, 28)
+        n = sum([1 for n, x, y in self.grid.words(True)])
+        self.assertEquals(n, 29)
 
 class TransformTest(unittest.TestCase):
     def setUp(self):
@@ -350,8 +368,33 @@ class TransformTest(unittest.TestCase):
         self.puzzle.grid.set_block(0, 0, True)
         
     def testClearAll(self):
-        #transform.clear_all(self.puzzle)
-        pass
+        self.puzzle.grid.set_block(5, 5, True)
+        self.puzzle.grid.set_char(10, 10, u"A")
+        
+        a = transform.clear_all(self.puzzle)
+        a.perform_redo(self.puzzle)
+        self.assertEquals(self.puzzle.grid.is_block(5, 5), False)
+        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"")
+        
+    def testClearChars(self):
+        self.puzzle.grid.set_block(5, 5, True)
+        self.puzzle.grid.set_char(10, 10, u"A")
+        
+        a = transform.clear_chars(self.puzzle)
+        a.perform_redo(self.puzzle)
+        self.assertEquals(self.puzzle.grid.is_block(5, 5), True)
+        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"")
+        
+    def testClearClues(self):
+        self.puzzle.grid.store_clue(0, 0, "across", "text", "foo")
+        self.puzzle.grid.set_block(5, 5, True)
+        self.puzzle.grid.set_char(10, 10, u"A")
+        
+        a = transform.clear_clues(self.puzzle)
+        a.perform_redo(self.puzzle)
+        self.assertEquals("across" in self.puzzle.grid.get_clues(0, 0), False)
+        self.assertEquals(self.puzzle.grid.is_block(5, 5), True)
+        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"A")
         
 if __name__ == '__main__':
     unittest.main()

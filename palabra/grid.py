@@ -224,13 +224,26 @@ class Grid:
             except KeyError:
                 yield n, x, y, {}
                     
-    def words(self):
-        """Iterate over the words of the grid."""
+    def words(self, allow_duplicates=False):
+        """
+        Iterate over the words of the grid.
+        
+        allow_duplicates: If True, cells that contain the start
+        of two words are encountered twice when iterating. Otherwise,
+        they are encountered only once.
+        """
         n = 0
         for x, y in self.cells():
-            if self.is_start_word(x, y):
-                n += 1
-                yield n, x, y
+            if allow_duplicates:
+                if self.is_start_horizontal_word(x, y):
+                    n += 1
+                    yield n, x, y
+                if self.is_start_vertical_word(x, y):
+                    yield n, x, y
+            else:
+                if self.is_start_word(x, y):
+                    n += 1
+                    yield n, x, y
                     
     def cells(self):
         """Iterate over the cells of the grid."""

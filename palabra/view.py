@@ -232,7 +232,7 @@ class GridView:
         
     def render_numbers(self, context):
         def render(context, grid, props):
-            for n, x, y in grid.words():
+            for n, x, y in grid.words(False):
                 self._render_number(context, props, x, y, n)
         self._render(context, render, color=self.properties.number["color"])
     
