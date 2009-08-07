@@ -892,14 +892,20 @@ class PalabraWindow(gtk.Window):
         return view_menu
         
     def edit_appearance(self):
-        editor = AppearanceDialog(self)
+        puzzle = self.puzzle_manager.current_puzzle
+        editor = AppearanceDialog(self, puzzle.view.properties)
         editor.show_all()
         response = editor.run()
         if response == gtk.RESPONSE_OK:
             appearance = editor.gather_appearance()
             
+            cell_color = appearance["cell"]["color"]
+            cell_red = cell_color.red
+            cell_green = cell_color.green
+            cell_blue = cell_color.blue
+            
             view = self.puzzle_manager.current_puzzle.view
-            view.properties.cell["size"] = appearance["tile_size"]
+            view.properties.cell["color"] = (cell_red, cell_green, cell_blue)
             self.update_window()
         editor.destroy()
 

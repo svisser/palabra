@@ -63,7 +63,7 @@ class GridViewProperties:
         self.border["color"] = (0, 0, 0)
         
         self.cell = {}
-        self.cell["color"] = (1, 1, 1)
+        self.cell["color"] = (65535, 65535, 65535)
         self.cell["size"] = 32
         
         self.char = {}
@@ -254,7 +254,10 @@ class GridView:
             height = props.get_grid_height() - props.line["width"]
             context.rectangle(x, y, width, height)
             context.fill()
-        self._render(context, render, color=self.properties.cell["color"])
+        color = (self.properties.cell["color"][0] / 65536.0
+            , self.properties.cell["color"][1] / 65536.0
+            , self.properties.cell["color"][2] / 65536.0)
+        self._render(context, render, color=color)
         
     def _render_pango(self, context, x, y, font, content):
         pcr = pangocairo.CairoContext(context)
