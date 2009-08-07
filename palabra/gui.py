@@ -61,6 +61,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_file_menu())
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
+        self.menubar.append(self.create_grid_menu())
         self.menubar.append(self.create_help_menu())
         
         self.toolbar = self.create_toolbar()
@@ -589,126 +590,6 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
-            lambda item: self.edit_clues()
-            , "Edit clues"
-            , title="Edit _clues"
-            , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-
-        item = self.create_edit_symmetry_menu()
-        item.set_sensitive(False)
-        self.puzzle_toggle_items += [item]
-        menu.append(item)
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.shift_grid_up)
-            , "Move the content of the grid up by one square"
-            , title="Move content _up"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.shift_grid_down)
-            , "Move the content of the grid down by one square"
-            , title="Move content _down"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.shift_grid_left)
-            , "Move the content of the grid left by one square"
-            , title="Move content _left"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.shift_grid_right)
-            , "Move the content of the grid right by one square"
-            , title="Move content _right"
-            , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.resize_grid()
-            , "Change the size of the grid"
-            , title="_Resize grid"
-            , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.perform_selection_based_transform(transform.insert_row_above)
-            , "Insert an empty row above this cell"
-            , title="Insert row (above)"
-            , is_selection_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.perform_selection_based_transform(transform.insert_row_below)
-            , "Insert an empty row below this cell"
-            , title="Insert row (below)"
-            , is_selection_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.perform_selection_based_transform(transform.insert_column_left)
-            , "Insert an empty column to the left of this cell"
-            , title="Insert column (left)"
-            , is_selection_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.perform_selection_based_transform(transform.insert_column_right)
-            , "Insert an empty column to the right of this cell"
-            , title="Insert column (right)"
-            , is_selection_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.perform_selection_based_transform(transform.remove_row)
-            , "Remove the row containing this cell"
-            , title="Remove row"
-            , is_selection_sensitive=True
-            , condition=lambda puzzle: puzzle.grid.height > 3))
-        menu.append(self._create_menu_item(
-            lambda item: self.perform_selection_based_transform(transform.remove_column)
-            , "Remove the column containing this cell"
-            , title="Remove column"
-            , is_selection_sensitive=True
-            , condition=lambda puzzle: puzzle.grid.width > 3))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.horizontal_flip)
-            , "Flip the content of the grid horizontally and clear the clues"
-            , title="Flip _horizontally"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.vertical_flip)
-            , "Flip the content of the grid vertically and clear the clues"
-            , title="Flip _vertically"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.diagonal_flip)
-            , "Flip the content of the grid diagonally"
-            , title="Flip _diagonally"
-            , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.clear_all)
-            , "Clear the blocks, the letters and the clues of the puzzle"
-            , title="Clear _all"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.clear_chars)
-            , "Clear the letters and the clues of the puzzle"
-            , title="Clear _letters"
-            , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.clear_clues)
-            , "Clear the clues of the puzzle"
-            , title="Clear clu_es"
-            , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
             lambda item: self.view_preferences()
             , "Configure the application"
             , image=gtk.STOCK_PREFERENCES))
@@ -917,14 +798,6 @@ class PalabraWindow(gtk.Window):
         item.set_active(True)
         toggle_predicate("warn_two_letter_words", True)
         
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.edit_appearance()
-            , u"Modify the appearance of the puzzle"
-            , title=u"Modify _appearance"
-            , is_puzzle_sensitive=True))
-        
         view_menu = gtk.MenuItem("_View", True)
         view_menu.set_submenu(menu)
         return view_menu
@@ -951,6 +824,137 @@ class PalabraWindow(gtk.Window):
             self.statusbar.show()
         else:
             self.statusbar.hide()
+            
+    def create_grid_menu(self):
+        menu = gtk.Menu()
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.edit_clues()
+            , u"Edit the clues of the puzzle"
+            , title=u"Edit _clues"
+            , is_puzzle_sensitive=True))
+            
+        menu.append(self._create_menu_item(
+            lambda item: self.edit_appearance()
+            , u"Edit the appearance of the puzzle"
+            , title=u"Edit _appearance"
+            , is_puzzle_sensitive=True))
+        
+        menu.append(gtk.SeparatorMenuItem())
+
+        item = self.create_edit_symmetry_menu()
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
+        menu.append(item)
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_up)
+            , "Move the content of the grid up by one square"
+            , title="Move content _up"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_down)
+            , "Move the content of the grid down by one square"
+            , title="Move content _down"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_left)
+            , "Move the content of the grid left by one square"
+            , title="Move content _left"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.shift_grid_right)
+            , "Move the content of the grid right by one square"
+            , title="Move content _right"
+            , is_puzzle_sensitive=True))
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.resize_grid()
+            , "Change the size of the grid"
+            , title="_Resize grid"
+            , is_puzzle_sensitive=True))
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_row_above)
+            , "Insert an empty row above this cell"
+            , title="Insert row (above)"
+            , is_selection_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_row_below)
+            , "Insert an empty row below this cell"
+            , title="Insert row (below)"
+            , is_selection_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_column_left)
+            , "Insert an empty column to the left of this cell"
+            , title="Insert column (left)"
+            , is_selection_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.insert_column_right)
+            , "Insert an empty column to the right of this cell"
+            , title="Insert column (right)"
+            , is_selection_sensitive=True))
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.remove_row)
+            , "Remove the row containing this cell"
+            , title="Remove row"
+            , is_selection_sensitive=True
+            , condition=lambda puzzle: puzzle.grid.height > 3))
+        menu.append(self._create_menu_item(
+            lambda item: self.perform_selection_based_transform(transform.remove_column)
+            , "Remove the column containing this cell"
+            , title="Remove column"
+            , is_selection_sensitive=True
+            , condition=lambda puzzle: puzzle.grid.width > 3))
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.horizontal_flip)
+            , "Flip the content of the grid horizontally and clear the clues"
+            , title="Flip _horizontally"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.vertical_flip)
+            , "Flip the content of the grid vertically and clear the clues"
+            , title="Flip _vertically"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.diagonal_flip)
+            , "Flip the content of the grid diagonally"
+            , title="Flip _diagonally"
+            , is_puzzle_sensitive=True))
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_all)
+            , "Clear the blocks, the letters and the clues of the puzzle"
+            , title="Clear _all"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_chars)
+            , "Clear the letters and the clues of the puzzle"
+            , title="Clear _letters"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_clues)
+            , "Clear the clues of the puzzle"
+            , title="Clear clu_es"
+            , is_puzzle_sensitive=True))
+        
+        grid_menu = gtk.MenuItem("_Grid", True)
+        grid_menu.set_submenu(menu)
+        return grid_menu
 
     def create_help_menu(self):
         menu = gtk.Menu()
