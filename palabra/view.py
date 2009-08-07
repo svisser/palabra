@@ -176,13 +176,12 @@ class GridView:
             
     def render_two_letter_warnings(self, context):
         r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
-        for x, y in self.grid.cells():
-            if self.grid.is_start_horizontal_word(x, y):
-                if self.grid.word_length(x, y, "across") == 2:
-                    self.render_horizontal_line(context, x, y, r, g, b)
-            if self.grid.is_start_vertical_word(x, y):
-                if self.grid.word_length(x, y, "down") == 2:
-                    self.render_vertical_line(context, x, y, r, g, b)
+        for n, x, y in self.grid.horizontal_words():
+            if self.grid.word_length(x, y, "across") == 2:
+                self.render_horizontal_line(context, x, y, r, g, b)
+        for n, x, y in self.grid.vertical_words():
+            if self.grid.word_length(x, y, "down") == 2:
+                self.render_vertical_line(context, x, y, r, g, b)
         
     def render_blocks(self, context):
         def render(context, grid, props):
