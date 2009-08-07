@@ -64,8 +64,8 @@ class GridViewProperties:
         # 0.5 for sharp lines
         self.origin_x = 0.5
         self.origin_y = 0.5
-        self.margin_x = 10
-        self.margin_y = 10
+        self.margin_x = 5
+        self.margin_y = 5
         
         self.block = {}
         self.block["color"] = (0, 0, 0)
