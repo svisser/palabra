@@ -17,6 +17,8 @@
 
 import gtk
 
+MAX_LINE_WIDTH = 32
+
 def apply_appearance(properties, appearance):
     cell_color = appearance["cell"]["color"]
     cell_red = cell_color.red
@@ -54,6 +56,9 @@ def apply_appearance(properties, appearance):
     properties.cell["color"] = (cell_red, cell_green, cell_blue)
     properties.line["color"] = (line_red, line_green, line_blue)
     properties.number["color"] = (number_red, number_green, number_blue)
+    
+    properties.border["width"] = appearance["border"]["width"]
+    properties.line["width"] = appearance["line"]["width"]
 
 class AppearanceDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -80,64 +85,72 @@ class AppearanceDialog(gtk.Dialog):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
         
-        table = gtk.Table(6, 2)
+        table = gtk.Table(6, 3)
         table.set_col_spacings(6)
         main.pack_start(table, False, False, 0)
         
+        # cells
         color = gtk.gdk.Color(*self.properties.cell["color"])
         self.cell_color_button = gtk.ColorButton()
         self.cell_color_button.set_color(color)
-        
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
         align.add(gtk.Label("Cell:"))
         table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
         table.attach(self.cell_color_button, 1, 2, 0, 1, 0, 0)
         
+        # lines
         color = gtk.gdk.Color(*self.properties.line["color"])
         self.line_color_button = gtk.ColorButton()
         self.line_color_button.set_color(color)
-        
+        adj = gtk.Adjustment(self.properties.line["width"]
+            , 1, MAX_LINE_WIDTH, 1, 0, 0)
+        self.line_width_spinner = gtk.SpinButton(adj, 0.0, 0)
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
         align.add(gtk.Label("Line:"))
         table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
         table.attach(self.line_color_button, 1, 2, 1, 2, 0, 0)
+        table.attach(self.line_width_spinner, 2, 3, 1, 2, 0, 0)
         
+        # border
         color = gtk.gdk.Color(*self.properties.border["color"])
         self.border_color_button = gtk.ColorButton()
         self.border_color_button.set_color(color)
-        
+        adj = gtk.Adjustment(self.properties.border["width"], 1
+            , MAX_LINE_WIDTH, 1, 0, 0)
+        self.border_width_spinner = gtk.SpinButton(adj, 0.0, 0)
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
         align.add(gtk.Label("Border:"))
         table.attach(align, 0, 1, 2, 3, gtk.FILL, gtk.FILL)
         table.attach(self.border_color_button, 1, 2, 2, 3, 0, 0)
+        table.attach(self.border_width_spinner, 2, 3, 2, 3, 0, 0)
         
+        # blocks
         color = gtk.gdk.Color(*self.properties.block["color"])
         self.block_color_button = gtk.ColorButton()
         self.block_color_button.set_color(color)
-        
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
         align.add(gtk.Label("Block:"))
         table.attach(align, 0, 1, 3, 4, gtk.FILL, gtk.FILL)
         table.attach(self.block_color_button, 1, 2, 3, 4, 0, 0)
         
+        # letters
         color = gtk.gdk.Color(*self.properties.char["color"])
         self.char_color_button = gtk.ColorButton()
         self.char_color_button.set_color(color)
-        
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
         align.add(gtk.Label("Letter:"))
         table.attach(align, 0, 1, 4, 5, gtk.FILL, gtk.FILL)
         table.attach(self.char_color_button, 1, 2, 4, 5, 0, 0)
         
+        # numbers
         color = gtk.gdk.Color(*self.properties.number["color"])
         self.number_color_button = gtk.ColorButton()
         self.number_color_button.set_color(color)
-        
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
         align.add(gtk.Label("Number:"))
@@ -153,6 +166,7 @@ class AppearanceDialog(gtk.Dialog):
         
         appearance["border"] = {}
         appearance["border"]["color"] = self.border_color_button.get_color()
+        appearance["border"]["width"] = self.border_width_spinner.get_value_as_int()
         
         appearance["char"] = {}
         appearance["char"]["color"] = self.char_color_button.get_color()
@@ -162,6 +176,7 @@ class AppearanceDialog(gtk.Dialog):
         
         appearance["line"] = {}
         appearance["line"]["color"] = self.line_color_button.get_color()
+        appearance["line"]["width"] = self.line_width_spinner.get_value_as_int()
         
         appearance["number"] = {}
         appearance["number"]["color"] = self.number_color_button.get_color()
