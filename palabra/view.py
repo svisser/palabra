@@ -58,7 +58,6 @@ class GridViewProperties:
         
         self.appearance = {}
         self.appearance["colors"] = {
-            "background": (1, 1, 1)
             , "block": (0, 0, 0)
             , "char": (0, 0, 0)
             , "number": (0, 0, 0)
@@ -67,6 +66,9 @@ class GridViewProperties:
         self.border = {}
         self.border["width"] = 1
         self.border["color"] = (0, 0, 0)
+        
+        self.cell = {}
+        self.cell["color"] = (1, 1, 1)
         
         self.line = {}
         self.line["width"] = 1
@@ -255,7 +257,7 @@ class GridView:
             height = settings.get_grid_height() - settings.line["width"]
             context.rectangle(x, y, width, height)
             context.fill()
-        color = self.properties.appearance["colors"]["background"]
+        color = self.properties.cell["color"]
         self._render(context, render, color=color)
         
     def _render_pango(self, context, x, y, font, content):
