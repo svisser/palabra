@@ -28,5 +28,5 @@ class AppearanceDialog(gtk.Dialog):
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
         
     def gather_appearance(self):
-        appearance = {"tile_size": 32}
+        appearance = {"tile_size": 64}
         return appearance

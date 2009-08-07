@@ -899,7 +899,7 @@ class PalabraWindow(gtk.Window):
             appearance = editor.gather_appearance()
             
             view = self.puzzle_manager.current_puzzle.view
-            view.properties.tile_size = appearance["tile_size"]
+            view.properties.cell["size"] = appearance["tile_size"]
             self.update_window()
         editor.destroy()
 

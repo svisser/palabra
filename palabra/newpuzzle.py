@@ -536,10 +536,8 @@ class NewWindow(gtk.Dialog):
 class GridPreview(gtk.VBox):
     def __init__(self):
         gtk.VBox.__init__(self)
-        #gtk.ScrolledWindow.__init__(self, None, None)
         
         self.view = None
-        self.tile_size = 12
         
         label = gtk.Label()
         label.set_alignment(0, 0)
@@ -561,7 +559,7 @@ class GridPreview(gtk.VBox):
         
     def refresh(self):
         if self.view is not None:
-            self.view.properties.tile_size = self.tile_size
+            self.view.properties.cell["size"] = 12
             self.view.update_visual_size(self.drawing_area)
             self.drawing_area.queue_draw()
         
