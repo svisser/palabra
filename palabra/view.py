@@ -156,46 +156,46 @@ class GridView:
             self.render_numbers(context)
         
     def render_blocks(self, context):
-        def render(context, grid, settings):
+        def render(context, grid, props):
             for x, y in grid.cells():
                 if grid.is_block(x, y):
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
-                    rx = settings.grid_to_screen_x(x, False) - 0.5
-                    ry = settings.grid_to_screen_y(y, False) - 0.5
-                    context.rectangle(rx, ry, settings.cell["size"] + 1, settings.cell["size"] + 1)
+                    rx = props.grid_to_screen_x(x, False) - 0.5
+                    ry = props.grid_to_screen_y(y, False) - 0.5
+                    context.rectangle(rx, ry, props.cell["size"] + 1, props.cell["size"] + 1)
             context.fill()
         self._render(context, render, color=self.properties.block["color"])
         
     def render_lines(self, context):
-        def render(context, grid, settings):
-            context.set_line_width(settings.line["width"])
+        def render(context, grid, props):
+            context.set_line_width(props.line["width"])
             
-            sx = self.properties.border["width"] + settings.cell["size"] + 0.5 * settings.line["width"]
-            sy = self.properties.border["width"]
-            line_length = settings.get_grid_height() - settings.line["width"]
+            sx = props.border["width"] + props.cell["size"] + 0.5 * props.line["width"]
+            sy = props.border["width"]
+            line_length = props.get_grid_height() - props.line["width"]
             context.move_to(sx, sy)
             for i in range(grid.width - 1):
                 context.rel_line_to(0, line_length)
-                context.rel_move_to(settings.cell["size"] + settings.line["width"], -line_length)
+                context.rel_move_to(props.cell["size"] + props.line["width"], -line_length)
                 
-            sx = self.properties.border["width"]
-            sy = self.properties.border["width"] + settings.cell["size"] + 0.5 * settings.line["width"]
-            line_length = settings.get_grid_width() - settings.line["width"]
+            sx = props.border["width"]
+            sy = props.border["width"] + props.cell["size"] + 0.5 * props.line["width"]
+            line_length = props.get_grid_width() - props.line["width"]
             context.move_to(sx, sy)
             for j in range(grid.height - 1):
                 context.rel_line_to(line_length, 0)
-                context.rel_move_to(-line_length, settings.cell["size"] + settings.line["width"])
+                context.rel_move_to(-line_length, props.cell["size"] + props.line["width"])
             context.stroke()
         self._render(context, render, color=self.properties.line["color"])
         
     def render_border(self, context):
-        def render(context, grid, settings):
-            context.set_line_width(self.properties.border["width"])
-            x = 0.5 * self.properties.border["width"]
-            y = 0.5 * self.properties.border["width"]
-            width = settings.get_grid_width() - settings.line["width"]
-            height = settings.get_grid_height() - settings.line["width"]
+        def render(context, grid, props):
+            context.set_line_width(props.border["width"])
+            x = 0.5 * props.border["width"]
+            y = 0.5 * props.border["width"]
+            width = props.get_grid_width() - props.line["width"]
+            height = props.get_grid_height() - props.line["width"]
             context.rectangle(x, y, width, height)
             context.stroke()
         self._render(context, render, color=self.properties.border["color"])
@@ -223,39 +223,38 @@ class GridView:
         self._render(context, render, color=(r, g, b))
         
     def render_chars(self, context):
-        def render(context, grid, settings):
+        def render(context, grid, props):
             for x, y in grid.cells():
                 c = grid.get_char(x, y)
                 if c != '':
-                    self._render_char(context, settings, x, y, c)
+                    self._render_char(context, props, x, y, c)
         self._render(context, render, color=self.properties.char["color"])
         
     def render_numbers(self, context):
-        def render(context, grid, settings):
+        def render(context, grid, props):
             for n, x, y in grid.words():
-                self._render_number(context, settings, x, y, n)
+                self._render_number(context, props, x, y, n)
         self._render(context, render, color=self.properties.number["color"])
     
     def render_location(self, context, x, y, r, g, b):
-        def render(context, grid, settings):
+        def render(context, grid, props):
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
-            rx = settings.grid_to_screen_x(x, False) - 0.5
-            ry = settings.grid_to_screen_y(y, False) - 0.5
-            context.rectangle(rx, ry, settings.cell["size"] + 1, settings.cell["size"] + 1)
+            rx = props.grid_to_screen_x(x, False) - 0.5
+            ry = props.grid_to_screen_y(y, False) - 0.5
+            context.rectangle(rx, ry, props.cell["size"] + 1, props.cell["size"] + 1)
             context.fill()
         self._render(context, render, color=(r, g, b))
     
     def render_background(self, context):
-        def render(context, grid, settings):
-            x = self.properties.border["width"]
-            y = self.properties.border["width"]
-            width = settings.get_grid_width() - settings.line["width"]
-            height = settings.get_grid_height() - settings.line["width"]
+        def render(context, grid, props):
+            x = props.border["width"]
+            y = props.border["width"]
+            width = props.get_grid_width() - props.line["width"]
+            height = props.get_grid_height() - props.line["width"]
             context.rectangle(x, y, width, height)
             context.fill()
-        color = self.properties.cell["color"]
-        self._render(context, render, color=color)
+        self._render(context, render, color=self.properties.cell["color"])
         
     def _render_pango(self, context, x, y, font, content):
         pcr = pangocairo.CairoContext(context)
@@ -266,20 +265,20 @@ class GridView:
         pcr.show_layout(layout)
         context.restore()
         
-    def _render_char(self, context, settings, x, y, c):
+    def _render_char(self, context, props, x, y, c):
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
-        rx = (settings.border["width"] +
-            (x + 0.55) * (settings.cell["size"] + settings.line["width"]) -
-            width - settings.line["width"] / 2 - abs(xbearing) / 2)
-        ry = (settings.border["width"] +
-            (y + 0.55) * (settings.cell["size"] + settings.line["width"]) -
-            height - settings.line["width"] / 2 - abs(ybearing) / 2)
+        rx = (props.border["width"] +
+            (x + 0.55) * (props.cell["size"] + props.line["width"]) -
+            width - props.line["width"] / 2 - abs(xbearing) / 2)
+        ry = (props.border["width"] +
+            (y + 0.55) * (props.cell["size"] + props.line["width"]) -
+            height - props.line["width"] / 2 - abs(ybearing) / 2)
         self._render_pango(context, rx, ry, "Sans 12", c)
         
-    def _render_number(self, context, settings, x, y, n):
-        rx = settings.grid_to_screen_x(x, False) + 1
-        ry = settings.grid_to_screen_y(y, False)
+    def _render_number(self, context, props, x, y, n):
+        rx = props.grid_to_screen_x(x, False) + 1
+        ry = props.grid_to_screen_y(y, False)
         self._render_pango(context, rx, ry, "Sans 7", str(n))
             
     def _render(self, context, render, **args):
