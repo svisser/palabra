@@ -237,7 +237,11 @@ class PropertiesWindow(gtk.Dialog):
         
         for y in xrange(0, 26, 6):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
-                label = gtk.Label(''.join([char, ": ", str(count)]))
+                if count == 0:
+                    label = gtk.Label()
+                    label.set_markup(''.join([char, ": <b>", str(count), "</b>"]))
+                else:
+                    label = gtk.Label(''.join([char, ": ", str(count), ""]))
                 table.attach(label, x, x + 1, y / 6, y / 6 + 1)
         
         main = gtk.VBox(False, 0)
