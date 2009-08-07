@@ -860,14 +860,14 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
-        def toggle_numbers(status):
-            view.custom_settings["show_numbers"] = status
+        def toggle_predicate(predicate, status):
+            view.custom_settings[predicate] = status
             try:
                 self.panel.queue_draw()
             except AttributeError:
                 pass
         
-        activate = lambda item: toggle_numbers(item.active)
+        activate = lambda item: toggle_predicate("show_numbers", item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , "Show or hide the word numbers in the editor")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -877,16 +877,23 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         item.set_active(True)
-        toggle_numbers(True)
+        toggle_predicate("show_numbers", True)
         
-        def toggle_two_letter_warning(status):
-            view.custom_settings["warn_two_letter_words"] = status
-            try:
-                self.panel.queue_draw()
-            except AttributeError:
-                pass
-            
-        activate = lambda item: toggle_two_letter_warning(item.active)
+        menu.append(gtk.SeparatorMenuItem())
+        
+        activate = lambda item: toggle_predicate("warn_unchecked_cells", item.active)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Warn visually when cells exist in the grid that do not belong to any word")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.CheckMenuItem("Warn for _unchecked cells", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        item.set_active(True)
+        toggle_predicate("warn_unchecked_cells", True)
+           
+        activate = lambda item: toggle_predicate("warn_two_letter_words", item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , "Warn visually when two letter words exist in the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -896,7 +903,7 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         item.set_active(True)
-        toggle_numbers(True)
+        toggle_predicate("warn_two_letter_words", True)
         
         menu.append(gtk.SeparatorMenuItem())
         

@@ -27,24 +27,28 @@ SETTINGS_PREVIEW = {
     "has_padding": True
     , "show_chars": False
     , "show_numbers": False
+    , "warn_unchecked_cells": False
     , "warn_two_letter_words": False
 }
 SETTINGS_EDITOR = {
     "has_padding": True
     , "show_chars": True
     , "show_numbers": False
+    , "warn_unchecked_cells": True
     , "warn_two_letter_words": True
 }
 SETTINGS_EMPTY = {
     "has_padding": False
     , "show_chars": False
     , "show_numbers": True
+    , "warn_unchecked_cells": False
     , "warn_two_letter_words": False
 }
 SETTINGS_SOLUTION = {
     "has_padding": False
     , "show_chars": True
     , "show_numbers": True
+    , "warn_unchecked_cells": False
     , "warn_two_letter_words": False
 }
 custom_settings = {}
@@ -151,6 +155,9 @@ class GridView:
         self.render_lines(context)
         self.render_border(context)
         
+        if self.settings["warn_unchecked_cells"]:
+            self.render_unchecked_cell_warnings(context)
+        
         if self.settings["warn_two_letter_words"]:
             self.render_two_letter_warnings(context)
         
@@ -159,6 +166,12 @@ class GridView:
 
         if self.settings["show_numbers"]:
             self.render_numbers(context)
+            
+    def render_unchecked_cell_warnings(self, context):
+        r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
+        for x, y in self.grid.cells():
+            if self.grid.get_check_count(x, y) == 1:
+                self.render_location(context, x, y, r, g, b)
             
     def render_two_letter_warnings(self, context):
         r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
