@@ -19,7 +19,7 @@ import gtk
 import os
 
 import action
-from appearance import AppearanceDialog
+from appearance import AppearanceDialog, apply_appearance
 from clue import ClueEditor
 import constants
 from export import (
@@ -897,15 +897,8 @@ class PalabraWindow(gtk.Window):
         editor.show_all()
         response = editor.run()
         if response == gtk.RESPONSE_OK:
-            appearance = editor.gather_appearance()
-            
-            cell_color = appearance["cell"]["color"]
-            cell_red = cell_color.red
-            cell_green = cell_color.green
-            cell_blue = cell_color.blue
-            
-            view = self.puzzle_manager.current_puzzle.view
-            view.properties.cell["color"] = (cell_red, cell_green, cell_blue)
+            properties = self.puzzle_manager.current_puzzle.view.properties
+            apply_appearance(properties, editor.gather_appearance())
             self.update_window()
         editor.destroy()
 

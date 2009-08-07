@@ -165,7 +165,10 @@ class GridView:
                     ry = props.grid_to_screen_y(y, False) - 0.5
                     context.rectangle(rx, ry, props.cell["size"] + 1, props.cell["size"] + 1)
             context.fill()
-        self._render(context, render, color=self.properties.block["color"])
+        color = (self.properties.block["color"][0] / 65535.0
+            , self.properties.block["color"][1] / 65535.0
+            , self.properties.block["color"][2] / 65535.0)
+        self._render(context, render, color=color)
         
     def render_lines(self, context):
         def render(context, grid, props):
@@ -187,7 +190,10 @@ class GridView:
                 context.rel_line_to(line_length, 0)
                 context.rel_move_to(-line_length, props.cell["size"] + props.line["width"])
             context.stroke()
-        self._render(context, render, color=self.properties.line["color"])
+        color = (self.properties.line["color"][0] / 65535.0
+            , self.properties.line["color"][1] / 65535.0
+            , self.properties.line["color"][2] / 65535.0)
+        self._render(context, render, color=color)
         
     def render_border(self, context):
         def render(context, grid, props):
@@ -198,7 +204,10 @@ class GridView:
             height = props.get_grid_height() - props.line["width"]
             context.rectangle(x, y, width, height)
             context.stroke()
-        self._render(context, render, color=self.properties.border["color"])
+        color = (self.properties.border["color"][0] / 65535.0
+            , self.properties.border["color"][1] / 65535.0
+            , self.properties.border["color"][2] / 65535.0)
+        self._render(context, render, color=color)
         
     def render_horizontal_line(self, context, x, y, r, g, b):
         def render(context, grid, props):
@@ -228,13 +237,19 @@ class GridView:
                 c = grid.get_char(x, y)
                 if c != '':
                     self._render_char(context, props, x, y, c)
-        self._render(context, render, color=self.properties.char["color"])
+        color = (self.properties.char["color"][0] / 65535.0
+            , self.properties.char["color"][1] / 65535.0
+            , self.properties.char["color"][2] / 65535.0)
+        self._render(context, render, color=color)
         
     def render_numbers(self, context):
         def render(context, grid, props):
             for n, x, y in grid.words(False):
                 self._render_number(context, props, x, y, n)
-        self._render(context, render, color=self.properties.number["color"])
+        color = (self.properties.number["color"][0] / 65535.0
+            , self.properties.number["color"][1] / 65535.0
+            , self.properties.number["color"][2] / 65535.0)
+        self._render(context, render, color=color)
     
     def render_location(self, context, x, y, r, g, b):
         def render(context, grid, props):
@@ -254,9 +269,9 @@ class GridView:
             height = props.get_grid_height() - props.line["width"]
             context.rectangle(x, y, width, height)
             context.fill()
-        color = (self.properties.cell["color"][0] / 65536.0
-            , self.properties.cell["color"][1] / 65536.0
-            , self.properties.cell["color"][2] / 65536.0)
+        color = (self.properties.cell["color"][0] / 65535.0
+            , self.properties.cell["color"][1] / 65535.0
+            , self.properties.cell["color"][2] / 65535.0)
         self._render(context, render, color=color)
         
     def _render_pango(self, context, x, y, font, content):
