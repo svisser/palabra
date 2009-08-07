@@ -323,17 +323,13 @@ class PreferencesWindow(gtk.Dialog):
             scheme = color_schemes[color_schemes_order[index - 1]]
             for key, value in scheme.items():
                 if key == "primary_selection":
-                    color = gtk.gdk.Color(value[0], value[1], value[2])
-                    self.color1_button.set_color(color)
+                    self.color1_button.set_color(gtk.gdk.Color(*value))
                 elif key == "primary_active":
-                    color = gtk.gdk.Color(value[0], value[1], value[2])
-                    self.color2_button.set_color(color)
+                    self.color2_button.set_color(gtk.gdk.Color(*value))
                 elif key == "secondary_active":
-                    color = gtk.gdk.Color(value[0], value[1], value[2])
-                    self.color4_button.set_color(color)
+                    self.color4_button.set_color(gtk.gdk.Color(*value))
                 elif key == "current_word":
-                    color = gtk.gdk.Color(value[0], value[1], value[2])
-                    self.color3_button.set_color(color)
+                    self.color3_button.set_color(gtk.gdk.Color(*value))
             self.refresh_color_preferences()
 
     def refresh_color_preferences(self):
