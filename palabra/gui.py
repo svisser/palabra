@@ -883,7 +883,7 @@ class PalabraWindow(gtk.Window):
         
         activate = lambda item: toggle_predicate("warn_unchecked_cells", item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , "Warn visually when cells exist in the grid that do not belong to any word")
+            , "Warn visually when cells that belong to (at most) one word exist in the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.CheckMenuItem("Warn for _unchecked cells", True)
         item.connect("activate", activate)
@@ -892,6 +892,18 @@ class PalabraWindow(gtk.Window):
         menu.append(item)
         item.set_active(True)
         toggle_predicate("warn_unchecked_cells", True)
+        
+        activate = lambda item: toggle_predicate("warn_consecutive_unchecked", item.active)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Warn visually when consecutive unchecked cells exist in the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.CheckMenuItem("Warn for _consecutive unchecked cells", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        item.set_active(True)
+        toggle_predicate("warn_consecutive_unchecked", True)
            
         activate = lambda item: toggle_predicate("warn_two_letter_words", item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
