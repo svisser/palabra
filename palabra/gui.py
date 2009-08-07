@@ -879,6 +879,25 @@ class PalabraWindow(gtk.Window):
         item.set_active(True)
         toggle_numbers(True)
         
+        def toggle_two_letter_warning(status):
+            view.custom_settings["warn_two_letter_words"] = status
+            try:
+                self.panel.queue_draw()
+            except AttributeError:
+                pass
+            
+        activate = lambda item: toggle_two_letter_warning(item.active)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , "Warn visually when two letter words exist in the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.CheckMenuItem("Warn for _two letter words", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        item.set_active(True)
+        toggle_numbers(True)
+        
         menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(

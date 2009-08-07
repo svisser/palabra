@@ -27,21 +27,25 @@ SETTINGS_PREVIEW = {
     "has_padding": True
     , "show_chars": False
     , "show_numbers": False
+    , "warn_two_letter_words": False
 }
 SETTINGS_EDITOR = {
     "has_padding": True
     , "show_chars": True
     , "show_numbers": False
+    , "warn_two_letter_words": True
 }
 SETTINGS_EMPTY = {
     "has_padding": False
     , "show_chars": False
     , "show_numbers": True
+    , "warn_two_letter_words": False
 }
 SETTINGS_SOLUTION = {
     "has_padding": False
     , "show_chars": True
     , "show_numbers": True
+    , "warn_two_letter_words": False
 }
 custom_settings = {}
 
@@ -147,13 +151,24 @@ class GridView:
         self.render_lines(context)
         self.render_border(context)
         
-        # chars
+        if self.settings["warn_two_letter_words"]:
+            self.render_two_letter_warnings(context)
+        
         if self.settings["show_chars"]:
             self.render_chars(context)
 
-        # numbers
         if self.settings["show_numbers"]:
             self.render_numbers(context)
+            
+    def render_two_letter_warnings(self, context):
+        r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
+        for x, y in self.grid.cells():
+            if self.grid.is_start_horizontal_word(x, y):
+                if self.grid.word_length(x, y, "across") == 2:
+                    self.render_horizontal_line(context, x, y, r, g, b)
+            if self.grid.is_start_vertical_word(x, y):
+                if self.grid.word_length(x, y, "down") == 2:
+                    self.render_vertical_line(context, x, y, r, g, b)
         
     def render_blocks(self, context):
         def render(context, grid, props):
