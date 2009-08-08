@@ -4,16 +4,21 @@
 Palabra is a crossword editor written in Python. It is free software and
 it is licensed under the GNU General Public License.
 
-Requirements:
+== Requirements ==
+
 - Python 2.3 (for itertools module)
 - PyGTK 2.8 (for pangocairo module)
 
-Known to work with:
+Palabra should work with the above versions of the software packages but they
+may need to be refined further. In any case, Palabra is known to work with:
+
 - Python 2.5.2
 - GTK+ 2.12.9
 - PyGTK 2.12.1
 
 == Getting started ==
+
+To run, navigate to /palabra and run: python palabra.py.
 
 The following keyboard and mouse commands can be used for editing:
 
@@ -24,3 +29,9 @@ The following keyboard and mouse commands can be used for editing:
 - Use HOME and END to jump to the beginning or end of the current word.
 - Use TAB to switch the typing direction.
 - Use the ARROW KEYS to select the cell next to the current cell.
+
+== Development ==
+
+Development takes place at http://bitbucket.org/svisser/palabra/.
+
+Please report any issues at http://bitbucket.org/svisser/palabra/issues/.
