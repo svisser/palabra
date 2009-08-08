@@ -173,7 +173,7 @@ class GridTest(unittest.TestCase):
         self.grid.set_block(5, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), -1)
     
-    def testGatherWord(self):
+    def testGatherWordOne(self):
         word = self.grid.gather_word(0, 0, "across", "_")
         self.assertEqual(word, self.grid.width * "_")
         word = self.grid.gather_word(0, 0, "down", "_")
@@ -192,6 +192,20 @@ class GridTest(unittest.TestCase):
         self.grid.set_block(0, 6, True)
         word = self.grid.gather_word(0, 0, "down", "_")
         self.assertEqual(word, "D_E_F_")
+        
+    def testGatherWordTwo(self):
+        self.grid.set_block(4, 0, True)
+        self.assertEquals(self.grid.gather_word(4, 0, "across"), "")
+        self.assertEquals(self.grid.gather_word(4, 0, "down"), "")
+        
+        self.grid.set_char(0, 0, "A")
+        self.grid.set_char(1, 0, "B")
+        self.grid.set_char(2, 0, "C")
+        self.grid.set_char(3, 0, "D")
+        self.assertEquals(self.grid.gather_word(0, 0, "across"), "ABCD")
+        
+        self.grid.set_block(0, 4, True)
+        self.assertEquals(self.grid.gather_word(0, 0, "down", "x"), "Axxx")
         
     def testWordLength(self):
         length = self.grid.word_length(0, 0, "across")
@@ -361,6 +375,84 @@ class GridTest(unittest.TestCase):
         self.assertEquals(n, 28)
         n = sum([1 for n, x, y in self.grid.words(True)])
         self.assertEquals(n, 29)
+        
+    def testHorizontalWords(self):
+        n = len([1 for x in self.grid.horizontal_words()])
+        self.assertEquals(self.grid.height, n)
+        
+        for y in xrange(self.grid.height):
+            self.grid.set_block(2, y, True)
+        xs = [x for n, x, y in self.grid.horizontal_words()]
+        self.assertEquals(xs, [0, 3] * self.grid.height)
+        
+    def testVerticalWords(self):
+        n = len([1 for x in self.grid.vertical_words()])
+        self.assertEquals(self.grid.width, n)
+        
+        for x in xrange(self.grid.width):
+            self.grid.set_block(x, 2, True)
+        ys = [y for n, x, y in self.grid.vertical_words()]
+        self.assertEquals(ys, [0] * self.grid.width + [3] * self.grid.width)
+        
+    def testInsertRow(self):
+        width, height = self.grid.width, self.grid.height
+        self.grid.set_block(0, 0, True)
+        self.grid.set_block(0, 1, True)
+        
+        self.grid.insert_row(0, True)
+        self.assertEquals(self.grid.width, width)
+        self.assertEquals(self.grid.height, height + 1)
+        bs = [self.grid.is_block(x, y) for x, y in [(0, 0), (0, 1), (0, 2)]]
+        self.assertEquals(bs, [False, True, True])
+        for x, y in self.grid.in_direction("across", 0, 0):
+            self.assertEquals(self.grid.is_block(x, y), False)
+            self.assertEquals(self.grid.get_char(x, y), "")
+
+        self.grid.insert_row(1, False)
+        self.assertEquals(self.grid.width, width)
+        self.assertEquals(self.grid.height, height + 2)
+        cells = [(0, 0), (0, 1), (0, 2), (0, 3)]
+        bs = [self.grid.is_block(x, y) for x, y in cells]
+        self.assertEquals(bs, [False, True, False, True])
+        
+    def testInsertColumn(self):
+        width, height = self.grid.width, self.grid.height
+        self.grid.set_block(0, 0, True)
+        self.grid.set_block(1, 0, True)
+        
+        self.grid.insert_column(0, True)
+        self.assertEquals(self.grid.width, width + 1)
+        self.assertEquals(self.grid.height, height)
+        bs = [self.grid.is_block(x, y) for x, y in [(0, 0), (1, 0), (2, 0)]]
+        self.assertEquals(bs, [False, True, True])
+        for x, y in self.grid.in_direction("down", 0, 0):
+            self.assertEquals(self.grid.is_block(x, y), False)
+            self.assertEquals(self.grid.get_char(x, y), "")
+
+        self.grid.insert_column(1, False)
+        self.assertEquals(self.grid.width, width + 2)
+        self.assertEquals(self.grid.height, height)
+        cells = [(0, 0), (1, 0), (2, 0), (3, 0)]
+        bs = [self.grid.is_block(x, y) for x, y in cells]
+        self.assertEquals(bs, [False, True, False, True])
+        
+    def testRemoveRow(self):
+        width, height = self.grid.width, self.grid.height
+        for x in xrange(self.grid.width):
+            self.grid.set_block(x, 0, True)
+        self.grid.remove_row(0)
+        self.assertEquals(self.grid.height, height - 1)
+        for x in xrange(self.grid.width):
+            self.assertEquals(self.grid.is_block(x, 0), False)
+            
+    def testRemoveColumn(self):
+        width, height = self.grid.width, self.grid.height
+        for y in xrange(self.grid.height):
+            self.grid.set_block(0, y, True)
+        self.grid.remove_column(0)
+        self.assertEquals(width - 1, self.grid.width)
+        for y in xrange(self.grid.height):
+            self.assertEquals(self.grid.is_block(0, y), False)
 
 class TransformTest(unittest.TestCase):
     def setUp(self):
