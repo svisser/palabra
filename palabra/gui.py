@@ -810,6 +810,7 @@ class PalabraWindow(gtk.Window):
         if response == gtk.RESPONSE_OK:
             properties = self.puzzle_manager.current_puzzle.view.properties
             apply_appearance(properties, editor.gather_appearance())
+            self.editor.refresh_visual_size()
             self.update_window()
         editor.destroy()
 

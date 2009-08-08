@@ -64,8 +64,8 @@ class GridViewProperties:
         # 0.5 for sharp lines
         self.origin_x = 0.5
         self.origin_y = 0.5
-        self.margin_x = 5
-        self.margin_y = 5
+        self.margin_x = 10
+        self.margin_y = 10
         
         self.block = {}
         self.block["color"] = (0, 0, 0)
@@ -117,13 +117,15 @@ class GridViewProperties:
         return -1
         
     def visual_width(self, include_padding=True):
-        width = self.border["width"] + self.get_grid_width()
+        width = (2 * self.border["width"] + self.grid.width * self.cell["size"]
+            + (self.grid.width - 1) * self.line["width"])
         if include_padding:
             width += (self.margin_x * 2)
         return width
     
     def visual_height(self, include_padding=True):
-        height = self.border["width"] + self.get_grid_height()
+        height = (2 * self.border["width"] + self.grid.height * self.cell["size"]
+            + (self.grid.height - 1) * self.line["width"])
         if include_padding:
             height += (self.margin_y * 2)
         return height
