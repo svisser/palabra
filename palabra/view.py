@@ -156,16 +156,6 @@ class GridView:
         self.select_mode(mode)
             
         self.render_blocks(context)
-        
-        if self.settings["warn_unchecked_cells"]:
-            self.render_unchecked_cell_warnings(context)
-            
-        if self.settings["warn_consecutive_unchecked"]:
-            self.render_consecutive_unchecked_warnings(context)
-        
-        if self.settings["warn_two_letter_words"]:
-            self.render_two_letter_warnings(context)
-        
         self.render_lines(context)
         self.render_border(context)
         
@@ -175,8 +165,18 @@ class GridView:
         if self.settings["show_numbers"]:
             self.render_numbers(context)
             
-    def render_consecutive_unchecked_warnings(self, context):
+    def render_warnings(self, context):
         r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
+        if self.settings["warn_unchecked_cells"]:
+            self._render_unchecked_cell_warnings(context, r, g, b)
+            
+        if self.settings["warn_consecutive_unchecked"]:
+            self._render_consecutive_unchecked_warnings(context, r, g, b)
+        
+        if self.settings["warn_two_letter_words"]:
+            self._render_two_letter_warnings(context, r, g, b)
+            
+    def _render_consecutive_unchecked_warnings(self, context, r, g, b):
         def check_word(direction, x, y):
             cells = []
             for p, q in self.grid.in_direction(direction, x, y):
@@ -193,14 +193,12 @@ class GridView:
         for n, x, y in self.grid.vertical_words():
             check_word("down", x, y)
             
-    def render_unchecked_cell_warnings(self, context):
-        r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
+    def _render_unchecked_cell_warnings(self, context, r, g, b):
         for x, y in self.grid.cells():
             if 0 <= self.grid.get_check_count(x, y) <= 1:
                 self.render_location(context, x, y, r, g, b)
             
-    def render_two_letter_warnings(self, context):
-        r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
+    def _render_two_letter_warnings(self, context, r, g, b):
         for n, x, y in self.grid.horizontal_words():
             if self.grid.word_length(x, y, "across") == 2:
                 self.render_horizontal_line(context, x, y, r, g, b)
