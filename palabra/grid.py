@@ -327,7 +327,7 @@ class Grid:
         
         return float(char_count) / float(word_count)
             
-    def resize(self, width, height):
+    def resize(self, width, height, make_dirty=True):
         """
         Resize the grid to the given dimensions.
         
@@ -336,12 +336,13 @@ class Grid:
         """
         ndata = [[self._default_cell() for x in range(width)] for y in range(height)]
         
-        dirty = []
-        dirty += [(x, y, "across") for x, y in self.cells()
-            if x >= min(width - 1, self.width - 1)]
-        dirty += [(x, y, "down") for x, y in self.cells()
-            if y >= min(height - 1, self.height - 1)]
-        self._clear_clues(dirty)
+        if make_dirty:
+            dirty = []
+            dirty += [(x, y, "across") for x, y in self.cells()
+                if x >= min(width - 1, self.width - 1)]
+            dirty += [(x, y, "down") for x, y in self.cells()
+                if y >= min(height - 1, self.height - 1)]
+            self._clear_clues(dirty)
         
         for x in range(width):
             for y in range(height):
@@ -354,17 +355,20 @@ class Grid:
         
     def _clear_clues(self, dirty_cells):
         """Remove the clues of the words that contain a dirty cell."""
+        print "dirty", dirty_cells
         for x, y, direction in dirty_cells:
             if direction == "across":
                 p, q = self.get_start_horizontal_word(x, y)
                 try:
                     del self.cell(p, q)["clues"]["across"]
+                    print "deleted", p, q, "across at:", x, y
                 except KeyError:
                     pass
             elif direction == "down":
                 p, q = self.get_start_vertical_word(x, y)
                 try:
                     del self.cell(p, q)["clues"]["down"]
+                    print "deleted", p, q, "down at:", x, y
                 except KeyError:
                     pass
         
@@ -378,7 +382,7 @@ class Grid:
         dirty += [(x, ny, "down") for x in blocks if self.is_valid(x, ny)]
         self._clear_clues(dirty)
 
-        self.resize(self.width, self.height + 1)
+        self.resize(self.width, self.height + 1, False)
         row = [[self._default_cell() for x in range(self.width)]]
         if insert_above:
             self.data = self.data[:y] + row + self.data[y:]
@@ -387,7 +391,15 @@ class Grid:
             
     def insert_column(self, x, insert_left=True):
         """Insert a column to the left or right of the horizontal coordinate x."""
-        self.resize(self.width + 1, self.height)
+        dirty = []
+        dirty += [(x, y, "across") for y in xrange(self.height)]
+        
+        nx = x - 1 if insert_left else x + 1
+        blocks = [y for y in xrange(self.height) if self.is_block(x, y)]
+        dirty += [(nx, y, "across") for y in blocks if self.is_valid(nx, y)]
+        self._clear_clues(dirty)
+        
+        self.resize(self.width + 1, self.height, False)
         if insert_left:
             f = lambda row: row[:x] + [self._default_cell()] + row[x:]
         else:
