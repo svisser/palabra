@@ -336,6 +336,13 @@ class Grid:
         """
         ndata = [[self._default_cell() for x in range(width)] for y in range(height)]
         
+        dirty_cells = []
+        dirty_cells += [(x, y, "across") for x, y in self.cells()
+            if x >= min(width - 1, self.width - 1)]
+        dirty_cells += [(x, y, "down") for x, y in self.cells()
+            if y >= min(height - 1, self.height - 1)]
+        self._clear_clues(dirty_cells)
+        
         for x in range(width):
             for y in range(height):
                 if self.is_valid(x, y):
@@ -344,6 +351,21 @@ class Grid:
         self.data = ndata
         self.width = width
         self.height = height
+        
+    def _clear_clues(self, dirty_cells):
+        for x, y, direction in dirty_cells:
+            if direction == "across":
+                p, q = self.get_start_horizontal_word(x, y)
+                try:
+                    del self.cell(p, q)["clues"]["across"]
+                except KeyError:
+                    pass
+            elif direction == "down":
+                p, q = self.get_start_vertical_word(x, y)
+                try:
+                    del self.cell(p, q)["clues"]["down"]
+                except KeyError:
+                    pass
         
     def insert_row(self, y, insert_above=True):
         """Insert a row above or below the row at vertical coordinate y."""
