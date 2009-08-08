@@ -336,12 +336,12 @@ class Grid:
         """
         ndata = [[self._default_cell() for x in range(width)] for y in range(height)]
         
-        dirty_cells = []
-        dirty_cells += [(x, y, "across") for x, y in self.cells()
+        dirty = []
+        dirty += [(x, y, "across") for x, y in self.cells()
             if x >= min(width - 1, self.width - 1)]
-        dirty_cells += [(x, y, "down") for x, y in self.cells()
+        dirty += [(x, y, "down") for x, y in self.cells()
             if y >= min(height - 1, self.height - 1)]
-        self._clear_clues(dirty_cells)
+        self._clear_clues(dirty)
         
         for x in range(width):
             for y in range(height):
@@ -353,6 +353,7 @@ class Grid:
         self.height = height
         
     def _clear_clues(self, dirty_cells):
+        """Remove the clues of the words that contain a dirty cell."""
         for x, y, direction in dirty_cells:
             if direction == "across":
                 p, q = self.get_start_horizontal_word(x, y)
@@ -369,6 +370,14 @@ class Grid:
         
     def insert_row(self, y, insert_above=True):
         """Insert a row above or below the row at vertical coordinate y."""
+        dirty = []
+        dirty += [(x, y, "down") for x in xrange(self.width)]
+
+        ny = y - 1 if insert_above else y + 1
+        blocks = [x for x in xrange(self.width) if self.is_block(x, y)]
+        dirty += [(x, ny, "down") for x in blocks if self.is_valid(x, ny)]
+        self._clear_clues(dirty)
+
         self.resize(self.width, self.height + 1)
         row = [[self._default_cell() for x in range(self.width)]]
         if insert_above:
