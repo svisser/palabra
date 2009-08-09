@@ -708,10 +708,10 @@ class PalabraWindow(gtk.Window):
     @staticmethod
     def determine_status_message(status):
         return ''.join(
-            ["Words: ", str(status["word_count"]), ", "
-            ,"Blocks: ", str(status["block_count"]), " ("
-            ,"%.2f" % status["block_percentage"]
-            , "%), Letters: ", str(status["char_count"])
+            ["Blocks: ", str(status["block_count"]), " ("
+            ,"%.2f" % status["block_percentage"], "%), "
+            ,"words: ", str(status["word_count"]), ", "
+            ,"letters: ", str(status["char_count"])
             ])
         
     def create_view_menu(self):
