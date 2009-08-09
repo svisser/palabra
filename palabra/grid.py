@@ -284,13 +284,21 @@ class Grid:
         
     def in_direction(self, direction, x, y, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
-        while self.is_available(x, y):
+        dx = 1 if direction == "across" else 0
+        dy = 1 if direction == "down" else 0
+        if reverse:
+            dx *= -1
+            dy *= -1
+        return self._start_from(x, y, dx, dy, self.is_block)
+                
+    def _start_from(self, x, y, delta_x, delta_y, predicate=None):
+        """Repeatedly add the delta to (x, y) until the predicate becomes True."""
+        while self.is_valid(x, y):
+            if predicate is not None and predicate(x, y):
+                break
             yield x, y
-            
-            if direction == "across":
-                x = x - 1 if reverse else x + 1
-            elif direction == "down":
-                y = y - 1 if reverse else y + 1
+            x += delta_x
+            y += delta_y
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
