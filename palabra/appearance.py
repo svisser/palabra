@@ -66,7 +66,7 @@ class AppearanceDialog(gtk.Dialog):
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.properties = properties
-        self.set_size_request(640, 480)
+        self.set_size_request(480, 320)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -85,77 +85,69 @@ class AppearanceDialog(gtk.Dialog):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
         
-        table = gtk.Table(6, 3)
+        table = gtk.Table(7, 3)
         table.set_col_spacings(6)
+        table.set_row_spacings(3)
         main.pack_start(table, False, False, 0)
         
-        # cells
-        color = gtk.gdk.Color(*self.properties.cell["color"])
-        self.cell_color_button = gtk.ColorButton()
-        self.cell_color_button.set_color(color)
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Cell:"))
-        table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
-        table.attach(self.cell_color_button, 1, 2, 0, 1, 0, 0)
+        def create_label(label):
+            align = gtk.Alignment(0, 0.5)
+            align.set_padding(0, 0, 12, 0)
+            align.add(gtk.Label(label))
+            return align
+        
+        def create_color_button(color):
+            color = gtk.gdk.Color(*color)
+            button = gtk.ColorButton()
+            button.set_color(color)
+            return button
+            
+        def create_width_spinner(current):
+            adj = gtk.Adjustment(current, 1, MAX_LINE_WIDTH, 1, 0, 0)
+            return gtk.SpinButton(adj, 0.0, 0)
+            
+        def create_row(table, y, label, c1, c2=None):
+            table.attach(label, 0, 1, y, y + 1, gtk.FILL, gtk.FILL)
+            table.attach(c1, 1, 2, y, y + 1, 0, 0)
+            if c2 is not None:
+                table.attach(c2, 2, 3, y, y + 1, 0, 0)
+        
+        label = create_label("Color")
+        table.attach(label, 1, 2, 0, 1, gtk.FILL, gtk.FILL)
+        label = create_label("Thickness")
+        table.attach(label, 2, 3, 0, 1, gtk.FILL, gtk.FILL)
         
         # lines
-        color = gtk.gdk.Color(*self.properties.line["color"])
-        self.line_color_button = gtk.ColorButton()
-        self.line_color_button.set_color(color)
-        adj = gtk.Adjustment(self.properties.line["width"]
-            , 1, MAX_LINE_WIDTH, 1, 0, 0)
-        self.line_width_spinner = gtk.SpinButton(adj, 0.0, 0)
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Line:"))
-        table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
-        table.attach(self.line_color_button, 1, 2, 1, 2, 0, 0)
-        table.attach(self.line_width_spinner, 2, 3, 1, 2, 0, 0)
+        label = create_label(u"Line:")
+        self.line_color_button = create_color_button(self.properties.line["color"])
+        self.line_width_spinner = create_width_spinner(self.properties.line["width"])
+        create_row(table, 1, label, self.line_color_button, self.line_width_spinner)
         
         # border
-        color = gtk.gdk.Color(*self.properties.border["color"])
-        self.border_color_button = gtk.ColorButton()
-        self.border_color_button.set_color(color)
-        adj = gtk.Adjustment(self.properties.border["width"], 1
-            , MAX_LINE_WIDTH, 1, 0, 0)
-        self.border_width_spinner = gtk.SpinButton(adj, 0.0, 0)
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Border:"))
-        table.attach(align, 0, 1, 2, 3, gtk.FILL, gtk.FILL)
-        table.attach(self.border_color_button, 1, 2, 2, 3, 0, 0)
-        table.attach(self.border_width_spinner, 2, 3, 2, 3, 0, 0)
+        label = create_label(u"Border:")
+        self.border_color_button = create_color_button(self.properties.border["color"])
+        self.border_width_spinner = create_width_spinner(self.properties.border["width"])
+        create_row(table, 2, label, self.border_color_button, self.border_width_spinner)
+        
+        # cells
+        label = create_label(u"Cell:")
+        self.cell_color_button = create_color_button(self.properties.cell["color"])
+        create_row(table, 3, label, self.cell_color_button)
         
         # blocks
-        color = gtk.gdk.Color(*self.properties.block["color"])
-        self.block_color_button = gtk.ColorButton()
-        self.block_color_button.set_color(color)
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Block:"))
-        table.attach(align, 0, 1, 3, 4, gtk.FILL, gtk.FILL)
-        table.attach(self.block_color_button, 1, 2, 3, 4, 0, 0)
+        label = create_label(u"Blocks:")
+        self.block_color_button = create_color_button(self.properties.block["color"])
+        create_row(table, 4, label, self.block_color_button)
         
         # letters
-        color = gtk.gdk.Color(*self.properties.char["color"])
-        self.char_color_button = gtk.ColorButton()
-        self.char_color_button.set_color(color)
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Letter:"))
-        table.attach(align, 0, 1, 4, 5, gtk.FILL, gtk.FILL)
-        table.attach(self.char_color_button, 1, 2, 4, 5, 0, 0)
+        label = create_label(u"Letter:")
+        self.char_color_button = create_color_button(self.properties.char["color"])
+        create_row(table, 5, label, self.char_color_button)
         
         # numbers
-        color = gtk.gdk.Color(*self.properties.number["color"])
-        self.number_color_button = gtk.ColorButton()
-        self.number_color_button.set_color(color)
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Number:"))
-        table.attach(align, 0, 1, 5, 6, gtk.FILL, gtk.FILL)
-        table.attach(self.number_color_button, 1, 2, 5, 6, 0, 0)
+        label = create_label(u"Number:")
+        self.number_color_button = create_color_button(self.properties.number["color"])
+        create_row(table, 6, label, self.number_color_button)
         
         return main
         
