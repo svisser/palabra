@@ -399,11 +399,23 @@ class Grid:
             
     def remove_column(self, x):
         """Remove the column at horizontal coordinate x."""
+        dirty = [(x, y, "across") for y in xrange(self.height)]
+        blocks = [y for y in xrange(self.height) if self.is_block(x, y)]
+        for p in [x - 1, x + 1]:
+            dirty += [(p, y, "across") for y in blocks if self.is_valid(p, y)]
+        self._clear_clues(dirty)
+        
         self.data = map(lambda row: row[:x] + row[x + 1:], self.data)
         self.width -= 1
             
     def remove_row(self, y):
         """Remove the row at vertical coordinate y."""
+        dirty = [(x, y, "down") for x in xrange(self.width)]
+        blocks = [x for x in xrange(self.width) if self.is_block(x, y)]
+        for q in [y - 1, y + 1]:
+            dirty += [(x, q, "down") for x in blocks if self.is_valid(x, q)]
+        self._clear_clues(dirty)
+        
         self.data = self.data[:y] + self.data[y + 1:]
         self.height -= 1
         
