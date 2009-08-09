@@ -355,20 +355,17 @@ class Grid:
         
     def _clear_clues(self, dirty_cells):
         """Remove the clues of the words that contain a dirty cell."""
-        print "dirty", dirty_cells
         for x, y, direction in dirty_cells:
             if direction == "across":
                 p, q = self.get_start_horizontal_word(x, y)
                 try:
                     del self.cell(p, q)["clues"]["across"]
-                    print "deleted", p, q, "across at:", x, y
                 except KeyError:
                     pass
             elif direction == "down":
                 p, q = self.get_start_vertical_word(x, y)
                 try:
                     del self.cell(p, q)["clues"]["down"]
-                    print "deleted", p, q, "down at:", x, y
                 except KeyError:
                     pass
         

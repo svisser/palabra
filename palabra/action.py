@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
+
 from grid import Grid
 import preferences
 
@@ -75,9 +77,8 @@ class FullTransformAction(Action):
     def _perform_action(self, puzzle, source_grid):
         if self.size_changed:
             puzzle.grid.initialize(source_grid.width, source_grid.height)
-        for y in range(source_grid.height):
-            for x in range(source_grid.width):
-                puzzle.grid.set_cell(x, y, source_grid.cell(x, y))
+        for x, y in source_grid.cells():
+            puzzle.grid.set_cell(x, y, copy.deepcopy(source_grid.cell(x, y)))
 
 class ActionStack:
     """
