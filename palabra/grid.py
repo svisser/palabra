@@ -282,6 +282,12 @@ class Grid:
         """Return the length of the word starting at (x, y) in the given direction."""
         return sum([1 for x, y in self.in_direction(direction, x, y)])
         
+    def line(self, x, y, direction):
+        """Iterate in the given direction from (x, y)."""
+        dx = 1 if direction == "across" else 0
+        dy = 1 if direction == "down" else 0
+        return self._start_from(x, y, dx, dy)
+        
     def in_direction(self, direction, x, y, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
         dx = 1 if direction == "across" else 0
