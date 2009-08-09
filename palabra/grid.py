@@ -437,6 +437,8 @@ class Grid:
         The content of the top row will be lost.
         An empty row will be inserted at the bottom.
         """
+        dirty = [(x, y, "down") for x in xrange(self.width) for y in [0, self.height - 1]]
+        self._clear_clues(dirty)
         self.data = self.data[1:] + [[self._default_cell() for x in range(self.width)]]
         
     def shift_down(self):
@@ -446,6 +448,8 @@ class Grid:
         The content of the bottom row will be lost.
         An empty row will be inserted at the top.
         """
+        dirty = [(x, y, "down") for x in xrange(self.width) for y in [0, self.height - 1]]
+        self._clear_clues(dirty)
         self.data = [[self._default_cell() for x in range(self.width)]] + self.data[:-1]
         
     def shift_left(self):
@@ -455,6 +459,8 @@ class Grid:
         The content of the left column will be lost.
         An empty column will be inserted at the right.
         """
+        dirty = [(x, y, "across") for y in xrange(self.height) for x in [0, self.width - 1]]
+        self._clear_clues(dirty)
         self.data = map(lambda x: x[1:] + [self._default_cell()], self.data)
 
     def shift_right(self):
@@ -464,6 +470,8 @@ class Grid:
         The content of the right column will be lost.
         An empty column will be inserted at the left.
         """
+        dirty = [(x, y, "across") for y in xrange(self.height) for x in [0, self.width - 1]]
+        self._clear_clues(dirty)
         self.data = map(lambda x: [self._default_cell()] + x[:-1], self.data)
         
     def horizontal_flip(self):
