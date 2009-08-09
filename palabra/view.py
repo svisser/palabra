@@ -368,10 +368,10 @@ class GridView:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
     def refresh_horizontal_line(self, drawing_area, y):
-        self._refresh(drawing_area, self.grid.in_direction("across", 0, y))
+        self._refresh(drawing_area, [(x, y) for x in xrange(self.grid.width)])
         
     def refresh_vertical_line(self, drawing_area, x):
-        self._refresh(drawing_area, self.grid.in_direction("down", x, 0))
+        self._refresh(drawing_area, [(x, y) for y in xrange(self.grid.height)])
         
     def refresh_location(self, drawing_area, x, y):
         self._refresh(drawing_area, [(x, y)])
@@ -380,7 +380,8 @@ class GridView:
         for x, y in cells:
             rx = self.properties.grid_to_screen_x(x)
             ry = self.properties.grid_to_screen_y(y)
-            drawing_area.queue_draw_area(rx, ry, self.properties.cell["size"], self.properties.cell["size"])
+            size = self.properties.cell["size"]
+            drawing_area.queue_draw_area(rx, ry, size, size)
             
     # needs manual queue_draw() on drawing_area afterwards
     def update_visual_size(self, drawing_area):
