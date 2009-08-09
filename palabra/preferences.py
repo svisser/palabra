@@ -85,6 +85,9 @@ defaults["color_secondary_active_blue"] = (color_schemes["yellow"]["secondary_ac
 defaults["color_current_word_red"] = (color_schemes["yellow"]["current_word"][0], int)
 defaults["color_current_word_green"] = (color_schemes["yellow"]["current_word"][1], int)
 defaults["color_current_word_blue"] = (color_schemes["yellow"]["current_word"][2], int)
+defaults["color_warning_red"] = (65535, int)
+defaults["color_warning_green"] = (49152, int)
+defaults["color_warning_blue"] = (49152, int)
 
 def read_config_file():    
     parser = ConfigParser.RawConfigParser()

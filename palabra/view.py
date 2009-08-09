@@ -80,6 +80,7 @@ class GridViewProperties:
         
         self.char = {}
         self.char["color"] = (0, 0, 0)
+        self.char["font"] = "Sans 12"
         
         self.line = {}
         self.line["width"] = 1
@@ -87,6 +88,7 @@ class GridViewProperties:
         
         self.number = {}
         self.number["color"] = (0, 0, 0)
+        self.number["font"] = "Sans 7"
         
     def grid_to_screen_x(self, x, include_padding=True):
         result = self.border["width"] + x * (self.cell["size"] + self.line["width"])
@@ -167,8 +169,7 @@ class GridView:
         if self.settings["show_numbers"]:
             self.render_numbers(context)
             
-    def render_warnings(self, context):
-        r, g, b = 65535 / 65535.0, 49152 / 65535.0, 49152 / 65535.0
+    def render_warnings(self, context, r, g, b):
         if self.settings["warn_unchecked_cells"]:
             self._render_unchecked_cell_warnings(context, r, g, b)
             
@@ -333,12 +334,12 @@ class GridView:
         ry = (props.border["width"] +
             (y + 0.55) * (props.cell["size"] + props.line["width"]) -
             height - props.line["width"] / 2 - abs(ybearing) / 2)
-        self._render_pango(context, rx, ry, "Sans 12", c)
+        self._render_pango(context, rx, ry, props.char["font"], c)
         
     def _render_number(self, context, props, x, y, n):
         rx = props.grid_to_screen_x(x, False) + 1
         ry = props.grid_to_screen_y(y, False)
-        self._render_pango(context, rx, ry, "Sans 7", str(n))
+        self._render_pango(context, rx, ry, props.number["font"], str(n))
             
     def _render(self, context, render, **args):
         r, g, b = args["color"]

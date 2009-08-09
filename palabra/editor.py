@@ -89,7 +89,10 @@ class Editor(gtk.HBox):
         #secondary_selection_green = preferences.prefs["color_secondary_selection_green"] / 65535.0
         #secondary_selection_blue = preferences.prefs["color_secondary_selection_blue"] / 65535.0
         
-        self.puzzle.view.render_warnings(context)
+        r = preferences.prefs["color_warning_red"] / 65535.0
+        g = preferences.prefs["color_warning_green"] / 65535.0
+        b = preferences.prefs["color_warning_blue"] / 65535.0
+        self.puzzle.view.render_warnings(context, r, g, b)
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
