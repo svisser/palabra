@@ -246,7 +246,7 @@ class Grid:
                     yield n, x, y
                     
     def cells(self):
-        """Iterate over the cells of the grid."""
+        """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""
         for y in xrange(self.height):
             for x in xrange(self.width):
                 yield x, y
@@ -288,15 +288,9 @@ class Grid:
             yield x, y
             
             if direction == "across":
-                if reverse:
-                    x -= 1
-                else:
-                    x += 1
+                x = x - 1 if reverse else x + 1
             elif direction == "down":
-                if reverse:
-                    y -= 1
-                else:
-                    y += 1
+                y = y - 1 if reverse else y + 1
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
@@ -531,7 +525,7 @@ class Grid:
         
     def is_valid(self, x, y):
         """Return True if the given (x, y) is within the grid's boundaries."""
-        return x >= 0 and x < self.width and y >= 0 and y < self.height
+        return 0 <= x < self.width and 0 <= y < self.height
         
     def is_available(self, x, y):
         """Return True if the given (x, y) is valid and not a block."""
