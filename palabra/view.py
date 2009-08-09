@@ -69,6 +69,7 @@ class GridViewProperties:
         
         self.block = {}
         self.block["color"] = (0, 0, 0)
+        self.block["margin"] = 0
         
         self.border = {}
         self.border["width"] = 1
@@ -213,11 +214,24 @@ class GridView:
         def render(context, grid, props):
             for x, y in grid.cells():
                 if grid.is_block(x, y):
-                    # -0.5 for coordinates and +1 for size
-                    # are needed to render seamlessly in PDF
-                    rx = props.grid_to_screen_x(x, False) - 0.5
-                    ry = props.grid_to_screen_y(y, False) - 0.5
-                    context.rectangle(rx, ry, props.cell["size"] + 1, props.cell["size"] + 1)
+                    rx = props.grid_to_screen_x(x, False)
+                    ry = props.grid_to_screen_y(y, False)
+                    rwidth = props.cell["size"]
+                    rheight = props.cell["size"]
+                    
+                    if props.block["margin"] == 0:
+                        # -0.5 for coordinates and +1 for size
+                        # are needed to render seamlessly in PDF
+                        rx -= 0.5
+                        ry -= 0.5
+                        rwidth += 1
+                        rheight += 1
+                    else:
+                        rx += props.block["margin"]
+                        ry += props.block["margin"]
+                        rwidth -= (2 * props.block["margin"])
+                        rheight -= (2 * props.block["margin"])
+                    context.rectangle(rx, ry, rwidth, rheight)
             context.fill()
         color = map(lambda x: x / 65535.0, self.properties.block["color"])
         self._render(context, render, color=color)
