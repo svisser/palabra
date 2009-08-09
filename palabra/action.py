@@ -61,8 +61,6 @@ class FullTransformAction(Action):
         Action.__init__(self)
         self.from_grid = from_grid
         self.to_grid = to_grid
-        self.size_changed = (from_grid.width != to_grid.width or
-            from_grid.height != to_grid.height)
         
     def perform_undo(self, puzzle):
         """Undo this action."""
@@ -75,8 +73,8 @@ class FullTransformAction(Action):
         self._perform_action(puzzle, self.to_grid)
         
     def _perform_action(self, puzzle, source_grid):
-        if self.size_changed:
-            puzzle.grid.initialize(source_grid.width, source_grid.height)
+        if self.from_grid.size != self.to_grid.size:
+            puzzle.grid.initialize(*source_grid.size)
         for x, y in source_grid.cells():
             puzzle.grid.set_cell(x, y, copy.deepcopy(source_grid.cell(x, y)))
 

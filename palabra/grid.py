@@ -536,6 +536,11 @@ class Grid:
     def is_available(self, x, y):
         """Return True if the given (x, y) is valid and not a block."""
         return self.is_valid(x, y) and not self.is_block(x, y)
+        
+    def get_size(self):
+        return (self.width, self.height)
+        
+    size = property(get_size)
     
     def cell(self, x, y):
         return self.data[y][x]
