@@ -345,12 +345,11 @@ class Grid:
         ndata = [[self._default_cell() for x in range(width)] for y in range(height)]
         
         if make_dirty:
-            dirty = []
-            dirty += [(x, y, "across") for x, y in self.cells()
+            a = [(x, y, "across") for x, y in self.cells()
                 if x >= min(width - 1, self.width - 1)]
-            dirty += [(x, y, "down") for x, y in self.cells()
+            d = [(x, y, "down") for x, y in self.cells()
                 if y >= min(height - 1, self.height - 1)]
-            self._clear_clues(dirty)
+            self._clear_clues(a + d)
         
         for x in range(width):
             for y in range(height):
@@ -379,8 +378,7 @@ class Grid:
         
     def insert_row(self, y, insert_above=True):
         """Insert a row above or below the row at vertical coordinate y."""
-        dirty = []
-        dirty += [(x, y, "down") for x in xrange(self.width)]
+        dirty = [(x, y, "down") for x in xrange(self.width)]
 
         ny = y - 1 if insert_above else y + 1
         blocks = [x for x in xrange(self.width) if self.is_block(x, y)]
@@ -396,8 +394,7 @@ class Grid:
             
     def insert_column(self, x, insert_left=True):
         """Insert a column to the left or right of the horizontal coordinate x."""
-        dirty = []
-        dirty += [(x, y, "across") for y in xrange(self.height)]
+        dirty = [(x, y, "across") for y in xrange(self.height)]
         
         nx = x - 1 if insert_left else x + 1
         blocks = [y for y in xrange(self.height) if self.is_block(x, y)]
