@@ -5,3 +5,5 @@ syntax: glob
 *.txt
 *.png
 *.xml
+MANIFEST
+dist/*
