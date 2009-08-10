@@ -227,10 +227,11 @@ class GridView:
                         rwidth += 1
                         rheight += 1
                     else:
-                        rx += props.block["margin"]
-                        ry += props.block["margin"]
-                        rwidth -= (2 * props.block["margin"])
-                        rheight -= (2 * props.block["margin"])
+                        offset = int((props.block["margin"] / 100.0) * props.cell["size"])
+                        rx += offset
+                        ry += offset
+                        rwidth -= (2 * offset)
+                        rheight -= (2 * offset)
                     context.rectangle(rx, ry, rwidth, rheight)
             context.fill()
         color = map(lambda x: x / 65535.0, self.properties.block["color"])

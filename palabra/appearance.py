@@ -59,6 +59,7 @@ def apply_appearance(properties, appearance):
     
     properties.border["width"] = appearance["border"]["width"]
     properties.line["width"] = appearance["line"]["width"]
+    properties.block["margin"] = appearance["block"]["margin"]
 
 class AppearanceDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -85,7 +86,7 @@ class AppearanceDialog(gtk.Dialog):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
         
-        table = gtk.Table(7, 3)
+        table = gtk.Table(8, 3)
         table.set_col_spacings(6)
         table.set_row_spacings(3)
         main.pack_start(table, False, False, 0)
@@ -95,7 +96,7 @@ class AppearanceDialog(gtk.Dialog):
             align.set_padding(0, 0, 12, 0)
             align.add(gtk.Label(label))
             return align
-        
+            
         def create_color_button(color):
             color = gtk.gdk.Color(*color)
             button = gtk.ColorButton()
@@ -135,19 +136,27 @@ class AppearanceDialog(gtk.Dialog):
         create_row(table, 3, label, self.cell_color_button)
         
         # blocks
+        label = create_label(u"Color")
+        table.attach(label, 1, 2, 4, 5, gtk.FILL, gtk.FILL)
+        label = create_label(u"Margin (%)")
+        table.attach(label, 2, 3, 4, 5, gtk.FILL, gtk.FILL)
+        
+        current = self.properties.block["margin"]
         label = create_label(u"Blocks:")
         self.block_color_button = create_color_button(self.properties.block["color"])
-        create_row(table, 4, label, self.block_color_button)
+        adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
+        self.block_margin_spinner = gtk.SpinButton(adj, 0.0, 0)
+        create_row(table, 5, label, self.block_color_button, self.block_margin_spinner)
         
         # letters
         label = create_label(u"Letter:")
         self.char_color_button = create_color_button(self.properties.char["color"])
-        create_row(table, 5, label, self.char_color_button)
+        create_row(table, 6, label, self.char_color_button)
         
         # numbers
         label = create_label(u"Number:")
         self.number_color_button = create_color_button(self.properties.number["color"])
-        create_row(table, 6, label, self.number_color_button)
+        create_row(table, 7, label, self.number_color_button)
         
         return main
         
@@ -155,6 +164,7 @@ class AppearanceDialog(gtk.Dialog):
         appearance = {}
         appearance["block"] = {}
         appearance["block"]["color"] = self.block_color_button.get_color()
+        appearance["block"]["margin"] = self.block_margin_spinner.get_value_as_int()
         
         appearance["border"] = {}
         appearance["border"]["color"] = self.border_color_button.get_color()
