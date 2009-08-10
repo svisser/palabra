@@ -307,6 +307,10 @@ def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
     
     def write_csv_grid(output):
+        line = [output, settings["separator"]
+            , str(puzzle.grid.width), settings["separator"]
+            , str(puzzle.grid.height), "\n"]
+        f.write(''.join(line))
         for y in xrange(puzzle.grid.height):
             line = []
             for x in xrange(puzzle.grid.width):
