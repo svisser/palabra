@@ -497,11 +497,11 @@ class PalabraWindow(gtk.Window):
             , "Export the puzzle to various file formats"
             , title="_Export..."
             , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.export_as_template()
-            , "Save the grid as a template without the words and clues"
-            , title="Export as _template..."
-            , is_puzzle_sensitive=True))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.export_as_template()
+        #    , "Save the grid as a template without the words and clues"
+        #    , title="Export as _template..."
+        #    , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         

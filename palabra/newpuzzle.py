@@ -431,8 +431,8 @@ class NewWindow(gtk.Dialog):
         align.set_padding(0, 0, 12, 0)
         align.add(creation_method_vbox)
         
-        options_vbox.pack_start(label, False, False, 6)
-        options_vbox.pack_start(align, False, False, 0)
+        #options_vbox.pack_start(label, False, False, 6)
+        #options_vbox.pack_start(align, False, False, 0)
         
         self.context_vbox = gtk.VBox(False, 0)
         options_vbox.pack_start(self.context_vbox, True, True, 0)
@@ -443,7 +443,8 @@ class NewWindow(gtk.Dialog):
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.size_component = SizeComponent(
-            title="<b>Empty grid</b>"
+            #title="<b>Empty grid</b>"
+            title=u"<b>New puzzle</b>"
             , callback=self.size_callback)
         
         self.template_label = gtk.Label()
@@ -458,8 +459,8 @@ class NewWindow(gtk.Dialog):
         align.add(self.template_button)
         
         self.context_vbox.pack_start(self.size_component, False, False, 0)
-        self.context_vbox.pack_start(self.template_label, False, False, 6)
-        self.context_vbox.pack_start(align, False, False, 0)
+        #self.context_vbox.pack_start(self.template_label, False, False, 6)
+        #self.context_vbox.pack_start(align, False, False, 0)
         
         self.template_label.set_sensitive(False)
         self.template_button.set_sensitive(False)
