@@ -445,6 +445,35 @@ class GridTest(unittest.TestCase):
         for x in xrange(self.grid.width):
             self.assertEquals(self.grid.is_block(x, 0), False)
             
+    def _set_clues(self, direction):
+        # X _ _ _
+        # _ X _ _
+        # _ _ X _
+        # _ _ _ _
+        for i in xrange(3):
+            self.grid.set_block(i, i, True)
+        clues = [(2, 0, "foo"), (0, 1, "bar"), (1, 2, "bunny"), (2, 3, "cat")]
+        for i, j, value in clues:
+            if direction == "down":
+                x, y = i, j
+            else:
+                x, y = j, i
+            self.grid.store_clue(x, y, direction, "text", value)
+        
+    def testRemoveRowDirty(self):
+        clues = [(2, 0, "foo"), (0, 1, "bar"), (1, 2, "bunny"), (2, 3, "cat")]
+        self._set_clues("down")
+        self.grid.remove_row(1)
+        results = [(2, 0, False), (0, 1, False), (1, 1, False), (2, 2, True)]
+        for x, y, value in results:
+            self.assertEquals("down" in self.grid.get_clues(x, y), value)
+        self.assertEquals(self.grid.get_clues(2, 2)["down"]["text"], "cat")
+        
+    def testRemoveRowDirtyTwo(self):
+        self._set_clues("down")
+        self.grid.remove_row(2)
+        self.assertEquals("down" in self.grid.get_clues(2, 0), False)
+        
     def testRemoveColumn(self):
         width, height = self.grid.width, self.grid.height
         for y in xrange(self.grid.height):
@@ -453,6 +482,19 @@ class GridTest(unittest.TestCase):
         self.assertEquals(width - 1, self.grid.width)
         for y in xrange(self.grid.height):
             self.assertEquals(self.grid.is_block(0, y), False)
+            
+    def testRemoveColumnDirty(self):
+        self._set_clues("across")
+        self.grid.remove_column(1)
+        results = [(0, 2, False), (1, 0, False), (1, 1, False), (2, 2, True)]
+        for x, y, value in results:
+            self.assertEquals("across" in self.grid.get_clues(x, y), value)
+        self.assertEquals(self.grid.get_clues(2, 2)["across"]["text"], "cat")
+        
+    def testRemoveColumnDirtyTwo(self):
+        self._set_clues("across")
+        self.grid.remove_row(2)
+        self.assertEquals("across" in self.grid.get_clues(0, 2), False)
 
 class TransformTest(unittest.TestCase):
     def setUp(self):
