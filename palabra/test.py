@@ -505,6 +505,7 @@ class GridTest(unittest.TestCase):
         self.grid.set_block(0, 3, True)
         self.grid.shift_up()
         self.assertEquals("down" in self.grid.get_clues(0, 0), True)
+        self.assertEquals(self.grid.get_clues(0, 0)["down"]["text"], "B")
         self.assertEquals("down" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridLeftDirtyOne(self):
@@ -518,6 +519,7 @@ class GridTest(unittest.TestCase):
         self.grid.set_block(3, 0, True)
         self.grid.shift_left()
         self.assertEquals("across" in self.grid.get_clues(0, 0), True)
+        self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "B")
         self.assertEquals("across" in self.grid.get_clues(1, 1), False)
 
 class TransformTest(unittest.TestCase):
