@@ -139,7 +139,7 @@ class AppearanceDialog(gtk.Dialog):
         
         label = create_label(u"Cell:")
         self.cell_color_button = create_color_button(self.properties.cell["color"])
-        adj = gtk.Adjustment(self.properties.cell["size"], 32, 128, 2, 0, 0)
+        adj = gtk.Adjustment(self.properties.cell["size"], 32, 128, 1, 0, 0)
         self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
         create_row(table, 4, label, self.cell_color_button, self.cell_size_spinner)
         
