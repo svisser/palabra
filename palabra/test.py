@@ -458,6 +458,28 @@ class GridTest(unittest.TestCase):
             self.grid.set_block(i, i, True)
         for x, y, value in clues:
             self.grid.store_clue(x, y, direction, "text", value)
+            
+    def _set_clues_two(self, direction):
+        # bottom-right corner:
+        # _ _ _ _
+        # _ X _ _
+        # _ _ X _
+        # _ _ _ X
+        for i in xrange(3):
+            x = self.grid.width - 1 - i
+            y = self.grid.height - 1 - i
+            self.grid.set_block(x, y, True)
+        clues = []
+        if direction == "down":
+            clues.append((self.grid.width - 3, self.grid.height - 2, "A"))
+            clues.append((self.grid.width - 2, 0, "B"))
+            clues.append((self.grid.width - 1, 0, "C"))
+        else:
+            clues.append((self.grid.width - 2, self.grid.height - 3, "A"))
+            clues.append((0, self.grid.height - 2, "B"))
+            clues.append((0, self.grid.height - 1, "C"))
+        for x, y, value in clues:
+            self.grid.store_clue(x, y, direction, "text", value)
        
     def testRemoveRowDirty(self):
         self._set_clues_one("down")
@@ -521,6 +543,44 @@ class GridTest(unittest.TestCase):
         self.assertEquals("across" in self.grid.get_clues(0, 0), True)
         self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "B")
         self.assertEquals("across" in self.grid.get_clues(1, 1), False)
+        
+    def testShiftGridRightDirtyOne(self):
+        self._set_clues_two("across")
+        self.grid.shift_right()
+        clue = self.grid.get_clues(self.grid.width - 1, self.grid.height - 3)
+        self.assertEquals("across" in clue, False)
+        clue = self.grid.get_clues(0, self.grid.height - 2)
+        self.assertEquals("across" in clue, False)
+        clue = self.grid.get_clues(0, self.grid.height - 1)
+        self.assertEquals("across" in clue, False)
+        
+    def testShiftGridRightDirtyTwo(self):
+        self._set_clues_two("across")
+        self.grid.set_block(2, self.grid.height - 1, True)
+        self.grid.store_clue(3, self.grid.height - 1, "across", "text", "E")
+        self.grid.shift_right()
+        clue = self.grid.get_clues(4, self.grid.height - 1)
+        self.assertEquals("across" in clue, True)
+        self.assertEquals(clue["across"]["text"], "E")
+        
+    def testShiftGridDownDirtyOne(self):
+        self._set_clues_two("down")
+        self.grid.shift_down()
+        clue = self.grid.get_clues(self.grid.width - 3, self.grid.height - 1)
+        self.assertEquals("down" in clue, False)
+        clue = self.grid.get_clues(self.grid.width - 2, 0)
+        self.assertEquals("down" in clue, False)
+        clue = self.grid.get_clues(self.grid.width - 1, 0)
+        self.assertEquals("down" in clue, False)
+        
+    def testShiftGridDownDirtyTwo(self):
+        self._set_clues_two("down")
+        self.grid.set_block(self.grid.width - 1, 2, True)
+        self.grid.store_clue(self.grid.width - 1, 3, "down", "text", "E")
+        self.grid.shift_down()
+        clue = self.grid.get_clues(self.grid.width - 1, 4)
+        self.assertEquals("down" in clue, True)
+        self.assertEquals(clue["down"]["text"], "E")
 
 class TransformTest(unittest.TestCase):
     def setUp(self):
