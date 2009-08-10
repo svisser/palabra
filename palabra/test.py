@@ -450,18 +450,15 @@ class GridTest(unittest.TestCase):
         # _ X _ _
         # _ _ X _
         # _ _ _ _
+        clues = [(2, 0, "foo"), (0, 1, "bar"), (1, 2, "bunny"), (2, 3, "cat")]
+        if direction == "across":
+            clues = [(x, y, v) for y, x, v in clues]
         for i in xrange(3):
             self.grid.set_block(i, i, True)
-        clues = [(2, 0, "foo"), (0, 1, "bar"), (1, 2, "bunny"), (2, 3, "cat")]
-        for i, j, value in clues:
-            if direction == "down":
-                x, y = i, j
-            else:
-                x, y = j, i
+        for x, y, value in clues:
             self.grid.store_clue(x, y, direction, "text", value)
         
     def testRemoveRowDirty(self):
-        clues = [(2, 0, "foo"), (0, 1, "bar"), (1, 2, "bunny"), (2, 3, "cat")]
         self._set_clues("down")
         self.grid.remove_row(1)
         results = [(2, 0, False), (0, 1, False), (1, 1, False), (2, 2, True)]
