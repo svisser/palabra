@@ -446,25 +446,26 @@ class GridTest(unittest.TestCase):
             self.assertEquals(self.grid.is_block(x, 0), False)
             
     def _set_clues_one(self, direction):
+        # top-left corner:
         # X _ _ _
         # _ X _ _
         # _ _ X _
         # _ _ _ _
-        clues = [(2, 0, "foo"), (0, 1, "bar"), (1, 2, "bunny"), (2, 3, "cat")]
+        clues = [(2, 0, "A"), (0, 1, "B"), (1, 2, "C"), (2, 3, "D")]
         if direction == "across":
             clues = [(x, y, v) for y, x, v in clues]
         for i in xrange(3):
             self.grid.set_block(i, i, True)
         for x, y, value in clues:
             self.grid.store_clue(x, y, direction, "text", value)
-        
+       
     def testRemoveRowDirty(self):
         self._set_clues_one("down")
         self.grid.remove_row(1)
         results = [(2, 0, False), (0, 1, False), (1, 1, False), (2, 2, True)]
         for x, y, value in results:
             self.assertEquals("down" in self.grid.get_clues(x, y), value)
-        self.assertEquals(self.grid.get_clues(2, 2)["down"]["text"], "cat")
+        self.assertEquals(self.grid.get_clues(2, 2)["down"]["text"], "D")
         
     def testRemoveRowDirtyTwo(self):
         self._set_clues_one("down")
@@ -486,47 +487,34 @@ class GridTest(unittest.TestCase):
         results = [(0, 2, False), (1, 0, False), (1, 1, False), (2, 2, True)]
         for x, y, value in results:
             self.assertEquals("across" in self.grid.get_clues(x, y), value)
-        self.assertEquals(self.grid.get_clues(2, 2)["across"]["text"], "cat")
+        self.assertEquals(self.grid.get_clues(2, 2)["across"]["text"], "D")
         
     def testRemoveColumnDirtyTwo(self):
         self._set_clues_one("across")
         self.grid.remove_row(2)
         self.assertEquals("across" in self.grid.get_clues(0, 2), False)
         
-    def _set_clues_two(self, direction):
-        # X _ _ _
-        # _ X _ _
-        # _ _ X _
-        # _ _ _ _
-        for i in xrange(3):
-            self.grid.set_block(i, i, True)
-        clues = [(0, 1, "A"), (1, 2, "B")]
-        if direction == "across":
-            clues = [(x, y, v) for y, x, v in clues]
-        for x, y, v in clues:
-            self.grid.store_clue(x, y, direction, "text", v)
-        
     def testShiftGridUpDirtyOne(self):
-        self._set_clues_two("down")
+        self._set_clues_one("down")
         self.grid.shift_up()
         self.assertEquals("down" in self.grid.get_clues(0, 0), False)
         self.assertEquals("down" in self.grid.get_clues(1, 1), False)
 
     def testShiftGridUpDirtyTwo(self):    
-        self._set_clues_two("down")
+        self._set_clues_one("down")
         self.grid.set_block(0, 3, True)
         self.grid.shift_up()
         self.assertEquals("down" in self.grid.get_clues(0, 0), True)
         self.assertEquals("down" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridLeftDirtyOne(self):
-        self._set_clues_two("across")
+        self._set_clues_one("across")
         self.grid.shift_left()
         self.assertEquals("across" in self.grid.get_clues(0, 0), False)
         self.assertEquals("across" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridLeftDirtyTwo(self):
-        self._set_clues_two("across")
+        self._set_clues_one("across")
         self.grid.set_block(3, 0, True)
         self.grid.shift_left()
         self.assertEquals("across" in self.grid.get_clues(0, 0), True)
