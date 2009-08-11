@@ -82,7 +82,7 @@ class Histogram:
 
 class PropertiesWindow(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
-        gtk.Dialog.__init__(self, "Puzzle properties", palabra_window
+        gtk.Dialog.__init__(self, u"Puzzle properties", palabra_window
             , gtk.DIALOG_MODAL)
         self.puzzle = puzzle
         self.set_size_request(512, 512)
@@ -98,43 +98,41 @@ class PropertiesWindow(gtk.Dialog):
             self.puzzle.metadata["title"] = item.get_text().strip()
         title_entry.connect("changed", title_changed)
         alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label("Title"))
+        alignment.add(gtk.Label(u"Title"))
         details.attach(alignment, 0, 1, 0, 1)
         details.attach(title_entry, 1, 2, 0, 1)
         
-        author_hbox = gtk.HButtonBox()
-        author_hbox.pack_start(gtk.Label("Author"), False, False, 0)
         author_entry = gtk.Entry(512)
         
         def author_changed(item):
             self.puzzle.metadata["author"] = item.get_text().strip()
         author_entry.connect("changed", author_changed)
         alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label("Author"))
+        alignment.add(gtk.Label(u"Author"))
         details.attach(alignment, 0, 1, 1, 2)
         details.attach(author_entry, 1, 2, 1, 2)
         
         copyright_hbox = gtk.HBox(False, 0)
-        copyright_hbox.pack_start(gtk.Label("Copyright"), False, False, 0)
+        copyright_hbox.pack_start(gtk.Label(u"Copyright"), False, False, 0)
         copyright_entry = gtk.Entry(512)
         
         def copyright_changed(item):
             self.puzzle.metadata["copyright"] = item.get_text().strip()
         copyright_entry.connect("changed", copyright_changed)
         alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label("Copyright"))
+        alignment.add(gtk.Label(u"Copyright"))
         details.attach(alignment, 0, 1, 2, 3)
         details.attach(copyright_entry, 1, 2, 2, 3)
         
         description_hbox = gtk.HBox(False, 0)
-        description_hbox.pack_start(gtk.Label("Description"), False, False, 0)
+        description_hbox.pack_start(gtk.Label(u"Description"), False, False, 0)
         description_entry = gtk.Entry(512)
         
         def description_changed(item):
             self.puzzle.metadata["description"] = item.get_text().strip()
         description_entry.connect("changed", description_changed)
         alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label("Description"))
+        alignment.add(gtk.Label(u"Description"))
         details.attach(alignment, 0, 1, 3, 4)
         details.attach(description_entry, 1, 2, 3, 4)
 
@@ -150,11 +148,11 @@ class PropertiesWindow(gtk.Dialog):
         status = puzzle.grid.determine_status(True)
         
         tabs = gtk.Notebook()
-        tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label("General"))
-        tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label("Letters"))
+        tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label(u"General"))
+        tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
         
         message = self.determine_words_message(status, puzzle)
-        tabs.append_page(self.create_stats_tab(message), gtk.Label("Words"))
+        tabs.append_page(self.create_stats_tab(message), gtk.Label(u"Words"))
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -182,21 +180,21 @@ class PropertiesWindow(gtk.Dialog):
             label.set_alignment(1, 0)
             table.attach(label, x + 1, x + 2, y, y + 1)
             
-        create_statistic(table, "Columns", str(puzzle.grid.width), 0, 0)
-        create_statistic(table, "Rows", str(puzzle.grid.height), 0, 1)
-        create_statistic(table, "Blocks", str(status["block_count"]), 0, 2)
-        message = ''.join(["%.2f" % status["block_percentage"], "%"])
-        create_statistic(table, "Block percentage", message, 0, 3)
-        create_statistic(table, "Letters", str(status["char_count"]), 0, 4)
-        create_statistic(table, "Clues", str(status["clue_count"]), 0, 5)
+        create_statistic(table, u"Columns", str(puzzle.grid.width), 0, 0)
+        create_statistic(table, u"Rows", str(puzzle.grid.height), 0, 1)
+        create_statistic(table, u"Blocks", str(status["block_count"]), 0, 2)
+        message = ''.join([u"%.2f" % status["block_percentage"], u"%"])
+        create_statistic(table, u"Block percentage", message, 0, 3)
+        create_statistic(table, u"Letters", str(status["char_count"]), 0, 4)
+        create_statistic(table, u"Clues", str(status["clue_count"]), 0, 5)
         
-        create_statistic(table, "Checked cells", str(status["checked_count"]), 2, 0)
-        create_statistic(table, "Unchecked cells", str(status["unchecked_count"]), 2, 1)
-        create_statistic(table, "Total words", str(status["word_count"]), 2, 2)
-        create_statistic(table, "Across words", str(status["across_word_count"]), 2, 3)
-        create_statistic(table, "Down words", str(status["down_word_count"]), 2, 4)
-        message = "%.2f" % status["mean_word_length"]
-        create_statistic(table, "Mean word length", message, 2, 5)
+        create_statistic(table, u"Checked cells", str(status["checked_count"]), 2, 0)
+        create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 2, 1)
+        create_statistic(table, u"Total words", str(status["word_count"]), 2, 2)
+        create_statistic(table, u"Across words", str(status["across_word_count"]), 2, 3)
+        create_statistic(table, u"Down words", str(status["down_word_count"]), 2, 4)
+        message = u"%.2f" % status["mean_word_length"]
+        create_statistic(table, u"Mean word length", message, 2, 5)
         
         letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
         letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
@@ -208,14 +206,14 @@ class PropertiesWindow(gtk.Dialog):
         main.set_spacing(6)
         main.pack_start(table, False, False, 0)
         
-        label = gtk.Label("Letters in use")
+        label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
         table.attach(label, 0, 2, 6, 7)
         label = gtk.Label(''.join(letters_in_use_strings))
         label.set_alignment(0, 0)
         table.attach(label, 2, 4, 6, 7)
         
-        label = gtk.Label("Letters not in use")
+        label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
         table.attach(label, 0, 2, 7, 8)
         label = gtk.Label(''.join(letters_not_in_use_strings))
@@ -239,9 +237,9 @@ class PropertiesWindow(gtk.Dialog):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
                 if count == 0:
                     label = gtk.Label()
-                    label.set_markup(''.join([char, ": <b>", str(count), "</b>"]))
+                    label.set_markup(''.join([char, u": <b>", str(count), u"</b>"]))
                 else:
-                    label = gtk.Label(''.join([char, ": ", str(count), ""]))
+                    label = gtk.Label(''.join([char, u": ", str(count), u""]))
                 table.attach(label, x, x + 1, y / 6, y / 6 + 1)
         
         main = gtk.VBox(False, 0)
@@ -254,8 +252,8 @@ class PropertiesWindow(gtk.Dialog):
             return True
         
         combo = gtk.combo_box_new_text()
-        combo.append_text("Alphabet")
-        combo.append_text("Frequency")
+        combo.append_text(u"Alphabet")
+        combo.append_text(u"Frequency")
         combo.set_active(0)
         combo.connect("changed", self.on_ordering_changed)
         
@@ -268,7 +266,7 @@ class PropertiesWindow(gtk.Dialog):
         
         histo_options = gtk.VBox(False, 0)
         
-        label = gtk.Label("Order by:")
+        label = gtk.Label(u"Order by:")
         label.set_alignment(0, 0.5)
         histo_options.pack_start(label, False, False, 3)
         histo_options.pack_start(combo, False, False, 3)
@@ -311,7 +309,7 @@ class PropertiesWindow(gtk.Dialog):
         
     @staticmethod
     def determine_words_message(status, puzzle):
-        word_count_to_str = lambda (length, count): ''.join([str(length), ": ", str(count), "\n"])
+        word_count_to_str = lambda (length, count): ''.join([str(length), u": ", str(count), u"\n"])
         
         a = [word for (n, x, y, word, clue) in puzzle.grid.gather_words("across")]
         d = [word for (n, x, y, word, clue) in puzzle.grid.gather_words("down")]
@@ -320,10 +318,10 @@ class PropertiesWindow(gtk.Dialog):
         words.sort(key=len)
 
         message = ''.join(
-            ["Word counts:\n"
+            [u"Word counts:\n"
             ,''.join(map(word_count_to_str, status["word_counts_total"]))
-            ,"\n"
-            ,"Words:\n"
-            ,''.join(map(lambda word: ''.join([word, "\n"]), words))
+            ,u"\n"
+            ,u"Words:\n"
+            ,''.join(map(lambda word: ''.join([word, u"\n"]), words))
             ])
         return message

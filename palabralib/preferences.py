@@ -121,7 +121,7 @@ class PreferencesWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         buttons = (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
-        gtk.Dialog.__init__(self, "Palabra preferences"
+        gtk.Dialog.__init__(self, u"Palabra preferences"
             , palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         self.current_item = None
@@ -139,8 +139,8 @@ class PreferencesWindow(gtk.Dialog):
         vbox.pack_start(main, True, True, 0)
         
         self.components = []
-        self.components.append(("General", self.create_general_item()))
-        self.components.append(("Editor", self.create_editor_item()))
+        self.components.append((u"General", self.create_general_item()))
+        self.components.append((u"Editor", self.create_editor_item()))
         
         items = gtk.ListStore(str)
         for title, component in self.components:
@@ -196,7 +196,7 @@ class PreferencesWindow(gtk.Dialog):
         # new
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>New puzzle</b>")
+        label.set_markup(u"<b>New puzzle</b>")
         main.pack_start(label, False, False, 6)
         
         size_table = gtk.Table(2, 2)
@@ -219,13 +219,13 @@ class PreferencesWindow(gtk.Dialog):
         
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Default width:"))
+        align.add(gtk.Label(u"Default width:"))
         size_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
         size_table.attach(new_width_spinner, 1, 2, 0, 1, 0, 0)
         
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Default height:"))
+        align.add(gtk.Label(u"Default height:"))
         size_table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
         size_table.attach(new_height_spinner, 1, 2, 1, 2, 0, 0)
         
@@ -237,7 +237,7 @@ class PreferencesWindow(gtk.Dialog):
         
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>Colors</b>")
+        label.set_markup(u"<b>Colors</b>")
         main.pack_start(label, False, False, 6)
         
         color_table = gtk.Table(5, 2)
@@ -253,7 +253,7 @@ class PreferencesWindow(gtk.Dialog):
             , lambda button: self.refresh_color_preferences())
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Selected cell:"))
+        align.add(gtk.Label(u"Selected cell:"))
         color_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
         color_table.attach(self.color1_button, 1, 2, 0, 1, 0, 0)
         
@@ -266,7 +266,7 @@ class PreferencesWindow(gtk.Dialog):
             , lambda button: self.refresh_color_preferences())
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Selected word:"))
+        align.add(gtk.Label(u"Selected word:"))
         color_table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
         color_table.attach(self.color3_button, 1, 2, 1, 2, 0, 0)
         
@@ -279,7 +279,7 @@ class PreferencesWindow(gtk.Dialog):
             , lambda button: self.refresh_color_preferences())
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Cell under mouse pointer:"))
+        align.add(gtk.Label(u"Cell under mouse pointer:"))
         color_table.attach(align, 0, 1, 2, 3, gtk.FILL, gtk.FILL)
         color_table.attach(self.color2_button, 1, 2, 2, 3, 0, 0)
         
@@ -292,13 +292,13 @@ class PreferencesWindow(gtk.Dialog):
             , lambda button: self.refresh_color_preferences())
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Symmetrical cells:"))
+        align.add(gtk.Label(u"Symmetrical cells:"))
         color_table.attach(align, 0, 1, 3, 4, gtk.FILL, gtk.FILL)
         color_table.attach(self.color4_button, 1, 2, 3, 4, 0, 0)
         
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>Color schemes</b>")
+        label.set_markup(u"<b>Color schemes</b>")
         main.pack_start(label, False, False, 6)
         
         scheme_table = gtk.Table(1, 2)
@@ -314,7 +314,7 @@ class PreferencesWindow(gtk.Dialog):
         
         align = gtk.Alignment(0, 0.5)
         align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label("Load color scheme:"))
+        align.add(gtk.Label(u"Load color scheme:"))
         scheme_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
         scheme_table.attach(colors_combo, 1, 2, 0, 1)
         

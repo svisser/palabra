@@ -21,7 +21,7 @@ import transform
 
 class ClueEditor(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
-        gtk.Dialog.__init__(self, "Palabra Clue Editor"
+        gtk.Dialog.__init__(self, u"Palabra Clue Editor"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.puzzle = puzzle
@@ -30,8 +30,8 @@ class ClueEditor(gtk.Dialog):
         self.modifications = []
         
         tabs = gtk.Notebook()
-        tabs.append_page(self.create_clue_editor(), gtk.Label("Clue"))
-        tabs.append_page(self.create_overview(), gtk.Label("Overview"))
+        tabs.append_page(self.create_clue_editor(), gtk.Label(u"Clue"))
+        tabs.append_page(self.create_overview(), gtk.Label(u"Overview"))
         tabs.connect("switch-page", self.on_tab_change)
         
         main = gtk.VBox(False, 0)
@@ -110,8 +110,8 @@ class ClueEditor(gtk.Dialog):
             if value is not None:
                 widget.set_text(value)
         
-        display_dir = {"across": "Across", "down": "Down"}[direction]
-        content = ["<b>Currently editing</b>: ", str(n), ", ", display_dir]
+        display_dir = {"across": u"Across", "down": u"Down"}[direction]
+        content = [u"<b>Currently editing</b>: ", str(n), u", ", display_dir]
         self.clue_label.set_markup(''.join(content))
         
     def _check_against_user_modifications(self, x, y, direction, key):
@@ -150,7 +150,7 @@ class ClueEditor(gtk.Dialog):
         main.pack_start(self.clue_label, False, False, 0)
         
         label = gtk.Label()
-        label.set_markup("<b>Grid entry</b>")
+        label.set_markup(u"<b>Grid entry</b>")
         label.set_alignment(0, 0.5)
         label.set_padding(3, 3)
         self.grid_entry = gtk.Entry(512)
@@ -160,7 +160,7 @@ class ClueEditor(gtk.Dialog):
         
         changed = lambda widget: self.on_clue_changed(widget, "text")
         label = gtk.Label()
-        label.set_markup("<b>Clue</b>")
+        label.set_markup(u"<b>Clue</b>")
         label.set_alignment(0, 0.5)
         self.clue_entry = gtk.Entry(512)
         self.clue_entry.connect("changed", changed)
@@ -169,7 +169,7 @@ class ClueEditor(gtk.Dialog):
         
         changed = lambda widget: self.on_clue_changed(widget, "explanation")
         label = gtk.Label()
-        label.set_markup("<b>Explanation</b>")
+        label.set_markup(u"<b>Explanation</b>")
         label.set_alignment(0, 0.5)
         self.explanation_entry = gtk.Entry(512)
         self.explanation_entry.connect("changed", changed)
@@ -184,7 +184,7 @@ class ClueEditor(gtk.Dialog):
         align = button.get_children()[0]
         hbox = align.get_children()[0]
         image, label = hbox.get_children()
-        label.set_text("Previous")
+        label.set_text(u"Previous")
         buttons.pack_start(button, False, False, 0)
         
         def to_next_word(self):
@@ -198,7 +198,7 @@ class ClueEditor(gtk.Dialog):
         align = button.get_children()[0]
         hbox = align.get_children()[0]
         image, label = hbox.get_children()
-        label.set_text("Next")
+        label.set_text(u"Next")
         buttons.pack_start(button, False, False, 0)
         
         main.pack_start(buttons, False, False, 7)
@@ -225,7 +225,7 @@ class ClueEditor(gtk.Dialog):
         self.across_tree.append_column(column)
         
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("Word")
+        column = gtk.TreeViewColumn(u"Word")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=3)
         self.across_tree.append_column(column)
@@ -236,7 +236,7 @@ class ClueEditor(gtk.Dialog):
         cell = gtk.CellRendererText()
         cell.set_property("editable", True)
         cell.connect("edited", on_across_clue_editted)
-        column = gtk.TreeViewColumn("Clue")
+        column = gtk.TreeViewColumn(u"Clue")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=4)
         self.across_tree.append_column(column)
@@ -249,7 +249,7 @@ class ClueEditor(gtk.Dialog):
         self.down_tree.append_column(column)
         
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("Word")
+        column = gtk.TreeViewColumn(u"Word")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=3)
         self.down_tree.append_column(column)
@@ -260,7 +260,7 @@ class ClueEditor(gtk.Dialog):
         cell = gtk.CellRendererText()
         cell.set_property("editable", True)
         cell.connect("edited", on_down_clue_editted)
-        column = gtk.TreeViewColumn("Clue")
+        column = gtk.TreeViewColumn(u"Clue")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=4)
         self.down_tree.append_column(column)
@@ -275,14 +275,14 @@ class ClueEditor(gtk.Dialog):
         
         main = gtk.VBox(False, 0)
         across_label = gtk.Label()
-        across_label.set_markup("<b>Across words</b>")
+        across_label.set_markup(u"<b>Across words</b>")
         across_label.set_alignment(0, 0.5)
         across_label.set_padding(3, 3)
         main.pack_start(across_label, False, False, 0)
         main.pack_start(across_window, True, True, 0)
         
         down_label = gtk.Label()
-        down_label.set_markup("<b>Down words</b>")
+        down_label.set_markup(u"<b>Down words</b>")
         down_label.set_alignment(0, 0.5)
         down_label.set_padding(3, 3)
         main.pack_start(down_label, False, False, 0)
