@@ -8,7 +8,7 @@ it is licensed under the GNU General Public License.
 Requirements
 ============
 
-- Python 2.3 (for itertools module)
+- Python 2.4 (for lxml module)
 - PyGTK 2.8 (for pangocairo module)
 
 Palabra should work with the above versions of the software packages but they
