@@ -13,7 +13,8 @@ setup(name="palabra"
     , author_email="simeonvisser@gmail.com"
     , description="A crossword editor"
     , url="http://bitbucket.org/svisser/palabra"
-    , packages=['palabra']
+    , packages=['palabralib']
+    , scripts=['palabra']
     , requires=['gtk', 'pygtk (>=2.8)', 'lxml']
     # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
     , classifiers=[ 
