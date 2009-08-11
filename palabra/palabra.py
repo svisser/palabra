@@ -16,11 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#import pstats
-
-#import cProfile
-
-# see http://faq.pygtk.org/index.py?req=show&file=faq02.006.htp
 try:
     import pygtk
     pygtk.require("2.0")
@@ -33,11 +28,18 @@ from gui import PalabraWindow
 from preferences import read_config_file
 
 if __name__ == "__main__":
-    read_config_file()
-    
-    palabra = PalabraWindow()
-    palabra.show_all()
-    gtk.main()
-    #cProfile.run('gtk.main()', 'fooprof')
-    #p = pstats.Stats('fooprof')
-    #p.sort_stats('cumulative').print_stats()#20)
+    try:
+        read_config_file()
+        palabra = PalabraWindow()
+        palabra.show_all()
+        gtk.main()
+        #import pstats
+        #import cProfile
+        #cProfile.run('gtk.main()', 'fooprof')
+        #p = pstats.Stats('fooprof')
+        #p.sort_stats('cumulative').print_stats()#20)
+    except KeyboardInterrupt:
+        import sys
+        sys.exit("ERROR: Interrupted by user")
+else:
+    raise ImportError("Palabra cannot be imported.")
