@@ -146,6 +146,7 @@ class GridView:
         self.select_mode(constants.VIEW_MODE_EDITOR)
         
     def select_mode(self, mode):
+        """Select the render mode for future render calls."""
         self.settings = {}
         if mode == constants.VIEW_MODE_EDITOR:
             self.settings.update(SETTINGS_EDITOR)
@@ -158,6 +159,12 @@ class GridView:
             self.settings.update(SETTINGS_SOLUTION)
         
     def render(self, context, mode=constants.VIEW_MODE_EDITOR):
+        """
+        Render the grid in the current render mode.
+        
+        The current render mode can be specified as argument
+        or it has been specified earlier by a select_mode call.
+        """
         self.select_mode(mode)
             
         self.render_blocks(context)
@@ -171,6 +178,7 @@ class GridView:
             self.render_numbers(context)
             
     def render_warnings(self, context, r, g, b):
+        """Render undesired cells in the specified color."""
         if self.settings["warn_unchecked_cells"]:
             self._render_unchecked_cell_warnings(context, r, g, b)
             
@@ -181,6 +189,7 @@ class GridView:
             self._render_two_letter_warnings(context, r, g, b)
             
     def _render_consecutive_unchecked_warnings(self, context, r, g, b):
+        """Color consecutive (two or more) unchecked cells."""
         def check_word(direction, x, y):
             cells = []
             for p, q in self.grid.in_direction(direction, x, y):
@@ -198,11 +207,13 @@ class GridView:
             check_word("down", x, y)
             
     def _render_unchecked_cell_warnings(self, context, r, g, b):
+        """Color cells that are unchecked. Isolated cells are also colored."""
         for x, y in self.grid.cells():
             if 0 <= self.grid.get_check_count(x, y) <= 1:
                 self.render_location(context, x, y, r, g, b)
             
     def _render_two_letter_warnings(self, context, r, g, b):
+        """Color words with length two."""
         for n, x, y in self.grid.horizontal_words():
             if self.grid.word_length(x, y, "across") == 2:
                 self.render_horizontal_line(context, x, y, r, g, b)
@@ -211,6 +222,7 @@ class GridView:
                 self.render_vertical_line(context, x, y, r, g, b)
         
     def render_blocks(self, context):
+        """Render all blocks of the grid."""
         def render(context, grid, props):
             for x, y in grid.cells():
                 if grid.is_block(x, y):
@@ -238,6 +250,7 @@ class GridView:
         self._render(context, render, color=color)
         
     def render_lines(self, context):
+        """Render the internal lines of the grid (i.e., all lines except the border)."""
         def render(context, grid, props):
             context.set_line_width(props.line["width"])
             
@@ -261,6 +274,7 @@ class GridView:
         self._render(context, render, color=color)
         
     def render_border(self, context):
+        """Render the border of the grid."""
         def render(context, grid, props):
             context.set_line_width(props.border["width"])
             x = 0.5 * props.border["width"]
@@ -273,6 +287,7 @@ class GridView:
         self._render(context, render, color=color)
         
     def render_horizontal_line(self, context, x, y, r, g, b):
+        """Render a horizontal sequence of cells."""
         def render(context, grid, props):
             a = grid.in_direction("across", x, y)
             b = grid.in_direction("across", x, y, reverse=True)
@@ -284,6 +299,7 @@ class GridView:
         self._render(context, render, color=(r, g, b))
         
     def render_vertical_line(self, context, x, y, r, g, b):
+        """Render a vertical sequence of cells."""
         def render(context, grid, props):
             a = grid.in_direction("down", x, y)
             b = grid.in_direction("down", x, y, reverse=True)
@@ -295,6 +311,7 @@ class GridView:
         self._render(context, render, color=(r, g, b))
         
     def render_chars(self, context):
+        """Render the letters of the grid."""
         def render(context, grid, props):
             for x, y in grid.cells():
                 c = grid.get_char(x, y)
@@ -304,6 +321,7 @@ class GridView:
         self._render(context, render, color=color)
         
     def render_numbers(self, context):
+        """Render the word numbers of the grid."""
         def render(context, grid, props):
             for n, x, y in grid.words(False):
                 self._render_number(context, props, x, y, n)
@@ -311,6 +329,7 @@ class GridView:
         self._render(context, render, color=color)
     
     def render_location(self, context, x, y, r, g, b):
+        """Render a cell."""
         def render(context, grid, props):
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
@@ -321,6 +340,7 @@ class GridView:
         self._render(context, render, color=(r, g, b))
     
     def render_background(self, context):
+        """Render the background of all cells of the grid."""
         def render(context, grid, props):
             x = props.border["width"]
             y = props.border["width"]
@@ -332,6 +352,7 @@ class GridView:
         self._render(context, render, color=color)
         
     def _render_pango(self, context, x, y, font, content):
+        """Render the content at (x, y) using the specified font description."""
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
         layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
@@ -341,6 +362,7 @@ class GridView:
         context.restore()
         
     def _render_char(self, context, props, x, y, c):
+        """Render a letter c at the specified coordinates (x, y)."""
         xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
                     
         rx = (props.border["width"] +
@@ -352,6 +374,7 @@ class GridView:
         self._render_pango(context, rx, ry, props.char["font"], c)
         
     def _render_number(self, context, props, x, y, n):
+        """Render a number n at the specified coordinates (x, y)."""
         rx = props.grid_to_screen_x(x, False) + 1
         ry = props.grid_to_screen_y(y, False)
         self._render_pango(context, rx, ry, props.number["font"], str(n))
@@ -369,12 +392,15 @@ class GridView:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
     def refresh_horizontal_line(self, drawing_area, y):
+        """Redraw a horizontal sequence of cells at the specified y-coordinate."""
         self._refresh(drawing_area, [(x, y) for x in xrange(self.grid.width)])
         
     def refresh_vertical_line(self, drawing_area, x):
+        """Redraw a vertical sequence of cells at the specified x-coordinate."""
         self._refresh(drawing_area, [(x, y) for y in xrange(self.grid.height)])
         
     def refresh_location(self, drawing_area, x, y):
+        """Refresh the cell at the specified coordinates."""
         self._refresh(drawing_area, [(x, y)])
         
     def _refresh(self, drawing_area, cells):
@@ -386,6 +412,7 @@ class GridView:
             
     # needs manual queue_draw() on drawing_area afterwards
     def update_visual_size(self, drawing_area):
+        """Recalculate the visual width and height and resize the drawing area."""
         visual_width = self.visual_width()
         visual_height = self.visual_height()
         drawing_area.set_size_request(visual_width, visual_height)
