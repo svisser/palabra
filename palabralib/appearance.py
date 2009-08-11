@@ -64,7 +64,7 @@ def apply_appearance(properties, appearance):
 
 class AppearanceDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
-        gtk.Dialog.__init__(self, "Appearance"
+        gtk.Dialog.__init__(self, u"Appearance"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.properties = properties
@@ -114,9 +114,9 @@ class AppearanceDialog(gtk.Dialog):
             if c2 is not None:
                 table.attach(c2, 2, 3, y, y + 1, 0, 0)
         
-        label = create_label("Color")
+        label = create_label(u"Color")
         table.attach(label, 1, 2, 0, 1, gtk.FILL, gtk.FILL)
-        label = create_label("Thickness")
+        label = create_label(u"Thickness")
         table.attach(label, 2, 3, 0, 1, gtk.FILL, gtk.FILL)
         
         # lines
