@@ -24,8 +24,8 @@ except (ImportError, AssertionError):
     print "PyGTK 2.8 or higher is required for this application."
     raise SystemExit
 
-from palabra.gui import PalabraWindow
-from palabra.preferences import read_config_file
+from palabralib.gui import PalabraWindow
+from palabralib.preferences import read_config_file
 
 if __name__ == "__main__":
     try:
