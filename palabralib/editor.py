@@ -159,7 +159,7 @@ class Editor(gtk.HBox):
             self.set_selection(-1, -1)
             
         if event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK):
-            if self.puzzle.grid.is_valid(x, y):
+            if self.puzzle.grid.is_available(x, y):
                 self.set_selection(x, y)
         
         if (event.state & gtk.gdk.SHIFT_MASK):
