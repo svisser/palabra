@@ -37,6 +37,7 @@ The following keyboard and mouse commands can be used for editing:
 - Use HOME and END to jump to the beginning or end of the selected word.
 - Use TAB to switch the typing direction.
 - Use the ARROW KEYS to select the cell next to the selected cell.
+- Use BACKSPACE or DELETE to remove a letter.
 
 For more information, see the Palabra manual:
 
