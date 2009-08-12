@@ -28,18 +28,7 @@ Palabra can be installed using:
 Getting started
 ===============
 
-The following keyboard and mouse commands can be used for editing:
-
-- Click at a cell to select it.
-- Click at the selected cell to change the typing direction.
-- Hold SHIFT and left-click at a cell to place a block (and symmetrical blocks).
-- Hold SHIFT and right-click at a cell to remove a block (and symmetrical blocks).
-- Use HOME and END to jump to the beginning or end of the selected word.
-- Use TAB to switch the typing direction.
-- Use the ARROW KEYS to select the cell next to the selected cell.
-- Use BACKSPACE or DELETE to remove a letter.
-
-For more information, see the Palabra manual:
+Please see the Palabra manual:
 
   http://bitbucket.org/svisser/palabra/wiki/Manual
 
