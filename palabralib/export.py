@@ -22,7 +22,7 @@ def verify_output_options(options):
         if value:
             break
     else:
-        return "No output options are selected."
+        return u"No output options are selected."
     return None
 
 class Format:
@@ -52,7 +52,7 @@ class ExportWindow(gtk.Dialog):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
             gtk.STOCK_SAVE, gtk.RESPONSE_OK)
-        super(ExportWindow, self).__init__("Export puzzle", palabra_window, flags, buttons)
+        super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         
         self.reset_options()
@@ -60,13 +60,13 @@ class ExportWindow(gtk.Dialog):
         self.format = None
         self.formats = []
 
-        csv = Format("csv", "CSV (csv)", ["grid", "solution", "clues"])
+        csv = Format("csv", u"CSV (csv)", ["grid", "solution", "clues"])
         self.formats.append(csv)
-        png = Format("png", "PNG (png)", ["grid", "solution"], False)
+        png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
 
-        setting = FormatSetting("combo", "Separator:", "separator", ","
-            , [("Comma", ","), ("Tab", "\t")])
+        setting = FormatSetting("combo", u"Separator:", "separator", ","
+            , [(u"Comma", ","), (u"Tab", "\t")])
         def initialize(combo):
             combo.set_active(0)
         def callback(combo):
@@ -106,7 +106,7 @@ class ExportWindow(gtk.Dialog):
         
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>Export to:</b>")
+        label.set_markup(u"<b>Export to:</b>")
         format_vbox = gtk.VBox(False, 0)
         format_vbox.pack_start(label, False, False, 6)
         format_vbox.pack_start(tree_window, True, True, 6)
@@ -157,11 +157,11 @@ class ExportWindow(gtk.Dialog):
     def _create_output_options(main, format, callback):
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>Output</b>")
+        label.set_markup(u"<b>Output</b>")
         main.pack_start(label, False, False, 6)
 
         prev_option = None
-        options = {"grid": "Grid", "solution": "Solution", "clues": "Clues"}
+        options = {"grid": u"Grid", "solution": u"Solution", "clues": u"Clues"}
         for key, title in options.items():
             if key in format.outputs:
                 if format.allow_multiple:
@@ -187,7 +187,7 @@ class ExportWindow(gtk.Dialog):
             
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>Settings</b>")
+        label.set_markup(u"<b>Settings</b>")
         main.pack_start(label, False, False, 6)
         
         table = gtk.Table(len(format.settings), 2)
