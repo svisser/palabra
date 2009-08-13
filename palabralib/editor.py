@@ -152,8 +152,8 @@ class Editor(gtk.HBox):
         prev_x = self.settings["selection_x"]
         prev_y = self.settings["selection_y"]
         
-        x = self.puzzle.view.screen_to_grid_x(event.x)
-        y = self.puzzle.view.screen_to_grid_y(event.y)
+        x = self.puzzle.view.properties.screen_to_grid_x(event.x)
+        y = self.puzzle.view.properties.screen_to_grid_y(event.y)
         
         if not self.puzzle.grid.is_valid(x, y):
             self.set_selection(-1, -1)
@@ -202,8 +202,8 @@ class Editor(gtk.HBox):
         self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
         self.refresh_symmetry(drawing_area, prev_x, prev_y)
         
-        self.current_x = self.puzzle.view.screen_to_grid_x(event.x)
-        self.current_y = self.puzzle.view.screen_to_grid_y(event.y)
+        self.current_x = self.puzzle.view.properties.screen_to_grid_x(event.x)
+        self.current_y = self.puzzle.view.properties.screen_to_grid_y(event.y)
         
         cx = self.current_x
         cy = self.current_y

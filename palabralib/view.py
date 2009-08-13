@@ -416,27 +416,3 @@ class GridView:
         visual_width = self.visual_width()
         visual_height = self.visual_height()
         drawing_area.set_size_request(visual_width, visual_height)
-            
-    def screen_to_grid_x(self, screen_x):
-        return self.properties.screen_to_grid_x(screen_x)
-        
-    def screen_to_grid_y(self, screen_y):
-        return self.properties.screen_to_grid_y(screen_y)
-        
-    def grid_to_screen_x(self, x, include_padding=True):
-        return self.properties.grid_to_screen_x(x, include_padding)
-    
-    def grid_to_screen_y(self, y, include_padding=True):
-        return self.properties.grid_to_screen_y(y, include_padding)
-            
-    def visual_width(self, include_padding=True):
-        return self.properties.visual_width(include_padding)
-        
-    def visual_height(self, include_padding=True):
-        return self.properties.visual_height(include_padding)
-            
-    def get_grid_width(self):
-        return self.properties.get_grid_width()
-        
-    def get_grid_height(self):
-        return self.properties.get_grid_height()
