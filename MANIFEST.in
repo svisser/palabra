@@ -1,4 +1,6 @@
 include README
 include CHANGES
 include COPYING
+include ez_setup.py
 exclude palabralib/test.py
+exclude MANIFEST.in
