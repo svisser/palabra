@@ -6,4 +6,6 @@ syntax: glob
 *.png
 *.xml
 MANIFEST
+build/*
 dist/*
+*.egg-info/*
