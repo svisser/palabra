@@ -1,7 +1,9 @@
 
 import sys
 
-from distutils.core import setup
+from ez_setup import use_setuptools
+use_setuptools()
+from setuptools import setup
 
 if sys.version_info < (2, 4):
     sys.exit("ERROR: Python 2.4 is required to run Palabra.")
@@ -15,7 +17,7 @@ setup(name="palabra"
     , url="http://bitbucket.org/svisser/palabra"
     , packages=['palabralib']
     , scripts=['palabra']
-    , requires=['gtk', 'pygtk (>=2.8)', 'lxml']
+    , install_requires=['lxml']
     # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
     , classifiers=[ 
         "Development Status :: 4 - Beta"
@@ -25,5 +27,5 @@ setup(name="palabra"
         , "Operating System :: POSIX :: Linux" # for now
         , "Programming Language :: Python"
         , "Topic :: Games/Entertainment :: Puzzle Games"
-    ]
+        ]
     )
