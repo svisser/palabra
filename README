@@ -25,6 +25,8 @@ Palabra can be installed using:
 
   sudo python setup.py install
 
+You also need the lxml package (http://pypi.python.org/pypi/lxml).
+
 Getting started
 ===============
 
