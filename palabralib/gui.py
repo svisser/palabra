@@ -25,6 +25,7 @@ import constants
 from export import ExportWindow, verify_output_options
 from editor import Editor
 from files import (
+    InvalidFileError,
     import_puzzle,
     export_puzzle,
     export_puzzle_to_xml,
@@ -169,17 +170,22 @@ class PalabraWindow(gtk.Window):
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
                 dialog.hide()
-
-                filename = dialog.get_filename()
-                puzzle = import_puzzle(filename)
-                if puzzle is None:
-                    message = u"This file does not appear to be a valid Palabra puzzle file."
+                
+                def show_error(title, message):
                     mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
                         , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
                     mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-                    mdialog.set_title(u"Invalid file")
+                    mdialog.set_title(title)
                     mdialog.run()
                     mdialog.destroy()
+                    
+                filename = dialog.get_filename()
+                try:
+                    puzzle = import_puzzle(filename)
+                except InvalidFileError:
+                    title = u"Invalid file"
+                    message = u"This file does not appear to be a valid Palabra puzzle file."
+                    show_error(title, message)
                 else:
                     puzzle.filename = filename
                     self.update_title(filename)

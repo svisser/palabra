@@ -26,6 +26,12 @@ from grid import Grid
 from puzzle import Puzzle
 from view import GridView
 
+class ParserError(Exception):
+    pass
+    
+class InvalidFileError(ParserError):
+    pass
+
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])
     settings = options["settings"]
@@ -38,16 +44,21 @@ def import_puzzle(filename):
     try:
         tree = etree.parse(filename)
     except etree.XMLSyntaxError:
-        return None
+        raise InvalidFileError
+        
     palabra = tree.getroot()
     if palabra.tag != "palabra":
-        return None
+        raise InvalidFileError
     
     version = palabra.get("version")
+
+    try:
+        puzzle = palabra[0]
+    except IndexError:
+        raise InvalidFileError
         
-    puzzle = palabra[0]
     if puzzle.tag != "puzzle":
-        return None
+        raise InvalidFileError
     
     data = {}
     for e in puzzle:
@@ -56,7 +67,7 @@ def import_puzzle(filename):
         elif e.tag == "clues":
             direction = e.get("direction")
             if direction is None:
-                continue
+                raise InvalidFileError
                 
             clues = parse_clues(e, direction)
             
@@ -73,7 +84,7 @@ def parse_grid(e):
     width = e.get("width")
     height = e.get("height")
     if width is None or height is None:
-        return None
+        raise InvalidFileError
         
     width = int(width)
     height = int(height)
@@ -85,6 +96,8 @@ def parse_grid(e):
             x, y, c = cell_data
             if c is not None:
                 grid.set_cell(x, y, c)
+        else:
+            raise InvalidFileError
 
     return grid
     
