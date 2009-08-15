@@ -27,8 +27,8 @@ from editor import Editor
 from files import (
     InvalidFileError,
     read_crossword,
+    write_crossword_to_xml,
     export_puzzle,
-    export_puzzle_to_xml,
     export_template,
 )
 import grid
@@ -223,11 +223,11 @@ class PalabraWindow(gtk.Window):
             if response == gtk.RESPONSE_OK:
                 filename = dialog.get_filename()
                 self.puzzle_manager.current_puzzle.filename = filename
-                export_puzzle_to_xml(self.puzzle_manager.current_puzzle)
+                write_crossword_to_xml(self.puzzle_manager.current_puzzle)
                 self.update_title(self.puzzle_manager.current_puzzle.filename)
             dialog.destroy()
         else:
-            export_puzzle_to_xml(self.puzzle_manager.current_puzzle)
+            write_crossword_to_xml(self.puzzle_manager.current_puzzle)
         action.stack.distance_from_saved_puzzle = 0
         
     def export_puzzle(self):

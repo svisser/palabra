@@ -18,7 +18,7 @@
 import os
 
 # application version
-VERSION = "0.1"
+VERSION = "0.1.1"
 
 # configuration file
 APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
