@@ -1,6 +1,10 @@
 
 This is a list of changes since the initial release of Palabra.
 
+Version ?
+=========
+* XML files are now validated against XML schema.
+
 Version 0.1 (August 14, 2009)
 =============================
-Initial release
+* Initial release

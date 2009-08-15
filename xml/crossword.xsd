@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<xs:simpleType name="format_version_type">
+    <xs:restriction base="xs:string">
+        <xs:pattern value="([0-9])+(.([0-9])+(.([0-9])+(.([0-9])+)?)?)?" />
+    </xs:restriction>
+</xs:simpleType>
+
+<xs:simpleType name="integer_at_least_one">
+    <xs:restriction base="xs:integer">
+        <xs:minInclusive value="1" />
+    </xs:restriction>
+</xs:simpleType>
+
+<xs:complexType name="metadata_type">
+    <xs:sequence>
+        <xs:element name="title" type="xs:string" />
+        <xs:element name="author" type="xs:string" />
+        <xs:element name="copyright" type="xs:string" />
+        <xs:element name="description" type="xs:string" />
+    </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="cell_type">
+    <xs:attribute name="x" type="integer_at_least_one" use="required" />
+    <xs:attribute name="y" type="integer_at_least_one" use="required" />
+</xs:complexType>
+
+<xs:complexType name="letter_type">
+    <xs:complexContent>
+        <xs:extension base="cell_type">
+            <xs:attribute name="content" type="xs:string" use="required" />
+        </xs:extension>
+    </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="grid_type">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="letter" type="letter_type" />
+        <xs:element name="block" type="cell_type" />
+    </xs:choice>
+    <xs:attribute name="width" type="integer_at_least_one" use="required" />
+    <xs:attribute name="height" type="integer_at_least_one" use="required" />
+</xs:complexType>
+
+<xs:complexType name="clue_type">
+    <xs:complexContent>
+        <xs:extension base="cell_type">
+            <xs:sequence>
+                <xs:element name="text" type="xs:string" minOccurs="0" />
+                <xs:element name="explanation" type="xs:string" minOccurs="0" />
+            </xs:sequence>
+        </xs:extension>
+    </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="clues_type">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="clue" type="clue_type" />
+    </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="across_clues_type">
+    <xs:complexContent>
+        <xs:extension base="clues_type">
+            <xs:attribute name="direction" type="xs:string" fixed="across" use="required" />
+        </xs:extension>
+    </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="down_clues_type">
+    <xs:complexContent>
+        <xs:extension base="clues_type">
+            <xs:attribute name="direction" type="xs:string" fixed="down" use="required" />
+        </xs:extension>
+    </xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="crossword_type">
+    <xs:sequence>
+        <xs:element name="metadata" type="metadata_type"/>
+        <xs:element name="grid" type="grid_type" />
+        <xs:element name="clues" type="across_clues_type" />
+        <xs:element name="clues" type="down_clues_type" />
+    </xs:sequence>
+</xs:complexType>
+
+<xs:element name="palabra">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element name="crossword" type="crossword_type" />
+        </xs:sequence>
+        <xs:attribute name="version" type="format_version_type" use="required" />
+    </xs:complexType>
+</xs:element>
+
+</xs:schema>

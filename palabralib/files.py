@@ -26,6 +26,8 @@ from grid import Grid
 from puzzle import Puzzle
 from view import GridView
 
+XML_SCHEMA_CROSSWORD = "xml/crossword.xsd"
+
 class ParserError(Exception):
     pass
     
@@ -40,67 +42,72 @@ def export_puzzle(puzzle, filename, options):
     elif options["format"] == "png":
         export_to_png(puzzle, filename, outputs[0], settings)
 
-def import_puzzle(filename):
+def read_crossword(filename):
+    xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
-        tree = etree.parse(filename)
+        doc = etree.parse(filename)
     except etree.XMLSyntaxError:
         raise InvalidFileError
-        
-    palabra = tree.getroot()
-    if palabra.tag != "palabra":
-        raise InvalidFileError
-    
-    version = palabra.get("version")
-
     try:
-        puzzle = palabra[0]
-    except IndexError:
-        raise InvalidFileError
-        
-    if puzzle.tag != "puzzle":
+        xmlschema.assertValid(doc)
+    except etree.DocumentInvalid:
         raise InvalidFileError
     
-    data = {}
-    for e in puzzle:
-        if e.tag == "grid":
-            data["grid"] = parse_grid(e)
+    root = doc.getroot()
+    version = root.get("version")
+    for e in root[0]:
+        if e.tag == "metadata":
+            metadata = read_metadata(e)
+        elif e.tag == "grid":
+            grid = read_grid(e)
         elif e.tag == "clues":
-            direction = e.get("direction")
-            if direction is None:
-                raise InvalidFileError
-                
-            clues = parse_clues(e, direction)
-            
-            data[direction + "_clues"] = clues
-            
-    puzzle = Puzzle(data["grid"])
-    for x, y, direction in data["across_clues"]:
-        puzzle.grid.cell(x, y)["clues"]["across"] = data["across_clues"][x, y, direction]
-    for x, y, direction in data["down_clues"]:
-        puzzle.grid.cell(x, y)["clues"]["down"] = data["down_clues"][x, y, direction]
-    return puzzle
-            
-def parse_grid(e):
-    width = e.get("width")
-    height = e.get("height")
-    if width is None or height is None:
-        raise InvalidFileError
-        
-    width = int(width)
-    height = int(height)
-    
-    grid = Grid(width, height)
-    for cell in e:
-        if cell.tag == "cell":
-            cell_data = _parse_cell(cell)
-            x, y, c = cell_data
-            if c is not None:
-                grid.set_cell(x, y, c)
-        else:
-            raise InvalidFileError
+            direction, clues = read_clues(e)
+            for x, y in clues:
+                grid.cell(x, y)["clues"][direction] = clues[x, y]
+    return Puzzle(grid)
 
+def read_metadata(metadata):
+    m = {}
+    for e in metadata:
+        m[e.tag] = e.text
+    return m
+    
+def read_cell(e):
+    x = int(e.get("x")) - 1
+    y = int(e.get("y")) - 1
+    c = {}
+    c["block"] = e.tag == "block"
+    if e.tag == "letter" and e.get("content") is not None:
+        c["char"] = e.get("content")
+    else:
+        c["char"] = ""
+    c["clues"] = {}
+    return x, y, c
+    
+def read_grid(e):
+    width = int(e.get("width"))
+    height = int(e.get("height"))
+    grid = Grid(width, height)
+    for c in e:
+        grid.set_cell(*read_cell(c))
     return grid
     
+def read_clue(e):
+    x = int(e.get("x")) - 1
+    y = int(e.get("y")) - 1
+    c = {}
+    for prop in e:
+        if prop.text is not None:
+            c[prop.tag] = prop.text
+    return x, y, c
+    
+def read_clues(e):
+    clues = {}
+    for clue in e:
+        x, y, data = read_clue(clue)
+        clues[x, y] = data
+    return (e.get("direction"), clues)
+
 def _parse_statistics(e):
     stats = {}
     for prop in e:
@@ -109,60 +116,6 @@ def _parse_statistics(e):
         elif prop.tag == "word-count":
             stats["word_count"] = int(prop.text)
     return stats
-    
-def _parse_cell(e):
-    x = e.get("x")
-    y = e.get("y")
-    if x is None or y is None:
-        return None
-        
-    x = int(x) - 1
-    y = int(y) - 1
-    
-    cell = {}
-    
-    content = e.get("content")
-    ctype = e.get("type")
-    cell["block"] = ctype == "block"
-    if not cell["block"] and content is not None:
-        cell["char"] = content
-    else:
-        cell["char"] = ""
-    cell["clues"] = {}
-    return x, y, cell
-    
-def parse_clues(e, direction):
-    clues = {}
-    for clue in e:
-        if clue.tag != "clue":
-            continue
-        
-        x = clue.get("x")
-        y = clue.get("y")
-        
-        if x is None or y is None:
-            continue
-        
-        text = None
-        explanation = None
-        for prop in clue:
-            if prop.tag == "text":
-                text = prop.text
-            elif prop.tag == "explanation":
-                explanation = prop.text
-                
-        if text is None and explanation is None:
-            continue
-
-        x = int(x) - 1
-        y = int(y) - 1
-        
-        clues[x, y, direction] = {}
-        if text != None:
-            clues[x, y, direction]["text"] = text
-        if explanation != None:
-            clues[x, y, direction]["explanation"] = explanation
-    return clues
         
 def export_puzzle_to_xml(puzzle):
     palabra = etree.Element("palabra")
@@ -292,7 +245,7 @@ def parse_template(template, include_grid=False):
         result["letter_count"] = size - result["block_count"]
     
     if include_grid:
-        result["grid"] = parse_grid(grid_elem)
+        result["grid"] = read_grid(grid_elem)
             
     return result
 

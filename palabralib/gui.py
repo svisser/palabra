@@ -26,7 +26,7 @@ from export import ExportWindow, verify_output_options
 from editor import Editor
 from files import (
     InvalidFileError,
-    import_puzzle,
+    read_crossword,
     export_puzzle,
     export_puzzle_to_xml,
     export_template,
@@ -181,10 +181,10 @@ class PalabraWindow(gtk.Window):
                     
                 filename = dialog.get_filename()
                 try:
-                    puzzle = import_puzzle(filename)
+                    puzzle = read_crossword(filename)
                 except InvalidFileError:
-                    title = u"Invalid file"
-                    message = u"This file does not appear to be a valid Palabra puzzle file."
+                    title = u"Invalid crossword"
+                    message = u"This file does not appear to be a valid Palabra crossword file."
                     show_error(title, message)
                 else:
                     puzzle.filename = filename
