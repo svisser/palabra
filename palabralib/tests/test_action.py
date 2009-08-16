@@ -45,6 +45,3 @@ class ActionTestCase(unittest.TestCase):
         self.assertEqual(self.puzzle.grid.get_char(3, 3), "")
         self.assertEqual(self.puzzle.grid.is_block(5, 5), False)
         self.assertEqual(self.puzzle.grid.is_block(1, 1), True)
-
-#suite = unittest.TestLoader().loadTestsFromTestCase(ActionTestCase)
-#unittest.TextTestRunner(verbosity=2).run(suite)

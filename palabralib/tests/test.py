@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# In the main project directory, run python -m tests.test
+# In the palabralib directory, run python -m tests.test
 
 import unittest
 
@@ -27,4 +27,4 @@ cases = [ActionTestCase, GridTestCase, TransformTestCase]
 suites = [unittest.TestLoader().loadTestsFromTestCase(c) for c in cases]
 
 alltests = unittest.TestSuite(suites)
-unittest.TextTestRunner(verbosity=2).run(alltests)
+unittest.TextTestRunner(verbosity=1).run(alltests)
