@@ -43,11 +43,11 @@ def export_puzzle(puzzle, filename, options):
         export_to_png(puzzle, filename, outputs[0], settings)
 
 def read_crossword(filename):
-    xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
         doc = etree.parse(filename)
     except etree.XMLSyntaxError:
         raise InvalidFileError
+    xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
         xmlschema.assertValid(doc)
     except etree.DocumentInvalid:

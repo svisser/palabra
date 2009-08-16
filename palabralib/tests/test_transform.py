@@ -17,9 +17,9 @@
 
 import unittest
 
-import transform
-from puzzle import Puzzle
-from grid import Grid
+from palabralib.puzzle import Puzzle
+from palabralib.grid import Grid
+import palabralib.transform as transform
 
 class TransformTestCase(unittest.TestCase):
     def setUp(self):

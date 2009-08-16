@@ -17,7 +17,7 @@
 
 import unittest
 
-from grid import Grid
+from palabralib.grid import Grid
 
 class GridTestCase(unittest.TestCase):
     def setUp(self):

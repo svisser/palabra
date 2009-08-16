@@ -15,15 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# In the palabralib directory, run python -m tests.test
+# In the project directory, run:
+#
+# python -m palabralib.tests.test
 
 import unittest
 
-from tests.test_action import ActionTestCase, ActionStackTestCase
-from tests.test_grid import GridTestCase
-from tests.test_transform import TransformTestCase
+from palabralib.tests.test_action import ActionTestCase, ActionStackTestCase
+from palabralib.tests.test_files import FilesTestCase
+from palabralib.tests.test_grid import GridTestCase
+from palabralib.tests.test_transform import TransformTestCase
 
-cases = [ActionTestCase, ActionStackTestCase, GridTestCase, TransformTestCase]
+cases = [ActionTestCase, ActionStackTestCase, FilesTestCase, GridTestCase, TransformTestCase]
 suites = [unittest.TestLoader().loadTestsFromTestCase(c) for c in cases]
 
 alltests = unittest.TestSuite(suites)

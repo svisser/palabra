@@ -18,10 +18,10 @@
 import copy
 import unittest
 
-from action import Action, ActionStack, FullTransformAction
-from grid import Grid
-from puzzle import Puzzle
-import preferences
+from palabralib.action import Action, ActionStack, FullTransformAction
+from palabralib.grid import Grid
+from palabralib.puzzle import Puzzle
+import palabralib.preferences as preferences
 
 class ActionTestCase(unittest.TestCase):
     def setUp(self):
