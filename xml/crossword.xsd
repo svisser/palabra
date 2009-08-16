@@ -22,37 +22,38 @@
     </xs:sequence>
 </xs:complexType>
 
-<xs:complexType name="cell_type">
+<xs:attributeGroup name="cell_attrs">
     <xs:attribute name="x" type="integer_at_least_one" use="required" />
     <xs:attribute name="y" type="integer_at_least_one" use="required" />
-</xs:complexType>
+</xs:attributeGroup>
 
 <xs:complexType name="letter_type">
-    <xs:complexContent>
-        <xs:extension base="cell_type">
-            <xs:attribute name="content" type="xs:string" use="required" />
+    <xs:simpleContent>
+        <xs:extension base="xs:string">
+            <xs:attributeGroup ref="cell_attrs" />
         </xs:extension>
-    </xs:complexContent>
+    </xs:simpleContent>
 </xs:complexType>
 
 <xs:complexType name="grid_type">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="letter" type="letter_type" />
-        <xs:element name="block" type="cell_type" />
+        <xs:element name="block">
+            <xs:complexType>
+                <xs:attributeGroup ref="cell_attrs" />
+            </xs:complexType>
+        </xs:element>
     </xs:choice>
     <xs:attribute name="width" type="integer_at_least_one" use="required" />
     <xs:attribute name="height" type="integer_at_least_one" use="required" />
 </xs:complexType>
 
 <xs:complexType name="clue_type">
-    <xs:complexContent>
-        <xs:extension base="cell_type">
-            <xs:sequence>
-                <xs:element name="text" type="xs:string" minOccurs="0" />
-                <xs:element name="explanation" type="xs:string" minOccurs="0" />
-            </xs:sequence>
-        </xs:extension>
-    </xs:complexContent>
+    <xs:sequence>
+        <xs:element name="text" type="xs:string" minOccurs="0" />
+        <xs:element name="explanation" type="xs:string" minOccurs="0" />
+    </xs:sequence>
+    <xs:attributeGroup ref="cell_attrs" />
 </xs:complexType>
 
 <xs:complexType name="clues_type">

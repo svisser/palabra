@@ -99,8 +99,8 @@ def read_cell(e):
     y = int(e.get("y")) - 1
     c = {}
     c["block"] = e.tag == "block"
-    if e.tag == "letter" and e.get("content") is not None:
-        c["char"] = e.get("content")
+    if e.tag == "letter" and e.text is not None:
+        c["char"] = e.text
     else:
         c["char"] = ""
     c["clues"] = {}
