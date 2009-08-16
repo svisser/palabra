@@ -16,40 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import copy
 
-from action import (
-    FullTransformAction,
-)
 from grid import Grid
-from puzzle import Puzzle
-import transform
 
-class ActionTest(unittest.TestCase):
-    def setUp(self):
-        self.puzzle = Puzzle(Grid(15, 15))
-        
-    def testFullTransformAction(self):
-        self.puzzle.grid.set_block(1, 1, True)
-        cur_grid = copy.deepcopy(self.puzzle.grid)
-        
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(3, 3, "Q")
-        next_grid = copy.deepcopy(self.puzzle.grid)
-        
-        a = FullTransformAction(cur_grid, next_grid)
-            
-        a.perform_redo(self.puzzle)
-        self.assertEqual(self.puzzle.grid.get_char(3, 3), "Q")
-        self.assertEqual(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEqual(self.puzzle.grid.is_block(1, 1), True)
-        
-        a.perform_undo(self.puzzle)
-        self.assertEqual(self.puzzle.grid.get_char(3, 3), "")
-        self.assertEqual(self.puzzle.grid.is_block(5, 5), False)
-        self.assertEqual(self.puzzle.grid.is_block(1, 1), True)
-
-class GridTest(unittest.TestCase):
+class GridTestCase(unittest.TestCase):
     def setUp(self):
         self.grid = Grid(12, 15)
         
@@ -581,40 +551,3 @@ class GridTest(unittest.TestCase):
         clue = self.grid.get_clues(self.grid.width - 1, 4)
         self.assertEquals("down" in clue, True)
         self.assertEquals(clue["down"]["text"], "E")
-
-class TransformTest(unittest.TestCase):
-    def setUp(self):
-        self.puzzle = Puzzle(Grid(15, 15))
-        self.puzzle.grid.set_block(0, 0, True)
-        
-    def testClearAll(self):
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(10, 10, u"A")
-        
-        a = transform.clear_all(self.puzzle)
-        a.perform_redo(self.puzzle)
-        self.assertEquals(self.puzzle.grid.is_block(5, 5), False)
-        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"")
-        
-    def testClearChars(self):
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(10, 10, u"A")
-        
-        a = transform.clear_chars(self.puzzle)
-        a.perform_redo(self.puzzle)
-        self.assertEquals(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"")
-        
-    def testClearClues(self):
-        self.puzzle.grid.store_clue(0, 0, "across", "text", "foo")
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(10, 10, u"A")
-        
-        a = transform.clear_clues(self.puzzle)
-        a.perform_redo(self.puzzle)
-        self.assertEquals("across" in self.puzzle.grid.get_clues(0, 0), False)
-        self.assertEquals(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"A")
-        
-if __name__ == '__main__':
-    unittest.main()
