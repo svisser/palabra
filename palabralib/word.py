@@ -51,8 +51,17 @@ def create_predicate(constraints):
         return True
     return predicate
 
-words = read_wordlist("/usr/share/dict/words")
-wl = WordList()
-for w in words:
-    wl.add_word(w)
-print wl.search(15, [(0, "a")])
+def initialize_wordlists():
+    words = read_wordlist("/usr/share/dict/words")
+    wl = WordList()
+    for w in words:
+        wl.add_word(w)
+    return [wl]
+
+wordlists = initialize_wordlists()
+        
+def search_wordlists(length, constraints):
+    result = []
+    for wl in wordlists:
+        result += wl.search(length, constraints)
+    return result

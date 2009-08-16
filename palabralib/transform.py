@@ -54,6 +54,13 @@ def modify_blocks(puzzle, blocks=[]):
             puzzle.grid.set_block(x, y, status)
     return _delta_transform(puzzle, undo_function, redo_function)
 
+# TODO merge with modify_char
+def modify_chars(puzzle, chars):
+    def transform(puzzle):
+        for x, y, c in chars:
+            puzzle.grid.set_char(x, y, c)
+    return _full_transform(puzzle, transform)
+
 def modify_char(puzzle, x, y, next_char):
     """Modify the character at the given location and return an Action."""
     transform = lambda puzzle: puzzle.grid.set_char(x, y, next_char)

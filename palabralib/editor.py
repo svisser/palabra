@@ -20,6 +20,7 @@ import gtk
 import constants
 import preferences
 import transform
+from word import search_wordlists
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
@@ -158,6 +159,13 @@ class Editor(gtk.HBox):
         if not self.puzzle.grid.is_valid(x, y):
             self.set_selection(-1, -1)
             
+        if event.button == 2 and self.puzzle.grid.is_valid(x, y):
+            params = self.get_search_parameters(x, y, self.settings["direction"])
+            result = search_wordlists(*params)
+            if len(result) > 0:
+                word = self.decompose_word(result[0], x, y, self.settings["direction"])
+                self.insert_word(word)
+            
         if event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_available(x, y):
                 self.set_selection(x, y)
@@ -186,8 +194,43 @@ class Editor(gtk.HBox):
             self.puzzle.view.refresh_horizontal_line(drawing_area, y)
         elif self.settings["direction"] == "vertical":
             self.puzzle.view.refresh_vertical_line(drawing_area, x)
-        
         return True
+        
+    def get_search_parameters(self, x, y, direction):
+        if direction == "horizontal":
+            p, q = self.puzzle.grid.get_start_horizontal_word(x, y)
+            d = "across"
+        elif direction == "vertical":
+            p, q = self.puzzle.grid.get_start_vertical_word(x, y)
+            d = "down"
+    
+        length = self.puzzle.grid.word_length(p, q, d)
+        constraints = []
+        i = 0
+        for x, y in self.puzzle.grid.in_direction(d, p, q):
+            c = self.puzzle.grid.get_char(x, y)
+            if c != "":
+                constraints.append((i, c))
+            i += 1
+        return (length, constraints)
+        
+    def decompose_word(self, word, x, y, direction):
+        if direction == "horizontal":
+            sx, sy = self.puzzle.grid.get_start_horizontal_word(x, y)
+        elif direction == "vertical":
+            sx, sy = self.puzzle.grid.get_start_vertical_word(x, y)
+            
+        result = []
+        if direction == "horizontal":
+            result = [(sx + i, sy, word[i]) for i in xrange(len(word))]
+        elif direction == "vertical":
+            result = [(sx, sy + j, word[j]) for j in xrange(len(word))]
+        return result
+    
+    def insert_word(self, chars):
+        actual = [(x, y, c.upper()) for x, y, c in chars if self.puzzle.grid.get_char(x, y) != c]
+        if len(actual) > 0:
+            self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
         
     def on_button_release_event(self, drawing_area, event):
         if 1 <= event.button <= 3:
