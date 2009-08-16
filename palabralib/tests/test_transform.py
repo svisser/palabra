@@ -24,25 +24,22 @@ import palabralib.transform as transform
 class TransformTestCase(unittest.TestCase):
     def setUp(self):
         self.puzzle = Puzzle(Grid(15, 15))
-        self.puzzle.grid.set_block(0, 0, True)
         
     def testClearAll(self):
         self.puzzle.grid.set_block(5, 5, True)
         self.puzzle.grid.set_char(10, 10, u"A")
         
         a = transform.clear_all(self.puzzle)
-        a.perform_redo(self.puzzle)
-        self.assertEquals(self.puzzle.grid.is_block(5, 5), False)
-        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"")
+        self.assertEqual(self.puzzle.grid.is_block(5, 5), False)
+        self.assertEqual(self.puzzle.grid.get_char(10, 10), u"")
         
     def testClearChars(self):
         self.puzzle.grid.set_block(5, 5, True)
         self.puzzle.grid.set_char(10, 10, u"A")
         
         a = transform.clear_chars(self.puzzle)
-        a.perform_redo(self.puzzle)
-        self.assertEquals(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"")
+        self.assertEqual(self.puzzle.grid.is_block(5, 5), True)
+        self.assertEqual(self.puzzle.grid.get_char(10, 10), u"")
         
     def testClearClues(self):
         self.puzzle.grid.store_clue(0, 0, "across", "text", "foo")
@@ -50,7 +47,32 @@ class TransformTestCase(unittest.TestCase):
         self.puzzle.grid.set_char(10, 10, u"A")
         
         a = transform.clear_clues(self.puzzle)
-        a.perform_redo(self.puzzle)
-        self.assertEquals("across" in self.puzzle.grid.get_clues(0, 0), False)
-        self.assertEquals(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEquals(self.puzzle.grid.get_char(10, 10), u"A")
+        self.assertEqual("across" in self.puzzle.grid.get_clues(0, 0), False)
+        self.assertEqual(self.puzzle.grid.is_block(5, 5), True)
+        self.assertEqual(self.puzzle.grid.get_char(10, 10), u"A")
+        
+    def testModifyBlocks(self):
+        blocks = [(3, 3, True), (4, 4, True)]
+        a = transform.modify_blocks(self.puzzle, blocks)
+        for x, y, status in blocks:
+            self.assertEqual(self.puzzle.grid.is_block(x, y), status)
+            
+    def testModifyChar(self):
+        a = transform.modify_char(self.puzzle, 3, 3, "C")
+        self.assertEqual(self.puzzle.grid.get_char(3, 3), "C")
+        
+    def testModifyClue(self):
+        a = transform.modify_clue(self.puzzle, 3, 3, "across", "text", "foo")
+        b = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "bar")
+        
+        clues = self.puzzle.grid.cell(3, 3)["clues"]
+        self.assertEqual(clues["across"], {"text": "foo"})
+        self.assertEqual(clues["down"], {"text": "bar"})
+        
+        c = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "")
+        self.assertEqual("down" in clues, False)
+        
+        d = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "foo")
+        e = transform.modify_clue(self.puzzle, 3, 3, "down", "explanation", "bar")
+        f = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "")
+        self.assertEqual(clues["down"], {"explanation": "bar"})        
