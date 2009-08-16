@@ -57,44 +57,46 @@ def read_crossword(filename):
     version = root.get("version")
     for e in root[0]:
         if e.tag == "metadata":
-            metadata = read_metadata(e)
+            metadata = _read_metadata(e)
         elif e.tag == "grid":
-            grid = read_grid(e)
+            grid = _read_grid(e)
         elif e.tag == "clues":
-            direction, clues = read_clues(e)
+            direction, clues = _read_clues(e)
             for x, y, data in clues:
                 grid.cell(x, y)["clues"][direction] = data
-    return Puzzle(grid)
+    puzzle = Puzzle(grid)
+    puzzle.metadata = metadata
+    return puzzle
     
 def write_crossword_to_xml(puzzle):
     root = etree.Element("palabra")
     root.set("version", constants.VERSION)
     
     crossword = etree.SubElement(root, "crossword")
-    write_metadata(crossword, puzzle.metadata)
-    write_grid(crossword, puzzle.grid)
+    _write_metadata(crossword, puzzle.metadata)
+    _write_grid(crossword, puzzle.grid)
     for d in ["across", "down"]:
-        write_clues(crossword, puzzle.grid, d)
+        _write_clues(crossword, puzzle.grid, d)
     
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     f = open(puzzle.filename, "w")
     f.write(contents)
     f.close()
 
-def read_metadata(metadata):
+def _read_metadata(metadata):
     m = {}
     for e in metadata:
         m[e.tag] = e.text
     return m
     
-def write_metadata(parent, metadata):
+def _write_metadata(parent, metadata):
     e = etree.SubElement(parent, "metadata")
     for m in ["title", "author", "copyright", "description"]:
         prop = etree.SubElement(e, m)
         if m in metadata:
-            prop.text = data[m]
+            prop.text = metadata[m]
     
-def read_cell(e):
+def _read_cell(e):
     x = int(e.get("x")) - 1
     y = int(e.get("y")) - 1
     c = {}
@@ -106,7 +108,7 @@ def read_cell(e):
     c["clues"] = {}
     return x, y, c
     
-def write_cell(parent, x, y, cell):
+def _write_cell(parent, x, y, cell):
     if cell["block"]:
         e = etree.SubElement(parent, "block")
     else:
@@ -116,22 +118,22 @@ def write_cell(parent, x, y, cell):
     e.set("x", str(x + 1))
     e.set("y", str(y + 1))
     
-def read_grid(e):
+def _read_grid(e):
     width = int(e.get("width"))
     height = int(e.get("height"))
     grid = Grid(width, height)
     for c in e:
-        grid.set_cell(*read_cell(c))
+        grid.set_cell(*_read_cell(c))
     return grid
     
-def write_grid(parent, grid):
+def _write_grid(parent, grid):
     e = etree.SubElement(parent, "grid")
     e.set("width", str(grid.width))
     e.set("height", str(grid.height))
     for x, y in grid.cells():
-        write_cell(e, x, y, grid.cell(x, y))
+        _write_cell(e, x, y, grid.cell(x, y))
     
-def read_clue(e):
+def _read_clue(e):
     x = int(e.get("x")) - 1
     y = int(e.get("y")) - 1
     c = {}
@@ -140,7 +142,7 @@ def read_clue(e):
             c[prop.tag] = prop.text
     return x, y, c
     
-def write_clue(parent, x, y, clue):
+def _write_clue(parent, x, y, clue):
     e = etree.SubElement(parent, "clue")
     for prop in ["text", "explanation"]:
         if prop in clue:
@@ -149,16 +151,16 @@ def write_clue(parent, x, y, clue):
     e.set("x", str(x + 1))
     e.set("y", str(y + 1))
     
-def read_clues(e):
-    return (e.get("direction"), [read_clue(c) for c in e])
+def _read_clues(e):
+    return (e.get("direction"), [_read_clue(c) for c in e])
 
-def write_clues(parent, grid, direction):
+def _write_clues(parent, grid, direction):
     e = etree.SubElement(parent, "clues")
     e.set("direction", direction)
     for x, y in grid.cells():
         clues = grid.cell(x, y)["clues"]
         if direction in clues:
-            write_clue(e, x, y, clues[direction])
+            _write_clue(e, x, y, clues[direction])
 
 def _parse_statistics(e):
     stats = {}
