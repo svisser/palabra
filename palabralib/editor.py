@@ -32,13 +32,12 @@ class Editor(gtk.HBox):
         self.settings = {}
         self.settings["selection_x"] = -1
         self.settings["selection_y"] = -1
-        self.settings["direction"] = "horizontal"
+        self.settings["direction"] = "across"
         self.settings["keep_horizontal_symmetry"] = False
         self.settings["keep_vertical_symmetry"] = False
         self.settings["keep_point_symmetry"] = False
         self.settings["keep_point_symmetry"] = True
         
-        self.typing_direction = "horizontal"
         self.current_x = -1
         self.current_y = -1
         
@@ -102,9 +101,9 @@ class Editor(gtk.HBox):
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
-                if self.settings["direction"] == "horizontal":
+                if self.settings["direction"] == "across":
                     self.puzzle.view.render_horizontal_line(context, x, y, r, g, b)
-                elif self.settings["direction"] == "vertical":
+                elif self.settings["direction"] == "down":
                     self.puzzle.view.render_vertical_line(context, x, y, r, g, b)
                 
             r = preferences.prefs["color_primary_selection_red"] / 65535.0
@@ -177,9 +176,9 @@ class Editor(gtk.HBox):
                 elif event.button == 3:
                     self.transform_blocks(x, y, False)
         
-        if self.settings["direction"] == "horizontal":
+        if self.settings["direction"] == "across":
             self.puzzle.view.refresh_horizontal_line(drawing_area, prev_y)
-        elif self.settings["direction"] == "vertical":
+        elif self.settings["direction"] == "down":
             self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
             
         if (event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK)
@@ -190,45 +189,29 @@ class Editor(gtk.HBox):
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
-        if self.settings["direction"] == "horizontal":
+        if self.settings["direction"] == "across":
             self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-        elif self.settings["direction"] == "vertical":
+        elif self.settings["direction"] == "down":
             self.puzzle.view.refresh_vertical_line(drawing_area, x)
         return True
         
     def get_search_parameters(self, x, y, direction):
-        if direction == "horizontal":
-            p, q = self.puzzle.grid.get_start_horizontal_word(x, y)
-            d = "across"
-        elif direction == "vertical":
-            p, q = self.puzzle.grid.get_start_vertical_word(x, y)
-            d = "down"
-    
-        length = self.puzzle.grid.word_length(p, q, d)
-        constraints = []
-        i = 0
-        for x, y in self.puzzle.grid.in_direction(d, p, q):
-            c = self.puzzle.grid.get_char(x, y)
-            if c != "":
-                constraints.append((i, c))
-            i += 1
+        p, q = self.puzzle.grid.get_start_word(x, y, direction)
+        length = self.puzzle.grid.word_length(p, q, direction)
+        word = self.puzzle.grid.gather_word(p, q, direction, "?")
+        constraints = [(i, c) for i, c in enumerate(word) if c != "?"]
         return (length, constraints)
         
     def decompose_word(self, word, x, y, direction):
-        if direction == "horizontal":
-            sx, sy = self.puzzle.grid.get_start_horizontal_word(x, y)
-        elif direction == "vertical":
-            sx, sy = self.puzzle.grid.get_start_vertical_word(x, y)
-            
-        result = []
-        if direction == "horizontal":
-            result = [(sx + i, sy, word[i]) for i in xrange(len(word))]
-        elif direction == "vertical":
-            result = [(sx, sy + j, word[j]) for j in xrange(len(word))]
-        return result
+        sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
+        if direction == "across":
+            return [(sx + i, sy, word[i]) for i in xrange(len(word))]
+        elif direction == "down":
+            return [(sx, sy + j, word[j]) for j in xrange(len(word))]
     
     def insert_word(self, chars):
-        actual = [(x, y, c.upper()) for x, y, c in chars if self.puzzle.grid.get_char(x, y) != c]
+        actual = [(x, y, c.upper()) for x, y, c in chars
+            if self.puzzle.grid.get_char(x, y) != c]
         if len(actual) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
         
@@ -336,7 +319,7 @@ class Editor(gtk.HBox):
                     , y=self.settings["selection_y"]
                     , next_char='')
             else:
-                if self.settings["direction"] == "horizontal":
+                if self.settings["direction"] == "across":
                     x = self.settings["selection_x"] - 1
                     y = self.settings["selection_y"]
                     if self.puzzle.grid.is_available(x, y):
@@ -345,7 +328,7 @@ class Editor(gtk.HBox):
                             , y=y
                             , next_char='')
                         self.settings["selection_x"] -= 1
-                elif self.settings["direction"] == "vertical":
+                elif self.settings["direction"] == "down":
                     x = self.settings["selection_x"]
                     y = self.settings["selection_y"] - 1
                     if self.puzzle.grid.is_available(x, y):
@@ -359,7 +342,7 @@ class Editor(gtk.HBox):
         elif event.keyval == gtk.keysyms.Home:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
-            if self.settings["direction"] == "horizontal":
+            if self.settings["direction"] == "across":
                 for i in reversed(range(x)):
                     if self.puzzle.grid.is_block(i, y):
                         self.settings["selection_x"] = i + 1
@@ -368,7 +351,7 @@ class Editor(gtk.HBox):
                     if not self.puzzle.grid.is_block(0, y):
                         self.settings["selection_x"] = 0
                 self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-            elif self.settings["direction"] == "vertical":
+            elif self.settings["direction"] == "down":
                 for i in reversed(range(y)):
                     if self.puzzle.grid.is_block(x, i):
                         self.settings["selection_y"] = i + 1
@@ -408,7 +391,7 @@ class Editor(gtk.HBox):
         elif event.keyval == gtk.keysyms.End:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
-            if self.settings["direction"] == "horizontal":
+            if self.settings["direction"] == "across":
                 for i in range(x, self.puzzle.grid.width):
                     if self.puzzle.grid.is_block(i, y):
                         self.settings["selection_x"] = i - 1
@@ -417,7 +400,7 @@ class Editor(gtk.HBox):
                     if not self.puzzle.grid.is_block(self.puzzle.grid.width - 1, y):
                         self.settings["selection_x"] = self.puzzle.grid.width - 1
                 self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-            elif self.settings["direction"] == "vertical":
+            elif self.settings["direction"] == "down":
                 for i in range(y, self.puzzle.grid.height):
                     if self.puzzle.grid.is_block(x, i):
                         self.settings["selection_y"] = i - 1
@@ -445,17 +428,17 @@ class Editor(gtk.HBox):
                             , x=x
                             , y=y
                             , next_char=c)
-                    if self.settings["direction"] == "horizontal":
+                    if self.settings["direction"] == "across":
                         if self.puzzle.grid.is_available(x + 1, y):
                             self.settings["selection_x"] += 1
                         self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-                    elif self.settings["direction"] == "vertical":
+                    elif self.settings["direction"] == "down":
                         if self.puzzle.grid.is_available(x, y + 1):
                             self.settings["selection_y"] += 1
                         self.puzzle.view.refresh_vertical_line(drawing_area, x)
         return True
         
     def change_typing_direction(self):
-        other = {"horizontal": "vertical", "vertical": "horizontal"}
+        other = {"across": "down", "down": "across"}
         self.settings["direction"] = other[self.settings["direction"]]
         self.drawing_area.queue_draw()

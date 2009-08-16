@@ -90,6 +90,13 @@ class Grid:
             return x, 0
         return x, y
         
+    def get_start_word(self, x, y, direction):
+        """Return the first cell of a word in the given direction that contains the cell (x, y)."""
+        if direction == "across":
+            return self.get_start_horizontal_word(x, y)
+        elif direction == "down":
+            return self.get_start_vertical_word(x, y)
+        
     def get_check_count(self, x, y):
         """
         Return the number of words that contain the cell (x, y).

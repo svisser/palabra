@@ -38,7 +38,7 @@ def read_wordlist(filename):
     result = []
     for line in f:
         line = line.strip("\n")
-        if line.endswith("'s") or len(line) == 0:
+        if "'" in line or len(line) == 0:
             continue
         result.append(line)
     return result
