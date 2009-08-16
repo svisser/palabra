@@ -429,7 +429,10 @@ class Editor(gtk.HBox):
         elif event.keyval == gtk.keysyms.Delete:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
-            self.puzzle.grid.clear_char(x, y)
+            self.palabra_window.transform_grid(transform.modify_char
+                , x=x
+                , y=y
+                , next_char="")
             self.puzzle.view.refresh_location(drawing_area, x, y)
         else:
             if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
