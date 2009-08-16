@@ -111,7 +111,8 @@ def write_cell(parent, x, y, cell):
         e = etree.SubElement(parent, "block")
     else:
         e = etree.SubElement(parent, "letter")
-        e.set("content", cell["char"])
+        if len(cell["char"]) > 0:
+            e.text = cell["char"]
     e.set("x", str(x + 1))
     e.set("y", str(y + 1))
     
