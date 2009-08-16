@@ -24,12 +24,7 @@ import copy
 def _delta_transform(puzzle, undo_function, redo_function):
     """Return an Action based on the given undo/redo functions."""
     redo_function(puzzle)
-    
-    a = Action()
-    a.add_undo_function(undo_function)
-    a.add_redo_function(redo_function)
-
-    return a
+    return Action([undo_function], [redo_function])
 
 def _full_transform(puzzle, transform):
     """Return a FullTransformAction based on the given transform function."""

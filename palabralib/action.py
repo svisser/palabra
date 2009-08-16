@@ -35,14 +35,6 @@ class Action():
             redo_functions = []
         self.redo_functions = redo_functions
         
-    def add_undo_function(self, function):
-        """Add a function to the list of undo functions."""
-        self.undo_functions.append(function)
-        
-    def add_redo_function(self, function):
-        """Add a function to the list of redo functions."""
-        self.redo_functions.append(function)
-
     def perform_undo(self, puzzle):
         """Undo this action."""
         for f in self.undo_functions:
@@ -123,10 +115,7 @@ class ActionStack:
                 
             self.distance_from_saved_puzzle -= 1
             
-            if (preferences.prefs["undo_use_finite_stack"] and
-                len(self.redo_stack) >= preferences.prefs["undo_stack_size"]):
-                self.redo_stack = self.redo_stack[1:]
-            self.redo_stack.append(a)
+            self._append_to_stack(self.redo_stack, a)
             
     def redo_action(self, puzzle):
         """
@@ -144,10 +133,18 @@ class ActionStack:
             
             self.distance_from_saved_puzzle += 1
             
-            if (preferences.prefs["undo_use_finite_stack"] and
-                len(self.undo_stack) >= preferences.prefs["undo_stack_size"]):
-                self.undo_stack = self.undo_stack[1:]
-            self.undo_stack.append(a)
+            self._append_to_stack(self.undo_stack, a)
+            
+    def _append_to_stack(self, stack, action):
+        """
+        Append the action to the stack.
+        
+        An older action may be removed to maintain the preferred size.
+        """
+        if (preferences.prefs["undo_use_finite_stack"] and
+            len(stack) >= preferences.prefs["undo_stack_size"]):
+            stack = stack[1:]
+        stack.append(action)
     
     def cap_stack(self, max_size):
         """Limit the size of the undo and redo stacks to max_size."""

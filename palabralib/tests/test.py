@@ -19,11 +19,11 @@
 
 import unittest
 
-from tests.test_action import ActionTestCase
+from tests.test_action import ActionTestCase, ActionStackTestCase
 from tests.test_grid import GridTestCase
 from tests.test_transform import TransformTestCase
 
-cases = [ActionTestCase, GridTestCase, TransformTestCase]
+cases = [ActionTestCase, ActionStackTestCase, GridTestCase, TransformTestCase]
 suites = [unittest.TestLoader().loadTestsFromTestCase(c) for c in cases]
 
 alltests = unittest.TestSuite(suites)
