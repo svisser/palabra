@@ -197,12 +197,13 @@ class Editor(gtk.HBox):
         y = self.settings["selection_y"]
         result = None
         if self.puzzle.grid.is_available(x, y):
-            params = self.get_search_parameters(x, y, self.settings["direction"])
+            params = self._get_search_parameters(x, y, self.settings["direction"])
             if self.settings["word_search_parameters"] != params:
                 result = search_wordlists(*params)
                 self.settings["word_search_parameters"] = params
         else:
             result = []
+            self.settings["word_search_parameters"] = None
         if result is not None:
             self.tools["word"].display(result)
         
@@ -211,26 +212,25 @@ class Editor(gtk.HBox):
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x, y):
-                direction = self.settings["direction"]
-                w = self.decompose_word(word, x, y, direction)
-                self.insert_word(w)
+                w = self._decompose_word(word, x, y, self.settings["direction"])
+                self._insert_word(w)
         return callback
         
-    def get_search_parameters(self, x, y, direction):
+    def _get_search_parameters(self, x, y, direction):
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
         length = self.puzzle.grid.word_length(p, q, direction)
         word = self.puzzle.grid.gather_word(p, q, direction, "?")
         constraints = [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
         return (length, constraints)
         
-    def decompose_word(self, word, x, y, direction):
+    def _decompose_word(self, word, x, y, direction):
         sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
         if direction == "across":
             return [(sx + i, sy, word[i]) for i in xrange(len(word))]
         elif direction == "down":
             return [(sx, sy + j, word[j]) for j in xrange(len(word))]
     
-    def insert_word(self, chars):
+    def _insert_word(self, chars):
         actual = [(x, y, c.upper()) for x, y, c in chars
             if self.puzzle.grid.get_char(x, y) != c.upper()]
         if len(actual) > 0:
