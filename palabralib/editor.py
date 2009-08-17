@@ -29,6 +29,8 @@ class Editor(gtk.HBox):
         self.drawing_area = drawing_area
         self.puzzle = puzzle
         
+        self.tools = {}
+        
         self.settings = {}
         self.settings["selection_x"] = -1
         self.settings["selection_y"] = -1
@@ -37,6 +39,8 @@ class Editor(gtk.HBox):
         self.settings["keep_vertical_symmetry"] = False
         self.settings["keep_point_symmetry"] = False
         self.settings["keep_point_symmetry"] = True
+        
+        self.settings["word_search_parameters"] = None
         
         self.current_x = -1
         self.current_y = -1
@@ -158,13 +162,6 @@ class Editor(gtk.HBox):
         if not self.puzzle.grid.is_valid(x, y):
             self.set_selection(-1, -1)
             
-        if event.button == 2 and self.puzzle.grid.is_available(x, y):
-            params = self.get_search_parameters(x, y, self.settings["direction"])
-            result = search_wordlists(*params)
-            if len(result) > 0:
-                word = self.decompose_word(result[0], x, y, self.settings["direction"])
-                self.insert_word(word)
-            
         if event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_available(x, y):
                 self.set_selection(x, y)
@@ -194,6 +191,30 @@ class Editor(gtk.HBox):
         elif self.settings["direction"] == "down":
             self.puzzle.view.refresh_vertical_line(drawing_area, x)
         return True
+        
+    def refresh_words(self):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        result = None
+        if self.puzzle.grid.is_available(x, y):
+            params = self.get_search_parameters(x, y, self.settings["direction"])
+            if self.settings["word_search_parameters"] != params:
+                result = search_wordlists(*params)
+                self.settings["word_search_parameters"] = params
+        else:
+            result = []
+        if result is not None:
+            self.tools["word"].display(result)
+        
+    def get_word_tool_callback(self):
+        def callback(word):
+            x = self.settings["selection_x"]
+            y = self.settings["selection_y"]
+            if self.puzzle.grid.is_available(x, y):
+                direction = self.settings["direction"]
+                w = self.decompose_word(word, x, y, direction)
+                self.insert_word(w)
+        return callback
         
     def get_search_parameters(self, x, y, direction):
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
@@ -367,6 +388,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.refresh_vertical_line(drawing_area, x)
                 self.settings["selection_x"] -=1
                 self.puzzle.view.refresh_vertical_line(drawing_area, x - 1)
+                self.refresh_words()
         elif event.keyval == gtk.keysyms.Up:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
@@ -374,6 +396,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.refresh_horizontal_line(drawing_area, y)
                 self.settings["selection_y"] -= 1
                 self.puzzle.view.refresh_horizontal_line(drawing_area, y - 1)
+                self.refresh_words()
         elif event.keyval == gtk.keysyms.Right:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
@@ -381,6 +404,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.refresh_vertical_line(drawing_area, x)
                 self.settings["selection_x"] += 1
                 self.puzzle.view.refresh_vertical_line(drawing_area, x + 1)
+                self.refresh_words()
         elif event.keyval == gtk.keysyms.Down:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
@@ -388,6 +412,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.refresh_horizontal_line(drawing_area, y)
                 self.settings["selection_y"] += 1
                 self.puzzle.view.refresh_horizontal_line(drawing_area, y + 1)
+                self.refresh_words()
         elif event.keyval == gtk.keysyms.End:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
@@ -442,3 +467,4 @@ class Editor(gtk.HBox):
         other = {"across": "down", "down": "across"}
         self.settings["direction"] = other[self.settings["direction"]]
         self.drawing_area.queue_draw()
+        self.refresh_words()

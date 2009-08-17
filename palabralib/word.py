@@ -68,5 +68,4 @@ def search_wordlists(length, constraints):
     result = []
     for wl in wordlists:
         result += wl.search(length, constraints)
-    print result
     return result

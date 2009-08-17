@@ -41,6 +41,37 @@ from puzzle import Puzzle, PuzzleManager
 import transform
 import view
 
+class WordTool:
+    def __init__(self, callback):
+        self.callback = callback
+    
+    def create(self):
+        self.store = gtk.ListStore(str)
+        self.tree = gtk.TreeView(self.store)
+        self.tree.connect("row-activated", self.on_row_activated)
+        
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("")
+        column.pack_start(cell, True)
+        column.set_attributes(cell, text=0)
+        self.tree.append_column(column)
+        
+        tree_window = gtk.ScrolledWindow(None, None)
+        tree_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        tree_window.add(self.tree)
+        tree_window.set_size_request(128, -1)
+        return tree_window
+        
+    def on_row_activated(self, tree, path, column):
+        store, it = tree.get_selection().get_selected()
+        self.callback(store.get_value(it, 0))
+        
+    def display(self, strings):
+        self.store.clear()
+        for s in strings:
+            self.store.append([s])
+        self.tree.queue_draw()
+
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
@@ -97,6 +128,9 @@ class PalabraWindow(gtk.Window):
         drawing_area.queue_draw()
         
         self.editor = Editor(self, drawing_area, self.puzzle_manager.current_puzzle)
+            
+        word_tool = WordTool(self.editor.get_word_tool_callback())
+        self.editor.tools["word"] = word_tool
         
         options_hbox = gtk.HBox(False, 0)
         options_hbox.set_border_width(12)
@@ -112,9 +146,13 @@ class PalabraWindow(gtk.Window):
         main = gtk.HBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
         
-        all_vbox = gtk.VBox(False, 0)
-        all_vbox.pack_start(main, True, True, 0)
-        self.panel.pack_start(all_vbox, True, True, 0)
+        tools = gtk.HBox(False, 0)
+        tools.pack_start(word_tool.create(), False, False, 6)
+        
+        all_hbox = gtk.HBox(False, 0)
+        all_hbox.pack_start(main, True, True, 0)
+        all_hbox.pack_start(tools, False, False, 0)
+        self.panel.pack_start(all_hbox, True, True, 0)
         self.panel.show_all()
         
     def get_selection(self):
@@ -702,6 +740,7 @@ class PalabraWindow(gtk.Window):
         self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
+        self.editor.refresh_words()
         self.panel.queue_draw()
         
     @staticmethod
