@@ -493,8 +493,8 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals("down" in self.grid.get_clues(1, 1), False)
 
     def testShiftGridUpDirtyTwo(self):    
-        self._set_clues_one("down")
         self.grid.set_block(0, 3, True)
+        self._set_clues_one("down")
         self.grid.shift_up()
         self.assertEquals("down" in self.grid.get_clues(0, 0), True)
         self.assertEquals(self.grid.get_clues(0, 0)["down"]["text"], "B")
@@ -507,8 +507,8 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals("across" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridLeftDirtyTwo(self):
-        self._set_clues_one("across")
         self.grid.set_block(3, 0, True)
+        self._set_clues_one("across")
         self.grid.shift_left()
         self.assertEquals("across" in self.grid.get_clues(0, 0), True)
         self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "B")
@@ -551,3 +551,34 @@ class GridTestCase(unittest.TestCase):
         clue = self.grid.get_clues(self.grid.width - 1, 4)
         self.assertEquals("down" in clue, True)
         self.assertEquals(clue["down"]["text"], "E")
+        
+    def testModifyCharDirty(self):
+        self.grid.store_clue(0, 0, "across", "text", "A")
+        self.grid.set_char(0, 0, "B")
+        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        
+        self.grid.store_clue(0, 0, "across", "text", "C")
+        self.grid.set_char(5, 0, "D")
+        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        
+        self.grid.store_clue(0, 0, "across", "text", "E")
+        for x in xrange(1, self.grid.width):
+            for y in xrange(1, self.grid.height):
+                self.grid.set_char(x, y, "F")
+        self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "E")
+        
+    def testModifyBlockDirtyOne(self):
+        self.grid.store_clue(0, 0, "across", "text", "A")
+        self.grid.set_block(0, 0, True)
+        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        
+    def testModifyBlockDirtyTwo(self):
+        self.grid.store_clue(0, 0, "across", "text", "C")
+        self.grid.set_block(5, 0, True)
+        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        
+        self.grid.store_clue(0, 0, "across", "text", "E")
+        for x in xrange(1, self.grid.width):
+            for y in xrange(1, self.grid.height):
+                self.grid.set_block(x, y, True)
+        self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "E")

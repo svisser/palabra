@@ -382,6 +382,11 @@ class Grid:
                     del self.cell(p, q)["clues"]["down"]
                 except KeyError:
                     pass
+                    
+    def _clear_clues_related_to_cell(self, x, y):
+        sx, sy = self.get_start_horizontal_word(x, y)
+        tx, ty = self.get_start_vertical_word(x, y)
+        self._clear_clues([(sx, sy, "across"), (tx, ty, "down")])
         
     def insert_row(self, y, insert_above=True):
         """Insert a row above or below the row at vertical coordinate y."""
@@ -584,15 +589,17 @@ class Grid:
         return self.data[y][x]["clues"]
         
     def set_block(self, x, y, status):
+        self._clear_clues_related_to_cell(x, y)
         self.data[y][x]["block"] = status
         
     def is_block(self, x, y):
         return self.data[y][x]["block"]
         
     def clear_char(self, x, y):
-        self.set_char(x, y, '')
+        self.set_char(x, y, "")
         
     def set_char(self, x, y, char):
+        self._clear_clues_related_to_cell(x, y)
         self.data[y][x]["char"] = char
         
     def get_char(self, x, y):

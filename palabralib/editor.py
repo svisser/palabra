@@ -232,7 +232,7 @@ class Editor(gtk.HBox):
     
     def insert_word(self, chars):
         actual = [(x, y, c.upper()) for x, y, c in chars
-            if self.puzzle.grid.get_char(x, y) != c]
+            if self.puzzle.grid.get_char(x, y) != c.upper()]
         if len(actual) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
         
