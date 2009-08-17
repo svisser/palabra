@@ -197,15 +197,18 @@ class Editor(gtk.HBox):
         y = self.settings["selection_y"]
         result = None
         if self.puzzle.grid.is_available(x, y):
-            params = self._get_search_parameters(x, y, self.settings["direction"])
-            if self.settings["word_search_parameters"] != params:
-                result = search_wordlists(*params)
-                self.settings["word_search_parameters"] = params
-        else:
-            result = []
-            self.settings["word_search_parameters"] = None
+            parameters = self._get_search_parameters(x, y, self.settings["direction"])
+            length, constraints = parameters
+            if self.settings["word_search_parameters"] == parameters:
+                return
+            if len(constraints) != length:
+                result = search_wordlists(*parameters)
         if result is not None:
+            self.settings["word_search_parameters"] = parameters
             self.tools["word"].display(result)
+        else:
+            self.settings["word_search_parameters"] = None
+            self.tools["word"].display([])
         
     def get_word_tool_callback(self):
         def callback(word):
