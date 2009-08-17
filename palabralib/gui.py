@@ -23,7 +23,7 @@ from appearance import AppearanceDialog, apply_appearance
 from clue import ClueEditor
 import constants
 from export import ExportWindow, verify_output_options
-from editor import Editor
+from editor import Editor, WordTool
 from files import (
     InvalidFileError,
     read_crossword,
@@ -40,37 +40,6 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-
-class WordTool:
-    def __init__(self, callback):
-        self.callback = callback
-    
-    def create(self):
-        self.store = gtk.ListStore(str)
-        self.tree = gtk.TreeView(self.store)
-        self.tree.connect("row-activated", self.on_row_activated)
-        
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("")
-        column.pack_start(cell, True)
-        column.set_attributes(cell, text=0)
-        self.tree.append_column(column)
-        
-        tree_window = gtk.ScrolledWindow(None, None)
-        tree_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        tree_window.add(self.tree)
-        tree_window.set_size_request(128, -1)
-        return tree_window
-        
-    def on_row_activated(self, tree, path, column):
-        store, it = tree.get_selection().get_selected()
-        self.callback(store.get_value(it, 0))
-        
-    def display(self, strings):
-        self.store.clear()
-        for s in strings:
-            self.store.append([s])
-        self.tree.queue_draw()
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -160,6 +129,12 @@ class PalabraWindow(gtk.Window):
             return self.editor.get_selection()
         except AttributeError:
             return None
+            
+    def set_selection(self, x, y):
+        try:
+            self.editor.set_selection(x, y)
+        except AttributeError:
+            pass
         
     def update_status(self, context_string, message):
         context_id = self.statusbar.get_context_id(context_string)
@@ -731,6 +706,9 @@ class PalabraWindow(gtk.Window):
                 
                 for item, predicate in self.selection_toggle_items:
                     item.set_sensitive(valid and predicate(puzzle))
+                    
+                if valid and not puzzle.grid.is_available(sel_x, sel_y):
+                    self.set_selection(-1, -1)
                 
         for item in self.puzzle_toggle_items:
             item.set_sensitive(puzzle is not None)

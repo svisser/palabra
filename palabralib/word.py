@@ -26,6 +26,8 @@ class WordList:
             self.lengths[len(word)] = [word]
     
     def search(self, length, constraints):
+        if length not in self.lengths:
+            return []
         def predicate(word):
             for position, letter in constraints:
                 if not word[position] == letter:
@@ -68,4 +70,5 @@ def search_wordlists(length, constraints):
     result = []
     for wl in wordlists:
         result += wl.search(length, constraints)
+    result.sort()
     return result

@@ -22,6 +22,37 @@ import preferences
 import transform
 from word import search_wordlists
 
+class WordTool:
+    def __init__(self, callback):
+        self.callback = callback
+    
+    def create(self):
+        self.store = gtk.ListStore(str)
+        self.tree = gtk.TreeView(self.store)
+        self.tree.connect("row-activated", self.on_row_activated)
+        
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Words")
+        column.pack_start(cell, True)
+        column.set_attributes(cell, text=0)
+        self.tree.append_column(column)
+        
+        tree_window = gtk.ScrolledWindow(None, None)
+        tree_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        tree_window.add(self.tree)
+        tree_window.set_size_request(192, -1)
+        return tree_window
+        
+    def on_row_activated(self, tree, path, column):
+        store, it = tree.get_selection().get_selected()
+        self.callback(store.get_value(it, 0))
+        
+    def display(self, strings):
+        self.store.clear()
+        for s in strings:
+            self.store.append([s])
+        self.tree.queue_draw()
+
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
         gtk.HBox.__init__(self)
