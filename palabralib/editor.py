@@ -161,6 +161,7 @@ class Editor(gtk.HBox):
         if event.button == 2 and self.puzzle.grid.is_available(x, y):
             params = self.get_search_parameters(x, y, self.settings["direction"])
             result = search_wordlists(*params)
+            print result
             if len(result) > 0:
                 word = self.decompose_word(result[0], x, y, self.settings["direction"])
                 self.insert_word(word)

@@ -38,9 +38,13 @@ def read_wordlist(filename):
     result = []
     for line in f:
         line = line.strip("\n")
-        if "'" in line or len(line) == 0:
+        if len(line) == 0:
             continue
-        result.append(line)
+        for c in line:
+            if not (65 <= ord(c) <= 90 or 97 <= ord(c) <= 122):
+                break
+        else:
+            result.append(line)
     return result
 
 def create_predicate(constraints):
