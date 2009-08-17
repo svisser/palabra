@@ -59,7 +59,7 @@ def initialize_wordlists():
     words = read_wordlist("/usr/share/dict/words")
     wl = WordList()
     for w in words:
-        wl.add_word(w.upper())
+        wl.add_word(w.lower())
     return [wl]
 
 wordlists = initialize_wordlists()
@@ -68,4 +68,5 @@ def search_wordlists(length, constraints):
     result = []
     for wl in wordlists:
         result += wl.search(length, constraints)
+    print result
     return result
