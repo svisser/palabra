@@ -55,7 +55,7 @@ def initialize_wordlists():
     words = read_wordlist("/usr/share/dict/words")
     wl = WordList()
     for w in words:
-        wl.add_word(w)
+        wl.add_word(w.upper())
     return [wl]
 
 wordlists = initialize_wordlists()

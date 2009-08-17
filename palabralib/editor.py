@@ -158,7 +158,7 @@ class Editor(gtk.HBox):
         if not self.puzzle.grid.is_valid(x, y):
             self.set_selection(-1, -1)
             
-        if event.button == 2 and self.puzzle.grid.is_valid(x, y):
+        if event.button == 2 and self.puzzle.grid.is_available(x, y):
             params = self.get_search_parameters(x, y, self.settings["direction"])
             result = search_wordlists(*params)
             if len(result) > 0:
