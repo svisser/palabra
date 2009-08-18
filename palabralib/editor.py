@@ -256,7 +256,11 @@ class Editor(gtk.HBox):
                 more = None
                 if show_intersecting:
                     more = self._gather_all_constraints(x, y, self.settings["direction"])
-                result = search_wordlists(length, constraints, more)
+                wordlists = self.palabra_window.wordlists
+                if wordlists is None:
+                    result = ["Still loading, please wait..."]
+                else:
+                    result = search_wordlists(wordlists, length, constraints, more)
         if result is not None:
             self.settings["word_search_parameters"] = parameters
             self.tools["word"].display(result)

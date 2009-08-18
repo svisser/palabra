@@ -40,6 +40,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
+from word import WordListThread
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -74,6 +75,10 @@ class PalabraWindow(gtk.Window):
         self.add(self.main)
         
         self.connect("destroy", lambda widget: quit())
+        
+        self.wordlists = None
+        t = WordListThread(self)
+        t.start()
         
     def to_empty_panel(self):
         for widget in self.panel.get_children():
