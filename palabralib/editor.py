@@ -23,8 +23,9 @@ import transform
 from word import search_wordlists
 
 class WordTool:
-    def __init__(self, callback):
-        self.callback = callback
+    def __init__(self, callbacks):
+        self.toggle_callback = callbacks["toggle"]
+        self.insert_callback = callbacks["insert"]
     
     def create(self):
         self.store = gtk.ListStore(str)
@@ -41,11 +42,27 @@ class WordTool:
         tree_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         tree_window.add(self.tree)
         tree_window.set_size_request(192, -1)
-        return tree_window
+        
+        check_button = gtk.CheckButton("Show only words with\nintersecting words")
+        check_button.connect("toggled", self.on_button_toggled)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(9)
+        main.pack_start(tree_window, True, True, 0)
+        main.pack_start(check_button, False, False, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(6)
+        hbox.set_spacing(9)
+        hbox.pack_start(main, True, True, 0)
+        return hbox
+        
+    def on_button_toggled(self, button):
+        self.toggle_callback(button.get_active())
         
     def on_row_activated(self, tree, path, column):
-        store, it = tree.get_selection().get_selected()
-        self.callback(store.get_value(it, 0))
+        store, it = self.tree.get_selection().get_selected()
+        self.insert_callback(store.get_value(it, 0))
         
     def display(self, strings):
         self.store.clear()
@@ -72,6 +89,7 @@ class Editor(gtk.HBox):
         self.settings["keep_point_symmetry"] = True
         
         self.settings["word_search_parameters"] = None
+        self.settings["show_intersecting_words"] = False
         
         self.current_x = -1
         self.current_y = -1
@@ -223,17 +241,21 @@ class Editor(gtk.HBox):
             self.puzzle.view.refresh_vertical_line(drawing_area, x)
         return True
         
-    def refresh_words(self):
+    def refresh_words(self, force_refresh=False):
+        show_intersecting = self.settings["show_intersecting_words"]
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         result = None
         if self.puzzle.grid.is_available(x, y):
             parameters = self._get_search_parameters(x, y, self.settings["direction"])
             length, constraints = parameters
-            if self.settings["word_search_parameters"] == parameters:
+            if (self.settings["word_search_parameters"] == parameters
+                and not show_intersecting and not force_refresh):
                 return
             if len(constraints) != length:
-                more = self._gather_all_constraints(x, y, self.settings["direction"])
+                more = None
+                if show_intersecting:
+                    more = self._gather_all_constraints(x, y, self.settings["direction"])
                 result = search_wordlists(length, constraints, more)
         if result is not None:
             self.settings["word_search_parameters"] = parameters
@@ -242,14 +264,17 @@ class Editor(gtk.HBox):
             self.settings["word_search_parameters"] = None
             self.tools["word"].display([])
         
-    def get_word_tool_callback(self):
-        def callback(word):
+    def get_word_tool_callbacks(self):
+        def insert(word):
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x, y):
                 w = self._decompose_word(word, x, y, self.settings["direction"])
                 self._insert_word(w)
-        return callback
+        def toggle(status):
+            self.settings["show_intersecting_words"] = status
+            self.refresh_words(True)
+        return {"insert": insert, "toggle": toggle}
         
     def _get_search_parameters(self, x, y, direction):
         p, q = self.puzzle.grid.get_start_word(x, y, direction)

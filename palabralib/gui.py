@@ -98,7 +98,7 @@ class PalabraWindow(gtk.Window):
         
         self.editor = Editor(self, drawing_area, self.puzzle_manager.current_puzzle)
             
-        word_tool = WordTool(self.editor.get_word_tool_callback())
+        word_tool = WordTool(self.editor.get_word_tool_callbacks())
         self.editor.tools["word"] = word_tool
         
         options_hbox = gtk.HBox(False, 0)
