@@ -145,6 +145,8 @@ class GridView:
         self.properties = GridViewProperties(self.grid)
         self.select_mode(constants.VIEW_MODE_EDITOR)
         
+        self.overlay = []
+        
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
         self.settings = {}
@@ -176,6 +178,9 @@ class GridView:
 
         if self.settings["show_numbers"]:
             self.render_numbers(context)
+            
+        if mode == constants.VIEW_MODE_EDITOR:
+            self.render_overlay_chars(context)
             
     def render_warnings(self, context, r, g, b):
         """Render undesired cells in the specified color."""
@@ -318,6 +323,13 @@ class GridView:
                 if c != '':
                     self._render_char(context, props, x, y, c)
         color = map(lambda x: x / 65535.0, self.properties.char["color"])
+        self._render(context, render, color=color)
+        
+    def render_overlay_chars(self, context):
+        def render(context, grid, props):
+            for x, y, c in self.overlay:
+                self._render_char(context, props, x, y, c)
+        color = map(lambda x: x / 65535.0, (65535.0 / 2, 65535.0 / 2, 65535.0 / 2))
         self._render(context, render, color=color)
         
     def render_numbers(self, context):

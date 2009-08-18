@@ -24,13 +24,13 @@ from word import search_wordlists
 
 class WordTool:
     def __init__(self, callbacks):
-        self.toggle_callback = callbacks["toggle"]
-        self.insert_callback = callbacks["insert"]
+        self.callbacks = callbacks
     
     def create(self):
         self.store = gtk.ListStore(str)
         self.tree = gtk.TreeView(self.store)
         self.tree.connect("row-activated", self.on_row_activated)
+        self.tree.get_selection().connect("changed", self.on_selection_changed)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Words")
@@ -58,11 +58,18 @@ class WordTool:
         return hbox
         
     def on_button_toggled(self, button):
-        self.toggle_callback(button.get_active())
+        self.callbacks["toggle"](button.get_active())
         
     def on_row_activated(self, tree, path, column):
         store, it = self.tree.get_selection().get_selected()
-        self.insert_callback(store.get_value(it, 0))
+        self.callbacks["insert"](store.get_value(it, 0))
+        
+    def on_selection_changed(self, selection):
+        store, it = selection.get_selected()
+        if it is None:
+            self.callbacks["overlay"](None)
+        else:
+            self.callbacks["overlay"](store.get_value(it, 0))
         
     def display(self, strings):
         self.store.clear()
@@ -274,7 +281,24 @@ class Editor(gtk.HBox):
         def toggle(status):
             self.settings["show_intersecting_words"] = status
             self.refresh_words(True)
-        return {"insert": insert, "toggle": toggle}
+        def overlay(word):
+            if word is not None:
+                x = self.settings["selection_x"]
+                y = self.settings["selection_y"]
+                direction = self.settings["direction"]
+                p, q = self.puzzle.grid.get_start_word(x, y, direction)
+                result = self._decompose_word(word, p, q, direction)
+                result = [(x, y, c.upper()) for x, y, c in result]
+                self._display_overlay(result)
+            else:
+                self._display_overlay([])
+        return {"insert": insert, "toggle": toggle, "overlay": overlay}
+        
+    def _display_overlay(self, new):
+        copy = self.puzzle.view.overlay
+        self.puzzle.view.overlay = new
+        for x, y, c in (copy + new):
+            self.puzzle.view.refresh_location(self.drawing_area, x, y)
         
     def _get_search_parameters(self, x, y, direction):
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
