@@ -64,8 +64,11 @@ class WordList:
                     filled_constraints = []
                     for j, (i, l, cs) in enumerate(more_constraints):
                         filled_constraints.append((l, cs + [(i, word[j])]))
-                    checks = [self.has_matches(l, cs) for l, cs in filled_constraints]
-                    if False not in checks:
+                    
+                    for l, cs in filled_constraints:
+                        if not self.has_matches(l, cs):
+                            break
+                    else:
                         result.append(word)
                 else:
                     result.append(word)
