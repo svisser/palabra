@@ -233,7 +233,8 @@ class Editor(gtk.HBox):
             if self.settings["word_search_parameters"] == parameters:
                 return
             if len(constraints) != length:
-                result = search_wordlists(*parameters)
+                more = self._gather_all_constraints(x, y, self.settings["direction"])
+                result = search_wordlists(length, constraints, more)
         if result is not None:
             self.settings["word_search_parameters"] = parameters
             self.tools["word"].display(result)
@@ -253,9 +254,29 @@ class Editor(gtk.HBox):
     def _get_search_parameters(self, x, y, direction):
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
         length = self.puzzle.grid.word_length(p, q, direction)
-        word = self.puzzle.grid.gather_word(p, q, direction, "?")
-        constraints = [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
+        constraints = self._gather_constraints(p, q, direction)
         return (length, constraints)
+        
+    def _gather_all_constraints(self, x, y, direction):
+        result = []
+        other = {"across": "down", "down": "across"}
+        sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
+        for s, t in self.puzzle.grid.in_direction(direction, sx, sy):
+            p, q = self.puzzle.grid.get_start_word(s, t, other[direction])
+            length = self.puzzle.grid.word_length(p, q, other[direction])
+            
+            if other[direction] == "across":
+                index = x - p
+            elif other[direction] == "down":
+                index = y - q
+            
+            item = (index, length, self._gather_constraints(p, q, other[direction]))
+            result.append(item)
+        return result
+        
+    def _gather_constraints(self, x, y, direction):
+        word = self.puzzle.grid.gather_word(x, y, direction, "?")
+        return [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
         
     def _decompose_word(self, word, x, y, direction):
         sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
