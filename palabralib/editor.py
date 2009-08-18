@@ -158,13 +158,11 @@ class Editor(gtk.HBox):
         y = self.settings["selection_y"]
         if self.puzzle.grid.is_valid(x, y):
             if not self.puzzle.grid.is_block(x, y):
+                direction = self.settings["direction"]
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
-                if self.settings["direction"] == "across":
-                    self.puzzle.view.render_horizontal_line(context, x, y, r, g, b)
-                elif self.settings["direction"] == "down":
-                    self.puzzle.view.render_vertical_line(context, x, y, r, g, b)
+                self.puzzle.view.render_line(context, x, y, direction, r, g, b)
                 
             r = preferences.prefs["color_primary_selection_red"] / 65535.0
             g = preferences.prefs["color_primary_selection_green"] / 65535.0
@@ -229,10 +227,7 @@ class Editor(gtk.HBox):
                 elif event.button == 3:
                     self.transform_blocks(x, y, False)
         
-        if self.settings["direction"] == "across":
-            self.puzzle.view.refresh_horizontal_line(drawing_area, prev_y)
-        elif self.settings["direction"] == "down":
-            self.puzzle.view.refresh_vertical_line(drawing_area, prev_x)
+        self.puzzle.view.refresh_line(drawing_area, prev_x, prev_y, self.settings["direction"])
             
         if (event.button == 1 and not (event.state & gtk.gdk.SHIFT_MASK)
             and prev_x == x
@@ -242,10 +237,8 @@ class Editor(gtk.HBox):
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
-        if self.settings["direction"] == "across":
-            self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-        elif self.settings["direction"] == "down":
-            self.puzzle.view.refresh_vertical_line(drawing_area, x)
+        direction = self.settings["direction"]
+        self.puzzle.view.refresh_line(drawing_area, x, y, direction)
         return True
         
     def refresh_words(self, force_refresh=False):
@@ -369,7 +362,6 @@ class Editor(gtk.HBox):
                 self.transform_blocks(cx, cy, True)
             elif self.mouse_buttons_down[2] and (event.state & gtk.gdk.SHIFT_MASK):
                 self.transform_blocks(cx, cy, False)
-        
         return True
         
     def set_symmetry(self, options):
@@ -437,135 +429,99 @@ class Editor(gtk.HBox):
             return True
             
         if event.keyval == gtk.keysyms.BackSpace:
-            current_char = self.puzzle.grid.get_char(self.settings["selection_x"], self.settings["selection_y"])
-            if current_char != '':
-                self.palabra_window.transform_grid(transform.modify_char
-                    , x=self.settings["selection_x"]
-                    , y=self.settings["selection_y"]
-                    , next_char='')
-            else:
-                if self.settings["direction"] == "across":
-                    x = self.settings["selection_x"] - 1
-                    y = self.settings["selection_y"]
-                    if self.puzzle.grid.is_available(x, y):
-                        self.palabra_window.transform_grid(transform.modify_char
-                            , x=x
-                            , y=y
-                            , next_char='')
-                        self.settings["selection_x"] -= 1
-                elif self.settings["direction"] == "down":
-                    x = self.settings["selection_x"]
-                    y = self.settings["selection_y"] - 1
-                    if self.puzzle.grid.is_available(x, y):
-                        self.palabra_window.transform_grid(transform.modify_char
-                            , x=x
-                            , y=y
-                            , next_char='')
-                        self.settings["selection_y"] -= 1
+            self.on_backspace(drawing_area, event)
         elif event.keyval == gtk.keysyms.Tab:
             self.change_typing_direction()
         elif event.keyval == gtk.keysyms.Home:
-            x = self.settings["selection_x"]
-            y = self.settings["selection_y"]
-            if self.settings["direction"] == "across":
-                for i in reversed(range(x)):
-                    if self.puzzle.grid.is_block(i, y):
-                        self.settings["selection_x"] = i + 1
-                        break
-                else:
-                    if not self.puzzle.grid.is_block(0, y):
-                        self.settings["selection_x"] = 0
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-            elif self.settings["direction"] == "down":
-                for i in reversed(range(y)):
-                    if self.puzzle.grid.is_block(x, i):
-                        self.settings["selection_y"] = i + 1
-                        break
-                else:
-                    if not self.puzzle.grid.is_block(x, 0):
-                        self.settings["selection_y"] = 0
-                self.puzzle.view.refresh_vertical_line(drawing_area, x)
-        elif event.keyval == gtk.keysyms.Left:
-            x = self.settings["selection_x"]
-            y = self.settings["selection_y"]
-            if self.puzzle.grid.is_available(x - 1, y):
-                self.puzzle.view.refresh_vertical_line(drawing_area, x)
-                self.settings["selection_x"] -=1
-                self.puzzle.view.refresh_vertical_line(drawing_area, x - 1)
-                self.refresh_words()
-        elif event.keyval == gtk.keysyms.Up:
-            x = self.settings["selection_x"]
-            y = self.settings["selection_y"]
-            if self.puzzle.grid.is_available(x, y - 1):
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-                self.settings["selection_y"] -= 1
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y - 1)
-                self.refresh_words()
-        elif event.keyval == gtk.keysyms.Right:
-            x = self.settings["selection_x"]
-            y = self.settings["selection_y"]
-            if self.puzzle.grid.is_available(x + 1, y):
-                self.puzzle.view.refresh_vertical_line(drawing_area, x)
-                self.settings["selection_x"] += 1
-                self.puzzle.view.refresh_vertical_line(drawing_area, x + 1)
-                self.refresh_words()
-        elif event.keyval == gtk.keysyms.Down:
-            x = self.settings["selection_x"]
-            y = self.settings["selection_y"]
-            if self.puzzle.grid.is_available(x, y + 1):
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-                self.settings["selection_y"] += 1
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y + 1)
-                self.refresh_words()
+            self._on_jump_to_cell(drawing_area, "start")
         elif event.keyval == gtk.keysyms.End:
-            x = self.settings["selection_x"]
-            y = self.settings["selection_y"]
-            if self.settings["direction"] == "across":
-                for i in range(x, self.puzzle.grid.width):
-                    if self.puzzle.grid.is_block(i, y):
-                        self.settings["selection_x"] = i - 1
-                        break
-                else:
-                    if not self.puzzle.grid.is_block(self.puzzle.grid.width - 1, y):
-                        self.settings["selection_x"] = self.puzzle.grid.width - 1
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-            elif self.settings["direction"] == "down":
-                for i in range(y, self.puzzle.grid.height):
-                    if self.puzzle.grid.is_block(x, i):
-                        self.settings["selection_y"] = i - 1
-                        break
-                else:
-                    if not self.puzzle.grid.is_block(x, self.puzzle.grid.height - 1):
-                        self.settings["selection_y"] = self.puzzle.grid.height - 1
-                self.puzzle.view.refresh_vertical_line(drawing_area, x)
+            self._on_jump_to_cell(drawing_area, "end")
+        elif event.keyval == gtk.keysyms.Left:
+            self.on_arrow_key(drawing_area, event, -1, 0)
+        elif event.keyval == gtk.keysyms.Up:
+            self.on_arrow_key(drawing_area, event, 0, -1)
+        elif event.keyval == gtk.keysyms.Right:
+            self.on_arrow_key(drawing_area, event, 1, 0)
+        elif event.keyval == gtk.keysyms.Down:
+            self.on_arrow_key(drawing_area, event, 0, 1)
         elif event.keyval == gtk.keysyms.Delete:
+            self.on_delete(drawing_area, event)
+        else:
+            self.on_typing(drawing_area, event)
+        return True
+        
+    def on_backspace(self, drawing_area, event):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        if self.puzzle.grid.get_char(x, y) != "":
+            self.palabra_window.transform_grid(transform.modify_char
+                , x=self.settings["selection_x"]
+                , y=self.settings["selection_y"]
+                , next_char="")
+        else:
+            dx = -1 if self.settings["direction"] == "across" else 0
+            dy = -1 if self.settings["direction"] == "down" else 0
+            
+            x = self.settings["selection_x"] + dx
+            y = self.settings["selection_y"] + dy
+            if self.puzzle.grid.is_available(x, y):
+                self.palabra_window.transform_grid(transform.modify_char
+                    , x=x
+                    , y=y
+                    , next_char="")
+                self.set_selection(x, y)
+            
+    def on_arrow_key(self, drawing_area, event, dx, dy):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        if self.puzzle.grid.is_available(x + dx, y + dy):
+            self.set_selection(x + dx, y + dy)
+            if dy != 0:
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
+                self.puzzle.view.refresh_horizontal_line(drawing_area, y + dy)
+            if dx != 0:
+                self.puzzle.view.refresh_vertical_line(drawing_area, x)
+                self.puzzle.view.refresh_vertical_line(drawing_area, x + dx)
+        
+    def _on_jump_to_cell(self, drawing_area, target):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        direction = self.settings["direction"]
+        if target == "start":
+            p, q = self.puzzle.grid.get_start_word(x, y, direction)
+        elif target == "end":
+            p, q = self.puzzle.grid.get_end_word(x, y, direction)
+        self.set_selection(p, q)
+        self.puzzle.view.refresh_line(drawing_area, x, y, direction)
+        
+    def on_delete(self, drawing_area, event):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        self.palabra_window.transform_grid(transform.modify_char
+            , x=x
+            , y=y
+            , next_char="")
+        self.puzzle.view.refresh_location(drawing_area, x, y)
+        
+    def on_typing(self, drawing_area, event):
+        if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
-            self.palabra_window.transform_grid(transform.modify_char
-                , x=x
-                , y=y
-                , next_char="")
-            self.puzzle.view.refresh_location(drawing_area, x, y)
-        else:
-            if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
-                x = self.settings["selection_x"]
-                y = self.settings["selection_y"]
-                if self.puzzle.grid.is_valid(x, y):
-                    c = chr(event.keyval).capitalize()
-                    
-                    self.palabra_window.transform_grid(transform.modify_char
-                            , x=x
-                            , y=y
-                            , next_char=c)
-                    if self.settings["direction"] == "across":
-                        if self.puzzle.grid.is_available(x + 1, y):
-                            self.settings["selection_x"] += 1
-                        self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-                    elif self.settings["direction"] == "down":
-                        if self.puzzle.grid.is_available(x, y + 1):
-                            self.settings["selection_y"] += 1
-                        self.puzzle.view.refresh_vertical_line(drawing_area, x)
-        return True
+            if self.puzzle.grid.is_valid(x, y):
+                c = chr(event.keyval).capitalize()
+                
+                self.palabra_window.transform_grid(transform.modify_char
+                        , x=x
+                        , y=y
+                        , next_char=c)
+                if self.settings["direction"] == "across":
+                    if self.puzzle.grid.is_available(x + 1, y):
+                        self.settings["selection_x"] += 1
+                    self.puzzle.view.refresh_horizontal_line(drawing_area, y)
+                elif self.settings["direction"] == "down":
+                    if self.puzzle.grid.is_available(x, y + 1):
+                        self.settings["selection_y"] += 1
+                    self.puzzle.view.refresh_vertical_line(drawing_area, x)
         
     def change_typing_direction(self):
         other = {"across": "down", "down": "across"}

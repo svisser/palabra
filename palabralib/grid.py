@@ -66,29 +66,27 @@ class Grid:
             
     def get_start_horizontal_word(self, x, y):
         """Return the first cell of a horizontal word that contains the cell (x, y)."""
-        while x >= 0:
-            if self.is_start_horizontal_word(x, y):
-                return x, y
-            if (not self.is_available(x, y) or
-                (x > 0 and not self.is_available(x - 1, y))):
-                return x, y
-            x -= 1
-        if x < 0:
-            return 0, y
-        return x, y
+        if not self.is_available(x, y):
+            return x, y
+        return [(x, y) for x, y in self.in_direction("across", x, y, reverse=True)][-1]
         
     def get_start_vertical_word(self, x, y):
         """Return the first cell of a vertical word that contains the cell (x, y)."""
-        while y >= 0:
-            if self.is_start_vertical_word(x, y):
-                return x, y
-            if (not self.is_available(x, y) or
-                (y > 0 and not self.is_available(x, y - 1))):
-                return x, y
-            y -= 1
-        if y < 0:
-            return x, 0
-        return x, y
+        if not self.is_available(x, y):
+            return x, y
+        return [(x, y) for x, y in self.in_direction("down", x, y, reverse=True)][-1]
+        
+    def get_end_horizontal_word(self, x, y):
+        """Return the last cell of a horizontal word that contains the cell (x, y)."""
+        if not self.is_available(x, y):
+            return x, y
+        return [(x, y) for x, y in self.in_direction("across", x, y)][-1]
+        
+    def get_end_vertical_word(self, x, y):
+        """Return the last cell of a vertical word that contains the cell (x, y)."""
+        if not self.is_available(x, y):
+            return x, y
+        return [(x, y) for x, y in self.in_direction("down", x, y)][-1]
         
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
@@ -96,6 +94,13 @@ class Grid:
             return self.get_start_horizontal_word(x, y)
         elif direction == "down":
             return self.get_start_vertical_word(x, y)
+            
+    def get_end_word(self, x, y, direction):
+        """Return the last cell of a word in the given direction that contains the cell (x, y)."""
+        if direction == "across":
+            return self.get_end_horizontal_word(x, y)
+        elif direction == "down":
+            return self.get_end_vertical_word(x, y)
         
     def get_check_count(self, x, y):
         """

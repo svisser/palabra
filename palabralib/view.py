@@ -291,6 +291,13 @@ class GridView:
         color = map(lambda x: x / 65535.0, self.properties.border["color"])
         self._render(context, render, color=color)
         
+    def render_line(self, context, x, y, direction, r, g, b):
+        """Render a sequence of cells."""
+        if direction == "across":
+            self.render_horizontal_line(context, x, y, r, g, b)
+        elif direction == "down":
+            self.render_vertical_line(context, x, y, r, g, b)
+        
     def render_horizontal_line(self, context, x, y, r, g, b):
         """Render a horizontal sequence of cells."""
         def render(context, grid, props):
@@ -410,6 +417,13 @@ class GridView:
     def refresh_vertical_line(self, drawing_area, x):
         """Redraw a vertical sequence of cells at the specified x-coordinate."""
         self._refresh(drawing_area, [(x, y) for y in xrange(self.grid.height)])
+        
+    def refresh_line(self, drawing_area, x, y, direction):
+        """Redraw a sequence of cells in the given direction at the specified coordinates."""
+        if direction == "across":
+            self.refresh_horizontal_line(drawing_area, y)
+        elif direction == "down":
+            self.refresh_vertical_line(drawing_area, x)
         
     def refresh_location(self, drawing_area, x, y):
         """Refresh the cell at the specified coordinates."""
