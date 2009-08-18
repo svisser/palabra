@@ -281,7 +281,9 @@ class Editor(gtk.HBox):
                 direction = self.settings["direction"]
                 p, q = self.puzzle.grid.get_start_word(x, y, direction)
                 result = self._decompose_word(word, p, q, direction)
-                result = [(x, y, c.upper()) for x, y, c in result]
+                
+                result = [(x, y, c.upper()) for x, y, c in result
+                    if self.puzzle.grid.get_char(x, y) != c.upper()]
                 self._display_overlay(result)
             else:
                 self._display_overlay([])
@@ -482,6 +484,7 @@ class Editor(gtk.HBox):
             if dx != 0:
                 self.puzzle.view.refresh_vertical_line(drawing_area, x)
                 self.puzzle.view.refresh_vertical_line(drawing_area, x + dx)
+            self.refresh_words()
         
     def _on_jump_to_cell(self, drawing_area, target):
         x = self.settings["selection_x"]
