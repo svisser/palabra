@@ -42,7 +42,6 @@ class WordList:
                 self.combinations[len(word)][i][c] = [self.size]
         self.size += 1
             
-            
     def has_matches(self, length, constraints):
         if length not in self.lengths:
             return False
