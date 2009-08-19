@@ -82,7 +82,6 @@ class WordTool:
                     self._perform_overlay_callback(it)
                     
     def _perform_overlay_callback(self, it):
-        print "runs"
         if it is None:
             self.callbacks["overlay"](None)
         else:
