@@ -22,37 +22,48 @@ import time
 class WordList:
     def __init__(self):
         self.lengths = {}
-        #self.combinations = {}
+        self.combinations = {}
+        self.size = 0
         
     def add_word(self, word):
         try:
             self.lengths[len(word)].append(word)
         except KeyError:
             self.lengths[len(word)] = [word]
-        #if len(word) not in self.combinations:
-        #    self.combinations[len(word)] = {}
-        #decompose = [(i, c) for i, c in enumerate(word)]
-        #for j in xrange(len(word)):
-        #    i, c = decompose[j]
-        #    s = decompose[:j] + decompose[j + 1:]
-        #    if i not in self.combinations[len(word)]:
-        #        self.combinations[len(word)][i] = []
-        #    if c not in self.combinations[len(word)][i]:
-        #        self.combinations[len(word)][i].append(c)
+        if len(word) not in self.combinations:
+            self.combinations[len(word)] = {}
+        for x in xrange(len(word)):
+            if x not in self.combinations[len(word)]:
+                self.combinations[len(word)][x] = {}
+        for i, c in enumerate(word):
+            try:
+                self.combinations[len(word)][i][c].append(self.size)
+            except KeyError:
+                self.combinations[len(word)][i][c] = [self.size]
+        self.size += 1
+            
             
     def has_matches(self, length, constraints):
-        #if length not in self.combinations:
-        #    return False
-        #for i, c in constraints:
-        #    if c not in self.combinations[length][i]:
-        #        return False
-        #return True
         if length not in self.lengths:
             return False
-        for word in self.lengths[length]:
-            if False not in [word[i] == c for i, c in constraints]:
-                return True
-        return False
+        result = None
+        for i, c in constraints:
+            if i not in self.combinations[length]:
+                return False
+            if c not in self.combinations[length][i]:
+                return False
+            query = self.combinations[length][i][c]
+            if len(query) == 0:
+                return False
+            if result is None:
+                result = query
+                continue
+            else:
+                reduced = filter(lambda j: j in result, query)
+                if len(reduced) == 0:
+                    return False
+                result = reduced
+        return True
     
     def search(self, length, constraints, more_constraints=None):
         if length not in self.lengths:
