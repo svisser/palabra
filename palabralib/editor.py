@@ -31,6 +31,7 @@ class WordTool:
         self.tree = gtk.TreeView(self.store)
         self.tree.connect("row-activated", self.on_row_activated)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
+        self.tree.connect("button_press_event", self.on_tree_clicked)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Words")
@@ -66,10 +67,26 @@ class WordTool:
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
+        self._perform_overlay_callback(it)
+        
+    def on_tree_clicked(self, tree, event):
+        if event.button == 1:
+            x = int(event.x)
+            y = int(event.y)
+            
+            item = tree.get_path_at_pos(x, y)
+            if item is not None:
+                path, col, cellx, celly = item
+                if tree.get_selection().path_is_selected(path):
+                    it = tree.get_model().get_iter(path)
+                    self._perform_overlay_callback(it)
+                    
+    def _perform_overlay_callback(self, it):
+        print "runs"
         if it is None:
             self.callbacks["overlay"](None)
         else:
-            self.callbacks["overlay"](store.get_value(it, 0))
+            self.callbacks["overlay"](self.store.get_value(it, 0))
         
     def display(self, strings):
         self.store.clear()
@@ -134,6 +151,7 @@ class Editor(gtk.HBox):
         self.settings["selection_x"] = x
         self.settings["selection_y"] = y
         self.palabra_window.update_window()
+        self._display_overlay([])
         
     def refresh_visual_size(self):
         self.puzzle.view.update_visual_size(self.drawing_area)
@@ -535,3 +553,4 @@ class Editor(gtk.HBox):
         self.settings["direction"] = other[self.settings["direction"]]
         self.drawing_area.queue_draw()
         self.refresh_words()
+        self._display_overlay([])
