@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import gobject
 import gtk
 from threading import Thread
@@ -26,6 +27,9 @@ class WordListEditor(gtk.Dialog):
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(640, 480)
+        
+        self.data = copy.deepcopy(self.palabra_window.wordlists_paths)
+        self.modifications = {}
         
         self.store = gtk.ListStore(str)
         self._display_wordlists()
@@ -74,11 +78,9 @@ class WordListEditor(gtk.Dialog):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             path = dialog.get_filename()
-            self.palabra_window.wordlists_paths.append(path)
+            self.data.append(path)
+            self.modifications[path] = "add"
             self._display_wordlists()
-            
-            t = WordListThread(self.palabra_window, [path])
-            t.start()
         dialog.destroy()
         
     def on_selection_changed(self, selection):
@@ -88,17 +90,13 @@ class WordListEditor(gtk.Dialog):
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store.get_value(it, 0)
-        del self.palabra_window.wordlists[path]
-        self.palabra_window.wordlists_paths.remove(path)
-        self.store.remove(it)
-        try:
-            self.palabra_window.editor.refresh_words(True)
-        except AttributeError:
-            pass
+        self.data.remove(path)
+        self.modifications[path] = "remove"
+        self._display_wordlists()
         
     def _display_wordlists(self):
         self.store.clear()
-        for path in self.palabra_window.wordlists_paths:
+        for path in self.data:
             self.store.append([path])
 
 class WordList:

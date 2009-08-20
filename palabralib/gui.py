@@ -995,8 +995,21 @@ class PalabraWindow(gtk.Window):
     def manage_wordlists(self):
         editor = WordListEditor(self)
         editor.show_all()
-        editor.run()
+        response = editor.run()
         editor.destroy()
+        if response == gtk.RESPONSE_OK:
+            adds = [p for p, a in editor.modifications.items() if a == "add"]
+            removes = [p for p, a in editor.modifications.items() if a == "remove"]
+            
+            t = WordListThread(self, adds)
+            t.start()
+            for path in removes:
+                self.wordlists_paths.remove(path)
+                del self.wordlists[path]
+            try:
+                self.editor.refresh_words(True)
+            except AttributeError:
+                pass
 
     def create_help_menu(self):
         menu = gtk.Menu()
