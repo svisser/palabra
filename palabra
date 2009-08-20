@@ -27,12 +27,10 @@ except (ImportError, AssertionError):
 from palabralib.gui import PalabraWindow
 from palabralib.preferences import read_config_file
 
-import gobject
-
 if __name__ == "__main__":
     try:
         read_config_file()
-        gobject.threads_init()
+        gtk.gdk.threads_init()
         palabra = PalabraWindow()
         palabra.show_all()
         gtk.main()
