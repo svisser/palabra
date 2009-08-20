@@ -40,7 +40,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import WordListThread
+from word import WordListEditor, WordListThread
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -58,6 +58,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
+        self.menubar.append(self.create_word_menu())
         self.menubar.append(self.create_help_menu())
         
         self.toolbar = self.create_toolbar()
@@ -540,7 +541,7 @@ class PalabraWindow(gtk.Window):
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: quit()
-            , u"Quit the application"
+            , u"Quit the program"
             , image=gtk.STOCK_QUIT
             , accelerator="<Ctrl>Q"
             , accel_group=accel_group))
@@ -977,13 +978,31 @@ class PalabraWindow(gtk.Window):
         grid_menu = gtk.MenuItem(u"_Grid", True)
         grid_menu.set_submenu(menu)
         return grid_menu
+    
+    def create_word_menu(self):
+        menu = gtk.Menu()
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.manage_wordlists()
+            , u"Manage the word lists available to the program"
+            , title="_Manage word lists..."))
+        
+        word_menu = gtk.MenuItem(u"_Word", True)
+        word_menu.set_submenu(menu)
+        return word_menu
+        
+    def manage_wordlists(self):
+        editor = WordListEditor(self)
+        editor.show_all()
+        editor.run()
+        editor.destroy()
 
     def create_help_menu(self):
         menu = gtk.Menu()
         
         menu.append(self._create_menu_item(
             self.on_help_about_activate
-            , u"About this application"
+            , u"About this program"
             , image=gtk.STOCK_ABOUT))
         
         help_menu = gtk.MenuItem(u"_Help", True)

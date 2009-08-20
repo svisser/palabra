@@ -16,8 +16,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gobject
+import gtk
 from threading import Thread
 import time
+
+class WordListEditor(gtk.Dialog):
+    def __init__(self, palabra_window):
+        gtk.Dialog.__init__(self, u"Word lists manager"
+            , palabra_window, gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
+        self.set_size_request(640, 480)
+        
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
 
 class WordList:
     def __init__(self):
