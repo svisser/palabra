@@ -202,14 +202,11 @@ def read_wordlists(window, paths):
             wordlist.add_word(word.lower())
             yield True
         wordlists[path] = wordlist
-    
-    def callback(wordlists):
-        window.wordlists.update(wordlists)
-        try:
-            window.editor.refresh_words(True)
-        except AttributeError:
-            pass
-    gobject.idle_add(callback, wordlists)
+    window.wordlists.update(wordlists)
+    try:
+        window.editor.refresh_words(True)
+    except AttributeError:
+        pass
     yield False
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
