@@ -22,13 +22,84 @@ import time
 
 class WordListEditor(gtk.Dialog):
     def __init__(self, palabra_window):
-        gtk.Dialog.__init__(self, u"Word lists manager"
+        gtk.Dialog.__init__(self, u"Word list manager"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(640, 480)
         
+        self.store = gtk.ListStore(str)
+        self._display_wordlists()
+        
+        self.tree = gtk.TreeView(self.store)
+        self.tree.get_selection().connect("changed", self.on_selection_changed)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Word lists")
+        column.pack_start(cell, True)
+        column.set_attributes(cell, text=0)
+        self.tree.append_column(column)
+        
+        buttonbox = gtk.HButtonBox()
+        buttonbox.set_layout(gtk.BUTTONBOX_START)
+        
+        add_button = gtk.Button(stock=gtk.STOCK_ADD)
+        buttonbox.pack_start(add_button, False, False, 0)
+        add_button.connect("clicked", lambda button: self.add_word_list())
+        
+        self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
+        buttonbox.pack_start(self.remove_button, False, False, 0)
+        self.remove_button.connect("clicked", lambda button: self.remove_word_list())
+        self.remove_button.set_sensitive(False)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(self.tree, True, True, 0)
+        main.pack_start(buttonbox, False, False, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.vbox.add(hbox)
+        
+    def add_word_list(self):
+        dialog = gtk.FileChooserDialog(u"Add word list"
+            , self
+            , gtk.FILE_CHOOSER_ACTION_OPEN
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.show_all()
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            path = dialog.get_filename()
+            self.palabra_window.wordlists_paths.append(path)
+            self._display_wordlists()
+            
+            t = WordListThread(self.palabra_window, [path])
+            t.start()
+        dialog.destroy()
+        
+    def on_selection_changed(self, selection):
+        store, it = selection.get_selected()
+        self.remove_button.set_sensitive(it is not None)
+        
+    def remove_word_list(self):
+        store, it = self.tree.get_selection().get_selected()
+        path = self.store.get_value(it, 0)
+        del self.palabra_window.wordlists[path]
+        self.palabra_window.wordlists_paths.remove(path)
+        self.store.remove(it)
+        try:
+            self.palabra_window.editor.refresh_words(True)
+        except AttributeError:
+            pass
+        
+    def _display_wordlists(self):
+        self.store.clear()
+        for path in self.palabra_window.wordlists_paths:
+            self.store.append([path])
 
 class WordList:
     def __init__(self):
@@ -117,31 +188,31 @@ def read_wordlist(filename):
     return result
 
 class WordListThread(Thread):
-    def __init__(self, window):
+    def __init__(self, window, paths):
         Thread.__init__(self)
         self.window = window
+        self.paths = paths
 
     def run(self):
-        def callback(wordlists):
-            self.window.wordlists = wordlists
-            try:
-                self.window.editor.refresh_words(True)
-            except AttributeError:
-                pass
-        
-        files = ["/usr/share/dict/words"]
-        wordlists = []
-        for f in files:
+        wordlists = {}
+        for f in self.paths:
             words = read_wordlist(f)
             wordlist = WordList()
             for word in words:
                 wordlist.add_word(word.lower())
-            wordlists.append(wordlist)
+            wordlists[f] = wordlist
+            
+        def callback(wordlists):
+            self.window.wordlists.update(wordlists)
+            try:
+                self.window.editor.refresh_words(True)
+            except AttributeError:
+                pass
         gobject.idle_add(callback, wordlists)
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result = []
-    for wl in wordlists:
+    for path, wl in wordlists.items():
         result += wl.search(length, constraints, more_constraints)
     result.sort()
     return result

@@ -77,8 +77,9 @@ class PalabraWindow(gtk.Window):
         
         self.connect("destroy", lambda widget: quit())
         
-        self.wordlists = None
-        t = WordListThread(self)
+        self.wordlists_paths = ["/usr/share/dict/words"]
+        self.wordlists = {}
+        t = WordListThread(self, self.wordlists_paths)
         t.start()
         
     def to_empty_panel(self):
