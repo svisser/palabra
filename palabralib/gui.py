@@ -60,6 +60,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
         self.menubar.append(self.create_word_menu())
+        self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
         
         self.toolbar = self.create_toolbar()
@@ -573,6 +574,7 @@ class PalabraWindow(gtk.Window):
         preferences.show_all()
         preferences.run()
         preferences.destroy()
+        self.update_window()
         
     def undo_action(self):
         action.stack.undo_action(self.puzzle_manager.current_puzzle)
@@ -725,7 +727,10 @@ class PalabraWindow(gtk.Window):
         self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
-        self.editor.refresh_words()
+        try:
+            self.editor.refresh_words()
+        except AttributeError:
+            pass
         self.panel.queue_draw()
         
     @staticmethod
@@ -852,12 +857,6 @@ class PalabraWindow(gtk.Window):
     def create_grid_menu(self):
         menu = gtk.Menu()
         
-        menu.append(self._create_menu_item(
-            lambda item: self.edit_clues()
-            , u"Edit the clues of the puzzle"
-            , title=u"Edit _clues"
-            , is_puzzle_sensitive=True))
-            
         menu.append(self._create_menu_item(
             lambda item: self.edit_appearance()
             , u"Edit the appearance of the puzzle"
@@ -989,6 +988,19 @@ class PalabraWindow(gtk.Window):
             , title="_Manage word lists..."))
         
         word_menu = gtk.MenuItem(u"_Word", True)
+        word_menu.set_submenu(menu)
+        return word_menu
+        
+    def create_clue_menu(self):
+        menu = gtk.Menu()
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.edit_clues()
+            , u"Edit the clues of the puzzle"
+            , title=u"Edit _clues"
+            , is_puzzle_sensitive=True))
+        
+        word_menu = gtk.MenuItem(u"_Clue", True)
         word_menu.set_submenu(menu)
         return word_menu
         
