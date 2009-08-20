@@ -18,7 +18,6 @@
 import copy
 import gobject
 import gtk
-from threading import Thread
 import time
 
 class WordListEditor(gtk.Dialog):
@@ -173,7 +172,6 @@ class WordList:
 
 def read_wordlist(filename):
     f = open(filename, "r")
-    result = []
     for line in f:
         line = line.strip("\n")
         if len(line) == 0:
@@ -182,31 +180,25 @@ def read_wordlist(filename):
             if not (ord("A") <= ord(c) <= ord("Z") or ord("a") <= ord(c) <= ord("z")):
                 break
         else:
-            result.append(line)
-    return result
+            yield line
 
-class WordListThread(Thread):
-    def __init__(self, window, paths):
-        Thread.__init__(self)
-        self.window = window
-        self.paths = paths
-
-    def run(self):
-        wordlists = {}
-        for f in self.paths:
-            words = read_wordlist(f)
-            wordlist = WordList()
-            for word in words:
-                wordlist.add_word(word.lower())
-            wordlists[f] = wordlist
-            
-        def callback(wordlists):
-            self.window.wordlists.update(wordlists)
-            try:
-                self.window.editor.refresh_words(True)
-            except AttributeError:
-                pass
-        gobject.idle_add(callback, wordlists)
+def read_wordlists(window, paths):
+    wordlists = {}
+    for path in paths:
+        wordlist = WordList()
+        for word in read_wordlist(path):
+            wordlist.add_word(word.lower())
+            yield True
+        wordlists[path] = wordlist
+    
+    def callback(wordlists):
+        window.wordlists.update(wordlists)
+        try:
+            window.editor.refresh_words(True)
+        except AttributeError:
+            pass
+    gobject.idle_add(callback, wordlists)
+    yield False
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result = []

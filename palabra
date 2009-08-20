@@ -24,13 +24,15 @@ except (ImportError, AssertionError):
     print "PyGTK 2.8 or higher is required for this application."
     raise SystemExit
 
+import gobject
+
 from palabralib.gui import PalabraWindow
 from palabralib.preferences import read_config_file
 
 if __name__ == "__main__":
     try:
         read_config_file()
-        gtk.gdk.threads_init()
+        gobject.threads_init()
         palabra = PalabraWindow()
         palabra.show_all()
         gtk.main()

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import gobject
 import gtk
 import os
 
@@ -40,7 +41,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import WordListEditor, WordListThread
+from word import WordListEditor, read_wordlists
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -79,8 +80,7 @@ class PalabraWindow(gtk.Window):
         
         self.wordlists_paths = ["/usr/share/dict/words"]
         self.wordlists = {}
-        t = WordListThread(self, self.wordlists_paths)
-        t.start()
+        gobject.idle_add(read_wordlists(self, self.wordlists_paths).next)
         
     def to_empty_panel(self):
         for widget in self.panel.get_children():
@@ -1001,8 +1001,7 @@ class PalabraWindow(gtk.Window):
             adds = [p for p, a in editor.modifications.items() if a == "add"]
             removes = [p for p, a in editor.modifications.items() if a == "remove"]
             
-            t = WordListThread(self, adds)
-            t.start()
+            gobject.idle_add(read_wordlists(self, adds).next)
             for path in removes:
                 self.wordlists_paths.remove(path)
                 del self.wordlists[path]
