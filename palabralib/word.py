@@ -77,6 +77,18 @@ class WordListEditor(gtk.Dialog):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             path = dialog.get_filename()
+            if path in self.data:
+                dialog.destroy()
+                
+                title = u"Duplicate found"
+                message = u"The word list has not been added because it's already in the list."
+                mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
+                    , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
+                mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+                mdialog.set_title(title)
+                mdialog.run()
+                mdialog.destroy()
+                return
             self.data.append(path)
             self.modifications[path] = "add"
             self._display_wordlists()
