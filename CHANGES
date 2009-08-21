@@ -3,7 +3,8 @@ This is a list of changes since the initial release of Palabra.
 
 Version ?
 =========
-* XML files are now validated against XML schema.
+* XML files are validated against XML schema.
+* Word lists can be used to populate the grid.
 
 Version 0.1 (August 14, 2009)
 =============================

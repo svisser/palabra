@@ -3,7 +3,8 @@ Palabra
 =======
 
 Palabra is a crossword editor written in Python. It is free software and
-it is licensed under the GNU General Public License.
+it is licensed under the GNU General Public License, version 3 or any later
+version.
 
 Requirements
 ============

@@ -21,7 +21,7 @@ import transform
 
 class ClueEditor(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
-        gtk.Dialog.__init__(self, u"Palabra Clue Editor"
+        gtk.Dialog.__init__(self, u"Palabra clue editor"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.puzzle = puzzle

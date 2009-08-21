@@ -867,7 +867,7 @@ class PalabraWindow(gtk.Window):
         menu.append(self._create_menu_item(
             lambda item: self.edit_appearance()
             , u"Edit the appearance of the puzzle"
-            , title=u"Edit _appearance"
+            , title=u"Edit _appearance..."
             , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
@@ -898,7 +898,7 @@ class PalabraWindow(gtk.Window):
         menu.append(self._create_menu_item(
             lambda item: self.resize_grid()
             , u"Change the size of the grid"
-            , title=u"_Resize grid"
+            , title=u"_Resize grid..."
             , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
@@ -997,7 +997,7 @@ class PalabraWindow(gtk.Window):
         menu.append(self._create_menu_item(
             lambda item: self.edit_clues()
             , u"Edit the clues of the puzzle"
-            , title=u"Edit _clues"
+            , title=u"Edit _clues..."
             , is_puzzle_sensitive=True))
         
         word_menu = gtk.MenuItem(u"_Clue", True)
