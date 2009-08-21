@@ -609,6 +609,13 @@ class PalabraWindow(gtk.Window):
         menu.append(self.redo_menu_item)
         
         menu.append(gtk.SeparatorMenuItem())
+
+        item = self.create_edit_symmetry_menu()
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
+        menu.append(item)
+        
+        menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
             lambda item: self.view_preferences()
@@ -862,13 +869,6 @@ class PalabraWindow(gtk.Window):
             , u"Edit the appearance of the puzzle"
             , title=u"Edit _appearance"
             , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-
-        item = self.create_edit_symmetry_menu()
-        item.set_sensitive(False)
-        self.puzzle_toggle_items += [item]
-        menu.append(item)
         
         menu.append(gtk.SeparatorMenuItem())
         
