@@ -203,6 +203,9 @@ def read_wordlists(window, paths):
             yield True
         wordlists[path] = wordlist
     window.wordlists.update(wordlists)
+    for path in paths:
+        if path not in window.wordlists_paths:
+            window.wordlists_paths.append(path)
     try:
         window.editor.refresh_words(True)
     except AttributeError:
