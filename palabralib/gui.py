@@ -79,9 +79,10 @@ class PalabraWindow(gtk.Window):
         
         self.connect("destroy", lambda widget: quit())
         
-        self.wordlists_paths = ["/usr/share/dict/words"]
         self.wordlists = {}
-        gobject.idle_add(read_wordlists(self, self.wordlists_paths).next)
+        for path in ["/usr/share/dict/words"]:
+            self.wordlists[path] = {"list": None, "status": "loading"}
+        gobject.idle_add(read_wordlists(self, self.wordlists.keys()).next)
         
     def to_empty_panel(self):
         for widget in self.panel.get_children():
@@ -1015,7 +1016,6 @@ class PalabraWindow(gtk.Window):
             
             gobject.idle_add(read_wordlists(self, adds).next)
             for path in removes:
-                self.wordlists_paths.remove(path)
                 del self.wordlists[path]
             try:
                 self.editor.refresh_words(True)

@@ -27,7 +27,7 @@ class WordListEditor(gtk.Dialog):
         self.palabra_window = palabra_window
         self.set_size_request(640, 480)
         
-        self.data = copy.deepcopy(self.palabra_window.wordlists_paths)
+        self.data = self.palabra_window.wordlists.keys()
         self.modifications = {}
         
         self.store = gtk.ListStore(str)
@@ -204,17 +204,16 @@ def read_wordlist(filename):
             yield line
 
 def read_wordlists(window, paths):
+    for path in paths:
+        window.wordlists[path] = {"list": None, "status": "loading"}
     wordlists = {}
     for path in paths:
         wordlist = WordList()
         for word in read_wordlist(path):
             wordlist.add_word(word.lower())
             yield True
-        wordlists[path] = wordlist
+        wordlists[path] = {"list": wordlist, "status": "ready"}
     window.wordlists.update(wordlists)
-    for path in paths:
-        if path not in window.wordlists_paths:
-            window.wordlists_paths.append(path)
     try:
         window.editor.refresh_words(True)
     except AttributeError:
@@ -223,7 +222,7 @@ def read_wordlists(window, paths):
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result = []
-    for path, wl in wordlists.items():
-        result += wl.search(length, constraints, more_constraints)
+    for path, item in wordlists.items():
+        result += item["list"].search(length, constraints, more_constraints)
     result.sort()
     return result
