@@ -136,20 +136,29 @@ class WordList:
     def has_matches(self, length, constraints):
         if length not in self.lengths:
             return False
-        result = None
+
+        # preprocess constraints
         for i, c in constraints:
             if i not in self.combinations[length]:
                 return False
             if c not in self.combinations[length][i]:
                 return False
-            query = self.combinations[length][i][c]
-            if len(query) == 0:
+            if len(self.combinations[length][i][c]) == 0:
                 return False
+                
+        # store the words available per constraint and sort
+        counts = [(i, c, self.combinations[length][i][c]) for i, c in constraints]
+        counts.sort(key=lambda x: len(x[2]))
+        
+        # use each constraint to reduce the number of words available
+        # if it reaches zero at any time, there are no matches
+        result = None
+        for i, c, words in counts:
             if result is None:
-                result = query
+                result = words
                 continue
             else:
-                reduced = filter(lambda j: j in result, query)
+                reduced = filter(lambda w: w in result, words)
                 if len(reduced) == 0:
                     return False
                 result = reduced
