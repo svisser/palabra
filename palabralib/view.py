@@ -205,6 +205,9 @@ class GridView:
                         for x, y in cells:
                             self.render_location(context, x, y, r, g, b)
                     cells = []
+            if len(cells) > 1:
+                for x, y in cells:
+                    self.render_location(context, x, y, r, g, b)
         
         for n, x, y in self.grid.horizontal_words():
             check_word("across", x, y)
