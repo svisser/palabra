@@ -287,7 +287,7 @@ class Editor(gtk.HBox):
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             if self.puzzle.grid.is_available(x, y):
-                w = self._decompose_word(word, x, y, self.settings["direction"])
+                w = self.puzzle.grid.decompose_word(word, x, y, self.settings["direction"])
                 self._insert_word(w)
         def toggle(status):
             self.settings["show_intersecting_words"] = status
@@ -298,7 +298,7 @@ class Editor(gtk.HBox):
                 y = self.settings["selection_y"]
                 direction = self.settings["direction"]
                 p, q = self.puzzle.grid.get_start_word(x, y, direction)
-                result = self._decompose_word(word, p, q, direction)
+                result = self.puzzle.grid.decompose_word(word, p, q, direction)
                 
                 result = [(x, y, c.upper()) for x, y, c in result
                     if self.puzzle.grid.get_char(x, y) != c.upper()]
@@ -316,7 +316,7 @@ class Editor(gtk.HBox):
     def _get_search_parameters(self, x, y, direction):
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
         length = self.puzzle.grid.word_length(p, q, direction)
-        constraints = self._gather_constraints(p, q, direction)
+        constraints = self.puzzle.grid.gather_constraints(p, q, direction)
         return (length, constraints)
         
     def _gather_all_constraints(self, x, y, direction):
@@ -332,20 +332,9 @@ class Editor(gtk.HBox):
             elif other[direction] == "down":
                 index = y - q
             
-            item = (index, length, self._gather_constraints(p, q, other[direction]))
+            item = (index, length, self.puzzle.grid.gather_constraints(p, q, other[direction]))
             result.append(item)
         return result
-        
-    def _gather_constraints(self, x, y, direction):
-        word = self.puzzle.grid.gather_word(x, y, direction, "?")
-        return [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
-        
-    def _decompose_word(self, word, x, y, direction):
-        sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
-        if direction == "across":
-            return [(sx + i, sy, word[i]) for i in xrange(len(word))]
-        elif direction == "down":
-            return [(sx, sy + j, word[j]) for j in xrange(len(word))]
     
     def _insert_word(self, chars):
         actual = [(x, y, c.upper()) for x, y, c in chars

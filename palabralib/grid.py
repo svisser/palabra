@@ -273,6 +273,17 @@ class Grid:
             else:
                 word += c
         return word
+        
+    def decompose_word(self, word, x, y, direction):
+        sx, sy = self.get_start_word(x, y, direction)
+        if direction == "across":
+            return [(sx + i, sy, word[i]) for i in xrange(len(word))]
+        elif direction == "down":
+            return [(sx, sy + j, word[j]) for j in xrange(len(word))]
+            
+    def gather_constraints(self, x, y, direction):
+        word = self.gather_word(x, y, direction, "?")
+        return [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
                 
     def gather_words(self, direction):
         """Iterate over the word data in the given direction."""
