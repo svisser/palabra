@@ -171,6 +171,9 @@ class Editor(gtk.HBox):
         b = preferences.prefs["color_warning_blue"] / 65535.0
         self.puzzle.view.render_warnings(context, r, g, b)
         
+        if self.palabra_window.blacklist is not None:
+            self.puzzle.view.render_blacklist(context, r, g, b, self.palabra_window.blacklist)
+        
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         if self.puzzle.grid.is_valid(x, y):
@@ -213,12 +216,6 @@ class Editor(gtk.HBox):
             g = preferences.prefs["color_primary_active_green"] / 65535.0
             b = preferences.prefs["color_primary_active_blue"] / 65535.0
             self.puzzle.view.render_location(context, x, y, r, g, b)
-        
-        if self.palabra_window.blacklist is not None:
-            r = preferences.prefs["color_warning_red"] / 65535.0
-            g = preferences.prefs["color_warning_green"] / 65535.0
-            b = preferences.prefs["color_warning_blue"] / 65535.0
-            self.puzzle.view.render_blacklist(context, r, g, b, self.palabra_window.blacklist)
         
         self.puzzle.view.render(context, mode=constants.VIEW_MODE_EDITOR)
         
