@@ -182,6 +182,47 @@ class GridView:
         if mode == constants.VIEW_MODE_EDITOR:
             self.render_overlay_chars(context)
             
+    def render_blacklist(self, context, r, g, b, blacklist):
+        def gather_segments(word, sx, sy, direction):
+            segments = []
+            segment = ("", [])
+            dx = 1 if direction == "across" else 0
+            dy = 1 if direction == "down" else 0
+            for i, c in enumerate(word):
+                if c != "?":
+                    p = sx + i * dx
+                    q = sy + i * dy
+                    segment = (segment[0] + c, segment[1] + [(p, q)])
+                else:
+                    if len(segment[1]):
+                        segments.append(segment)
+                    segment = ("", [])
+            if len(segment):
+                segments.append(segment)
+            return segments
+        def in_blacklist(word):
+            constraints = [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
+            return blacklist.has_substring_matches(len(word), constraints)
+        def check_word(x, y, direction):
+            sx, sy = self.grid.get_start_word(x, y, direction)
+            word = self.grid.gather_word(x, y, direction, "?")
+            segments = gather_segments(word, sx, sy, direction)
+            cells = []
+            for word, c in segments:
+                if in_blacklist(word):
+                    cells += c
+            return cells                    
+        a = []
+        d = []
+        for n, x, y in self.grid.horizontal_words():
+            a += check_word(x, y, "across")
+        for n, x, y in self.grid.vertical_words():
+            d += check_word(x, y, "down")
+        for x, y in a:
+            self.render_location(context, x, y, r, g, b)
+        for x, y in d:
+            self.render_location(context, x, y, r, g, b)
+            
     def render_warnings(self, context, r, g, b):
         """Render undesired cells in the specified color."""
         if self.settings["warn_unchecked_cells"]:

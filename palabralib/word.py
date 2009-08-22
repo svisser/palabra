@@ -132,6 +132,10 @@ class WordList:
             except KeyError:
                 self.combinations[len(word)][i][c] = [self.size]
         self.size += 1
+        
+    # TODO
+    def has_substring_matches(self, length, constraints):
+        return self.has_matches(length, constraints)
             
     def has_matches(self, length, constraints):
         if length not in self.lengths:
@@ -191,17 +195,29 @@ class WordList:
                 return False
         return True
 
+def _process_word(word):
+    word = word.strip("\n")
+    if len(word) == 0:
+        return None
+    for c in word:
+        if not (ord("A") <= ord(c) <= ord("Z") or ord("a") <= ord(c) <= ord("z")):
+            return None
+    return word
+
 def read_wordlist(filename):
     f = open(filename, "r")
     for line in f:
-        line = line.strip("\n")
-        if len(line) == 0:
-            continue
-        for c in line:
-            if not (ord("A") <= ord(c) <= ord("Z") or ord("a") <= ord(c) <= ord("z")):
-                break
-        else:
-            yield line
+        word = _process_word(line)
+        if word is not None:
+            yield word
+
+def read_wordlist_from_iter(callback, words):
+    wordlist = WordList()
+    for word in words:
+        wordlist.add_word(word.lower())
+        yield True
+    callback(wordlist)
+    yield False
 
 def read_wordlists(window, paths):
     for path in paths:
@@ -223,6 +239,8 @@ def read_wordlists(window, paths):
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result = []
     for path, item in wordlists.items():
-        result += item["list"].search(length, constraints, more_constraints)
+        wordlist = item["list"]
+        if wordlist is not None:
+            result += wordlist.search(length, constraints, more_constraints)
     result.sort()
     return result

@@ -41,7 +41,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import WordListEditor, read_wordlists
+from word import WordListEditor, read_wordlist_from_iter, read_wordlists
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -83,6 +83,12 @@ class PalabraWindow(gtk.Window):
         for path in ["/usr/share/dict/words"]:
             self.wordlists[path] = {"list": None, "status": "loading"}
         gobject.idle_add(read_wordlists(self, self.wordlists.keys()).next)
+        
+        self.blacklist = None
+        def callback(wordlist):
+            self.blacklist = wordlist
+        words = ["ban"]
+        gobject.idle_add(read_wordlist_from_iter(callback, words).next)
         
     def to_empty_panel(self):
         for widget in self.panel.get_children():
