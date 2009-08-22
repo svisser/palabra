@@ -201,8 +201,12 @@ def _process_word(word):
     word = word.strip("\n")
     if len(word) == 0:
         return None
+    ord_A = ord("A")
+    ord_Z = ord("Z")
+    ord_a = ord("a")
+    ord_z = ord("z")
     for c in word:
-        if not (ord("A") <= ord(c) <= ord("Z") or ord("a") <= ord(c) <= ord("z")):
+        if not (ord_A <= ord(c) <= ord_Z or ord_a <= ord(c) <= ord_z):
             return None
     return word
 

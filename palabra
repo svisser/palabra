@@ -40,7 +40,7 @@ if __name__ == "__main__":
         #import cProfile
         #cProfile.run('gtk.main()', 'fooprof')
         #p = pstats.Stats('fooprof')
-        #p.sort_stats('cumulative').print_stats()#20)
+        #p.sort_stats('time').print_stats()#20)
     except KeyboardInterrupt:
         import sys
         sys.exit("ERROR: Interrupted by user")

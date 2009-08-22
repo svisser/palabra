@@ -245,24 +245,23 @@ class GridView:
             
     def _render_consecutive_unchecked_warnings(self, context, r, g, b):
         """Color consecutive (two or more) unchecked cells."""
-        def check_word(direction, x, y):
-            cells = []
-            for p, q in self.grid.in_direction(direction, x, y):
-                if 0 <= self.grid.get_check_count(p, q) <= 1:
-                    cells.append((p, q))
-                else:
-                    if len(cells) > 1:
-                        for x, y in cells:
-                            self.render_location(context, x, y, r, g, b)
-                    cells = []
-            if len(cells) > 1:
-                for x, y in cells:
-                    self.render_location(context, x, y, r, g, b)
-        
-        for n, x, y in self.grid.horizontal_words():
-            check_word("across", x, y)
-        for n, x, y in self.grid.vertical_words():
-            check_word("down", x, y)
+        checks = {}
+        for x, y in self.grid.cells():
+            checks[x, y] = self.grid.get_check_count(x, y)
+        def is_consecutive_unchecked(x, y):
+            if not (0 <= checks[x, y] <= 1):
+                return False
+            if (x - 1, y) in checks and 0 <= checks[x - 1, y] <= 1:
+                return True
+            if (x + 1, y) in checks and 0 <= checks[x + 1, y] <= 1:
+                return True
+            if (x, y - 1) in checks and 0 <= checks[x, y - 1] <= 1:
+                return True
+            if (x, y + 1) in checks and 0 <= checks[x, y + 1] <= 1:
+                return True
+        cells = filter(lambda p: is_consecutive_unchecked(*p), self.grid.cells())
+        for x, y in cells:
+            self.render_location(context, x, y, r, g, b)
             
     def _render_unchecked_cell_warnings(self, context, r, g, b):
         """Color cells that are unchecked. Isolated cells are also colored."""
