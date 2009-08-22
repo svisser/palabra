@@ -133,9 +133,11 @@ class WordList:
                 self.combinations[len(word)][i][c] = [self.size]
         self.size += 1
         
-    # TODO
-    def has_substring_matches(self, length, constraints):
-        return self.has_matches(length, constraints)
+    def get_substring_matches(self, word):
+        result = []
+        for length in self.lengths.keys():
+            result += [x for x in self.lengths[length] if x in word]
+        return result
             
     def has_matches(self, length, constraints):
         if length not in self.lengths:

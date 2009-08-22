@@ -87,7 +87,7 @@ class PalabraWindow(gtk.Window):
         self.blacklist = None
         def callback(wordlist):
             self.blacklist = wordlist
-        words = ["ban"]
+        words = ["cunt", "whore"]
         gobject.idle_add(read_wordlist_from_iter(callback, words).next)
         
     def to_empty_panel(self):
