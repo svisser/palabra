@@ -30,6 +30,7 @@ SETTINGS_PREVIEW = {
     , "warn_consecutive_unchecked": False
     , "warn_unchecked_cells": False
     , "warn_two_letter_words": False
+    , "warn_blacklist": False
 }
 SETTINGS_EDITOR = {
     "has_padding": True
@@ -38,6 +39,7 @@ SETTINGS_EDITOR = {
     , "warn_consecutive_unchecked": True
     , "warn_unchecked_cells": True
     , "warn_two_letter_words": True
+    , "warn_blacklist": True
 }
 SETTINGS_EMPTY = {
     "has_padding": False
@@ -46,6 +48,7 @@ SETTINGS_EMPTY = {
     , "warn_consecutive_unchecked": False
     , "warn_unchecked_cells": False
     , "warn_two_letter_words": False
+    , "warn_blacklist": False
 }
 SETTINGS_SOLUTION = {
     "has_padding": False
@@ -54,6 +57,7 @@ SETTINGS_SOLUTION = {
     , "warn_consecutive_unchecked": False
     , "warn_unchecked_cells": False
     , "warn_two_letter_words": False
+    , "warn_blacklist": False
 }
 custom_settings = {}
 
@@ -183,6 +187,9 @@ class GridView:
             self.render_overlay_chars(context)
             
     def render_blacklist(self, context, r, g, b, blacklist):
+        """Render blacklisted words in the specified color."""
+        if not self.settings["warn_blacklist"]:
+            return
         def gather_segments(word, sx, sy, direction):
             segments = []
             segment = {"word": "", "cells": []}

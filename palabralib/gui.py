@@ -840,6 +840,18 @@ class PalabraWindow(gtk.Window):
         item.set_active(True)
         toggle_predicate("warn_two_letter_words", True)
         
+        activate = lambda item: toggle_predicate("warn_blacklist", item.active)
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , u"Warn visually when blacklisted words exist in the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.CheckMenuItem(u"Warn for blacklisted words", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        item.set_active(True)
+        toggle_predicate("warn_blacklist", True)
+        
         view_menu = gtk.MenuItem(u"_View", True)
         view_menu.set_submenu(menu)
         return view_menu
