@@ -249,16 +249,11 @@ class GridView:
         for x, y in self.grid.cells():
             checks[x, y] = self.grid.get_check_count(x, y)
         def is_consecutive_unchecked(x, y):
-            if not (0 <= checks[x, y] <= 1):
+            if checks[x, y] < 0 or checks[x, y] > 1:
                 return False
-            if (x - 1, y) in checks and 0 <= checks[x - 1, y] <= 1:
-                return True
-            if (x + 1, y) in checks and 0 <= checks[x + 1, y] <= 1:
-                return True
-            if (x, y - 1) in checks and 0 <= checks[x, y - 1] <= 1:
-                return True
-            if (x, y + 1) in checks and 0 <= checks[x, y + 1] <= 1:
-                return True
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                if (x + dx, y + dy) in checks and 0 <= checks[x + dx, y + dy] <= 1:
+                    return True
         cells = filter(lambda p: is_consecutive_unchecked(*p), self.grid.cells())
         for x, y in cells:
             self.render_location(context, x, y, r, g, b)
