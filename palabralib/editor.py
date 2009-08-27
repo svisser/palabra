@@ -169,7 +169,7 @@ class Editor(gtk.HBox):
         r = preferences.prefs["color_warning_red"] / 65535.0
         g = preferences.prefs["color_warning_green"] / 65535.0
         b = preferences.prefs["color_warning_blue"] / 65535.0
-        #self.puzzle.view.render_warnings(context, event.area, r, g, b)
+        self.puzzle.view.render_warnings(context, event.area, r, g, b)
         
         #if self.palabra_window.blacklist is not None:
         #    self.puzzle.view.render_blacklist(context, event.area, r, g, b, self.palabra_window.blacklist)

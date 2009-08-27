@@ -1,10 +1,11 @@
 
 This is a list of changes since the initial release of Palabra.
 
-Version ?
-=========
+Version 0.1.1 (unreleased)
+==========================
 * XML files are validated against XML schema.
 * Word lists can be used to populate the grid.
+* Speed improvements in rendering code.
 
 Version 0.1 (August 14, 2009)
 =============================
