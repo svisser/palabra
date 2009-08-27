@@ -160,7 +160,7 @@ class Editor(gtk.HBox):
         
         self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
         
-        self.puzzle.view.render_background(context)
+        self.puzzle.view.render_background(context, event.area)
         
         #secondary_selection_red = preferences.prefs["color_secondary_selection_red"] / 65535.0
         #secondary_selection_green = preferences.prefs["color_secondary_selection_green"] / 65535.0
@@ -169,10 +169,10 @@ class Editor(gtk.HBox):
         r = preferences.prefs["color_warning_red"] / 65535.0
         g = preferences.prefs["color_warning_green"] / 65535.0
         b = preferences.prefs["color_warning_blue"] / 65535.0
-        self.puzzle.view.render_warnings(context, r, g, b)
+        #self.puzzle.view.render_warnings(context, event.area, r, g, b)
         
-        if self.palabra_window.blacklist is not None:
-            self.puzzle.view.render_blacklist(context, r, g, b, self.palabra_window.blacklist)
+        #if self.palabra_window.blacklist is not None:
+        #    self.puzzle.view.render_blacklist(context, event.area, r, g, b, self.palabra_window.blacklist)
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
@@ -182,12 +182,12 @@ class Editor(gtk.HBox):
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
-                self.puzzle.view.render_line(context, x, y, direction, r, g, b)
+                self.puzzle.view.render_line(context, event.area, x, y, direction, r, g, b)
                 
             r = preferences.prefs["color_primary_selection_red"] / 65535.0
             g = preferences.prefs["color_primary_selection_green"] / 65535.0
             b = preferences.prefs["color_primary_selection_blue"] / 65535.0
-            self.puzzle.view.render_location(context, x, y, r, g, b)
+            self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
         
         if self.current_x >= 0 and self.current_y >= 0:
             r = preferences.prefs["color_secondary_active_red"] / 65535.0
@@ -196,17 +196,17 @@ class Editor(gtk.HBox):
             if self.settings["keep_horizontal_symmetry"]:
                 x = self.current_x
                 y = (self.puzzle.grid.height - 1) - self.current_y
-                self.puzzle.view.render_location(context, x, y, r, g, b)
+                self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
             if self.settings["keep_vertical_symmetry"]:
                 x = (self.puzzle.grid.width - 1) - self.current_x
                 y = self.current_y
-                self.puzzle.view.render_location(context, x, y, r, g, b)
+                self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
             if ((self.settings["keep_horizontal_symmetry"] and
                 self.settings["keep_vertical_symmetry"]) or
                 self.settings["keep_point_symmetry"]):
                 x = (self.puzzle.grid.width - 1) - self.current_x
                 y = (self.puzzle.grid.height - 1) - self.current_y
-                self.puzzle.view.render_location(context, x, y, r, g, b)
+                self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
                 
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
@@ -215,9 +215,9 @@ class Editor(gtk.HBox):
             r = preferences.prefs["color_primary_active_red"] / 65535.0
             g = preferences.prefs["color_primary_active_green"] / 65535.0
             b = preferences.prefs["color_primary_active_blue"] / 65535.0
-            self.puzzle.view.render_location(context, x, y, r, g, b)
+            self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
         
-        self.puzzle.view.render(context, mode=constants.VIEW_MODE_EDITOR)
+        self.puzzle.view.render(context, event.area)
         
         return True
         
