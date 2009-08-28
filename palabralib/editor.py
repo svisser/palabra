@@ -114,6 +114,8 @@ class Editor(gtk.HBox):
         self.settings["word_search_parameters"] = None
         self.settings["show_intersecting_words"] = False
         
+        self.settings["locked_grid"] = False
+        
         self.current_x = -1
         self.current_y = -1
         
@@ -242,9 +244,9 @@ class Editor(gtk.HBox):
         
         if (event.state & gtk.gdk.SHIFT_MASK):
             if self.puzzle.grid.is_valid(x, y):
-                if event.button == 1:
+                if event.button == 1 and not self.settings["locked_grid"]:
                     self.transform_blocks(x, y, True)
-                elif event.button == 3:
+                elif event.button == 3 and not self.settings["locked_grid"]:
                     self.transform_blocks(x, y, False)
         
         self.puzzle.view.refresh_line(drawing_area, prev_x, prev_y, self.settings["direction"])
@@ -366,9 +368,13 @@ class Editor(gtk.HBox):
             self.puzzle.view.refresh_location(drawing_area, cx, cy)
         
         if self.puzzle.grid.is_valid(cx, cy):
-            if self.mouse_buttons_down[0] and (event.state & gtk.gdk.SHIFT_MASK):
+            if (self.mouse_buttons_down[0]
+                and (event.state & gtk.gdk.SHIFT_MASK)
+                and not self.settings["locked_grid"]):
                 self.transform_blocks(cx, cy, True)
-            elif self.mouse_buttons_down[2] and (event.state & gtk.gdk.SHIFT_MASK):
+            elif (self.mouse_buttons_down[2]
+                and (event.state & gtk.gdk.SHIFT_MASK)
+                and not self.settings["locked_grid"]):
                 self.transform_blocks(cx, cy, False)
         return True
         
@@ -436,7 +442,7 @@ class Editor(gtk.HBox):
             (event.state & gtk.gdk.CONTROL_MASK)):
             return True
             
-        if event.keyval == gtk.keysyms.BackSpace:
+        if event.keyval == gtk.keysyms.BackSpace and not self.settings["locked_grid"]:
             self.on_backspace(drawing_area, event)
         elif event.keyval == gtk.keysyms.Tab:
             self.change_typing_direction()
@@ -452,9 +458,9 @@ class Editor(gtk.HBox):
             self.on_arrow_key(drawing_area, event, 1, 0)
         elif event.keyval == gtk.keysyms.Down:
             self.on_arrow_key(drawing_area, event, 0, 1)
-        elif event.keyval == gtk.keysyms.Delete:
+        elif event.keyval == gtk.keysyms.Delete and not self.settings["locked_grid"]:
             self.on_delete(drawing_area, event)
-        else:
+        elif not self.settings["locked_grid"]:
             self.on_typing(drawing_area, event)
         return True
         

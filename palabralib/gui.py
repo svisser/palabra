@@ -626,7 +626,7 @@ class PalabraWindow(gtk.Window):
         
         menu.append(self._create_menu_item(
             lambda item: self.view_preferences()
-            , u"Configure the application"
+            , u"Configure the program"
             , image=gtk.STOCK_PREFERENCES))
                 
         edit_menu = gtk.MenuItem(u"_Edit", True)
