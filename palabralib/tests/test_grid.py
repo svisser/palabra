@@ -692,3 +692,17 @@ class GridTestCase(unittest.TestCase):
             for y in xrange(1, self.grid.height):
                 self.grid.set_block(x, y, True)
         self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "E")
+        
+    def testSetBarDirtyOne(self):
+        self.grid.store_clue(0, 0, "across", "text", "A")
+        self.grid.store_clue(0, 0, "down", "text", "B")
+        self.grid.set_bar(5, 0, "left", True)
+        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        self.assertEquals("down" in self.grid.get_clues(0, 0), True)
+        
+    def testSetBarDirtyTwo(self):
+        self.grid.store_clue(0, 0, "across", "text", "A")
+        self.grid.store_clue(0, 0, "down", "text", "B")
+        self.grid.set_bar(0, 5, "top", True)
+        self.assertEquals("across" in self.grid.get_clues(0, 0), True)
+        self.assertEquals("down" in self.grid.get_clues(0, 0), False)

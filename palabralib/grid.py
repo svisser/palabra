@@ -625,4 +625,10 @@ class Grid:
         return self.data[y][x]["bar"][side]
         
     def set_bar(self, x, y, side, status):
+        if side == "top":
+            tx, ty = self.get_start_vertical_word(x, y)
+            self._clear_clues([(tx, ty, "down")])
+        elif side == "left":
+            sx, sy = self.get_start_horizontal_word(x, y)
+            self._clear_clues([(sx, sy, "across")])
         self.data[y][x]["bar"][side] = status
