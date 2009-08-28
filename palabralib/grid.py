@@ -19,7 +19,6 @@ class Grid:
     def __init__(self, width, height):
         """Construct a grid with the given dimensions."""
         self.initialize(width, height)
-        self.set_bar(5, 5, "top", True)
         
     def initialize(self, width, height):
         """Reset the grid to the given dimensions with all empty cells."""
