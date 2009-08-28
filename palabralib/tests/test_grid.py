@@ -67,6 +67,20 @@ class GridTestCase(unittest.TestCase):
         
         cond = self.grid.is_start_horizontal_word(self.grid.width - 1, 0)
         self.assertEqual(cond, False)
+    
+    def testIsStartHorizontalWordBars(self):
+        self.grid.set_bar(1, 0, "left", True)
+        self.assertEqual(self.grid.is_start_horizontal_word(0, 0), False)
+        self.grid.set_bar(5, 5, "left", True)
+        self.assertEqual(self.grid.is_start_horizontal_word(5, 5), True)
+        self.grid.set_bar(6, 5, "left", True)
+        self.assertEqual(self.grid.is_start_horizontal_word(5, 5), False)
+        self.grid.set_bar(4, 4, "left", True)
+        self.grid.set_block(5, 4, True)
+        self.assertEqual(self.grid.is_start_horizontal_word(4, 4), False)
+        self.grid.set_block(7, 7, True)
+        self.grid.set_bar(9, 7, "left", True)
+        self.assertEqual(self.grid.is_start_horizontal_word(8, 7), False)
         
     def testIsStartVerticalWord(self):
         self.assertEqual(self.grid.is_start_vertical_word(0, 0), True)
@@ -82,6 +96,20 @@ class GridTestCase(unittest.TestCase):
         
         cond = self.grid.is_start_vertical_word(0, self.grid.height - 1)
         self.assertEqual(cond, False)
+        
+    def testIsStartVerticalWordBars(self):
+        self.grid.set_bar(0, 1, "top", True)
+        self.assertEqual(self.grid.is_start_vertical_word(0, 0), False)
+        self.grid.set_bar(5, 5, "top", True)
+        self.assertEqual(self.grid.is_start_vertical_word(5, 5), True)
+        self.grid.set_bar(5, 6, "top", True)
+        self.assertEqual(self.grid.is_start_vertical_word(5, 5), False)
+        self.grid.set_bar(4, 4, "top", True)
+        self.grid.set_block(4, 5, True)
+        self.assertEqual(self.grid.is_start_vertical_word(4, 4), False)
+        self.grid.set_block(7, 7, True)
+        self.grid.set_bar(7, 9, "top", True)
+        self.assertEqual(self.grid.is_start_vertical_word(7, 8), False)
         
     def testIsStartWord(self):
         self.assertEqual(self.grid.is_start_word(0, 0), True)

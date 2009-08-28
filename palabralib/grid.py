@@ -34,31 +34,29 @@ class Grid:
         cell["bar"] = {"top": False, "left": False}
         return cell
 
-    def set_data(self, width, height, chars, blocks):
-        """Set the grid's data to the given data."""
-        self.initialize(width, height)
-        
-        for x, y in self.cells():
-            self.data[y][x]["char"] = chars[y][x]
-            self.data[y][x]["block"] = blocks[y][x]
-
     def is_start_horizontal_word(self, x, y):
         """Return True when a horizontal words begins in the cell at (x, y)."""
         if self.is_block(x, y):
             return False
-            
-        return ((x == 0 and self.width > 1 and not self.is_block(1, y))
-            or (x > 0 and x < self.width - 1 and self.is_block(x - 1, y)
-            and not self.is_block(x + 1, y)))
+        if (x == 0 and self.width > 1 and not self.is_block(1, y)
+            and not self.has_bar(1, y, "left")):
+            return True
+        if (x > 0 and x < self.width - 1 and (self.is_block(x - 1, y) or self.has_bar(x, y, "left"))
+            and not (self.is_block(x + 1, y) or self.has_bar(x + 1, y, "left"))):
+            return True
+        return False
             
     def is_start_vertical_word(self, x, y):
         """Return True when a vertical word begins in the cell at (x, y)."""
         if self.is_block(x, y):
             return False
-            
-        return ((y == 0 and self.height > y + 1 and not self.is_block(x, y + 1))
-            or (y > 0 and y < self.height - 1 and self.is_block(x, y - 1)
-            and not self.is_block(x, y + 1)))
+        if (y == 0 and self.height > 1 and not self.is_block(x, 1)
+            and not self.has_bar(x, 1, "top")):
+            return True
+        if (y > 0 and y < self.height - 1 and (self.is_block(x, y - 1) or self.has_bar(x, y, "top"))
+            and not (self.is_block(x, y + 1) or self.has_bar(x, y + 1, "top"))):
+            return True
+        return False
             
     def is_start_word(self, x, y):
         """Return True when a word begins in either direction in the cell (x, y)."""

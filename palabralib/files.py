@@ -106,6 +106,7 @@ def _read_cell(e):
     else:
         c["char"] = ""
     c["clues"] = {}
+    c["bar"] = {"top": False, "left": False}
     return x, y, c
     
 def _write_cell(parent, x, y, cell):
