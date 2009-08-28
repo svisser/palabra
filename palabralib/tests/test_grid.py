@@ -22,6 +22,7 @@ from palabralib.grid import Grid
 class GridTestCase(unittest.TestCase):
     def setUp(self):
         self.grid = Grid(12, 15)
+        self.square_grid = Grid(15, 15)
         
     def testSize(self):
         self.assertEqual(self.grid.width, 12)
@@ -735,3 +736,59 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_bar(0, 5, "top", True)
         self.assertEquals("across" in self.grid.get_clues(0, 0), True)
         self.assertEquals("down" in self.grid.get_clues(0, 0), False)
+        
+    def testHorizontalFlip(self):
+        self.grid.set_block(0, 0, True)
+        self.grid.set_block(self.grid.width - 1, 1, True)
+        self.grid.set_char(5, 2, "A")
+        self.grid.set_char(6, 3, "B")
+        self.grid.set_bar(1, 4, "left", True)
+        self.grid.horizontal_flip()
+        self.assertEquals(self.grid.is_block(self.grid.width - 1, 0), True)
+        self.assertEquals(self.grid.is_block(0, 1), True)
+        self.assertEquals(self.grid.get_char(6, 2), "A")
+        self.assertEquals(self.grid.get_char(5, 3), "B")
+        self.assertEquals(self.grid.has_bar(self.grid.width - 1, 4, "left"), True)
+        
+    def testVerticalFlip(self):
+        self.grid.set_block(0, 0, True)
+        self.grid.set_block(1, self.grid.height - 1, True)
+        self.grid.set_char(2, 7, "A")
+        self.grid.set_char(3, 6, "B")
+        self.grid.set_char(4, 8, "C")
+        self.grid.set_bar(5, 1, "top", True)
+        self.grid.vertical_flip()
+        self.assertEquals(self.grid.is_block(0, self.grid.height - 1), True)
+        self.assertEquals(self.grid.is_block(1, 0), True)
+        self.assertEquals(self.grid.get_char(2, 7), "A")
+        self.assertEquals(self.grid.get_char(3, 8), "B")
+        self.assertEquals(self.grid.get_char(4, 6), "C")
+        self.assertEquals(self.grid.has_bar(5, self.grid.height - 1, "top"), True)
+        
+    def testDiagonalFlip(self):
+        # TODO use self.grid when size assertion in diagonal_flip() is no longer needed
+        self.square_grid.set_block(0, 1, True)
+        self.square_grid.set_block(3, 3, True)
+        self.square_grid.set_char(5, 0, "A")
+        self.square_grid.diagonal_flip()
+        self.assertEquals(self.square_grid.is_block(1, 0), True)
+        self.assertEquals(self.square_grid.is_block(3, 3), True)
+        self.assertEquals(self.square_grid.get_char(0, 5), "A")
+        
+    def testDiagonalFlipBars(self):
+        # TODO use self.grid when size assertion in diagonal_flip() is no longer needed
+        self.square_grid.set_bar(1, 1, "top", True)
+        self.square_grid.diagonal_flip()
+        self.assertEquals(self.square_grid.has_bar(1, 1, "left"), True)
+        
+        self.square_grid.set_bar(3, 3, "left", True)
+        self.square_grid.diagonal_flip()
+        self.assertEquals(self.square_grid.has_bar(3, 3, "top"), True)
+        
+        self.square_grid.set_bar(10, 3, "top", True)
+        self.square_grid.diagonal_flip()
+        self.assertEquals(self.square_grid.has_bar(3, 10, "left"), True)
+        
+        self.square_grid.set_bar(3, 10, "left", True)
+        self.square_grid.diagonal_flip()
+        self.assertEquals(self.square_grid.has_bar(10, 3, "top"), True)

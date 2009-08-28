@@ -522,6 +522,13 @@ class Grid:
                 second = self.data[y][self.width - 1 - x]
                 self.data[y][x] = second
                 self.data[y][self.width - 1 - x] = first
+                
+        # correct bars
+        for y in xrange(self.height):
+            for x in xrange(self.width - 1, -1, -1):
+                if self.has_bar(x, y, "left"):
+                    self.data[y][x]["bar"]["left"] = False
+                    self.data[y][x + 1]["bar"]["left"] = True
         self.clear_clues()
         
     def vertical_flip(self):
@@ -532,18 +539,47 @@ class Grid:
                 second = self.data[self.height -1 - y][x]
                 self.data[y][x] = second
                 self.data[self.height - 1 - y][x] = first
+                
+        # correct bars
+        for x in xrange(self.width):
+            for y in xrange(self.height - 1, -1, -1):
+                if self.has_bar(x, y, "top"):
+                    self.data[y][x]["bar"]["top"] = False
+                    self.data[y + 1][x]["bar"]["top"] = True
         self.clear_clues()
         
     def diagonal_flip(self):
         """Flip the content of the grid diagonally."""
+        
+        # for now
+        assert self.width == self.height
+        
+        def flip_bars(cell):
+            """Turn all top bars into left bars and vice versa."""
+            if cell["bar"]["top"] and cell["bar"]["left"]:
+                return
+            if cell["bar"]["top"]:
+                cell["bar"]["top"] = False
+                cell["bar"]["left"] = True
+            elif cell["bar"]["left"]:
+                cell["bar"]["left"] = False
+                cell["bar"]["top"] = True
+        
         for x in xrange(self.width):
             for y in xrange(x, self.height):
                 first = self.data[y][x]
                 second = self.data[x][y]
+                
+                # correct all bars but don't flip the
+                # bars of cells on the diagonal twice
+                flip_bars(first)
+                if x != y:
+                    flip_bars(second)
+                
                 self.data[y][x] = second
                 self.data[x][y] = first
-                
-                # also flip the clues
+
+                # flip the clues
                 other = {"across": "down", "down": "across"}
                 for p, q in [(x, y), (y, x)]:
                     for dir1 in ["across", "down"]:
