@@ -495,6 +495,11 @@ class GridTestCase(unittest.TestCase):
         bs = [self.grid.is_block(x, y) for x, y in cells]
         self.assertEquals(bs, [False, True, False, True])
         
+    def testInsertRowBars(self):
+        self.grid.set_bar(5, 5, "top", True)
+        self.grid.insert_row(5, True)
+        self.assertEquals(self.grid.has_bar(5, 5, "top"), True)
+        
     def testInsertColumn(self):
         width, height = self.grid.width, self.grid.height
         self.grid.set_block(0, 0, True)
@@ -515,6 +520,11 @@ class GridTestCase(unittest.TestCase):
         cells = [(0, 0), (1, 0), (2, 0), (3, 0)]
         bs = [self.grid.is_block(x, y) for x, y in cells]
         self.assertEquals(bs, [False, True, False, True])
+        
+    def testInsertColumnBars(self):
+        self.grid.set_bar(5, 5, "left", True)
+        self.grid.insert_column(5, True)
+        self.assertEquals(self.grid.has_bar(5, 5, "left"), True)
         
     def testRemoveRow(self):
         width, height = self.grid.width, self.grid.height

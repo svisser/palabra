@@ -19,6 +19,7 @@ class Grid:
     def __init__(self, width, height):
         """Construct a grid with the given dimensions."""
         self.initialize(width, height)
+        self.set_bar(5, 5, "top", True)
         
     def initialize(self, width, height):
         """Reset the grid to the given dimensions with all empty cells."""
@@ -416,6 +417,10 @@ class Grid:
         row = [[self._default_cell() for x in range(self.width)]]
         if insert_above:
             self.data = self.data[:y] + row + self.data[y:]
+            for x in xrange(self.width):
+                if self.has_bar(x, y + 1, "top"):
+                    self.data[y + 1][x]["bar"]["top"] = False
+                    self.data[y][x]["bar"]["top"] = True
         else:
             self.data = self.data[:y + 1] + row + self.data[y + 1:]
             
@@ -434,6 +439,11 @@ class Grid:
         else:
             f = lambda row: row[:x + 1] + [self._default_cell()] + row[x + 1:]
         self.data = map(f, self.data)
+        if insert_left:
+            for y in xrange(self.height):
+                if self.has_bar(x + 1, y, "left"):
+                    self.data[y][x + 1]["bar"]["left"] = False
+                    self.data[y][x]["bar"]["left"] = True
             
     def remove_column(self, x):
         """Remove the column at horizontal coordinate x."""
