@@ -680,6 +680,16 @@ class GridTestCase(unittest.TestCase):
         clue = self.grid.get_clues(self.grid.width - 1, 4)
         self.assertEquals("down" in clue, True)
         self.assertEquals(clue["down"]["text"], "E")
+
+    def testShiftGridUpBars(self):
+        self.grid.set_bar(1, 1, "top", True)
+        self.grid.shift_up()
+        self.assertEquals(self.grid.has_bar(1, 0, "top"), False)
+        
+    def testShiftGridLeftBars(self):
+        self.grid.set_bar(1, 1, "left", True)
+        self.grid.shift_left()
+        self.assertEquals(self.grid.has_bar(0, 1, "left"), False)
         
     def testModifyCharDirty(self):
         self.grid.store_clue(0, 0, "across", "text", "A")

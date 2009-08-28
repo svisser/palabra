@@ -476,6 +476,8 @@ class Grid:
         dirty = [(x, y, "down") for x in xrange(self.width) for y in [0, self.height - 1]]
         self._clear_clues(dirty)
         self.data = self.data[1:] + [[self._default_cell() for x in range(self.width)]]
+        for x in xrange(self.width):
+            self.data[0][x]["bar"]["top"] = False
         
     def shift_down(self):
         """
@@ -498,6 +500,8 @@ class Grid:
         dirty = [(x, y, "across") for y in xrange(self.height) for x in [0, self.width - 1]]
         self._clear_clues(dirty)
         self.data = map(lambda x: x[1:] + [self._default_cell()], self.data)
+        for y in xrange(self.height):
+            self.data[y][0]["bar"]["left"] = False
 
     def shift_right(self):
         """
