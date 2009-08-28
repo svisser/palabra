@@ -984,8 +984,13 @@ class PalabraWindow(gtk.Window):
             , title=u"Clear _all"
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_bars)
+            , u"Clear the bars and the involved clues of the puzzle"
+            , title=u"Clear _bars"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_chars)
-            , u"Clear the letters and the clues of the puzzle"
+            , u"Clear the letters and the involved clues of the puzzle"
             , title=u"Clear _letters"
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(

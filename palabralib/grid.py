@@ -556,6 +556,12 @@ class Grid:
     def clear(self):
         """Clear the content of the grid."""
         self.initialize(self.width, self.height)
+        
+    def clear_bars(self):
+        """Clear the bars of the grid."""
+        for x, y in self.cells():
+            self.set_bar(x, y, "top", False)
+            self.set_bar(x, y, "left", False)
                 
     def clear_chars(self):
         """Clear the characters of the grid."""

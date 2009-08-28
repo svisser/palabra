@@ -438,6 +438,15 @@ class GridTestCase(unittest.TestCase):
             for y in range(self.grid.height):
                 self.assertEqual(self.grid.get_char(x, y), "")
                 
+    def testClearBars(self):
+        for x, y in self.grid.cells():
+            self.grid.set_bar(x, y, "top", True)
+            self.grid.set_bar(x, y, "left", True)
+        self.grid.clear_bars()
+        for x, y in self.grid.cells():
+            self.assertEqual(self.grid.has_bar(x, y, "top"), False)
+            self.assertEqual(self.grid.has_bar(x, y, "left"), False)
+                
     def testCells(self):
         n = sum([1 for x, y in self.grid.cells()])
         self.assertEquals(n, self.grid.width * self.grid.height)
