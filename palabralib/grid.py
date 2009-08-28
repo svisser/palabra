@@ -275,14 +275,16 @@ class Grid:
                 word += c
         return word
         
-    def decompose_word(self, word, x, y, direction):
-        sx, sy = self.get_start_word(x, y, direction)
+    @staticmethod
+    def decompose_word(word, x, y, direction):
+        """Decompose the word starting at (x, y) in the given direction into tuples."""
         if direction == "across":
-            return [(sx + i, sy, word[i]) for i in xrange(len(word))]
+            return [(x + i, y, word[i]) for i in xrange(len(word))]
         elif direction == "down":
-            return [(sx, sy + j, word[j]) for j in xrange(len(word))]
+            return [(x, y + j, word[j]) for j in xrange(len(word))]
             
     def gather_constraints(self, x, y, direction):
+        """Create a list of all chars by position of the specified word."""
         word = self.gather_word(x, y, direction, "?")
         return [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
                 
@@ -588,6 +590,7 @@ class Grid:
         return self.is_valid(x, y) and not self.is_block(x, y)
         
     def get_size(self):
+        """Return a tuple containing the width and height of the grid."""
         return (self.width, self.height)
         
     size = property(get_size)

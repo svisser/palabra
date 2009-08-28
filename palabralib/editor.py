@@ -291,8 +291,10 @@ class Editor(gtk.HBox):
         def insert(word):
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
+            direction = self.settings["direction"]
             if self.puzzle.grid.is_available(x, y):
-                w = self.puzzle.grid.decompose_word(word, x, y, self.settings["direction"])
+                p, q = self.puzzle.grid.get_start_word(x, y, direction)
+                w = self.puzzle.grid.decompose_word(word, p, q, direction)
                 self._insert_word(w)
         def toggle(status):
             self.settings["show_intersecting_words"] = status
