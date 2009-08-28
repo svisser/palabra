@@ -795,7 +795,7 @@ class PalabraWindow(gtk.Window):
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Show or hide the word numbers in the editor")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.CheckMenuItem(u"Show _word numbers", True)
+        item = gtk.CheckMenuItem(u"_Word numbers", True)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)
@@ -889,8 +889,33 @@ class PalabraWindow(gtk.Window):
             , u"Edit the appearance of the puzzle"
             , title=u"Edit _appearance..."
             , is_puzzle_sensitive=True))
+            
+        menu.append(gtk.SeparatorMenuItem())
+        
+        item = self.create_grid_transform_menu()
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
+        menu.append(item)
+        
+        item = self.create_grid_clear_menu()
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
+        menu.append(item)
         
         menu.append(gtk.SeparatorMenuItem())
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.resize_grid()
+            , u"Change the size of the grid"
+            , title=u"_Resize grid..."
+            , is_puzzle_sensitive=True))
+        
+        grid_menu = gtk.MenuItem(u"_Grid", True)
+        grid_menu.set_submenu(menu)
+        return grid_menu
+        
+    def create_grid_transform_menu(self):
+        menu = gtk.Menu()
         
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.shift_grid_up)
@@ -916,31 +941,23 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
-            lambda item: self.resize_grid()
-            , u"Change the size of the grid"
-            , title=u"_Resize grid..."
-            , is_puzzle_sensitive=True))
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        menu.append(self._create_menu_item(
             lambda item: self.perform_selection_based_transform(transform.insert_row_above)
-            , u"Insert an empty row above this cell"
+            , u"Insert an empty row above the selected cell"
             , title=u"Insert row (above)"
             , is_selection_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.perform_selection_based_transform(transform.insert_row_below)
-            , u"Insert an empty row below this cell"
+            , u"Insert an empty row below the selected cell"
             , title=u"Insert row (below)"
             , is_selection_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.perform_selection_based_transform(transform.insert_column_left)
-            , u"Insert an empty column to the left of this cell"
+            , u"Insert an empty column to the left of the selected cell"
             , title=u"Insert column (left)"
             , is_selection_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.perform_selection_based_transform(transform.insert_column_right)
-            , u"Insert an empty column to the right of this cell"
+            , u"Insert an empty column to the right of the selected cell"
             , title=u"Insert column (right)"
             , is_selection_sensitive=True))
         
@@ -948,17 +965,17 @@ class PalabraWindow(gtk.Window):
         
         menu.append(self._create_menu_item(
             lambda item: self.perform_selection_based_transform(transform.remove_row)
-            , u"Remove the row containing this cell"
+            , u"Remove the row containing the selected cell"
             , title=u"Remove row"
             , is_selection_sensitive=True
             , condition=lambda puzzle: puzzle.grid.height > 3))
         menu.append(self._create_menu_item(
             lambda item: self.perform_selection_based_transform(transform.remove_column)
-            , u"Remove the column containing this cell"
+            , u"Remove the column containing the selected cell"
             , title=u"Remove column"
             , is_selection_sensitive=True
             , condition=lambda puzzle: puzzle.grid.width > 3))
-        
+            
         menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
@@ -977,32 +994,37 @@ class PalabraWindow(gtk.Window):
             , title=u"Flip _diagonally"
             , is_puzzle_sensitive=True))
         
-        menu.append(gtk.SeparatorMenuItem())
+        flip_menu = gtk.MenuItem(u"_Transform", True)
+        flip_menu.set_submenu(menu)
+        return flip_menu
+        
+    def create_grid_clear_menu(self):
+        menu = gtk.Menu()
         
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_all)
-            , u"Clear the blocks, the letters and the clues of the puzzle"
-            , title=u"Clear _all"
+            , u"Clear all the content of the puzzle"
+            , title=u"_All"
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_bars)
             , u"Clear the bars and the involved clues of the puzzle"
-            , title=u"Clear _bars"
+            , title=u"_Bars"
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_chars)
             , u"Clear the letters and the involved clues of the puzzle"
-            , title=u"Clear _letters"
+            , title=u"_Letters"
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_clues)
             , u"Clear the clues of the puzzle"
-            , title=u"Clear clu_es"
+            , title=u"_Clues"
             , is_puzzle_sensitive=True))
         
-        grid_menu = gtk.MenuItem(u"_Grid", True)
-        grid_menu.set_submenu(menu)
-        return grid_menu
+        clear_menu = gtk.MenuItem(u"_Clear", True)
+        clear_menu.set_submenu(menu)
+        return clear_menu
     
     def create_word_menu(self):
         menu = gtk.Menu()
