@@ -76,6 +76,9 @@ class GridViewProperties:
         self.margin_x = 10
         self.margin_y = 10
         
+        self.bar = {}
+        self.bar["width"] = 5
+        
         self.block = {}
         self.block["color"] = (0, 0, 0)
         self.block["margin"] = 0
@@ -313,6 +316,15 @@ class GridView:
         
     def render_lines(self, context, area):
         """Render the internal lines of the grid (i.e., all lines except the border)."""
+        def render_line(context, props, rx, ry, rdx, rdy, bar):
+            if bar:
+                context.set_line_width(props.bar["width"])
+            context.move_to(rx, ry)
+            context.rel_line_to(rdx, rdy)
+            context.stroke()
+            if bar:
+                context.set_line_width(props.line["width"])
+        
         def render(context, grid, props):
             context.set_line_width(props.line["width"])
             for x, y in grid.cells():
@@ -331,17 +343,17 @@ class GridView:
                 # only render when cell intersects the specified area
                 if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
                     if y > 0:
-                        # north
-                        context.move_to(sx, sy - 0.5 * props.line["width"])
-                        context.rel_line_to(props.cell["size"], 0)
-                    if x < grid.width - 1:
-                        # east
-                        context.move_to(sx + props.cell["size"] + 0.5 * props.line["width"], sy)
-                        length = props.cell["size"]
+                        ry = sy - 0.5 * props.line["width"]
+                        rdx = props.cell["size"]
+                        bar = grid.has_bar(x, y, "top")
+                        render_line(context, props, sx, ry, rdx, 0, bar)
+                    if x > 0:
+                        rx = sx - 0.5 * props.line["width"]
+                        rdy = props.cell["size"]
                         if y < grid.height - 1:
-                            length += props.line["width"]
-                        context.rel_line_to(0, length)
-                context.stroke()
+                            rdy += props.line["width"]
+                        bar = grid.has_bar(x, y, "left")
+                        render_line(context, props, rx, sy, 0, rdy, bar)
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
         self._render(context, render, color=color)
         

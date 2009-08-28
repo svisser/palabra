@@ -31,6 +31,7 @@ class Grid:
         cell["block"] = False
         cell["char"] = ""
         cell["clues"] = {}
+        cell["bar"] = {"top": False, "left": False}
         return cell
 
     def set_data(self, width, height, chars, blocks):
@@ -623,3 +624,9 @@ class Grid:
         
     def is_char(self, x, y):
         return self.data[y][x]["char"] != ''
+        
+    def has_bar(self, x, y, side):
+        return self.data[y][x]["bar"][side]
+        
+    def set_bar(self, x, y, side, status):
+        self.data[y][x]["bar"][side] = status
