@@ -18,6 +18,7 @@
 import gobject
 import gtk
 import os
+import webbrowser
 
 import action
 from appearance import AppearanceDialog, apply_appearance
@@ -1057,6 +1058,9 @@ class PalabraWindow(gtk.Window):
         help_menu.set_submenu(menu)
         return help_menu
         
+    def on_click_website(self, dialog, link, data=None):
+        webbrowser.open(link)
+        
     def on_help_about_activate(self, widget, data=None):
         dialog = gtk.AboutDialog()
         dialog.set_title(u"About Palabra")
@@ -1065,6 +1069,8 @@ class PalabraWindow(gtk.Window):
         dialog.set_version(constants.VERSION)
         dialog.set_authors([u"Simeon Visser"])
         dialog.set_copyright(u"Copyright 2009 Simeon Visser")
+        gtk.about_dialog_set_url_hook(self.on_click_website)
+        dialog.set_website(u"http://bitbucket.org/svisser/palabra/wiki/Home")
         dialog.set_license(u"""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
                 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
