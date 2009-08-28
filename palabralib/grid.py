@@ -304,12 +304,6 @@ class Grid:
         """Return the length of the word starting at (x, y) in the given direction."""
         return sum([1 for x, y in self.in_direction(direction, x, y)])
         
-    def line(self, x, y, direction):
-        """Iterate in the given direction from (x, y)."""
-        dx = 1 if direction == "across" else 0
-        dy = 1 if direction == "down" else 0
-        return self._start_from(x, y, dx, dy)
-        
     def in_direction(self, direction, x, y, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
         dx = 1 if direction == "across" else 0
@@ -317,16 +311,18 @@ class Grid:
         if reverse:
             dx *= -1
             dy *= -1
-        return self._start_from(x, y, dx, dy, self.is_block)
-                
-    def _start_from(self, x, y, delta_x, delta_y, predicate=None):
-        """Repeatedly add the delta to (x, y) until the predicate becomes True."""
-        while self.is_valid(x, y):
-            if predicate is not None and predicate(x, y):
-                break
+        while self.is_available(x, y):
             yield x, y
-            x += delta_x
-            y += delta_y
+            if dx == 1 and self.is_valid(x + dx, y) and self.has_bar(x + dx, y, "left"):
+                break
+            if dx == -1 and self.has_bar(x, y, "left"):
+                break
+            if dy == 1 and self.is_valid(x, y + dy) and self.has_bar(x, y + dy, "top"):
+                break
+            if dy == -1 and self.has_bar(x, y, "top"):
+                break
+            x += dx
+            y += dy
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
