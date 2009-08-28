@@ -115,9 +115,11 @@ class Grid:
             return -1
             
         check_count = 0
-        if self.is_available(x, y + 1) or self.is_available(x, y - 1):
+        if ((self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top"))
+            or (self.is_available(x, y - 1) and not self.has_bar(x, y, "top"))):
             check_count += 1
-        if self.is_available(x + 1, y) or self.is_available(x - 1, y):
+        if ((self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left"))
+            or (self.is_available(x - 1, y) and not self.has_bar(x, y, "left"))):
             check_count += 1
         return check_count
 

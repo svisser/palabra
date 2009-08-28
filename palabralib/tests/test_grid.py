@@ -166,7 +166,7 @@ class GridTestCase(unittest.TestCase):
             self.assertEqual(p, 0)
             self.assertEqual(q, 6)
             
-    def testCheckCount(self):
+    def testCheckCountBlocks(self):
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
         self.grid.set_block(4, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
@@ -178,6 +178,18 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(self.grid.get_check_count(5, 5), 0)
         self.grid.set_block(5, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), -1)
+        
+    def testCheckCountBars(self):
+        self.grid.set_bar(5, 5, "left", True)
+        self.grid.set_bar(6, 5, "left", True)
+        self.assertEqual(self.grid.get_check_count(5, 5), 1)
+        self.grid.set_bar(5, 5, "top", True)
+        self.grid.set_bar(5, 6, "top", True)
+        self.assertEqual(self.grid.get_check_count(5, 5), 0)
+        self.grid.set_bar(1, 1, "left", True)
+        self.assertEqual(self.grid.get_check_count(0, 1), 1)
+        self.grid.set_bar(1, 1, "top", True)
+        self.assertEqual(self.grid.get_check_count(1, 0), 1)
         
     def testInDirectionNormal(self):
         cells = [(x, 0) for x in xrange(self.grid.width)]
