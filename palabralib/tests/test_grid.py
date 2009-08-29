@@ -182,17 +182,31 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_block(1, 0, True)
         self.assertEqual(self.grid.is_start_word(0, 0), False)
         
-    def testGetStartHorizontalWord(self):
+    def testGetStartWordOne(self):
+        """All cells in a word return the first cell as the word's start."""
         for x in range(self.grid.width):
             p, q = self.grid.get_start_horizontal_word(x, 0)
             self.assertEqual(p, 0)
             self.assertEqual(q, 0)
-            
+        for y in range(self.grid.height):
+            p, q = self.grid.get_start_vertical_word(0, y)
+            self.assertEqual(p, 0)
+            self.assertEqual(q, 0)
+        
+    def testGetStartWordTwo(self):
+        """Return the cell itself when the start is requested of a block."""   
         self.grid.set_block(5, 0, True)
         p, q = self.grid.get_start_horizontal_word(5, 0)
         self.assertEqual(p, 5)
         self.assertEqual(q, 0)
+        self.grid.set_block(0, 5, True)
+        p, q = self.grid.get_start_vertical_word(0, 5)
+        self.assertEqual(p, 0)
+        self.assertEqual(q, 5)
         
+    def testGetStartWordThree(self):
+        """A block splits a word into two."""
+        self.grid.set_block(5, 0, True)
         for x in range(0, 5):
             p, q = self.grid.get_start_horizontal_word(x, 0)
             self.assertEqual(p, 0)
@@ -201,18 +215,7 @@ class GridTestCase(unittest.TestCase):
             p, q = self.grid.get_start_horizontal_word(x, 0)
             self.assertEqual(p, 6)
             self.assertEqual(q, 0)
-            
-    def testGetStartVerticalWord(self):
-        for y in range(self.grid.height):
-            p, q = self.grid.get_start_vertical_word(0, y)
-            self.assertEqual(p, 0)
-            self.assertEqual(q, 0)
-            
         self.grid.set_block(0, 5, True)
-        p, q = self.grid.get_start_vertical_word(0, 5)
-        self.assertEqual(p, 0)
-        self.assertEqual(q, 5)
-        
         for y in range(0, 5):
             p, q = self.grid.get_start_vertical_word(0, y)
             self.assertEqual(p, 0)
@@ -223,6 +226,7 @@ class GridTestCase(unittest.TestCase):
             self.assertEqual(q, 6)
             
     def testCheckCountBlocks(self):
+        """Check counts range from -1 to 2 for blocks to default cells."""
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
         self.grid.set_block(4, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
@@ -236,6 +240,7 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(self.grid.get_check_count(5, 5), -1)
         
     def testCheckCountBars(self):
+        """Bars influence the check count of a cell."""
         self.grid.set_bar(5, 5, "left", True)
         self.grid.set_bar(6, 5, "left", True)
         self.assertEqual(self.grid.get_check_count(5, 5), 1)
@@ -248,6 +253,7 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(self.grid.get_check_count(1, 0), 1)
         
     def testInDirectionNormal(self):
+        """Direction iterator returns all cells in the given direction."""
         cells = [(x, 0) for x in xrange(self.grid.width)]
         indir = [(x, y) for x, y in self.grid.in_direction("across", 0, 0)]
         self.assertEqual(cells, indir)
@@ -256,6 +262,9 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(cells, indir)
         
     def testInDirectionReverse(self):
+        """
+        Direction iterator returns all cells in the given direction (in reverse).
+        """
         cells = [(x, 0) for x in xrange(self.grid.width - 1, -1, -1)]
         indir = [(x, y) for x, y
             in self.grid.in_direction("across", self.grid.width - 1, 0, True)]
