@@ -666,7 +666,12 @@ class Grid:
         return self.data[y][x]["clues"]
         
     def set_block(self, x, y, status):
-        self._clear_clues_related_to_cell(x, y)
+        if status:
+            self._clear_clues_related_to_cell(x, y)
+        else:
+            for p, q in [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]:
+                if self.is_valid(p, q):
+                    self._clear_clues_related_to_cell(p, q)
         self.data[y][x]["block"] = status
         
     def is_block(self, x, y):

@@ -723,6 +723,22 @@ class GridTestCase(unittest.TestCase):
                 self.grid.set_block(x, y, True)
         self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "E")
         
+    def test_modify_block_dirty_three(self):
+        """
+        Removing a block should remove clues of words that
+        touch the cell that had the block.
+        """
+        self.grid.set_block(5, 5, True)
+        self.grid.store_clue(5, 0, "down", "text", "A")
+        self.grid.store_clue(0, 5, "across", "text", "B")
+        self.grid.store_clue(6, 5, "across", "text", "C")
+        self.grid.store_clue(5, 6, "down", "text", "D")
+        self.grid.set_block(5, 5, False)
+        self.assertEquals("down" in self.grid.get_clues(5, 0), False)
+        self.assertEquals("across" in self.grid.get_clues(0, 5), False)
+        self.assertEquals("across" in self.grid.get_clues(6, 5), False)
+        self.assertEquals("down" in self.grid.get_clues(5, 6), False)
+        
     def testSetBarDirtyOne(self):
         self.grid.store_clue(0, 0, "across", "text", "A")
         self.grid.store_clue(0, 0, "down", "text", "B")
