@@ -49,13 +49,12 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.set_block(0, 0, True)
         self.puzzle.grid.set_char(1, 1, "A")
         self.puzzle.grid.cell(2, 2)["clues"]["across"] = clues
+        self.puzzle.grid.cell(3, 3)["bar"]["top"] = True
+        self.puzzle.grid.cell(4, 4)["bar"]["left"] = True
         self.puzzle.metadata = {"title": "A", "author": "B"}
     
         write_crossword_to_xml(self.puzzle)
         puzzle = read_crossword(self.LOCATION)
-        self.assertEqual(puzzle.grid.is_block(0, 0), True)
-        self.assertEqual(puzzle.grid.get_char(1, 1), "A")
-        self.assertEqual(puzzle.grid.cell(2, 2)["clues"]["across"], clues)
         for x, y in self.puzzle.grid.cells():
             self.assertEqual(puzzle.grid.cell(x, y), self.puzzle.grid.cell(x, y))
         self.assertEqual(puzzle.metadata["title"], "A")

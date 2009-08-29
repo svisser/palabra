@@ -106,7 +106,9 @@ def _read_cell(e):
     else:
         c["char"] = ""
     c["clues"] = {}
-    c["bar"] = {"top": False, "left": False}
+    c["bar"] = {}
+    c["bar"]["top"] = e.get("top-bar") == "true"
+    c["bar"]["left"] = e.get("left-bar") == "true"
     return x, y, c
     
 def _write_cell(parent, x, y, cell):
@@ -118,6 +120,10 @@ def _write_cell(parent, x, y, cell):
             e.text = cell["char"]
     e.set("x", str(x + 1))
     e.set("y", str(y + 1))
+    if cell["bar"]["top"]:
+        e.set("top-bar", "true")
+    if cell["bar"]["left"]:
+        e.set("left-bar", "true")
     
 def _read_grid(e):
     width = int(e.get("width"))

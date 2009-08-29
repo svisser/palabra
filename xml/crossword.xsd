@@ -27,10 +27,16 @@
     <xs:attribute name="y" type="integer_at_least_one" use="required" />
 </xs:attributeGroup>
 
+<xs:attributeGroup name="cell_props">
+    <xs:attribute name="top-bar" type="xs:boolean" default="false" />
+    <xs:attribute name="left-bar" type="xs:boolean" default="false" />
+</xs:attributeGroup>
+
 <xs:complexType name="letter_type">
     <xs:simpleContent>
         <xs:extension base="xs:string">
             <xs:attributeGroup ref="cell_attrs" />
+            <xs:attributeGroup ref="cell_props" />
         </xs:extension>
     </xs:simpleContent>
 </xs:complexType>
@@ -41,6 +47,7 @@
         <xs:element name="block">
             <xs:complexType>
                 <xs:attributeGroup ref="cell_attrs" />
+                <xs:attributeGroup ref="cell_props" />
             </xs:complexType>
         </xs:element>
     </xs:choice>
