@@ -104,20 +104,23 @@ class GridViewProperties:
         self.number["font"] = "Sans 7"
     
     def grid_to_screen_x(self, x, include_padding=True):
-        """Returns the x-coordinate of the cell's upper-left corner."""
+        """Return the x-coordinate of the cell's upper-left corner."""
         result = self.border["width"] + x * (self.cell["size"] + self.line["width"])
         if include_padding:
             result += self.margin_x
         return result
         
     def grid_to_screen_y(self, y, include_padding=True):
-        """Returns the y-coordinate of the cell's upper-left corner."""
+        """Return the y-coordinate of the cell's upper-left corner."""
         result = self.border["width"] + y * (self.cell["size"] + self.line["width"])
         if include_padding:
             result += self.margin_y
         return result
         
     def screen_to_grid_x(self, screen_x):
+        """
+        Return the x-coordinate of the cell based on the x-coordinate on screen.
+        """
         for x in range(self.grid.width):
             left_x = self.grid_to_screen_x(x)
             right_x = self.grid_to_screen_x(x) + self.cell["size"]
@@ -126,13 +129,16 @@ class GridViewProperties:
         return -1
         
     def screen_to_grid_y(self, screen_y):
+        """
+        Return the y-coordinate of the cell based on the y-coordinate on screen.
+        """
         for y in range(self.grid.height):
             top_y = self.grid_to_screen_y(y)
             bottom_y = self.grid_to_screen_y(y) + self.cell["size"]
             if screen_y >= top_y and screen_y < bottom_y:
                 return y
         return -1
-        
+       
     def visual_width(self, include_padding=True):
         width = (2 * self.border["width"] + self.grid.width * self.cell["size"]
             + (self.grid.width - 1) * self.line["width"])
@@ -148,10 +154,18 @@ class GridViewProperties:
         return height
         
     def get_grid_width(self):
-        return self.border["width"] + self.grid.width * (self.cell["size"] + self.line["width"])
+        """Return the width of the grid."""
+        w = 2 * self.border["width"]
+        w += self.grid.width * self.cell["size"]
+        w += (self.grid.width - 1) * self.line["width"]
+        return w
         
     def get_grid_height(self):
-        return self.border["width"] + self.grid.height * (self.cell["size"] + self.line["width"])
+        """Return the height of the grid."""
+        h = 2 * self.border["width"]
+        h += self.grid.height * self.cell["size"]
+        h += (self.grid.height - 1) * self.line["width"]
+        return h
 
 class GridView:
     def __init__(self, grid):
@@ -503,8 +517,8 @@ class GridView:
         def render(context, grid, props):
             bx = self.properties.border["width"]
             by = self.properties.border["width"]
-            bwidth = self.properties.get_grid_width() - self.properties.line["width"]
-            bheight = self.properties.get_grid_height() - self.properties.line["width"]
+            bwidth = self.properties.get_grid_width() - self.properties.border["width"]
+            bheight = self.properties.get_grid_height() - self.properties.border["width"]
             
             b = gtk.gdk.Rectangle(bx, by, bwidth, bheight)
             a = self._determine_area(area)
