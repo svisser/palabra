@@ -602,7 +602,7 @@ class GridView:
             drawing_area.queue_draw_area(rx, ry, size, size)
             
     # needs manual queue_draw() on drawing_area afterwards
-    def update_visual_size(self, drawing_area):
+    def refresh_visual_size(self, drawing_area):
         """Recalculate the visual width and height and resize the drawing area."""
         visual_width = self.properties.visual_width()
         visual_height = self.properties.visual_height()

@@ -109,7 +109,7 @@ class PalabraWindow(gtk.Window):
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(drawing_area)
         
-        self.puzzle_manager.current_puzzle.view.update_visual_size(drawing_area)
+        self.puzzle_manager.current_puzzle.view.refresh_visual_size(drawing_area)
         drawing_area.queue_draw()
         
         self.editor = Editor(self, drawing_area, self.puzzle_manager.current_puzzle)
@@ -574,7 +574,6 @@ class PalabraWindow(gtk.Window):
             width, height = window.get_size()
             if (self.puzzle_manager.current_puzzle.grid.size != (width, height)):
                 self.transform_grid(transform.resize_grid, width=width, height=height)
-                self.editor.refresh_visual_size()
         window.destroy()
         
     def view_preferences(self):
@@ -744,6 +743,7 @@ class PalabraWindow(gtk.Window):
         
         try:
             self.editor.refresh_words()
+            self.editor.refresh_visual_size()
         except AttributeError:
             pass
         self.panel.queue_draw()
@@ -865,7 +865,6 @@ class PalabraWindow(gtk.Window):
         if response == gtk.RESPONSE_OK:
             properties = self.puzzle_manager.current_puzzle.view.properties
             apply_appearance(properties, editor.gather_appearance())
-            self.editor.refresh_visual_size()
             self.update_window()
         editor.destroy()
 

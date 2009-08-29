@@ -155,7 +155,7 @@ class Editor(gtk.HBox):
         self._display_overlay([])
         
     def refresh_visual_size(self):
-        self.puzzle.view.update_visual_size(self.drawing_area)
+        self.puzzle.view.refresh_visual_size(self.drawing_area)
 
     def on_expose_event(self, drawing_area, event):
         context = drawing_area.window.cairo_create()
