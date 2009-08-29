@@ -6,7 +6,7 @@ Version 0.1.1 (unreleased)
 * XML files are validated against XML schema.
 * Word lists can be used to populate the grid.
 * Speed improvements in rendering code.
-* Bars are now supported.
+* Support for bars.
 
 Version 0.1 (August 14, 2009)
 =============================
