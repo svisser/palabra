@@ -602,6 +602,12 @@ class Grid:
         for x, y in self.cells():
             self.set_bar(x, y, "top", False)
             self.set_bar(x, y, "left", False)
+            
+    def clear_blocks(self):
+        """Clear the blocks of the grid."""
+        for x, y in self.cells():
+            if self.is_block(x, y):
+                self.set_block(x, y, False)
                 
     def clear_chars(self):
         """Clear the characters of the grid."""

@@ -80,6 +80,11 @@ def clear_bars(puzzle):
     """Clear the bars of the grid and return an Action."""
     transform = lambda puzzle: puzzle.grid.clear_bars()
     return _full_transform(puzzle, transform)
+
+def clear_blocks(puzzle):
+    """Clear the blocks of the grid and return an Action."""
+    transform = lambda puzzle: puzzle.grid.clear_blocks()
+    return _full_transform(puzzle, transform)
     
 def clear_chars(puzzle):
     """Clear the characters of the grid and return an Action."""
