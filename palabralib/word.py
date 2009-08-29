@@ -18,6 +18,7 @@
 import copy
 import gobject
 import gtk
+import os
 import time
 
 class WordListEditor(gtk.Dialog):
@@ -210,8 +211,11 @@ def _process_word(word):
             return None
     return word
 
-def read_wordlist(filename):
-    f = open(filename, "r")
+def read_wordlist(path):
+    if not os.path.exists(path):
+        print "Error: The file", path, "does not exist."
+        return
+    f = open(path, "r")
     for line in f:
         word = _process_word(line)
         if word is not None:
