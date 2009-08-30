@@ -124,17 +124,17 @@ class AppearanceDialog(gtk.Dialog):
         label = create_label(u"Thickness")
         table.attach(label, 2, 3, 0, 1, gtk.FILL, gtk.FILL)
         
-        # lines
-        label = create_label(u"Line:")
-        self.line_color_button = create_color_button(self.properties.line["color"])
-        self.line_width_spinner = create_width_spinner(self.properties.line["width"])
-        create_row(table, 1, label, self.line_color_button, self.line_width_spinner)
-        
         # border
         label = create_label(u"Border:")
         self.border_color_button = create_color_button(self.properties.border["color"])
         self.border_width_spinner = create_width_spinner(self.properties.border["width"])
-        create_row(table, 2, label, self.border_color_button, self.border_width_spinner)
+        create_row(table, 1, label, self.border_color_button, self.border_width_spinner)
+        
+        # lines
+        label = create_label(u"Line:")
+        self.line_color_button = create_color_button(self.properties.line["color"])
+        self.line_width_spinner = create_width_spinner(self.properties.line["width"])
+        create_row(table, 2, label, self.line_color_button, self.line_width_spinner)
         
         # cells
         label = create_label(u"Color")
