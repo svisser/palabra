@@ -183,20 +183,8 @@ class Editor(gtk.HBox):
             r = preferences.prefs["color_secondary_active_red"] / 65535.0
             g = preferences.prefs["color_secondary_active_green"] / 65535.0
             b = preferences.prefs["color_secondary_active_blue"] / 65535.0
-            if self.settings["keep_horizontal_symmetry"]:
-                x = self.current_x
-                y = (self.puzzle.grid.height - 1) - self.current_y
-                self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
-            if self.settings["keep_vertical_symmetry"]:
-                x = (self.puzzle.grid.width - 1) - self.current_x
-                y = self.current_y
-                self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
-            if ((self.settings["keep_horizontal_symmetry"] and
-                self.settings["keep_vertical_symmetry"]) or
-                self.settings["keep_point_symmetry"]):
-                x = (self.puzzle.grid.width - 1) - self.current_x
-                y = (self.puzzle.grid.height - 1) - self.current_y
-                self.puzzle.view.render_location(context, event.area, x, y, r, g, b)
+            for p, q in self.apply_symmetry(self.current_x, self.current_y):
+                self.puzzle.view.render_location(context, event.area, p, q, r, g, b)
                 
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
@@ -298,7 +286,9 @@ class Editor(gtk.HBox):
             self.tools["word"].display([])
         
     def get_word_tool_callbacks(self):
+        """Return the callback functions for the word tool in the main window."""
         def insert(word):
+            """Insert a word in the selected slot."""
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
             direction = self.settings["direction"]
@@ -307,9 +297,13 @@ class Editor(gtk.HBox):
                 w = self.puzzle.grid.decompose_word(word, p, q, direction)
                 self._insert_word(w)
         def toggle(status):
+            """Toggle the status of the intersecting words option."""
             self.settings["show_intersecting_words"] = status
             self.refresh_words(True)
         def overlay(word):
+            """
+            Display the word in the selected slot without storing it the grid.
+            """
             if word is not None:
                 x = self.settings["selection_x"]
                 y = self.settings["selection_y"]
@@ -325,9 +319,10 @@ class Editor(gtk.HBox):
         return {"insert": insert, "toggle": toggle, "overlay": overlay}
         
     def _display_overlay(self, new):
-        copy = self.puzzle.view.overlay
+        """Display the (x, y, c) items in the grid's overlay."""
+        old = self.puzzle.view.overlay
         self.puzzle.view.overlay = new
-        for x, y, c in (copy + new):
+        for x, y, c in (old + new):
             self.puzzle.view.refresh_location(self.drawing_area, x, y)
         
     def _get_search_parameters(self, x, y, direction):
@@ -354,6 +349,7 @@ class Editor(gtk.HBox):
         return result
     
     def _insert_word(self, chars):
+        """Insert a word by storing the list of (x, y, c) items in the grid."""
         actual = [(x, y, c.upper()) for x, y, c in chars
             if self.puzzle.grid.get_char(x, y) != c.upper()]
         if len(actual) > 0:
@@ -367,42 +363,41 @@ class Editor(gtk.HBox):
             ]
         for key in symmetries:
             self.settings[key] = key in options
-        
-    def refresh_symmetry(self, drawing_area, main_x, main_y):
+            
+    def apply_symmetry(self, x, y):
+        """Apply one or more symmetrical transforms to (x, y)."""
+        names = []
         if self.settings["keep_horizontal_symmetry"]:
-            x = main_x
-            y = (self.puzzle.grid.height - 1) - main_y
-            self.puzzle.view.refresh_location(drawing_area, x, y)
+            names.append("horizontal")
         if self.settings["keep_vertical_symmetry"]:
-            x = (self.puzzle.grid.width - 1) - main_x
-            y = main_y
-            self.puzzle.view.refresh_location(drawing_area, x, y)
-        if ((self.settings["keep_horizontal_symmetry"] and
-            self.settings["keep_vertical_symmetry"]) or
-            self.settings["keep_point_symmetry"]):
-            x = (self.puzzle.grid.width - 1) - main_x
-            y = (self.puzzle.grid.height - 1) - main_y
-            self.puzzle.view.refresh_location(drawing_area, x, y)
+            names.append("vertical")
+        if self.settings["keep_point_symmetry"]:
+            names.append("point")
+        
+        if "horizontal" in names:
+            yield x, self.puzzle.grid.height - 1 - y
+        if "vertical" in names:
+            yield self.puzzle.grid.width - 1 - x, y
+        if (("horizontal" in names and "vertical" in names)
+            or "point" in names):
+            p = self.puzzle.grid.width - 1 - x
+            q = self.puzzle.grid.height - 1 - y
+            yield p, q
+        
+    def refresh_symmetry(self, drawing_area, x, y):
+        """
+        Refresh the cells that correspond to the current symmetry settings.
+        """
+        for p, q in self.apply_symmetry(x, y):
+            self.puzzle.view.refresh_location(drawing_area, p, q)
 
     def transform_blocks(self, x, y, status):
+        """Place or remove a block at (x, y) and its symmetrical cells."""
         blocks = []
+        
         if status != self.puzzle.grid.is_block(x, y):
             blocks.append((x, y, status))
-        if self.settings["keep_horizontal_symmetry"]:
-            p = x
-            q = self.puzzle.grid.height - 1 - y
-            if status != self.puzzle.grid.is_block(p, q):
-                blocks.append((p, q, status))
-        if self.settings["keep_vertical_symmetry"]:
-            p = self.puzzle.grid.width - 1 - x
-            q = y
-            if status != self.puzzle.grid.is_block(p, q):
-                blocks.append((p, q, status))
-        if ((self.settings["keep_horizontal_symmetry"] and
-            self.settings["keep_vertical_symmetry"]) or
-            self.settings["keep_point_symmetry"]):
-            p = self.puzzle.grid.width - 1 - x
-            q = self.puzzle.grid.height - 1 - y
+        for p, q in self.apply_symmetry(x, y):
             if status != self.puzzle.grid.is_block(p, q):
                 blocks.append((p, q, status))
         if len(blocks) > 0:
@@ -448,17 +443,15 @@ class Editor(gtk.HBox):
     def on_backspace(self, drawing_area, event):
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
+        direction = self.settings["direction"]
         if self.puzzle.grid.get_char(x, y) != "":
             self.palabra_window.transform_grid(transform.modify_char
-                , x=self.settings["selection_x"]
-                , y=self.settings["selection_y"]
+                , x=x
+                , y=y
                 , next_char="")
         else:
-            dx = -1 if self.settings["direction"] == "across" else 0
-            dy = -1 if self.settings["direction"] == "down" else 0
-            
-            x = self.settings["selection_x"] + dx
-            y = self.settings["selection_y"] + dy
+            x += (-1 if direction == "across" else 0)
+            y += (-1 if direction == "down" else 0)
             if self.puzzle.grid.is_available(x, y):
                 self.palabra_window.transform_grid(transform.modify_char
                     , x=x
@@ -503,6 +496,7 @@ class Editor(gtk.HBox):
         if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
+            direction = self.settings["direction"]
             if self.puzzle.grid.is_valid(x, y):
                 c = chr(event.keyval).capitalize()
                 
@@ -510,11 +504,11 @@ class Editor(gtk.HBox):
                         , x=x
                         , y=y
                         , next_char=c)
-                if self.settings["direction"] == "across":
+                if direction == "across":
                     if self.puzzle.grid.is_available(x + 1, y):
                         self.settings["selection_x"] += 1
                     self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-                elif self.settings["direction"] == "down":
+                elif direction == "down":
                     if self.puzzle.grid.is_available(x, y + 1):
                         self.settings["selection_y"] += 1
                     self.puzzle.view.refresh_vertical_line(drawing_area, x)
@@ -526,6 +520,9 @@ class Editor(gtk.HBox):
         self.refresh_words()
         self._display_overlay([])
         
+    def refresh_visual_size(self):
+        self.puzzle.view.refresh_visual_size(self.drawing_area)
+        
     def get_selection(self):
         return (self.settings["selection_x"], self.settings["selection_y"])
         
@@ -534,6 +531,3 @@ class Editor(gtk.HBox):
         self.settings["selection_y"] = y
         self.palabra_window.update_window()
         self._display_overlay([])
-        
-    def refresh_visual_size(self):
-        self.puzzle.view.refresh_visual_size(self.drawing_area)
