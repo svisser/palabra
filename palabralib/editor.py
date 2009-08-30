@@ -262,6 +262,10 @@ class Editor(gtk.HBox):
         return True
         
     def refresh_words(self, force_refresh=False):
+        """
+        Update the list of words according to active constraints of letters
+        and the current settings (e.g., show only words with intersections).
+        """
         show_intersecting = self.settings["show_intersecting_words"]
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
@@ -326,12 +330,24 @@ class Editor(gtk.HBox):
             self.puzzle.view.refresh_location(self.drawing_area, x, y)
         
     def _get_search_parameters(self, x, y, direction):
+        """Determine the length and the constraints of the word at (x, y, direction)."""
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
         length = self.puzzle.grid.word_length(p, q, direction)
         constraints = self.puzzle.grid.gather_constraints(p, q, direction)
         return (length, constraints)
         
     def _gather_all_constraints(self, x, y, direction):
+        """
+        Gather constraints of all intersecting words of the word at (x, y).
+        
+        This function returns a list with tuples that contain the
+        letters and positions of intersecting words. The item at place i of
+        the list corresponds to the intersecting word at position i.
+        
+        A tuple contains the position at which the word at
+        (x, y, direction) intersects the intersecting word, the length
+        of the intersecting word and the constraints.
+        """
         result = []
         other = {"across": "down", "down": "across"}
         sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
@@ -374,15 +390,17 @@ class Editor(gtk.HBox):
         if self.settings["keep_point_symmetry"]:
             names.append("point")
         
+        cells = []
         if "horizontal" in names:
-            yield x, self.puzzle.grid.height - 1 - y
+            cells.append((x, self.puzzle.grid.height - 1 - y))
         if "vertical" in names:
-            yield self.puzzle.grid.width - 1 - x, y
+            cells.append((self.puzzle.grid.width - 1 - x, y))
         if (("horizontal" in names and "vertical" in names)
             or "point" in names):
             p = self.puzzle.grid.width - 1 - x
             q = self.puzzle.grid.height - 1 - y
-            yield p, q
+            cells.append((p, q))
+        return cells
         
     def refresh_symmetry(self, drawing_area, x, y):
         """
@@ -395,11 +413,13 @@ class Editor(gtk.HBox):
         """Place or remove a block at (x, y) and its symmetrical cells."""
         blocks = []
         
+        # determine blocks that need to be modified
         if status != self.puzzle.grid.is_block(x, y):
             blocks.append((x, y, status))
         for p, q in self.apply_symmetry(x, y):
             if status != self.puzzle.grid.is_block(p, q):
                 blocks.append((p, q, status))
+                
         if len(blocks) > 0:
             self.palabra_window.transform_grid(transform.modify_blocks, blocks=blocks)
             x = self.settings["selection_x"]
@@ -441,25 +461,31 @@ class Editor(gtk.HBox):
         return True
         
     def on_backspace(self, drawing_area, event):
+        """Remove a character in the current or previous cell."""
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         direction = self.settings["direction"]
+        
+        # remove character in selected cell if it has one
         if self.puzzle.grid.get_char(x, y) != "":
             self.palabra_window.transform_grid(transform.modify_char
                 , x=x
                 , y=y
                 , next_char="")
         else:
+            # remove character in previous cell if needed and move selection
             x += (-1 if direction == "across" else 0)
             y += (-1 if direction == "down" else 0)
             if self.puzzle.grid.is_available(x, y):
-                self.palabra_window.transform_grid(transform.modify_char
-                    , x=x
-                    , y=y
-                    , next_char="")
+                if self.puzzle.grid.get_char(x, y) != "":
+                    self.palabra_window.transform_grid(transform.modify_char
+                        , x=x
+                        , y=y
+                        , next_char="")
                 self.set_selection(x, y)
             
     def on_arrow_key(self, drawing_area, event, dx, dy):
+        """Move the selection to an available nearby cell."""
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         if self.puzzle.grid.is_available(x + dx, y + dy):
@@ -473,6 +499,7 @@ class Editor(gtk.HBox):
             self.refresh_words()
         
     def _on_jump_to_cell(self, drawing_area, target):
+        """Jump to the start or end (i.e., first or last cell) of a word."""
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         direction = self.settings["direction"]
@@ -484,15 +511,18 @@ class Editor(gtk.HBox):
         self.puzzle.view.refresh_line(drawing_area, x, y, direction)
         
     def on_delete(self, drawing_area, event):
+        """Remove the character in the selected cell."""
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
-        self.palabra_window.transform_grid(transform.modify_char
-            , x=x
-            , y=y
-            , next_char="")
-        self.puzzle.view.refresh_location(drawing_area, x, y)
+        if self.puzzle.grid.get_char(x, y) != "":
+            self.palabra_window.transform_grid(transform.modify_char
+                , x=x
+                , y=y
+                , next_char="")
+            self.puzzle.view.refresh_location(drawing_area, x, y)
         
     def on_typing(self, drawing_area, event):
+        """Place an alphabetical character in the grid and move the selection."""
         if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
             x = self.settings["selection_x"]
             y = self.settings["selection_y"]
