@@ -22,7 +22,7 @@ import webbrowser
 
 import action
 from appearance import AppearanceDialog, apply_appearance
-from clue import ClueEditor
+from clue import ClueEditor, create_clue_editor
 import constants
 from export import ExportWindow, verify_output_options
 from editor import Editor, WordTool
@@ -48,7 +48,7 @@ class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
         self.set_title("Palabra")
-        self.set_size_request(800, 600)
+        self.set_size_request(1024, 768)
         
         self.puzzle_toggle_items = []
         self.selection_toggle_items = []
@@ -128,15 +128,30 @@ class PalabraWindow(gtk.Window):
         options = gtk.VBox(False, 0)
         options_vbox.pack_start(options, True, True, 0)
         
-        main = gtk.HBox(False, 0)
+        main = gtk.VBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
         
-        tools = gtk.HBox(False, 0)
-        tools.pack_start(word_tool.create(), False, False, 6)
+        #ex = gtk.Expander(u'<span weight="bold">Clues</span>')
+        #ex.set_use_markup(True)
+        #ex.add(create_clue_editor())
+        #main.pack_start(ex, False, False, 0)
+        
+        tabs = gtk.Notebook()
+        tabs.set_border_width(8)
+        tabs.set_size_request(288, -1)
+        tabs.set_show_border(False)
+        tabs.set_property("tab-hborder", 16)
+        tabs.set_property("tab-vborder", 8)
+        tabs.append_page(word_tool.create(), gtk.Label(u"Word"))
+        tabs.append_page(create_clue_editor(self.puzzle_manager.current_puzzle), gtk.Label(u"Clue"))
+        
+        #tools = gtk.VBox(False, 0)
+        #tools.pack_start(word_tool.create(), True, True, 6)
+        #tools.pack_start(create_clue_editor(), False, False, 6)
         
         all_hbox = gtk.HBox(False, 0)
         all_hbox.pack_start(main, True, True, 0)
-        all_hbox.pack_start(tools, False, False, 0)
+        all_hbox.pack_start(tabs, False, False, 0)
         self.panel.pack_start(all_hbox, True, True, 0)
         self.panel.show_all()
         
