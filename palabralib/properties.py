@@ -136,13 +136,13 @@ class PropertiesWindow(gtk.Dialog):
         details.attach(alignment, 0, 1, 3, 4)
         details.attach(description_entry, 1, 2, 3, 4)
 
-        if "title" in puzzle.metadata:
+        if "title" in puzzle.metadata and puzzle.metadata["title"] is not None:
             title_entry.set_text(puzzle.metadata["title"])
-        if "author" in puzzle.metadata:
+        if "author" in puzzle.metadata and puzzle.metadata["author"] is not None:
             author_entry.set_text(puzzle.metadata["author"])
-        if "copyright" in puzzle.metadata:
+        if "copyright" in puzzle.metadata and puzzle.metadata["copyright"] is not None:
             copyright_entry.set_text(puzzle.metadata["copyright"])
-        if "description" in puzzle.metadata:
+        if "description" in puzzle.metadata and puzzle.metadata["description"] is not None:
             description_entry.set_text(puzzle.metadata["description"])
         
         status = puzzle.grid.determine_status(True)
