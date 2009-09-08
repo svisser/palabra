@@ -22,7 +22,7 @@ import webbrowser
 
 import action
 from appearance import AppearanceDialog, apply_appearance
-from clue import ClueEditor, create_clue_editor
+from clue import ClueEditor, ClueTool
 import constants
 from export import ExportWindow, verify_output_options
 from editor import Editor, WordTool
@@ -114,6 +114,8 @@ class PalabraWindow(gtk.Window):
         
         self.editor = Editor(self, drawing_area, self.puzzle_manager.current_puzzle)
             
+        clue_tool = ClueTool(self.editor.get_clue_tool_callbacks(), self.puzzle_manager.current_puzzle)
+        self.editor.tools["clue"] = clue_tool
         word_tool = WordTool(self.editor.get_word_tool_callbacks())
         self.editor.tools["word"] = word_tool
         
@@ -143,7 +145,7 @@ class PalabraWindow(gtk.Window):
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
         tabs.append_page(word_tool.create(), gtk.Label(u"Word"))
-        tabs.append_page(create_clue_editor(self.puzzle_manager.current_puzzle), gtk.Label(u"Clue"))
+        tabs.append_page(clue_tool.create(), gtk.Label(u"Clue"))
         
         #tools = gtk.VBox(False, 0)
         #tools.pack_start(word_tool.create(), True, True, 6)

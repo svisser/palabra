@@ -288,6 +288,12 @@ class Editor(gtk.HBox):
         else:
             self.settings["word_search_parameters"] = None
             self.tools["word"].display([])
+            
+    def get_clue_tool_callbacks(self):
+        def select(x, y, direction):
+            self.set_typing_direction(direction)
+            self.set_selection(x, y)
+        return {"select": select}
         
     def get_word_tool_callbacks(self):
         """Return the callback functions for the word tool in the main window."""
@@ -545,7 +551,10 @@ class Editor(gtk.HBox):
         
     def change_typing_direction(self):
         other = {"across": "down", "down": "across"}
-        self.settings["direction"] = other[self.settings["direction"]]
+        self.set_typing_direction(other[self.settings["direction"]])
+        
+    def set_typing_direction(self, direction):
+        self.settings["direction"] = direction
         self.drawing_area.queue_draw()
         self.refresh_words()
         self._display_overlay([])
@@ -559,5 +568,9 @@ class Editor(gtk.HBox):
     def set_selection(self, x, y):
         self.settings["selection_x"] = x
         self.settings["selection_y"] = y
+        if x >= 0 and y >= 0:
+            self.tools["clue"].select(x, y, self.settings["direction"])
+        else:
+            self.tools["clue"].deselect()
         self.palabra_window.update_window()
         self._display_overlay([])

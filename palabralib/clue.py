@@ -19,105 +19,142 @@ import gtk
 
 import transform
 
-def create_clue_editor(puzzle):
-    vbox = gtk.VBox(False, 0)
-    vbox.set_spacing(6)
-    vbox.set_border_width(6)
-    #changed = lambda widget: self.on_clue_changed(widget, "text")
-    label = gtk.Label()
-    label.set_markup(u"<b>Clue</b>")
-    label.set_alignment(0, 0.5)
-    clue_entry = gtk.Entry(512)
-    #self.clue_entry.connect("changed", changed)
-    vbox.pack_start(label, False, False, 3)
-    vbox.pack_start(clue_entry, False, False, 0)
-    
-    #changed = lambda widget: self.on_clue_changed(widget, "explanation")
-    label = gtk.Label()
-    label.set_markup(u"<b>Explanation</b>")
-    label.set_alignment(0, 0.5)
-    explanation_entry = gtk.Entry(512)
-    #self.explanation_entry.connect("changed", changed)
-    vbox.pack_start(label, False, False, 3)
-    vbox.pack_start(explanation_entry, False, False, 0)
-    
-    # number x y word clue
-    across_store = gtk.ListStore(int, int, int, str)
-    down_store = gtk.ListStore(int, int, int, str)
-    
-    def process_row(row):
-        c = row[4] if len(row[4]) > 0 else "No clue yet."
-        return (row[0], row[1], row[2], ''.join(["<i>", row[3], "</i>\n", c]))
-    
-    for row in puzzle.grid.gather_words("across"):
-        across_store.append(process_row(row))
-    for row in puzzle.grid.gather_words("down"):
-        down_store.append(process_row(row))
-    
-    across_tree = gtk.TreeView(across_store)
-    across_tree.set_headers_visible(False)
-    down_tree = gtk.TreeView(down_store)
-    down_tree.set_headers_visible(False)
-    
-    cell = gtk.CellRendererText()
-    cell.set_property("xalign", 1)
-    column = gtk.TreeViewColumn("")
-    column.pack_start(cell, True)
-    column.set_attributes(cell, text=0)
-    across_tree.append_column(column)
-    
-    cell = gtk.CellRendererText()
-    column = gtk.TreeViewColumn(u"Word", cell, markup=3)
-    #column.pack_start(cell, True)
-    #column.set_attributes(cell, text=3)
-    across_tree.append_column(column)
-    
-    #def on_across_clue_editted(cell, path, new_text):
-    #    self.on_clue_editted(cell, path, new_text, "across", self.across_store)
-    
-    cell = gtk.CellRendererText()
-    cell.set_property("xalign", 1)
-    column = gtk.TreeViewColumn("")
-    column.pack_start(cell, True)
-    column.set_attributes(cell, text=0)
-    down_tree.append_column(column)
-    
-    cell = gtk.CellRendererText()
-    column = gtk.TreeViewColumn(u"Word", cell, markup=3)
-    #column.pack_start(cell, True)
-    #column.set_attributes(cell, text=3)
-    down_tree.append_column(column)
-    
-    #def on_down_clue_editted(cell, path, new_text):
-    #    self.on_clue_editted(cell, path, new_text, "down", self.down_store)
-    
-    across_window = gtk.ScrolledWindow(None, None)
-    across_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    #across_window.set_size_request(-1, 192)
-    across_window.add(across_tree)
-    
-    down_window = gtk.ScrolledWindow(None, None)
-    down_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    #down_window.set_size_request(-1, 192)
-    down_window.add(down_tree)
-    
-    across_label = gtk.Label()
-    across_label.set_markup(u"<b>Across words</b>")
-    across_label.set_alignment(0, 0.5)
-    across_label.set_padding(3, 3)
-    
-    vbox.pack_start(across_label, False, False, 0)
-    vbox.pack_start(across_window, True, True, 0)
-    
-    down_label = gtk.Label()
-    down_label.set_markup(u"<b>Down words</b>")
-    down_label.set_alignment(0, 0.5)
-    down_label.set_padding(3, 3)
-    
-    vbox.pack_start(down_label, False, False, 0)
-    vbox.pack_start(down_window, True, True, 0)
-    
-    return vbox
+class ClueTool:
+    def __init__(self, callbacks, puzzle):
+        self.callbacks = callbacks
+        self.puzzle = puzzle
+        
+    def create(self):
+        vbox = gtk.VBox(False, 0)
+        vbox.set_spacing(6)
+        vbox.set_border_width(6)
+        
+        changed = lambda widget: self.on_clue_changed(widget, "text")
+        label = gtk.Label()
+        label.set_markup(u"<b>Clue</b>")
+        label.set_alignment(0, 0.5)
+        self.clue_entry = gtk.Entry()
+        self.clue_entry.connect("changed", changed)
+        self.clue_entry.set_sensitive(False)
+        vbox.pack_start(label, False, False, 3)
+        vbox.pack_start(self.clue_entry, False, False, 0)
+        
+        changed = lambda widget: self.on_clue_changed(widget, "explanation")
+        label = gtk.Label()
+        label.set_markup(u"<b>Explanation</b>")
+        label.set_alignment(0, 0.5)
+        self.explanation_entry = gtk.Entry()
+        self.explanation_entry.connect("changed", changed)
+        self.explanation_entry.set_sensitive(False)
+        vbox.pack_start(label, False, False, 3)
+        vbox.pack_start(self.explanation_entry, False, False, 0)
+        
+        # number x y direction word clue displayed_string
+        self.store = gtk.ListStore(int, int, int, str, str, str, str)
+        
+        def process_row(row, direction):
+            display = self.create_display_string(row[0], direction, row[3], row[4])
+            return (row[0], row[1], row[2], direction, row[3], row[4], display)
+        
+        for d in ["across", "down"]:
+            for row in self.puzzle.grid.gather_words(d):
+                self.store.append(process_row(row, d))
+        
+        self.tree = gtk.TreeView(self.store)
+        self.changed_id = self.tree.get_selection().connect("changed"
+            , self.on_selection_changed)
+        self.tree.set_headers_visible(False)
+        
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Word", cell, markup=6)
+        self.tree.append_column(column)
+        
+        window = gtk.ScrolledWindow(None, None)
+        window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        window.add(self.tree)
+
+        label = gtk.Label()
+        label.set_markup(u"<b>Words and clues</b>")
+        label.set_alignment(0, 0.5)
+        label.set_padding(3, 3)
+        
+        vbox.pack_start(gtk.HSeparator(), False, False, 0)
+        vbox.pack_start(label, False, False, 0)
+        vbox.pack_start(window, True, True, 0)
+        
+        return vbox
+
+    def on_clue_changed(self, widget, key):
+        store, it = self.tree.get_selection().get_selected()
+        if it is not None:
+            n = store.get_value(it, 0)
+            direction = store.get_value(it, 3)
+            if key == "text":
+                clue = widget.get_text().strip()
+            else:
+                clue = store.get_value(it, 5)
+            word = store.get_value(it, 4)
+            display = self.create_display_string(n, direction, word, clue)
+            store.set_value(it, 6, display)
+            self.tree.queue_draw()
+        
+    def create_display_string(self, n, direction, word, clue):
+        c = clue if len(clue) > 0 else "<span foreground=\"red\">No clue yet.</span>"
+        if direction == "across":
+            d = "Across"
+        elif direction == "down":
+            d = "Down"
+        return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
+        
+    def update_current_word(self, x, y, direction):
+        clues = self.puzzle.grid.cell(x, y)["clues"]
+        try:
+            text = clues[direction]["text"] 
+            self.clue_entry.set_text(text)
+        except KeyError:
+            self.clue_entry.set_text("")
+        try:
+            explanation = clues[direction]["explanation"]
+            self.explanation_entry.set_text(explanation)
+        except KeyError:
+            self.explanation_entry.set_text("") 
+            
+    def set_clue_editor_status(self, status):
+        self.clue_entry.set_sensitive(status)
+        self.explanation_entry.set_sensitive(status)
+        if not status:
+            self.clue_entry.set_text("")
+            self.explanation_entry.set_text("")
+            self.deselect()
+
+    def on_selection_changed(self, selection):
+        store, it = selection.get_selected()
+        if it is None:
+            self.set_clue_editor_status(False)
+            return
+        x = store.get_value(it, 1)
+        y = store.get_value(it, 2)
+        direction = store.get_value(it, 3)
+        
+        self.set_clue_editor_status(True)
+        self.update_current_word(x, y, direction)
+        self.callbacks["select"](x, y, direction)
+        
+    def select(self, x, y, direction):
+        selection = self.tree.get_selection()
+        p, q = self.puzzle.grid.get_start_word(x, y, direction)
+        for row in self.store:
+            if (row[1], row[2], row[3]) == (p, q, direction):
+                selection.handler_block(self.changed_id)
+                selection.select_path(row.path)
+                self.tree.scroll_to_cell(row.path)
+                selection.handler_unblock(self.changed_id)
+                
+                self.set_clue_editor_status(True)
+                self.update_current_word(p, q, direction)
+        
+    def deselect(self):
+        self.tree.get_selection().unselect_all()
 
 # ########################################################
 
