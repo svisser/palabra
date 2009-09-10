@@ -555,6 +555,7 @@ class Editor(gtk.HBox):
         
     def set_typing_direction(self, direction):
         self.settings["direction"] = direction
+        self._on_selection_change()
         self.drawing_area.queue_draw()
         self.refresh_words()
         self._display_overlay([])
@@ -568,9 +569,15 @@ class Editor(gtk.HBox):
     def set_selection(self, x, y):
         self.settings["selection_x"] = x
         self.settings["selection_y"] = y
+        self._on_selection_change()
+        self.palabra_window.update_window()
+        self._display_overlay([])
+        
+    def _on_selection_change(self):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        direction = self.settings["direction"]
         if x >= 0 and y >= 0:
             self.tools["clue"].select(x, y, self.settings["direction"])
         else:
             self.tools["clue"].deselect()
-        self.palabra_window.update_window()
-        self._display_overlay([])
