@@ -223,7 +223,7 @@ class Editor(gtk.HBox):
             if event.button == 1:
                 # type is needed to assure rapid clicking
                 # doesn't trigger it multiple times
-                if (prev_x, prev_y) == (x, y) and event.type == gtk.gdk.BUTTON_PRESS:
+                if (prev_x, prev_y) == (x, y) and event.type == gtk.gdk._2BUTTON_PRESS:
                     x = self.settings["selection_x"]
                     y = self.settings["selection_y"]
                     direction = self.settings["direction"]
@@ -260,6 +260,12 @@ class Editor(gtk.HBox):
                 elif self.mouse_buttons_down[2]:
                     self.transform_blocks(cx, cy, False)
         return True
+        
+    def refresh_clues(self):
+        x = self.settings["selection_x"]
+        y = self.settings["selection_y"]
+        direction = self.settings["direction"]
+        self.tools["clue"].refresh_items(x, y, direction)
         
     def refresh_words(self, force_refresh=False):
         """
@@ -578,6 +584,7 @@ class Editor(gtk.HBox):
         y = self.settings["selection_y"]
         direction = self.settings["direction"]
         if x >= 0 and y >= 0:
-            self.tools["clue"].select(x, y, self.settings["direction"])
+            p, q = self.puzzle.grid.get_start_word(x, y, direction)
+            self.tools["clue"].select(p, q, self.settings["direction"])
         else:
             self.tools["clue"].deselect()

@@ -52,18 +52,12 @@ class ClueTool:
         # number x y direction word clue displayed_string
         self.store = gtk.ListStore(int, int, int, str, str, str, str)
         
-        def process_row(row, direction):
-            display = self.create_display_string(row[0], direction, row[3], row[4])
-            return (row[0], row[1], row[2], direction, row[3], row[4], display)
-        
-        for d in ["across", "down"]:
-            for row in self.puzzle.grid.gather_words(d):
-                self.store.append(process_row(row, d))
-        
         self.tree = gtk.TreeView(self.store)
         self.changed_id = self.tree.get_selection().connect("changed"
             , self.on_selection_changed)
         self.tree.set_headers_visible(False)
+        
+        self.load_items()
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Word", cell, markup=6)
@@ -83,7 +77,7 @@ class ClueTool:
         vbox.pack_start(window, True, True, 0)
         
         return vbox
-
+        
     def on_clue_changed(self, widget, key):
         store, it = self.tree.get_selection().get_selected()
         if it is not None:
@@ -105,6 +99,25 @@ class ClueTool:
         elif direction == "down":
             d = "Down"
         return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
+
+    def _process_row(self, direction, row):
+        display = self.create_display_string(row[0], direction, row[3], row[4])
+        return (row[0], row[1], row[2], direction, row[3], row[4], display)
+        
+    def load_items(self):
+        self.store.clear()
+        for d in ["across", "down"]:
+            for row in self.puzzle.grid.gather_words(d):
+                self.store.append(self._process_row(d, row))
+                
+    def refresh_items(self, sx, sy, sdirection):
+        self.store.clear()
+        for d in ["across", "down"]:
+            for row in self.puzzle.grid.gather_words(d):
+                self.store.append(self._process_row(d, row))
+            
+        p, q = self.puzzle.grid.get_start_word(sx, sy, sdirection)
+        self.select(p, q, sdirection)
         
     def update_current_word(self, x, y, direction):
         clues = self.puzzle.grid.cell(x, y)["clues"]

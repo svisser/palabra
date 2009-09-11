@@ -759,6 +759,7 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
         try:
+            self.editor.refresh_clues()
             self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
