@@ -24,6 +24,7 @@ class ClueTool:
         self.callbacks = callbacks
         self.puzzle = puzzle
         self.locked = False
+        self.last = None
         
     def create(self):
         vbox = gtk.VBox(False, 0)

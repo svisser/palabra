@@ -330,7 +330,7 @@ class PalabraWindow(gtk.Window):
     
     def load_puzzle(self):
         self.to_edit_panel()
-        self.update_window()
+        self.update_window(True)
     
     def close_puzzle(self):
         need_to_close, need_to_save = self.check_close_puzzle()
@@ -342,7 +342,7 @@ class PalabraWindow(gtk.Window):
             action.stack.clear()
             
             self.to_empty_panel()
-            self.update_window()
+            self.update_window(True)
 
     def check_close_puzzle(self):
         if not self.puzzle_manager.has_puzzle():
@@ -602,11 +602,11 @@ class PalabraWindow(gtk.Window):
         
     def undo_action(self):
         action.stack.undo_action(self.puzzle_manager.current_puzzle)
-        self.update_window()
+        self.update_window(True)
         
     def redo_action(self):
         action.stack.redo_action(self.puzzle_manager.current_puzzle)
-        self.update_window()
+        self.update_window(True)
         
     def create_edit_menu(self):
         menu = gtk.Menu()
@@ -727,9 +727,9 @@ class PalabraWindow(gtk.Window):
     def transform_grid(self, transform, **args):
         a = transform(self.puzzle_manager.current_puzzle, **args)
         action.stack.push_action(a)
-        self.update_window()
+        self.update_window(True)
         
-    def update_window(self):
+    def update_window(self, content_changed=False):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:
             self.set_title(u"Palabra")
@@ -759,7 +759,8 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
         try:
-            self.editor.refresh_clues()
+            if content_changed:
+                self.editor.refresh_clues()
             self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
