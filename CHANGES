@@ -6,7 +6,8 @@ Version 0.1.1 (unreleased)
 * XML files are validated against XML schema.
 * Word lists can be used to populate the grid.
 * Speed improvements in rendering code.
-* Support for bars.
+* Partial support for bars.
+* Clue editor is integrated in main window.
 
 Version 0.1 (August 14, 2009)
 =============================
