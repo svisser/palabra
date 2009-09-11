@@ -23,6 +23,7 @@ class ClueTool:
     def __init__(self, callbacks, puzzle):
         self.callbacks = callbacks
         self.puzzle = puzzle
+        self.locked = False
         
     def create(self):
         vbox = gtk.VBox(False, 0)
@@ -160,7 +161,8 @@ class ClueTool:
             if (row[1], row[2], row[3]) == (p, q, direction):
                 selection.handler_block(self.changed_id)
                 selection.select_path(row.path)
-                self.tree.scroll_to_cell(row.path)
+                if not self.locked:
+                    self.tree.scroll_to_cell(row.path)
                 selection.handler_unblock(self.changed_id)
                 
                 self.set_clue_editor_status(True)

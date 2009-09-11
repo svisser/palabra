@@ -297,8 +297,10 @@ class Editor(gtk.HBox):
             
     def get_clue_tool_callbacks(self):
         def select(x, y, direction):
+            self.tools["clue"].locked = True
             self.set_typing_direction(direction)
             self.set_selection(x, y)
+            self.tools["clue"].locked = False
         return {"select": select}
         
     def get_word_tool_callbacks(self):
