@@ -94,8 +94,10 @@ class ClueTool:
             value = widget.get_text().strip()
             if key == "text":
                 clue = value
+                store.set_value(it, 5, value)
             elif key == "explanation":
                 explanation = value
+                store.set_value(it, 6, value)
 
             display = self.create_display_string(n, direction, word, clue)
             store.set_value(it, 7, display)
