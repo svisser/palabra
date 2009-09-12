@@ -92,6 +92,7 @@ class ClueTool:
             word = store.get_value(it, 4)
             display = self.create_display_string(n, direction, word, clue)
             store.set_value(it, 6, display)
+            self.tree.columns_autosize()
             self.tree.queue_draw()
         
     def create_display_string(self, n, direction, word, clue):
