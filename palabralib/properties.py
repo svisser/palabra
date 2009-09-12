@@ -146,13 +146,12 @@ class PropertiesWindow(gtk.Dialog):
             description_entry.set_text(puzzle.metadata["description"])
         
         status = puzzle.grid.determine_status(True)
+        message = self.determine_words_message(status, puzzle)
         
         tabs = gtk.Notebook()
         tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label(u"General"))
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
-        
-        message = self.determine_words_message(status, puzzle)
-        tabs.append_page(self.create_stats_tab(message), gtk.Label(u"Words"))
+        tabs.append_page(self.create_words_tab(message, status, puzzle), gtk.Label(u"Words"))
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -307,6 +306,59 @@ class PropertiesWindow(gtk.Dialog):
         hbox.pack_start(main, True, True, 0)
         return hbox
         
+    def create_words_tab(self, message, status, puzzle):
+        store = gtk.ListStore(int, int)
+        tree = gtk.TreeView(store)
+        
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Length", cell, text=0)
+        tree.append_column(column)
+        
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Count", cell, text=1)
+        tree.append_column(column)
+        
+        for i in status["word_counts_total"]:
+            store.append(i)
+        
+        window = gtk.ScrolledWindow(None, None)
+        window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        window.add(tree)
+        
+        text = gtk.TextView()
+        text.set_editable(False)        
+        data = text.get_buffer()
+        data.set_text(message)
+        
+        twindow = gtk.ScrolledWindow(None, None)
+        twindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        twindow.add_with_viewport(text)
+        
+        label = gtk.Label()
+        label.set_markup(u"<b>Words</b>")        
+        label.set_alignment(0, 0.5)
+        label.set_padding(3, 3)
+        
+        text_vbox = gtk.VBox(False, 0)
+        text_vbox.set_spacing(6)
+        text_vbox.pack_start(label, False, False, 0)
+        text_vbox.pack_start(twindow, True, True, 0)
+        
+        hhbox = gtk.HBox(False, 0)
+        hhbox.set_spacing(18)
+        hhbox.pack_start(text_vbox, True, True, 0)
+        hhbox.pack_start(window, True, True, 0)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(hhbox, True, True, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        return hbox
+        
     @staticmethod
     def determine_words_message(status, puzzle):
         word_count_to_str = lambda (length, count): ''.join([str(length), u": ", str(count), u"\n"])
@@ -317,11 +369,4 @@ class PropertiesWindow(gtk.Dialog):
         words.sort()
         words.sort(key=len)
 
-        message = ''.join(
-            [u"Word counts:\n"
-            ,''.join(map(word_count_to_str, status["word_counts_total"]))
-            ,u"\n"
-            ,u"Words:\n"
-            ,''.join(map(lambda word: ''.join([word, u"\n"]), words))
-            ])
-        return message
+        return ''.join(map(lambda word: ''.join([word, u"\n"]), words))
