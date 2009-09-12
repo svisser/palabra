@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import action
-from action import Action, FullTransformAction
+from action import Action, ClueTransformAction, FullTransformAction
 from grid import Grid
 
 import copy
@@ -27,12 +27,22 @@ def _delta_transform(puzzle, undo_function, redo_function):
     return Action([undo_function], [redo_function])
 
 def _full_transform(puzzle, transform):
-    """Return a FullTransformAction based on the given transform function."""
+    """
+    Return a FullTransformAction based on the given transform function.
+    """
     from_grid = copy.deepcopy(puzzle.grid)
     transform(puzzle)
     to_grid = copy.deepcopy(puzzle.grid)
     
     return FullTransformAction(from_grid, to_grid)
+
+def _clue_transform(puzzle, transform, x, y, direction, key):
+    """Return a ClueTransformAction based on the given values."""
+    from_grid = copy.deepcopy(puzzle.grid)
+    transform(puzzle)
+    to_grid = copy.deepcopy(puzzle.grid)
+    
+    return ClueTransformAction(from_grid, to_grid, x, y, direction, key)
 
 def modify_blocks(puzzle, blocks=[]):
     """Modify the blocks and return an Action."""
@@ -69,7 +79,7 @@ def modify_char(puzzle, x, y, next_char):
 def modify_clue(puzzle, x, y, direction, key, value):
     """Store the given clue data at the given (x, y) and direction."""
     transform = lambda puzzle: puzzle.grid.store_clue(x, y, direction, key, value)
-    return _full_transform(puzzle, transform)
+    return _clue_transform(puzzle, transform, x, y, direction, key)
 
 def clear_all(puzzle):
     """Clear the content of the grid and return an Action."""

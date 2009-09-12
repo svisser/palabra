@@ -17,6 +17,8 @@
 
 import gtk
 
+import action
+from action import ClueTransformAction
 import constants
 import preferences
 import transform
@@ -301,7 +303,19 @@ class Editor(gtk.HBox):
             self.set_typing_direction(direction)
             self.set_selection(x, y)
             self.tools["clue"].locked = False
-        return {"select": select}
+        def clue(x, y, direction, key, value):
+            a = action.stack.peek_action()
+            if isinstance(a, ClueTransformAction) and a.matches(x, y, direction, key):
+                self.puzzle.grid.store_clue(x, y, direction, key, value)
+                a.update(x, y, direction, key, value)
+            else:
+                self.palabra_window.transform_clues(transform.modify_clue
+                        , x=x
+                        , y=y
+                        , direction=direction
+                        , key=key
+                        , value=value)
+        return {"select": select, "clue": clue}
         
     def get_word_tool_callbacks(self):
         """Return the callback functions for the word tool in the main window."""

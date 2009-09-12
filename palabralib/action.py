@@ -70,12 +70,30 @@ class FullTransformAction(Action):
         for x, y in source_grid.cells():
             puzzle.grid.set_cell(x, y, copy.deepcopy(source_grid.cell(x, y)))
 
+class ClueTransformAction(FullTransformAction):
+    def __init__(self, from_grid, to_grid, x, y, direction, key):
+        FullTransformAction.__init__(self, from_grid, to_grid)
+        self.x = x
+        self.y = y
+        self.direction = direction
+        self.key = key
+        
+    def matches(self, x, y, direction, key):
+        return (self.x, self.y, self.direction, self.key) == (x, y, direction, key)
+        
+    def update(self, x, y, direction, key, value):
+        self.to_grid.store_clue(x, y, direction, key, value)
+
 class ActionStack:
     """
     Contains two stacks with the actions that can be undone or redone.
     """
     def __init__(self):
         self.clear()
+        
+    def peek_action(self):
+        """Return the action that is currently on top of the undo stack."""
+        return self.undo_stack[-1] if len(self.undo_stack) > 0 else None
         
     def push_action(self, action):
         """

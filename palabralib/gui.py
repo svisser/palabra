@@ -729,6 +729,11 @@ class PalabraWindow(gtk.Window):
         action.stack.push_action(a)
         self.update_window(True)
         
+    def transform_clues(self, transform, **args):
+        a = transform(self.puzzle_manager.current_puzzle, **args)
+        action.stack.push_action(a)
+        self.update_window(False)
+        
     def update_window(self, content_changed=False):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:

@@ -84,6 +84,8 @@ class ClueTool:
         store, it = self.tree.get_selection().get_selected()
         if it is not None:
             n = store.get_value(it, 0)
+            x = store.get_value(it, 1)
+            y = store.get_value(it, 2)
             direction = store.get_value(it, 3)
             if key == "text":
                 clue = widget.get_text().strip()
@@ -92,6 +94,10 @@ class ClueTool:
             word = store.get_value(it, 4)
             display = self.create_display_string(n, direction, word, clue)
             store.set_value(it, 6, display)
+            
+            value = widget.get_text().strip()
+            self.callbacks["clue"](x, y, direction, key, value)
+            
             self.tree.columns_autosize()
             self.tree.queue_draw()
         
@@ -114,11 +120,7 @@ class ClueTool:
                 self.store.append(self._process_row(d, row))
                 
     def refresh_items(self, sx, sy, sdirection):
-        self.store.clear()
-        for d in ["across", "down"]:
-            for row in self.puzzle.grid.gather_words(d):
-                self.store.append(self._process_row(d, row))
-            
+        self.load_items()
         p, q = self.puzzle.grid.get_start_word(sx, sy, sdirection)
         self.select(p, q, sdirection)
         
