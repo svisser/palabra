@@ -380,6 +380,8 @@ class Editor(gtk.HBox):
     
     def _insert_word(self, chars):
         """Insert a word by storing the list of (x, y, c) items in the grid."""
+        if self.settings["locked_grid"]:
+            return
         actual = [(x, y, c.upper()) for x, y, c in chars
             if self.puzzle.grid.get_char(x, y) != c.upper()]
         if len(actual) > 0:
