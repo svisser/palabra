@@ -51,8 +51,8 @@ class ClueTool:
         vbox.pack_start(label, False, False, 3)
         vbox.pack_start(self.explanation_entry, False, False, 0)
         
-        # number x y direction word clue displayed_string
-        self.store = gtk.ListStore(int, int, int, str, str, str, str)
+        # number x y direction word clue explanation displayed_string
+        self.store = gtk.ListStore(int, int, int, str, str, str, str, str)
         
         self.tree = gtk.TreeView(self.store)
         self.changed_id = self.tree.get_selection().connect("changed"
@@ -62,7 +62,7 @@ class ClueTool:
         self.load_items()
         
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Word", cell, markup=6)
+        column = gtk.TreeViewColumn(u"Word", cell, markup=7)
         self.tree.append_column(column)
         
         window = gtk.ScrolledWindow(None, None)
@@ -87,15 +87,19 @@ class ClueTool:
             x = store.get_value(it, 1)
             y = store.get_value(it, 2)
             direction = store.get_value(it, 3)
-            if key == "text":
-                clue = widget.get_text().strip()
-            else:
-                clue = store.get_value(it, 5)
             word = store.get_value(it, 4)
-            display = self.create_display_string(n, direction, word, clue)
-            store.set_value(it, 6, display)
+            clue = store.get_value(it, 5)
+            explanation = store.get_value(it, 6)
             
             value = widget.get_text().strip()
+            if key == "text":
+                clue = value
+            elif key == "explanation":
+                explanation = value
+
+            display = self.create_display_string(n, direction, word, clue)
+            store.set_value(it, 7, display)
+            
             self.callbacks["clue"](x, y, direction, key, value)
             
             self.tree.columns_autosize()
@@ -111,7 +115,7 @@ class ClueTool:
 
     def _process_row(self, direction, row):
         display = self.create_display_string(row[0], direction, row[3], row[4])
-        return (row[0], row[1], row[2], direction, row[3], row[4], display)
+        return (row[0], row[1], row[2], direction, row[3], row[4], "TODO", display)
         
     def load_items(self):
         self.store.clear()
