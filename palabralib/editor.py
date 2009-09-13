@@ -34,9 +34,10 @@ class WordTool:
         self.tree.connect("row-activated", self.on_row_activated)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
         self.tree.connect("button_press_event", self.on_tree_clicked)
+        self.tree.set_headers_visible(False)
         
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Words")
+        column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)
@@ -49,14 +50,20 @@ class WordTool:
         check_button = gtk.CheckButton("Show only words with\nintersecting words")
         check_button.connect("toggled", self.on_button_toggled)
         
+        label = gtk.Label()
+        label.set_markup(u"<b>Words</b>")
+        label.set_alignment(0, 0.5)
+        label.set_padding(3, 3)
+        
         main = gtk.VBox(False, 0)
         main.set_spacing(9)
+        #main.pack_start(label, False, False, 0)
         main.pack_start(tree_window, True, True, 0)
         main.pack_start(check_button, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
-        hbox.set_spacing(9)
+        hbox.set_spacing(6)
         hbox.pack_start(main, True, True, 0)
         return hbox
         

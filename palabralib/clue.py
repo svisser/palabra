@@ -63,7 +63,7 @@ class ClueTool:
         self.load_items(puzzle)
         
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Word", cell, markup=7)
+        column = gtk.TreeViewColumn("", cell, markup=7)
         self.tree.append_column(column)
         
         window = gtk.ScrolledWindow(None, None)
