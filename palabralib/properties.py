@@ -368,5 +368,7 @@ class PropertiesWindow(gtk.Dialog):
         words = (a + d)
         words.sort()
         words.sort(key=len)
+        
+        r = reduce(operator.concat, map(lambda word: [word,  u"\n"], words))
 
-        return ''.join(map(lambda word: ''.join([word, u"\n"]), words))
+        return ''.join(r[:-1])
