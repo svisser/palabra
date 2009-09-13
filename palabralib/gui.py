@@ -22,7 +22,7 @@ import webbrowser
 
 import action
 from appearance import AppearanceDialog, apply_appearance
-from clue import ClueEditor, ClueTool
+from clue import ClueTool
 import constants
 from export import ExportWindow, verify_output_options
 from editor import Editor, WordTool
@@ -61,7 +61,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
         self.menubar.append(self.create_word_menu())
-        self.menubar.append(self.create_clue_menu())
+        #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
         
         self.toolbar = self.create_toolbar()
@@ -448,17 +448,6 @@ class PalabraWindow(gtk.Window):
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         
         item = gtk.ToolButton()
-        item.set_stock_id(gtk.STOCK_EDIT)
-        item.set_label(u"Edit clues")
-        item.connect("clicked", lambda item: self.edit_clues())
-        item.show()
-        item.set_sensitive(False)
-        toolbar.insert(item, -1)
-        self.puzzle_toggle_items += [item]
-        
-        toolbar.insert(gtk.SeparatorToolItem(), -1)
-        
-        item = gtk.ToolButton()
         item.set_stock_id(gtk.STOCK_PROPERTIES)
         item.connect("clicked", lambda item: self.view_puzzle_properties())
         item.show()
@@ -577,12 +566,6 @@ class PalabraWindow(gtk.Window):
         file_menu.set_submenu(menu)
         return file_menu
         
-    def edit_clues(self):
-        editor = ClueEditor(self, self.puzzle_manager.current_puzzle)
-        editor.show_all()
-        editor.run()
-        editor.destroy()
-
     def resize_grid(self):
         window = SizeWindow(self, self.puzzle_manager.current_puzzle)
         window.show_all()
