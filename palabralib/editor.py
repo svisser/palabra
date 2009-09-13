@@ -299,10 +299,10 @@ class Editor(gtk.HBox):
             
     def get_clue_tool_callbacks(self):
         def select(x, y, direction):
-            self.tools["clue"].locked = True
+            self.tools["clue"].settings["use_scrolling"] = False
             self.set_typing_direction(direction)
             self.set_selection(x, y)
-            self.tools["clue"].locked = False
+            self.tools["clue"].settings["use_scrolling"] = True
         def clue(x, y, direction, key, value):
             a = action.stack.peek_action()
             if isinstance(a, ClueTransformAction) and a.matches(x, y, direction, key):

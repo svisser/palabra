@@ -23,8 +23,10 @@ class ClueTool:
     def __init__(self, callbacks, puzzle):
         self.callbacks = callbacks
         self.puzzle = puzzle
-        self.locked = False
         self.last = None
+        
+        self.settings = {}
+        self.settings["use_scrolling"] = True
         
     def create(self):
         vbox = gtk.VBox(False, 0)
@@ -109,21 +111,22 @@ class ClueTool:
         
     def create_display_string(self, n, direction, word, clue):
         c = clue if len(clue) > 0 else "<span foreground=\"red\">No clue yet.</span>"
-        if direction == "across":
-            d = "Across"
-        elif direction == "down":
-            d = "Down"
+        d = {"across": "Across", "down": "Down"}[direction]
         return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
 
-    def _process_row(self, direction, row):
-        display = self.create_display_string(row[0], direction, row[3], row[4])
-        return (row[0], row[1], row[2], direction, row[3], row[4], "TODO", display)
-        
     def load_items(self):
+        def process_row(direction, row):
+            n = row[0]
+            x = row[1]
+            y = row[2]
+            word = row[3]
+            clue = row[4]
+            display = self.create_display_string(n, direction, word, clue)
+            return (n, x, y, direction, word, clue, "TODO", display)
         self.store.clear()
         for d in ["across", "down"]:
             for row in self.puzzle.grid.gather_words(d):
-                self.store.append(self._process_row(d, row))
+                self.store.append(process_row(d, row))
                 
     def refresh_items(self, sx, sy, sdirection):
         self.load_items()
@@ -171,7 +174,7 @@ class ClueTool:
             if (row[1], row[2], row[3]) == (p, q, direction):
                 selection.handler_block(self.changed_id)
                 selection.select_path(row.path)
-                if not self.locked:
+                if self.settings["use_scrolling"]:
                     self.tree.scroll_to_cell(row.path)
                 selection.handler_unblock(self.changed_id)
                 
