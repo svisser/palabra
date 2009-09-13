@@ -264,10 +264,14 @@ class Editor(gtk.HBox):
         return True
         
     def refresh_clues(self):
+        """Reload all the word/clue items and select the currently selected item."""
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         direction = self.settings["direction"]
-        self.tools["clue"].refresh_items(x, y, direction)
+        
+        p, q = self.puzzle.grid.get_start_word(x, y, direction)
+        self.tools["clue"].load_items()
+        self.tools["clue"].select(p, q, direction)
         
     def refresh_words(self, force_refresh=False):
         """
@@ -299,13 +303,18 @@ class Editor(gtk.HBox):
             
     def get_clue_tool_callbacks(self):
         def select(x, y, direction):
+            """Select the word at (x, y, direction) in the grid."""
             self.tools["clue"].settings["use_scrolling"] = False
             self.set_typing_direction(direction)
             self.set_selection(x, y)
             self.tools["clue"].settings["use_scrolling"] = True
         def clue(x, y, direction, key, value):
+            """
+            Update the clue data by creating or updating the latest undo action.
+            """
             a = action.stack.peek_action()
-            if isinstance(a, ClueTransformAction) and a.matches(x, y, direction, key):
+            if (isinstance(a, ClueTransformAction)
+                and a.matches(x, y, direction, key)):
                 self.puzzle.grid.store_clue(x, y, direction, key, value)
                 a.update(x, y, direction, key, value)
             else:

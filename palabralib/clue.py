@@ -38,7 +38,7 @@ class ClueTool:
         label.set_markup(u"<b>Clue</b>")
         label.set_alignment(0, 0.5)
         self.clue_entry = gtk.Entry()
-        self.clue_entry.connect("changed", changed)
+        self.clue_changed_id = self.clue_entry.connect("changed", changed)
         self.clue_entry.set_sensitive(False)
         vbox.pack_start(label, False, False, 3)
         vbox.pack_start(self.clue_entry, False, False, 0)
@@ -48,7 +48,7 @@ class ClueTool:
         label.set_markup(u"<b>Explanation</b>")
         label.set_alignment(0, 0.5)
         self.explanation_entry = gtk.Entry()
-        self.explanation_entry.connect("changed", changed)
+        self.explanation_changed_id = self.explanation_entry.connect("changed", changed)
         self.explanation_entry.set_sensitive(False)
         vbox.pack_start(label, False, False, 3)
         vbox.pack_start(self.explanation_entry, False, False, 0)
@@ -57,7 +57,7 @@ class ClueTool:
         self.store = gtk.ListStore(int, int, int, str, str, str, str, str)
         
         self.tree = gtk.TreeView(self.store)
-        self.changed_id = self.tree.get_selection().connect("changed"
+        self.selection_changed_id = self.tree.get_selection().connect("changed"
             , self.on_selection_changed)
         self.tree.set_headers_visible(False)
         
@@ -110,11 +110,13 @@ class ClueTool:
             self.tree.queue_draw()
         
     def create_display_string(self, n, direction, word, clue):
+        """Construct the displayed string for a word/clue item."""
         c = clue if len(clue) > 0 else "<span foreground=\"red\">No clue yet.</span>"
         d = {"across": "Across", "down": "Down"}[direction]
         return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
 
     def load_items(self):
+        """Load all word/clue items and put them in the ListStore."""
         def process_row(direction, row):
             n = row[0]
             x = row[1]
@@ -127,13 +129,11 @@ class ClueTool:
         for d in ["across", "down"]:
             for row in self.puzzle.grid.gather_words(d):
                 self.store.append(process_row(d, row))
-                
-    def refresh_items(self, sx, sy, sdirection):
-        self.load_items()
-        p, q = self.puzzle.grid.get_start_word(sx, sy, sdirection)
-        self.select(p, q, sdirection)
         
     def update_current_word(self, x, y, direction):
+        """Put the clue data of the word at (x, y, direction) in the text entries."""
+        self.set_clue_editor_status(True)
+        
         clues = self.puzzle.grid.cell(x, y)["clues"]
         try:
             text = clues[direction]["text"] 
@@ -147,6 +147,7 @@ class ClueTool:
             self.explanation_entry.set_text("") 
             
     def set_clue_editor_status(self, status):
+        """Enable or disable the text entries for editing clue data."""
         self.clue_entry.set_sensitive(status)
         self.explanation_entry.set_sensitive(status)
         if not status:
@@ -155,34 +156,53 @@ class ClueTool:
             self.deselect()
 
     def on_selection_changed(self, selection):
+        """When the selection changes, update the state of the edit controls."""
         store, it = selection.get_selected()
         if it is None:
-            self.set_clue_editor_status(False)
+            def locked():
+                self.set_clue_editor_status(False)
+            self.perform_while_locked(selection, locked)
             return
         x = store.get_value(it, 1)
         y = store.get_value(it, 2)
         direction = store.get_value(it, 3)
         
-        self.set_clue_editor_status(True)
-        self.update_current_word(x, y, direction)
-        self.callbacks["select"](x, y, direction)
+        def locked():
+            self.update_current_word(x, y, direction)
+            self.callbacks["select"](x, y, direction)
+        self.perform_while_locked(selection, locked)
         
     def select(self, x, y, direction):
-        selection = self.tree.get_selection()
-        p, q = self.puzzle.grid.get_start_word(x, y, direction)
+        """Select the word starting at the given (x, y, direction)."""
+        if x < 0 or y < 0:
+            return
+        
+        selection = self.tree.get_selection()            
+        def locked():
+            selection.select_path(row.path)
+            if self.settings["use_scrolling"]:
+                self.tree.scroll_to_cell(row.path)
+            self.update_current_word(x, y, direction)
+        
         for row in self.store:
-            if (row[1], row[2], row[3]) == (p, q, direction):
-                selection.handler_block(self.changed_id)
-                selection.select_path(row.path)
-                if self.settings["use_scrolling"]:
-                    self.tree.scroll_to_cell(row.path)
-                selection.handler_unblock(self.changed_id)
-                
-                self.set_clue_editor_status(True)
-                self.update_current_word(p, q, direction)
+            if (row[1], row[2], row[3]) == (x, y, direction):
+                self.perform_while_locked(selection, locked)
         
     def deselect(self):
+        """Deselect all word/clue items in the list."""
         self.tree.get_selection().unselect_all()
+        
+    def perform_while_locked(self, selection, code):
+        """
+        Execute the given code while preventing GTK callbacks from running.
+        """
+        selection.handler_block(self.selection_changed_id)
+        self.clue_entry.handler_block(self.clue_changed_id)
+        self.explanation_entry.handler_block(self.explanation_changed_id)
+        code()
+        selection.handler_unblock(self.selection_changed_id)
+        self.clue_entry.handler_unblock(self.clue_changed_id)
+        self.explanation_entry.handler_unblock(self.explanation_changed_id)
 
 # ########################################################
 
