@@ -20,15 +20,14 @@ import gtk
 import transform
 
 class ClueTool:
-    def __init__(self, callbacks, puzzle):
+    def __init__(self, callbacks):
         self.callbacks = callbacks
-        self.puzzle = puzzle
         self.last = None
         
         self.settings = {}
         self.settings["use_scrolling"] = True
         
-    def create(self):
+    def create(self, puzzle):
         vbox = gtk.VBox(False, 0)
         vbox.set_spacing(6)
         vbox.set_border_width(6)
@@ -61,7 +60,7 @@ class ClueTool:
             , self.on_selection_changed)
         self.tree.set_headers_visible(False)
         
-        self.load_items()
+        self.load_items(puzzle)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Word", cell, markup=7)
@@ -83,6 +82,9 @@ class ClueTool:
         return vbox
         
     def on_clue_changed(self, widget, key):
+        """
+        Update the ListStore/tree and create or update an undoable action.
+        """
         store, it = self.tree.get_selection().get_selected()
         if it is not None:
             n = store.get_value(it, 0)
@@ -115,7 +117,7 @@ class ClueTool:
         d = {"across": "Across", "down": "Down"}[direction]
         return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
 
-    def load_items(self):
+    def load_items(self, puzzle):
         """Load all word/clue items and put them in the ListStore."""
         def process_row(direction, row):
             n = row[0]
@@ -123,28 +125,19 @@ class ClueTool:
             y = row[2]
             word = row[3]
             clue = row[4]
+            explanation = row[5]
             display = self.create_display_string(n, direction, word, clue)
-            return (n, x, y, direction, word, clue, "TODO", display)
+            return (n, x, y, direction, word, clue, explanation, display)
         self.store.clear()
         for d in ["across", "down"]:
-            for row in self.puzzle.grid.gather_words(d):
+            for row in puzzle.grid.gather_words(d):
                 self.store.append(process_row(d, row))
         
-    def update_current_word(self, x, y, direction):
+    def update_current_word(self, clue, explanation):
         """Put the clue data of the word at (x, y, direction) in the text entries."""
         self.set_clue_editor_status(True)
-        
-        clues = self.puzzle.grid.cell(x, y)["clues"]
-        try:
-            text = clues[direction]["text"] 
-            self.clue_entry.set_text(text)
-        except KeyError:
-            self.clue_entry.set_text("")
-        try:
-            explanation = clues[direction]["explanation"]
-            self.explanation_entry.set_text(explanation)
-        except KeyError:
-            self.explanation_entry.set_text("") 
+        self.clue_entry.set_text(clue)
+        self.explanation_entry.set_text(explanation)
             
     def set_clue_editor_status(self, status):
         """Enable or disable the text entries for editing clue data."""
@@ -166,9 +159,11 @@ class ClueTool:
         x = store.get_value(it, 1)
         y = store.get_value(it, 2)
         direction = store.get_value(it, 3)
+        clue = store.get_value(it, 5)
+        explanation = store.get_value(it, 6)
         
         def locked():
-            self.update_current_word(x, y, direction)
+            self.update_current_word(clue, explanation)
             self.callbacks["select"](x, y, direction)
         self.perform_while_locked(selection, locked)
         
@@ -178,14 +173,13 @@ class ClueTool:
             return
         
         selection = self.tree.get_selection()            
-        def locked():
-            selection.select_path(row.path)
-            if self.settings["use_scrolling"]:
-                self.tree.scroll_to_cell(row.path)
-            self.update_current_word(x, y, direction)
-        
         for row in self.store:
             if (row[1], row[2], row[3]) == (x, y, direction):
+                def locked():
+                    selection.select_path(row.path)
+                    if self.settings["use_scrolling"]:
+                        self.tree.scroll_to_cell(row.path)
+                    self.update_current_word(row[5], row[6])
                 self.perform_while_locked(selection, locked)
         
     def deselect(self):

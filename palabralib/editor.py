@@ -270,7 +270,7 @@ class Editor(gtk.HBox):
         direction = self.settings["direction"]
         
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
-        self.tools["clue"].load_items()
+        self.tools["clue"].load_items(self.puzzle)
         self.tools["clue"].select(p, q, direction)
         
     def refresh_words(self, force_refresh=False):

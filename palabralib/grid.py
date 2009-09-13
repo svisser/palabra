@@ -300,9 +300,13 @@ class Grid:
                 clue = self.cell(x, y)["clues"][direction]["text"]
             except KeyError:
                 clue = ""
+            try:
+                explanation = self.cell(x, y)["clues"][direction]["explanation"]
+            except KeyError:
+                explanation = ""
                 
             word = self.gather_word(x, y, direction)
-            yield n, x, y, word, clue
+            yield n, x, y, word, clue, explanation
         
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""

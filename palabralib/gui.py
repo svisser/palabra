@@ -114,7 +114,7 @@ class PalabraWindow(gtk.Window):
         
         self.editor = Editor(self, drawing_area, self.puzzle_manager.current_puzzle)
             
-        clue_tool = ClueTool(self.editor.get_clue_tool_callbacks(), self.puzzle_manager.current_puzzle)
+        clue_tool = ClueTool(self.editor.get_clue_tool_callbacks())
         self.editor.tools["clue"] = clue_tool
         word_tool = WordTool(self.editor.get_word_tool_callbacks())
         self.editor.tools["word"] = word_tool
@@ -133,10 +133,7 @@ class PalabraWindow(gtk.Window):
         main = gtk.VBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
         
-        #ex = gtk.Expander(u'<span weight="bold">Clues</span>')
-        #ex.set_use_markup(True)
-        #ex.add(create_clue_editor())
-        #main.pack_start(ex, False, False, 0)
+        puzzle = self.puzzle_manager.current_puzzle
         
         tabs = gtk.Notebook()
         tabs.set_border_width(8)
@@ -145,11 +142,7 @@ class PalabraWindow(gtk.Window):
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
         tabs.append_page(word_tool.create(), gtk.Label(u"Word"))
-        tabs.append_page(clue_tool.create(), gtk.Label(u"Clue"))
-        
-        #tools = gtk.VBox(False, 0)
-        #tools.pack_start(word_tool.create(), True, True, 6)
-        #tools.pack_start(create_clue_editor(), False, False, 6)
+        tabs.append_page(clue_tool.create(puzzle), gtk.Label(u"Clue"))
         
         all_hbox = gtk.HBox(False, 0)
         all_hbox.pack_start(main, True, True, 0)
