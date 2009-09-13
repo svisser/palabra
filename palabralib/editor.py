@@ -50,14 +50,8 @@ class WordTool:
         check_button = gtk.CheckButton("Show only words with\nintersecting words")
         check_button.connect("toggled", self.on_button_toggled)
         
-        label = gtk.Label()
-        label.set_markup(u"<b>Words</b>")
-        label.set_alignment(0, 0.5)
-        label.set_padding(3, 3)
-        
         main = gtk.VBox(False, 0)
         main.set_spacing(9)
-        #main.pack_start(label, False, False, 0)
         main.pack_start(tree_window, True, True, 0)
         main.pack_start(check_button, False, False, 0)
         
@@ -132,18 +126,18 @@ class Editor(gtk.HBox):
         
         self.drawing_area.set_flags(gtk.CAN_FOCUS)
         
-        self.expose_event_id = \
-            self.drawing_area.connect("expose_event", self.on_expose_event)
-        self.button_press_event_id = \
-            self.drawing_area.connect("button_press_event", self.on_button_press_event)
-        self.button_release_event_id = \
-            self.drawing_area.connect("button_release_event", self.on_button_release_event)
-        self.motion_notify_event_id = \
-            self.drawing_area.connect("motion_notify_event", self.on_motion_notify_event)
-        self.key_press_event_id = \
-            self.drawing_area.connect("key_press_event", self.on_key_press_event)
-        self.key_release_event_id = \
-            self.drawing_area.connect("key_release_event", self.on_key_release_event)
+        self.expose_event_id = self.drawing_area.connect("expose_event"
+            , self.on_expose_event)
+        self.button_press_event_id = self.drawing_area.connect("button_press_event"
+            , self.on_button_press_event)
+        self.button_release_event_id = self.drawing_area.connect("button_release_event"
+            , self.on_button_release_event)
+        self.motion_notify_event_id = self.drawing_area.connect("motion_notify_event"
+            , self.on_motion_notify_event)
+        self.key_press_event_id = self.drawing_area.connect("key_press_event"
+            , self.on_key_press_event)
+        self.key_release_event_id = self.drawing_area.connect("key_release_event"
+            , self.on_key_release_event)
                 
     def cleanup(self):
         self.drawing_area.unset_flags(gtk.CAN_FOCUS)
@@ -160,10 +154,6 @@ class Editor(gtk.HBox):
         self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
         
         self.puzzle.view.render_background(context, event.area)
-        
-        #secondary_selection_red = preferences.prefs["color_secondary_selection_red"] / 65535.0
-        #secondary_selection_green = preferences.prefs["color_secondary_selection_green"] / 65535.0
-        #secondary_selection_blue = preferences.prefs["color_secondary_selection_blue"] / 65535.0
         
         r = preferences.prefs["color_warning_red"] / 65535.0
         g = preferences.prefs["color_warning_green"] / 65535.0
@@ -388,23 +378,24 @@ class Editor(gtk.HBox):
         letters and positions of intersecting words. The item at place i of
         the list corresponds to the intersecting word at position i.
         
-        A tuple contains the position at which the word at
+        Each tuple contains the position at which the word at
         (x, y, direction) intersects the intersecting word, the length
         of the intersecting word and the constraints.
         """
         result = []
-        other = {"across": "down", "down": "across"}
+        other = {"across": "down", "down": "across"}[direction]
         sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
         for s, t in self.puzzle.grid.in_direction(direction, sx, sy):
-            p, q = self.puzzle.grid.get_start_word(s, t, other[direction])
-            length = self.puzzle.grid.word_length(p, q, other[direction])
+            p, q = self.puzzle.grid.get_start_word(s, t, other)
+            length = self.puzzle.grid.word_length(p, q, other)
             
-            if other[direction] == "across":
+            if other == "across":
                 index = x - p
-            elif other[direction] == "down":
+            elif other == "down":
                 index = y - q
             
-            item = (index, length, self.puzzle.grid.gather_constraints(p, q, other[direction]))
+            constraints = self.puzzle.grid.gather_constraints(p, q, other)
+            item = (index, length, constraints)
             result.append(item)
         return result
     
@@ -590,6 +581,7 @@ class Editor(gtk.HBox):
                     self.puzzle.view.refresh_vertical_line(drawing_area, x)
         
     def change_typing_direction(self):
+        """Switch the typing direction to the other direction."""
         other = {"across": "down", "down": "across"}
         self.set_typing_direction(other[self.settings["direction"]])
         
@@ -614,6 +606,9 @@ class Editor(gtk.HBox):
         self._display_overlay([])
         
     def _on_selection_change(self):
+        """
+        Update the selection of the clue tool when the grid selection changes.
+        """
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         direction = self.settings["direction"]
