@@ -29,7 +29,8 @@ class WordTool:
         self.callbacks = callbacks
     
     def create(self):
-        self.store = gtk.ListStore(str)
+        # word displayed_string
+        self.store = gtk.ListStore(str, str)
         self.tree = gtk.TreeView(self.store)
         self.tree.connect("row-activated", self.on_row_activated)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
@@ -39,7 +40,7 @@ class WordTool:
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
-        column.set_attributes(cell, text=0)
+        column.set_attributes(cell, markup=1)
         self.tree.append_column(column)
         
         tree_window = gtk.ScrolledWindow(None, None)
@@ -93,7 +94,7 @@ class WordTool:
     def display(self, strings):
         self.store.clear()
         for s in strings:
-            self.store.append([s])
+            self.store.append([s, s])
         self.tree.queue_draw()
 
 class Editor(gtk.HBox):
