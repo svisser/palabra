@@ -109,12 +109,14 @@ def _read_cell(e):
     c["bar"] = {}
     c["bar"]["top"] = e.get("top-bar") == "true"
     c["bar"]["left"] = e.get("left-bar") == "true"
-    c["void"] = False
+    c["void"] = e.tag == "void"
     return x, y, c
     
 def _write_cell(parent, x, y, cell):
     if cell["block"]:
         e = etree.SubElement(parent, "block")
+    elif cell["void"]:
+        e = etree.SubElement(parent, "void")
     else:
         e = etree.SubElement(parent, "letter")
         if len(cell["char"]) > 0:

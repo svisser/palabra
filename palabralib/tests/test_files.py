@@ -47,6 +47,7 @@ class FilesTestCase(unittest.TestCase):
     def testReadWriteCrossword(self):
         clues = {"text": "foo", "explanation": "bar"}
         self.puzzle.grid.set_block(0, 0, True)
+        self.puzzle.grid.set_void(5, 5, True)
         self.puzzle.grid.set_char(1, 1, "A")
         self.puzzle.grid.cell(2, 2)["clues"]["across"] = clues
         self.puzzle.grid.cell(3, 3)["bar"]["top"] = True
@@ -74,11 +75,13 @@ class FilesTestCase(unittest.TestCase):
         clues = {"text": "C", "explanation": "D"}
         self.puzzle.grid.set_block(5, 5, True)
         self.puzzle.grid.set_char(6, 6, "A")
+        self.puzzle.grid.set_void(7, 7, True)
         root = etree.Element("root")
         _write_grid(root, self.puzzle.grid)
         result = _read_grid(root[0])
         self.assertEqual(result.is_block(5, 5), True)
         self.assertEqual(result.get_char(6, 6), "A")
+        self.assertEqual(result.is_void(7, 7), True)
         
     def testReadWriteClues(self):
         a = {"text": "foo", "explanation": "bar"}

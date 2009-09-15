@@ -50,6 +50,12 @@
                 <xs:attributeGroup ref="cell_props" />
             </xs:complexType>
         </xs:element>
+        <xs:element name="void">
+            <xs:complexType>
+                <xs:attributeGroup ref="cell_attrs" />
+                <xs:attributeGroup ref="cell_props" />
+            </xs:complexType>
+        </xs:element>
     </xs:choice>
     <xs:attribute name="width" type="integer_at_least_one" use="required" />
     <xs:attribute name="height" type="integer_at_least_one" use="required" />
