@@ -123,6 +123,7 @@ class Grid:
         status = {}
         status["block_count"] = self.count_blocks()
         status["char_count"] = size - status["block_count"]
+        status["void_count"] = self.count_voids()
         status["word_count"] = self.count_words()
         
         block_percentage = (float(status["block_count"]) / float(size)) * 100

@@ -167,7 +167,7 @@ class PropertiesWindow(gtk.Dialog):
         self.vbox.add(hbox)
     
     def create_general_tab(self, status, puzzle):
-        table = gtk.Table(8, 4, False)
+        table = gtk.Table(9, 4, False)
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
@@ -186,6 +186,7 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Block percentage", message, 0, 3)
         create_statistic(table, u"Letters", str(status["char_count"]), 0, 4)
         create_statistic(table, u"Clues", str(status["clue_count"]), 0, 5)
+        create_statistic(table, u"Voids", str(status["void_count"]), 0, 6)
         
         create_statistic(table, u"Checked cells", str(status["checked_count"]), 2, 0)
         create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 2, 1)
@@ -207,17 +208,17 @@ class PropertiesWindow(gtk.Dialog):
         
         label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 6, 7)
+        table.attach(label, 0, 2, 7, 8)
         label = gtk.Label(''.join(letters_in_use_strings))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 6, 7)
+        table.attach(label, 2, 4, 7, 8)
         
         label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 7, 8)
+        table.attach(label, 0, 2, 8, 9)
         label = gtk.Label(''.join(letters_not_in_use_strings))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 7, 8)
+        table.attach(label, 2, 4, 8, 9)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
