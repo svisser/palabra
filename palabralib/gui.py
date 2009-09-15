@@ -21,7 +21,7 @@ import os
 import webbrowser
 
 import action
-from appearance import AppearanceDialog, apply_appearance
+from appearance import AppearanceDialog
 from clue import ClueTool
 import constants
 from export import ExportWindow, verify_output_options
@@ -48,7 +48,7 @@ class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
         self.set_title("Palabra")
-        self.set_size_request(1024, 768)
+        self.set_size_request(960, 720)
         
         self.puzzle_toggle_items = []
         self.selection_toggle_items = []
@@ -75,7 +75,6 @@ class PalabraWindow(gtk.Window):
         self.main.pack_start(self.toolbar, False, False, 0)
         self.main.pack_start(self.panel, True, True, 0)
         self.main.pack_start(self.statusbar, False, False, 0)
-        
         self.add(self.main)
         
         self.connect("destroy", lambda widget: quit())
@@ -109,10 +108,12 @@ class PalabraWindow(gtk.Window):
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(drawing_area)
         
-        self.puzzle_manager.current_puzzle.view.refresh_visual_size(drawing_area)
+        puzzle = self.puzzle_manager.current_puzzle
+        
+        puzzle.view.refresh_visual_size(drawing_area)
         drawing_area.queue_draw()
         
-        self.editor = Editor(self, drawing_area, self.puzzle_manager.current_puzzle)
+        self.editor = Editor(self, drawing_area, puzzle)
             
         clue_tool = ClueTool(self.editor.get_clue_tool_callbacks())
         self.editor.tools["clue"] = clue_tool
@@ -132,8 +133,6 @@ class PalabraWindow(gtk.Window):
         
         main = gtk.VBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
-        
-        puzzle = self.puzzle_manager.current_puzzle
         
         tabs = gtk.Notebook()
         tabs.set_border_width(8)
@@ -861,10 +860,8 @@ class PalabraWindow(gtk.Window):
         puzzle = self.puzzle_manager.current_puzzle
         editor = AppearanceDialog(self, puzzle.view.properties)
         editor.show_all()
-        response = editor.run()
-        if response == gtk.RESPONSE_OK:
-            properties = self.puzzle_manager.current_puzzle.view.properties
-            apply_appearance(properties, editor.gather_appearance())
+        if editor.run() == gtk.RESPONSE_OK:
+            puzzle.view.properties.apply_appearance(editor.gather_appearance())
             self.update_window()
         editor.destroy()
 

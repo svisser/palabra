@@ -19,49 +19,6 @@ import gtk
 
 MAX_LINE_WIDTH = 32
 
-def apply_appearance(properties, appearance):
-    cell_color = appearance["cell"]["color"]
-    cell_red = cell_color.red
-    cell_green = cell_color.green
-    cell_blue = cell_color.blue
-    
-    line_color = appearance["line"]["color"]
-    line_red = line_color.red
-    line_green = line_color.green
-    line_blue = line_color.blue
-    
-    border_color = appearance["border"]["color"]
-    border_red = border_color.red
-    border_green = border_color.green
-    border_blue = border_color.blue
-    
-    block_color = appearance["block"]["color"]
-    block_red = block_color.red
-    block_green = block_color.green
-    block_blue = block_color.blue
-    
-    char_color = appearance["char"]["color"]
-    char_red = char_color.red
-    char_green = char_color.green
-    char_blue = char_color.blue
-    
-    number_color = appearance["number"]["color"]
-    number_red = number_color.red
-    number_green = number_color.green
-    number_blue = number_color.blue
-    
-    properties.block["color"] = (block_red, block_green, block_blue)
-    properties.border["color"] = (border_red, border_green, border_blue)
-    properties.char["color"] = (char_red, char_green, char_blue)
-    properties.cell["color"] = (cell_red, cell_green, cell_blue)
-    properties.line["color"] = (line_red, line_green, line_blue)
-    properties.number["color"] = (number_red, number_green, number_blue)
-    
-    properties.border["width"] = appearance["border"]["width"]
-    properties.line["width"] = appearance["line"]["width"]
-    properties.block["margin"] = appearance["block"]["margin"]
-    properties.cell["size"] = appearance["cell"]["size"]
-
 class AppearanceDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Appearance"
