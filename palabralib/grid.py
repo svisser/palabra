@@ -122,8 +122,10 @@ class Grid:
         
         status = {}
         status["block_count"] = self.count_blocks()
-        status["char_count"] = size - status["block_count"]
         status["void_count"] = self.count_voids()
+        
+        nots = len([(x, y) for x, y in self.cells() if not self.is_available(x, y)])
+        status["char_count"] = size - nots
         status["word_count"] = self.count_words()
         
         block_percentage = (float(status["block_count"]) / float(size)) * 100
