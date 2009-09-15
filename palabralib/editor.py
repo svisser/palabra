@@ -161,8 +161,8 @@ class Editor(gtk.HBox):
         b = preferences.prefs["color_warning_blue"] / 65535.0
         self.puzzle.view.render_warnings(context, event.area, r, g, b)
         
-        #if self.palabra_window.blacklist is not None:
-        #    self.puzzle.view.render_blacklist(context, event.area, r, g, b, self.palabra_window.blacklist)
+        if self.palabra_window.blacklist is not None:
+            self.puzzle.view.render_blacklist(context, event.area, r, g, b, self.palabra_window.blacklist)
         
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
