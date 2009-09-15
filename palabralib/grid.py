@@ -28,35 +28,28 @@ class Grid:
         
     def _default_cell(self):
         cell = {}
+        cell["bar"] = {"top": False, "left": False}
         cell["block"] = False
         cell["char"] = ""
         cell["clues"] = {}
-        cell["bar"] = {"top": False, "left": False}
+        cell["void"] = False
         return cell
 
     def is_start_horizontal_word(self, x, y):
         """Return True when a horizontal words begins in the cell at (x, y)."""
-        if self.is_block(x, y):
+        if not self.is_available(x, y):
             return False
-        if (x == 0 and self.width > 1 and not self.is_block(1, y)
-            and not self.has_bar(1, y, "left")):
-            return True
-        if (x > 0 and x < self.width - 1 and (self.is_block(x - 1, y) or self.has_bar(x, y, "left"))
-            and not (self.is_block(x + 1, y) or self.has_bar(x + 1, y, "left"))):
-            return True
-        return False
+        left = not self.is_available(x - 1, y) or self.has_bar(x, y, "left")
+        right = self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left")
+        return left and right
             
     def is_start_vertical_word(self, x, y):
         """Return True when a vertical word begins in the cell at (x, y)."""
-        if self.is_block(x, y):
+        if not self.is_available(x, y):
             return False
-        if (y == 0 and self.height > 1 and not self.is_block(x, 1)
-            and not self.has_bar(x, 1, "top")):
-            return True
-        if (y > 0 and y < self.height - 1 and (self.is_block(x, y - 1) or self.has_bar(x, y, "top"))
-            and not (self.is_block(x, y + 1) or self.has_bar(x, y + 1, "top"))):
-            return True
-        return False
+        top = not self.is_available(x, y - 1) or self.has_bar(x, y, "top")
+        bottom = self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top")
+        return top and bottom
             
     def is_start_word(self, x, y):
         """Return True when a word begins in either direction in the cell (x, y)."""
@@ -106,12 +99,12 @@ class Grid:
         Return the number of words that contain the cell (x, y).
         
         Return values:
-        -1 : A block
+        -1 : A block or void
         0 : An isolated cell: no words contain this cell
         1 : One word contains this cell
         2 : Two words contain this cell
         """
-        if self.is_block(x, y):
+        if not self.is_available(x, y):
             return -1
             
         check_count = 0
@@ -336,6 +329,10 @@ class Grid:
         """Return the number of blocks in the grid."""
         return sum([1 for x, y in self.cells() if self.is_block(x, y)])
         
+    def count_voids(self):
+        """Return the number of voids in the grid."""
+        return sum([1 for x, y in self.cells() if self.is_void(x, y)])
+        
     def count_words(self):
         """Return the number of words in the grid."""
         total = 0
@@ -412,8 +409,8 @@ class Grid:
         dirty = [(x, y, "down") for x in xrange(self.width)]
 
         ny = y - 1 if insert_above else y + 1
-        blocks = [x for x in xrange(self.width) if self.is_block(x, y)]
-        dirty += [(x, ny, "down") for x in blocks if self.is_valid(x, ny)]
+        nots = [x for x in xrange(self.width) if not self.is_available(x, y)]
+        dirty += [(x, ny, "down") for x in nots if self.is_valid(x, ny)]
         self._clear_clues(dirty)
 
         self.resize(self.width, self.height + 1, False)
@@ -432,8 +429,8 @@ class Grid:
         dirty = [(x, y, "across") for y in xrange(self.height)]
         
         nx = x - 1 if insert_left else x + 1
-        blocks = [y for y in xrange(self.height) if self.is_block(x, y)]
-        dirty += [(nx, y, "across") for y in blocks if self.is_valid(nx, y)]
+        nots = [y for y in xrange(self.height) if not self.is_available(x, y)]
+        dirty += [(nx, y, "across") for y in nots if self.is_valid(nx, y)]
         self._clear_clues(dirty)
         
         self.resize(self.width + 1, self.height, False)
@@ -451,9 +448,9 @@ class Grid:
     def remove_column(self, x):
         """Remove the column at horizontal coordinate x."""
         dirty = [(x, y, "across") for y in xrange(self.height)]
-        blocks = [y for y in xrange(self.height) if self.is_block(x, y)]
+        nots = [y for y in xrange(self.height) if not self.is_available(x, y)]
         for p in [x - 1, x + 1]:
-            dirty += [(p, y, "across") for y in blocks if self.is_valid(p, y)]
+            dirty += [(p, y, "across") for y in nots if self.is_valid(p, y)]
         self._clear_clues(dirty)
         
         self.data = map(lambda row: row[:x] + row[x + 1:], self.data)
@@ -462,9 +459,9 @@ class Grid:
     def remove_row(self, y):
         """Remove the row at vertical coordinate y."""
         dirty = [(x, y, "down") for x in xrange(self.width)]
-        blocks = [x for x in xrange(self.width) if self.is_block(x, y)]
+        nots = [x for x in xrange(self.width) if not self.is_available(x, y)]
         for q in [y - 1, y + 1]:
-            dirty += [(x, q, "down") for x in blocks if self.is_valid(x, q)]
+            dirty += [(x, q, "down") for x in nots if self.is_valid(x, q)]
         self._clear_clues(dirty)
         
         self.data = self.data[:y] + self.data[y + 1:]
@@ -651,8 +648,9 @@ class Grid:
         return 0 <= x < self.width and 0 <= y < self.height
         
     def is_available(self, x, y):
-        """Return True if the given (x, y) is valid and not a block."""
-        return self.is_valid(x, y) and not self.is_block(x, y)
+        """Return True if the given (x, y) is valid and not a block or a void."""
+        return (self.is_valid(x, y) and not self.is_block(x, y)
+            and not self.is_void(x, y))
         
     def get_size(self):
         """Return a tuple containing the width and height of the grid."""
@@ -670,12 +668,7 @@ class Grid:
         return self.data[y][x]["clues"]
         
     def set_block(self, x, y, status):
-        if status:
-            self._clear_clues_related_to_cell(x, y)
-        else:
-            for p, q in [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]:
-                if self.is_valid(p, q):
-                    self._clear_clues_related_to_cell(p, q)
+        self._on_cell_type_change(x, y, status)
         self.data[y][x]["block"] = status
         
     def is_block(self, x, y):
@@ -705,3 +698,18 @@ class Grid:
             sx, sy = self.get_start_horizontal_word(x, y)
             self._clear_clues([(sx, sy, "across")])
         self.data[y][x]["bar"][side] = status
+        
+    def is_void(self, x, y):
+        return self.data[y][x]["void"]
+        
+    def set_void(self, x, y, status):
+        self._on_cell_type_change(x, y, status)
+        self.data[y][x]["void"] = status
+        
+    def _on_cell_type_change(self, x, y, status):
+        if status:
+            self._clear_clues_related_to_cell(x, y)
+        else:
+            for p, q in [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]:
+                if self.is_valid(p, q):
+                    self._clear_clues_related_to_cell(p, q)

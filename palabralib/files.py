@@ -109,6 +109,7 @@ def _read_cell(e):
     c["bar"] = {}
     c["bar"]["top"] = e.get("top-bar") == "true"
     c["bar"]["left"] = e.get("left-bar") == "true"
+    c["void"] = False
     return x, y, c
     
 def _write_cell(parent, x, y, cell):

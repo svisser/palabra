@@ -56,6 +56,14 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_bar(3, 3, "top", False)
         self.assertEqual(self.grid.has_bar(3, 3, "top"), False)
         
+    def testBasicVoid(self):
+        """Basic functionality - voids."""
+        self.assertEqual(self.grid.is_void(0, 0), False)
+        self.grid.set_void(0, 0, True)
+        self.assertEqual(self.grid.is_void(0, 0), True)
+        self.grid.set_void(0, 0, False)
+        self.assertEqual(self.grid.is_void(0, 0), False)
+        
     def testIsStartHorizontalWordOne(self):
         """A single cell (ended by a block) is not a horizontal word."""
         self.assertEqual(self.grid.is_start_horizontal_word(0, 0), True)
@@ -226,15 +234,15 @@ class GridTestCase(unittest.TestCase):
             self.assertEqual(q, 6)
             
     def testCheckCountBlocks(self):
-        """Check counts range from -1 to 2 for blocks to default cells."""
+        """Check counts range from -1 to 2 for blocks/voids to default cells."""
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
         self.grid.set_block(4, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
-        self.grid.set_block(6, 5, True)
+        self.grid.set_void(6, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), 1)
         self.grid.set_block(5, 4, True)
         self.assertEqual(self.grid.get_check_count(5, 5), 1)
-        self.grid.set_block(5, 6, True)
+        self.grid.set_void(5, 6, True)
         self.assertEqual(self.grid.get_check_count(5, 5), 0)
         self.grid.set_block(5, 5, True)
         self.assertEqual(self.grid.get_check_count(5, 5), -1)
@@ -317,6 +325,28 @@ class GridTestCase(unittest.TestCase):
         indir = [(x, y) for x, y
             in self.grid.in_direction("down", 0, self.grid.height - 1, True)]
         self.assertEqual(cells, indir)
+        
+    def testInDirectionVoids(self):
+        self.grid.set_void(5, 0, True)
+        cells = [(x, 0) for x in xrange(5)]
+        indir = [(x, y) for x, y in self.grid.in_direction("across", 0, 0)]
+        self.assertEqual(cells, indir)
+        self.grid.set_void(0, 5, True)
+        cells = [(0, x) for x in xrange(5)]
+        indir = [(x, y) for x, y in self.grid.in_direction("down", 0, 0)]
+        self.assertEqual(cells, indir)
+        
+    def testInDirectionBlocksReverse(self):
+        self.grid.set_void(5, 0, True)
+        cells = [(x, 0) for x in xrange(self.grid.width - 1, 5, -1)]
+        indir = [(x, y) for x, y
+            in self.grid.in_direction("across", self.grid.width - 1, 0, True)]
+        self.assertEqual(cells, indir)
+        self.grid.set_void(0, 5, True)
+        cells = [(0, x) for x in xrange(self.grid.height - 1, 5, -1)]
+        indir = [(x, y) for x, y
+            in self.grid.in_direction("down", 0, self.grid.height - 1, True)]
+        self.assertEqual(cells, indir)
     
     def testGatherWordOne(self):
         word = self.grid.gather_word(0, 0, "across", "_")
@@ -374,11 +404,22 @@ class GridTestCase(unittest.TestCase):
         
         for i in range(10):
             self.grid.set_block(i, i, True)
-        self.assertEqual(self.grid.count_blocks(), 10)
+            self.assertEqual(self.grid.count_blocks(), i + 1)
         
         for i in range(10):
             self.grid.set_block(i, i, False)
         self.assertEqual(self.grid.count_blocks(), 0)
+        
+    def testCountVoids(self):
+        self.assertEqual(self.grid.count_voids(), 0)
+        
+        for i in range(10):
+            self.grid.set_void(i, i, True)
+            self.assertEqual(self.grid.count_voids(), i + 1)
+        
+        for i in range(10):
+            self.grid.set_void(i, i, False)
+        self.assertEqual(self.grid.count_voids(), 0)
         
     def testResize(self):
         for i in [2, 4, 6, 8]:
@@ -872,3 +913,11 @@ class GridTestCase(unittest.TestCase):
         self.square_grid.set_bar(3, 10, "left", True)
         self.square_grid.diagonal_flip()
         self.assertEquals(self.square_grid.has_bar(10, 3, "top"), True)
+        
+    def testIsAvailable(self):
+        """A cell is available when text can be entered into it."""
+        self.assertEquals(self.grid.is_available(0, 0), True)
+        self.grid.set_block(0, 0, True)
+        self.assertEquals(self.grid.is_available(0, 0), False)
+        self.grid.set_void(1, 0, True)
+        self.assertEquals(self.grid.is_available(1, 0), False)
