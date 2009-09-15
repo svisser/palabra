@@ -286,7 +286,10 @@ class Editor(gtk.HBox):
             if (self.settings["word_search_parameters"] == parameters
                 and not show_intersecting and not force_refresh):
                 return
-            if len(constraints) != length:
+            if length <= 1:
+                # if this is the case, don't search and clear the words list
+                pass
+            elif len(constraints) != length:
                 more = None
                 if show_intersecting:
                     more = self._gather_all_constraints(x, y, self.settings["direction"])
