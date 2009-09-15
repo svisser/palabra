@@ -1,8 +1,12 @@
 
 This is a list of changes since the initial release of Palabra.
 
-Version 0.1.1 (September 15, 2009)
+Version 0.1.2 (unreleased)
 ==========================
+* Partial support for voids.
+
+Version 0.1.1 (September 15, 2009)
+==================================
 * XML files are validated against XML schema.
 * Word lists can be used to populate the grid.
 * Speed improvements in rendering code.
