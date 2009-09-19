@@ -243,7 +243,7 @@ class GridView:
             
         self.render_blocks(context, area)
         self.render_lines(context, area)
-        self.render_border(context, area)
+        #self.render_border(context, area)
         
         if self.settings["show_chars"]:
             self.render_chars(context, area)
@@ -384,7 +384,7 @@ class GridView:
         
         def render(context, grid, props):
             context.set_line_width(props.line["width"])
-            for x, y in grid.cells():
+            for x, y, ltype, side in grid.lines():
                 sx = props.grid_to_screen_x(x, False)
                 sy = props.grid_to_screen_y(y, False)
                 
@@ -399,17 +399,16 @@ class GridView:
                 
                 # only render when cell intersects the specified area
                 if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
-                    if y > 0:
+                    bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
+                    if ltype == "top":
                         ry = sy - 0.5 * props.line["width"]
                         rdx = props.cell["size"]
-                        bar = grid.has_bar(x, y, "top")
                         render_line(context, props, sx, ry, rdx, 0, bar)
-                    if x > 0:
+                    elif ltype == "left":
                         rx = sx - 0.5 * props.line["width"]
                         rdy = props.cell["size"]
-                        if y < grid.height - 1:
-                            rdy += props.line["width"]
-                        bar = grid.has_bar(x, y, "left")
+                        #if y < grid.height - 1:
+                        #    rdy += props.line["width"]
                         render_line(context, props, rx, sy, 0, rdy, bar)
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
         self._render(context, render, color=color)

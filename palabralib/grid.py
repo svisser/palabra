@@ -259,6 +259,31 @@ class Grid:
         for y in xrange(self.height):
             for x in xrange(self.width):
                 yield x, y
+                
+    def lines(self):
+        """Iterate over the lines of the grid (uses nonexistent cells for outer lines)."""
+        for x, y in self.cells():
+            for edge, (dx, dy) in [("left", (-1, 0)), ("top", (0, -1))]:
+                if self.is_valid(x + dx, y + dy):
+                    v0 = self.is_void(x, y)
+                    v1 = self.is_void(x + dx, y + dy)
+                    if not (v0 and v1):
+                        side = "normal"
+                        if v0 and not v1:
+                            side = "innerborder"
+                        elif not v0 and v1:
+                            side = "outerborder"
+                        yield x, y, edge, side
+                elif not self.is_void(x, y):
+                    yield x, y, edge, "outerborder"
+                
+        # also yield lines at the bottom and the right
+        for x in xrange(self.width):
+            if not self.is_void(x, self.height - 1):
+                yield x, self.height, "top", "outerborder"
+        for y in xrange(self.height):
+            if not self.is_void(self.width - 1, y):
+                yield self.width, y, "left", "outerborder"
                     
     def gather_word(self, x, y, direction, empty_char="?"):
         """Return the word starting at (x, y) in the given direction."""
