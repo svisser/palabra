@@ -384,7 +384,9 @@ class GridView:
         
         def render(context, grid, props):
             context.set_line_width(props.line["width"])
-            for x, y, ltype, side in grid.lines():
+            
+            lines = grid.lines()
+            for x, y, ltype, side in lines:
                 sx = props.grid_to_screen_x(x, False)
                 sy = props.grid_to_screen_y(y, False)
                 
@@ -401,14 +403,31 @@ class GridView:
                 if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
                     bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
                     if ltype == "top":
-                        ry = sy - 0.5 * props.line["width"]
-                        rdx = props.cell["size"]
+                        if side == "normal":
+                            context.set_line_width(props.line["width"])
+                            ry = sy - 0.5 * props.line["width"]
+                            rdx = props.cell["size"]
+                        elif "border" in side:
+                            context.set_line_width(props.border["width"])
+                            if side == "outerborder":
+                                ry = sy - 0.5 * props.border["width"]
+                            elif side == "innerborder":
+                                ry = sy + 0.5 * props.border["width"] - 1
+                            rdx = props.cell["size"]
                         render_line(context, props, sx, ry, rdx, 0, bar)
                     elif ltype == "left":
-                        rx = sx - 0.5 * props.line["width"]
-                        rdy = props.cell["size"]
-                        #if y < grid.height - 1:
-                        #    rdy += props.line["width"]
+                        if side == "normal":
+                            context.set_line_width(props.line["width"])
+                            rx = sx - 0.5 * props.line["width"]
+                            rdy = props.cell["size"]
+                            
+                        elif "border" in side:
+                            context.set_line_width(props.border["width"])
+                            if side == "outerborder":
+                                rx = sx - 0.5 * props.border["width"]
+                            elif side == "innerborder":
+                                rx = sx + 0.5 * props.border["width"] - 1
+                            rdy = props.cell["size"]
                         render_line(context, props, rx, sy, 0, rdy, bar)
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
         self._render(context, render, color=color)
