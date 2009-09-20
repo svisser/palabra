@@ -637,8 +637,7 @@ class Grid:
     def clear_blocks(self):
         """Clear the blocks of the grid."""
         for x, y in self.cells():
-            if self.is_block(x, y):
-                self.set_block(x, y, False)
+            self.set_block(x, y, False)
                 
     def clear_chars(self):
         """Clear the characters of the grid."""
