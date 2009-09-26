@@ -119,7 +119,6 @@ class Editor(gtk.HBox):
         self.settings["keep_point_symmetry"] = False
         self.settings["keep_point_symmetry"] = True
         
-        self.settings["word_search_parameters"] = None
         self.settings["show_intersecting_words"] = False
         
         self.settings["locked_grid"] = False
@@ -295,10 +294,8 @@ class Editor(gtk.HBox):
                 wordlists = self.palabra_window.wordlists
                 result = search_wordlists(wordlists, length, constraints, more)
         if result is not None:
-            self.settings["word_search_parameters"] = parameters
             self.tools["word"].display(result, show_intersections)
         else:
-            self.settings["word_search_parameters"] = None
             self.tools["word"].display([], show_intersections)
             
     def get_clue_tool_callbacks(self):
