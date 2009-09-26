@@ -243,7 +243,6 @@ class GridView:
             
         self.render_blocks(context, area)
         self.render_lines(context, area)
-        #self.render_border(context, area)
         
         if self.settings["show_chars"]:
             self.render_chars(context, area)
@@ -462,80 +461,6 @@ class GridView:
                             rdy = props.cell["size"]
                         render_line(context, props, rx, sy, 0, rdy, bar)
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
-        self._render(context, render, color=color)
-        
-    def render_border(self, context, area):
-        """Render the border of the grid."""
-        def render(context, grid, props):
-            context.set_line_width(props.border["width"])
-            
-            for x, y in grid.cells():
-                if x > 0 and x < grid.width - 1 and y > 0 and y < grid.height - 1:
-                    continue
-                sx = props.grid_to_screen_x(x, False)
-                sy = props.grid_to_screen_y(y, False)
-                
-                # overestimate to accommodate for cells that are near the border of the puzzle
-                bx = sx - props.line["width"] - props.border["width"]
-                by = sy - props.line["width"] - props.border["width"]
-                bsize = props.cell["size"] + 2 * props.border["width"] + 2 * props.line["width"]
-                
-                b = gtk.gdk.Rectangle(bx, by, bsize, bsize)
-                a = self._determine_area(area)
-                i = b.intersect(a)
-                if (i.x, i.y, i.width, i.height) == (0, 0, 0, 0):
-                    continue
-                
-                cell = props.cell["size"]
-                border = props.border["width"]
-                line = props.line["width"]
-                
-                context.move_to(sx, sy)
-                
-                # corners
-                corner = False
-                if (x, y) == (0, 0):
-                    context.rel_move_to(-0.5 * border, cell)
-                    context.rel_line_to(0, -cell - 0.5 * border)
-                    context.rel_line_to(cell + 0.5 * border, 0)
-                    corner = True
-                if (x, y) == (grid.width - 1, 0):
-                    context.rel_move_to(-line, -0.5 * border)
-                    context.rel_line_to(line + cell + 0.5 * border, 0)
-                    context.rel_line_to(0, cell + 0.5 * border)
-                    corner = True
-                if (x, y) == (0, grid.height - 1):
-                    context.rel_move_to(-0.5 * border, -line)
-                    context.rel_line_to(0, line + cell + 0.5 * border)
-                    context.rel_line_to(cell + 0.5 * border, 0)
-                    corner = True
-                if (x, y) == (grid.width - 1, grid.height - 1):
-                    context.rel_move_to(cell + 0.5 * border, -line)
-                    context.rel_line_to(0, line + cell + 0.5 * border)
-                    context.rel_line_to(-line - cell - 0.5 * border, 0)
-                    corner = True
-                if corner:
-                    continue
-                    
-                # remaining borders
-                if y == 0:
-                    # north
-                    context.rel_move_to(-line, -0.5 * border)
-                    context.rel_line_to(line + cell, 0)
-                if x == 0:
-                    # west
-                    context.rel_move_to(-0.5 * border, -line)
-                    context.rel_line_to(0, line + cell)
-                if x == grid.width - 1:
-                    # east
-                    context.rel_move_to(cell + 0.5 * border, -line)
-                    context.rel_line_to(0, line + cell)
-                if y == grid.height - 1:
-                    # south
-                    context.rel_move_to(-line, cell + 0.5 * border)
-                    context.rel_line_to(line + cell, 0)
-            context.stroke()
-        color = map(lambda x: x / 65535.0, self.properties.border["color"])
         self._render(context, render, color=color)
         
     def render_line(self, context, area, x, y, direction, r, g, b):
