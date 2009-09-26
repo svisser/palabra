@@ -638,6 +638,11 @@ class Grid:
         """Clear the blocks of the grid."""
         for x, y in self.cells():
             self.set_block(x, y, False)
+            
+    def clear_voids(self):
+        """Clear the void cells of the grid."""
+        for x, y in self.cells():
+            self.set_void(x, y, False)
                 
     def clear_chars(self):
         """Clear the characters of the grid."""

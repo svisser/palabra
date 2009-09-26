@@ -1013,6 +1013,11 @@ class PalabraWindow(gtk.Window):
             , title=u"Bl_ocks"
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
+            lambda item: self.transform_grid(transform.clear_voids)
+            , u"Clear the void cells and the involved clues of the puzzle"
+            , title=u"_Voids"
+            , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_chars)
             , u"Clear the letters and the involved clues of the puzzle"
             , title=u"_Letters"
