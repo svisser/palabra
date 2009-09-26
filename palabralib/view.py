@@ -533,14 +533,16 @@ class GridView:
     def render_background(self, context, area):
         """Render the background of all cells of the grid."""
         def render(context, grid, props):
-            bx = self.properties.border["width"]
-            by = self.properties.border["width"]
-            bwidth = self.properties.get_grid_width() - self.properties.border["width"]
-            bheight = self.properties.get_grid_height() - self.properties.border["width"]
+            bx = 0 #self.properties.border["width"]
+            by = 0 #self.properties.border["width"]
+            bwidth = self.properties.get_grid_width() #- 2 * self.properties.border["width"]
+            bheight = self.properties.get_grid_height() #- 2 * self.properties.border["width"]
             
             b = gtk.gdk.Rectangle(bx, by, bwidth, bheight)
             a = self._determine_area(area)
             i = b.intersect(a)
+            if (i.x, i.y, i.width, i.height) == (0, 0, 0, 0):
+                return
             context.rectangle(i.x, i.y, i.width, i.height)
             context.fill()
         color = map(lambda x: x / 65535.0, self.properties.cell["color"])

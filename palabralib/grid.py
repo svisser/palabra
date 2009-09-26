@@ -19,6 +19,19 @@ class Grid:
     def __init__(self, width, height):
         """Construct a grid with the given dimensions."""
         self.initialize(width, height)
+        for x in xrange(0, 5):
+            self.set_void(x, 5, True)
+        self.set_void(9, 9, True)
+        self.set_void(10, 10, True)
+        self.set_void(9, 11, True)
+        self.set_void(11, 9, True)
+        self.set_void(11, 11, True)
+        
+        self.set_void(13, 5, True)
+        self.set_void(13, 4, True)
+        self.set_void(12, 5, True)
+        self.set_void(14, 5, True)
+        self.set_void(13, 6, True)
         
     def initialize(self, width, height):
         """Reset the grid to the given dimensions with all empty cells."""
