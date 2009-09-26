@@ -381,6 +381,26 @@ class GridView:
             context.stroke()
             if bar:
                 context.set_line_width(props.line["width"])
+                
+        def get_adjustments(lines, props, x, y):
+            def get_delta(x, y, side_no_extend, side_extend):
+                """
+                Determine the delta in pixels.
+                The delta is at least the normal line width.
+                """
+                if ((x, y, "left", side_no_extend) in lines
+                    or (x, y - 1, "left", side_no_extend) in lines):
+                    return props.line["width"]
+                elems = [(x, y, "left", "normal"), (x, y - 1, "left", "normal")]
+                if True in map(lambda e: e in lines, elems):
+                    return props.line["width"]
+                elems = [(x, y, "left", side_extend), (x, y - 1, "left", side_extend)]
+                if True in map(lambda e: e in lines, elems):
+                    return props.border["width"]
+                return 0
+            dx_left = get_delta(x, y, "innerborder", "outerborder")
+            dx_right = get_delta(x + 1, y, "outerborder", "innerborder")
+            return (dx_left, dx_right)
         
         def render(context, grid, props):
             context.set_line_width(props.line["width"])
@@ -403,6 +423,7 @@ class GridView:
                 if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
                     bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
                     if ltype == "top":
+                        rx = sx
                         if side == "normal":
                             context.set_line_width(props.line["width"])
                             ry = sy - 0.5 * props.line["width"]
@@ -412,9 +433,18 @@ class GridView:
                             if side == "outerborder":
                                 ry = sy - 0.5 * props.border["width"]
                             elif side == "innerborder":
-                                ry = sy + 0.5 * props.border["width"] - 1
+                                ry = sy + 0.5 * props.border["width"]
+                                if not grid.is_available(x, y):
+                                    ry -= props.line["width"]
                             rdx = props.cell["size"]
-                        render_line(context, props, sx, ry, rdx, 0, bar)
+                            
+                        # adjust horizontal lines to fill empty spaces in corners
+                        dxl, dxr = get_adjustments(lines, props, x, y)
+                        rx -= dxl
+                        rdx += dxl
+                        rdx += dxr
+                            
+                        render_line(context, props, rx, ry, rdx, 0, bar)
                     elif ltype == "left":
                         if side == "normal":
                             context.set_line_width(props.line["width"])
@@ -426,7 +456,9 @@ class GridView:
                             if side == "outerborder":
                                 rx = sx - 0.5 * props.border["width"]
                             elif side == "innerborder":
-                                rx = sx + 0.5 * props.border["width"] - 1
+                                rx = sx + 0.5 * props.border["width"]
+                                if not grid.is_available(x, y):
+                                    rx -= props.line["width"]
                             rdy = props.cell["size"]
                         render_line(context, props, rx, sy, 0, rdy, bar)
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
