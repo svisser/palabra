@@ -91,10 +91,14 @@ class WordTool:
         else:
             self.callbacks["overlay"](self.store.get_value(it, 0))
         
-    def display(self, strings):
+    def display(self, strings, show_intersections):
         self.store.clear()
-        for s in strings:
-            self.store.append([s, s])
+        for word, has_intersections in strings:
+            if show_intersections and not has_intersections:
+                continue
+            color = "black" if has_intersections else "#ff1111"
+            display = "".join(["<span color=\"", color,"\">", word, "</span>"])
+            self.store.append([word, display])
         self.tree.queue_draw()
 
 class Editor(gtk.HBox):
@@ -276,31 +280,26 @@ class Editor(gtk.HBox):
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        show_intersecting = self.settings["show_intersecting_words"]
+        show_intersections = self.settings["show_intersecting_words"]
         x = self.settings["selection_x"]
         y = self.settings["selection_y"]
         result = None
         if self.puzzle.grid.is_available(x, y):
             parameters = self._get_search_parameters(x, y, self.settings["direction"])
             length, constraints = parameters
-            if (self.settings["word_search_parameters"] == parameters
-                and not show_intersecting and not force_refresh):
-                return
             if length <= 1:
                 # if this is the case, don't search and clear the words list
                 pass
             elif len(constraints) != length:
-                more = None
-                if show_intersecting:
-                    more = self._gather_all_constraints(x, y, self.settings["direction"])
+                more = self._gather_all_constraints(x, y, self.settings["direction"])
                 wordlists = self.palabra_window.wordlists
                 result = search_wordlists(wordlists, length, constraints, more)
         if result is not None:
             self.settings["word_search_parameters"] = parameters
-            self.tools["word"].display(result)
+            self.tools["word"].display(result, show_intersections)
         else:
             self.settings["word_search_parameters"] = None
-            self.tools["word"].display([])
+            self.tools["word"].display([], show_intersections)
             
     def get_clue_tool_callbacks(self):
         def select(x, y, direction):

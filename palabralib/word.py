@@ -184,11 +184,12 @@ class WordList:
                     
                     for l, cs in filled_constraints:
                         if not self.has_matches(l, cs):
+                            result.append((word, False))
                             break
                     else:
-                        result.append(word)
+                        result.append((word, True))
                 else:
-                    result.append(word)
+                    result.append((word, True))
         return result
         
     @staticmethod
