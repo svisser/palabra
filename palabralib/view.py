@@ -358,8 +358,10 @@ class GridView:
                         rheight -= (2 * offset)
                     
                     b = gtk.gdk.Rectangle(rx, ry, rwidth, rheight)
-                    a = self._determine_area(area)
-                    i = b.intersect(a)
+                    if area is not None:
+                        i = b.intersect(self._determine_area(area))
+                    else:
+                        i = b
                     if props.block["margin"] == 0:
                         # -0.5 for coordinates and +1 for size
                         # are needed to render seamlessly in PDF
@@ -415,8 +417,10 @@ class GridView:
                 bsize = props.cell["size"] + 2 * props.border["width"] + 2 * props.line["width"]
                 
                 b = gtk.gdk.Rectangle(bx, by, bsize, bsize)
-                a = self._determine_area(area)
-                i = b.intersect(a)
+                if area is not None:
+                    i = b.intersect(self._determine_area(area))
+                else:
+                    i = b
                 
                 # only render when cell intersects the specified area
                 if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
@@ -518,8 +522,10 @@ class GridView:
             by = props.grid_to_screen_y(y, False)
             bsize = props.cell["size"]
             b = gtk.gdk.Rectangle(bx, by, bsize, bsize)
-            a = self._determine_area(area)
-            i = b.intersect(a)
+            if area is not None:
+                i = b.intersect(self._determine_area(area))
+            else:
+                i = b
             
             if (i.x, i.y, i.width, i.height) == (0, 0, 0, 0):
                 return
@@ -533,18 +539,17 @@ class GridView:
     def render_background(self, context, area):
         """Render the background of all cells of the grid."""
         def render(context, grid, props):
-            bx = 0 #self.properties.border["width"]
-            by = 0 #self.properties.border["width"]
-            bwidth = self.properties.get_grid_width() #- 2 * self.properties.border["width"]
-            bheight = self.properties.get_grid_height() #- 2 * self.properties.border["width"]
+            bwidth = self.properties.get_grid_width()
+            bheight = self.properties.get_grid_height()
             
-            b = gtk.gdk.Rectangle(bx, by, bwidth, bheight)
-            a = self._determine_area(area)
-            i = b.intersect(a)
-            if (i.x, i.y, i.width, i.height) == (0, 0, 0, 0):
-                return
-            context.rectangle(i.x, i.y, i.width, i.height)
-            context.fill()
+            b = gtk.gdk.Rectangle(0, 0, bwidth, bheight)
+            if area is not None:
+                i = b.intersect(self._determine_area(area))
+            else:
+                i = b
+            if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
+                context.rectangle(i.x, i.y, i.width, i.height)
+                context.fill()
         color = map(lambda x: x / 65535.0, self.properties.cell["color"])
         self._render(context, render, color=color)
         
@@ -595,8 +600,10 @@ class GridView:
         sy = props.grid_to_screen_y(y, False)
         
         b = gtk.gdk.Rectangle(sx, sy, props.cell["size"], props.cell["size"])
-        a = self._determine_area(area)
-        i = b.intersect(a)
+        if area is not None:
+            i = b.intersect(self._determine_area(area))
+        else:
+            i = b
         return (i.x, i.y, i.width, i.height) != (0, 0, 0, 0)
             
     def _determine_area(self, area):
