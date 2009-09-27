@@ -18,6 +18,8 @@
 import gtk
 import os
 
+from lxml import etree
+
 import action
 import constants
 import grid
@@ -89,32 +91,36 @@ defaults["color_warning_red"] = (65535, int)
 defaults["color_warning_green"] = (49152, int)
 defaults["color_warning_blue"] = (49152, int)
 
-def read_config_file():    
-    parser = ConfigParser.RawConfigParser()
-    parser.read(constants.CONFIG_FILE_LOCATION)
-    
-    for key in defaults:
-        if parser.has_option("DEFAULT", key):
-            if defaults[key][1] == int:
-                prefs[key] = parser.getint("DEFAULT", key)
-            elif defaults[key][1] == bool:
-                prefs[key] = parser.getboolean("DEFAULT", key)
-        else:
-            prefs[key] = defaults[key][0]
+def read_config_file():
+    props = {}
+    try:
+        doc = etree.parse(constants.CONFIG_FILE_LOCATION)
+        root = doc.getroot()
+        version = root.get("version")
+        for p in root:
+            props[p.get("name")] = p.text
+    except (etree.XMLSyntaxError, IOError):
+        pass
+    for key, value in defaults.items():
+        prefs[key] = value[1](props[key]) if key in props else value[0]
 
 def write_config_file():
-    parser = ConfigParser.RawConfigParser()
-    for key in defaults.keys():
-        if key in prefs:
-            parser.set("DEFAULT", key, str(prefs[key]))
-        else:
-            parser.set("DEFAULT", key, str(defaults[key][0]))
+    root = etree.Element("palabra-preferences")
+    root.set("version", constants.VERSION)
+    
+    keys = defaults.keys()
+    keys.sort()
+    for key in keys:
+        e = etree.SubElement(root, "property")
+        e.set("name", key)
+        e.text = str(prefs[key]) if key in prefs else str(defaults[key][0])
     
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
         os.mkdir(constants.APPLICATION_DIRECTORY)
     
-    f = open(constants.CONFIG_FILE_LOCATION, "wb")
-    parser.write(f)
+    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
+    f = open(constants.CONFIG_FILE_LOCATION, "w")
+    f.write(contents)
     f.close()
 
 class PreferencesWindow(gtk.Dialog):
