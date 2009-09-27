@@ -96,7 +96,7 @@ class WordTool:
         for word, has_intersections in strings:
             if show_intersections and not has_intersections:
                 continue
-            color = "black" if has_intersections else "#ff1111"
+            color = "black" if has_intersections else "gray"
             display = "".join(["<span color=\"", color,"\">", word, "</span>"])
             self.store.append([word, display])
         self.tree.queue_draw()
