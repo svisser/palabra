@@ -100,7 +100,7 @@ def read_config_file():
         for p in root:
             props[p.get("name")] = p.text
     except (etree.XMLSyntaxError, IOError):
-        pass
+        print "Warning: Error with reading configuration file, using defaults instead."
     for key, value in defaults.items():
         prefs[key] = value[1](props[key]) if key in props else value[0]
 
