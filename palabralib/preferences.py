@@ -68,11 +68,11 @@ color_schemes["cyan"] = {"title": "Cyan"
 prefs = {}
 
 defaults = {}
-defaults["backup_copy_before_save"] = (True, bool)
+defaults["backup_copy_before_save"] = (False, lambda s: "True" in s)
 defaults["new_initial_height"] = (15, int)
 defaults["new_initial_width"] = (15, int)
 defaults["undo_stack_size"] = (50, int)
-defaults["undo_use_finite_stack"] = (True, bool)
+defaults["undo_use_finite_stack"] = (True, lambda s: "True" in s)
 defaults["color_primary_selection_red"] = (color_schemes["yellow"]["primary_selection"][0], int)
 defaults["color_primary_selection_green"] = (color_schemes["yellow"]["primary_selection"][1], int)
 defaults["color_primary_selection_blue"] = (color_schemes["yellow"]["primary_selection"][2], int)
@@ -235,6 +235,22 @@ class PreferencesWindow(gtk.Dialog):
         align.add(gtk.Label(u"Default height:"))
         size_table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
         size_table.attach(new_height_spinner, 1, 2, 1, 2, 0, 0)
+        
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup(u"<b>Files</b>")
+        main.pack_start(label, False, False, 6)
+        
+        def callback(widget, data=None):
+            prefs["backup_copy_before_save"] = widget.get_active()
+        backup_button = gtk.CheckButton(u"Create a backup copy of files before saving")
+        backup_button.set_active(prefs["backup_copy_before_save"])
+        backup_button.connect("toggled", callback)
+        
+        align = gtk.Alignment(0, 0.5)
+        align.set_padding(0, 0, 12, 0)
+        align.add(backup_button)
+        main.pack_start(align, False, False, 0)
         
         return main
     
