@@ -23,7 +23,6 @@ VERSION = "0.1.2"
 # configuration file
 APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
 CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config")
-CONFIG_FILE_LOCATION2 = os.path.expanduser("~/.palabra/config2")
 
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
