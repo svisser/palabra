@@ -68,6 +68,7 @@ color_schemes["cyan"] = {"title": "Cyan"
 prefs = {}
 
 defaults = {}
+defaults["backup_copy_before_save"] = (True, bool)
 defaults["new_initial_height"] = (15, int)
 defaults["new_initial_width"] = (15, int)
 defaults["undo_stack_size"] = (50, int)
@@ -100,7 +101,7 @@ def read_config_file():
         for p in root:
             props[p.get("name")] = p.text
     except (etree.XMLSyntaxError, IOError):
-        print "Warning: Error with reading configuration file, using defaults instead."
+        print "Warning: No configuration file found, using defaults instead."
     for key, value in defaults.items():
         prefs[key] = value[1](props[key]) if key in props else value[0]
 

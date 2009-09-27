@@ -241,6 +241,8 @@ class PalabraWindow(gtk.Window):
         self.set_title(title)
     
     def save_puzzle(self, save_as=False):
+        puzzle = self.puzzle_manager.current_puzzle
+        backup = preferences.prefs["backup_copy_before_save"]
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
             title = u"Save puzzle"
             if save_as:
@@ -260,12 +262,12 @@ class PalabraWindow(gtk.Window):
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
                 filename = dialog.get_filename()
-                self.puzzle_manager.current_puzzle.filename = filename
-                write_crossword_to_xml(self.puzzle_manager.current_puzzle)
-                self.update_title(self.puzzle_manager.current_puzzle.filename)
+                puzzle.filename = filename
+                write_crossword_to_xml(puzzle, backup)
+                self.update_title(filename)
             dialog.destroy()
         else:
-            write_crossword_to_xml(self.puzzle_manager.current_puzzle)
+            write_crossword_to_xml(puzzle, backup)
         action.stack.distance_from_saved_puzzle = 0
         
     def export_puzzle(self):

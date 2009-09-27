@@ -68,7 +68,7 @@ def read_crossword(filename):
     puzzle.metadata = metadata
     return puzzle
     
-def write_crossword_to_xml(puzzle):
+def write_crossword_to_xml(puzzle, backup=True):
     root = etree.Element("palabra")
     root.set("version", constants.VERSION)
     
@@ -77,6 +77,15 @@ def write_crossword_to_xml(puzzle):
     _write_grid(crossword, puzzle.grid)
     for d in ["across", "down"]:
         _write_clues(crossword, puzzle.grid, d)
+
+    if backup:
+        try:
+            import os
+            if os.path.isfile(puzzle.filename):
+                import shutil
+                shutil.copy2(puzzle.filename, "".join([puzzle.filename, "~"]))
+        except IOError:
+            print "Warning: Failed to create a backup copy before saving."
     
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     f = open(puzzle.filename, "w")
