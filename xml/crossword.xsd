@@ -32,6 +32,11 @@
     <xs:attribute name="left-bar" type="xs:boolean" default="false" />
 </xs:attributeGroup>
 
+<xs:attributeGroup name="grid_dimensions">
+    <xs:attribute name="width" type="integer_at_least_one" use="required" />
+    <xs:attribute name="height" type="integer_at_least_one" use="required" />
+</xs:attributeGroup>
+
 <xs:complexType name="cell_type">
     <xs:attributeGroup ref="cell_coords" />
     <xs:attributeGroup ref="cell_props" />
@@ -46,14 +51,21 @@
     </xs:simpleContent>
 </xs:complexType>
 
+<xs:complexType name="pattern_type">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="block" type="cell_type" />
+        <xs:element name="void" type="cell_type" />
+    </xs:choice>
+    <xs:attributeGroup ref="grid_dimensions" />
+</xs:complexType>
+
 <xs:complexType name="grid_type">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="letter" type="letter_type" />
         <xs:element name="block" type="cell_type" />
         <xs:element name="void" type="cell_type" />
     </xs:choice>
-    <xs:attribute name="width" type="integer_at_least_one" use="required" />
-    <xs:attribute name="height" type="integer_at_least_one" use="required" />
+    <xs:attributeGroup ref="grid_dimensions" />
 </xs:complexType>
 
 <xs:complexType name="clue_type">
@@ -95,11 +107,18 @@
     </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="patterns_type">
+    <xs:choice minOccurs="1" maxOccurs="unbounded">
+        <xs:element name="pattern" type="pattern_type" />
+    </xs:choice>
+</xs:complexType>
+
 <xs:element name="palabra">
     <xs:complexType>
-        <xs:sequence>
+        <xs:choice minOccurs="1" maxOccurs="1">
             <xs:element name="crossword" type="crossword_type" />
-        </xs:sequence>
+            <xs:element name="patterns" type="patterns_type" />
+        </xs:choice>
         <xs:attribute name="version" type="format_version_type" use="required" />
     </xs:complexType>
 </xs:element>
