@@ -160,7 +160,7 @@ def _read_grid(e):
         if grid.is_valid(x, y):
             grid.set_cell(x, y, data)
         else:
-            print "".join(["Warning: Invalid cell encountered: ", str((x, y))])
+            print "".join(["Warning: Invalid cell encountered: ", str((x + 1, y + 1))])
     return grid
     
 def _write_grid(parent, grid):
