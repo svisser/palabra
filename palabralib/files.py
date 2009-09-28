@@ -32,7 +32,8 @@ class ParserError(Exception):
     pass
     
 class InvalidFileError(ParserError):
-    pass
+    def __init__(self, message=None):
+        self.message = message
 
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])
@@ -46,12 +47,25 @@ def read_crossword(filename):
     try:
         doc = etree.parse(filename)
     except etree.XMLSyntaxError:
-        raise InvalidFileError
+        raise InvalidFileError(u"This file does not appear to be a valid Palabra crossword file.")
     xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
         xmlschema.assertValid(doc)
     except etree.DocumentInvalid:
-        raise InvalidFileError
+        root = doc.getroot()
+        version = root.get("version")
+        if version is None:
+            raise InvalidFileError(u"Palabra was unable to open this file.")
+        elif version > constants.VERSION:
+            contents = [
+                u"This file was created in a newer version of Palabra ("
+                , str(version)
+                , u")\n"
+                , "You are running Palabra "
+                , str(constants.VERSION)
+                , u".\nPlease upgrade your version of Palabra to open this file."
+                ]
+            raise InvalidFileError(u"".join(contents))
     
     root = doc.getroot()
     version = root.get("version")

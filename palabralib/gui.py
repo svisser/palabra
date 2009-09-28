@@ -220,10 +220,9 @@ class PalabraWindow(gtk.Window):
                 filename = dialog.get_filename()
                 try:
                     puzzle = read_crossword(filename)
-                except InvalidFileError:
+                except InvalidFileError, e:
                     title = u"Invalid crossword"
-                    message = u"This file does not appear to be a valid Palabra crossword file."
-                    show_error(title, message)
+                    show_error(title, e.message)
                 else:
                     puzzle.filename = filename
                     self.update_title(filename)
