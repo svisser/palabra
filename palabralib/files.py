@@ -156,7 +156,9 @@ def _read_grid(e):
     height = int(e.get("height"))
     grid = Grid(width, height)
     for c in e:
-        grid.set_cell(*_read_cell(c))
+        x, y, data = _read_cell(c)
+        if grid.is_valid(x, y):
+            grid.set_cell(x, y, data)
     return grid
     
 def _write_grid(parent, grid):
