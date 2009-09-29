@@ -69,12 +69,12 @@ def read_crossword(filename):
         else:
             raise InvalidFileError(u"Palabra was unable to open this file.")
     
-    root = doc.getroot()
-    version = root.get("version")
-    main = root[0]
+    main = doc.getroot()[0]
     
     if main.tag == "container":
         raise InvalidFileError(u"This is a container file instead of a puzzle file.")
+    elif main.tag != "crossword":
+        raise InvalidFileError(u"This file does not contain a crossword puzzle.")
     for e in main:
         if e.tag == "metadata":
             metadata = _read_metadata(e)
