@@ -51,14 +51,6 @@
     </xs:simpleContent>
 </xs:complexType>
 
-<xs:complexType name="pattern_type">
-    <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="block" type="cell_type" />
-        <xs:element name="void" type="cell_type" />
-    </xs:choice>
-    <xs:attributeGroup ref="grid_dimensions" />
-</xs:complexType>
-
 <xs:complexType name="grid_type">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="letter" type="letter_type" />
@@ -100,24 +92,25 @@
 
 <xs:complexType name="crossword_type">
     <xs:sequence>
-        <xs:element name="metadata" type="metadata_type"/>
+        <xs:element name="metadata" type="metadata_type" />
         <xs:element name="grid" type="grid_type" />
         <xs:element name="clues" type="across_clues_type" />
         <xs:element name="clues" type="down_clues_type" />
     </xs:sequence>
 </xs:complexType>
 
-<xs:complexType name="patterns_type">
+<xs:complexType name="container_type">
     <xs:choice minOccurs="1" maxOccurs="unbounded">
-        <xs:element name="pattern" type="pattern_type" />
+        <xs:element name="grid" type="grid_type" />
     </xs:choice>
+    <xs:attribute name="content" type="xs:string" use="required" />
 </xs:complexType>
 
 <xs:element name="palabra">
     <xs:complexType>
         <xs:choice minOccurs="1" maxOccurs="1">
             <xs:element name="crossword" type="crossword_type" />
-            <xs:element name="patterns" type="patterns_type" />
+            <xs:element name="container" type="container_type" />
         </xs:choice>
         <xs:attribute name="version" type="format_version_type" use="required" />
     </xs:complexType>

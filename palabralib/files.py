@@ -54,9 +54,9 @@ def read_crossword(filename):
     except etree.DocumentInvalid:
         root = doc.getroot()
         version = root.get("version")
-        if version is None:
-            raise InvalidFileError(u"Palabra was unable to open this file.")
-        elif version > constants.VERSION:
+        if (root.tag == "palabra" and
+            version is not None and
+            version > constants.VERSION):
             contents = [
                 u"This file was created in a newer version of Palabra ("
                 , str(version)
@@ -66,10 +66,16 @@ def read_crossword(filename):
                 , u".\nPlease upgrade your version of Palabra to open this file."
                 ]
             raise InvalidFileError(u"".join(contents))
+        else:
+            raise InvalidFileError(u"Palabra was unable to open this file.")
     
     root = doc.getroot()
     version = root.get("version")
-    for e in root[0]:
+    main = root[0]
+    
+    if main.tag == "container":
+        raise InvalidFileError(u"This is a container file instead of a puzzle file.")
+    for e in main:
         if e.tag == "metadata":
             metadata = _read_metadata(e)
         elif e.tag == "grid":

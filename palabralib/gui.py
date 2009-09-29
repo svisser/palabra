@@ -221,7 +221,7 @@ class PalabraWindow(gtk.Window):
                 try:
                     puzzle = read_crossword(filename)
                 except InvalidFileError, e:
-                    title = u"Invalid crossword"
+                    title = u"Error when opening file"
                     show_error(title, e.message)
                 else:
                     puzzle.filename = filename
