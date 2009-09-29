@@ -44,31 +44,8 @@ def export_puzzle(puzzle, filename, options):
         export_to_png(puzzle, filename, outputs[0], settings)
 
 def read_crossword(filename):
-    try:
-        doc = etree.parse(filename)
-    except etree.XMLSyntaxError:
-        raise InvalidFileError(u"This file does not appear to be a valid Palabra crossword file.")
-    xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
-    try:
-        xmlschema.assertValid(doc)
-    except etree.DocumentInvalid:
-        root = doc.getroot()
-        version = root.get("version")
-        if (root.tag == "palabra" and
-            version is not None and
-            version > constants.VERSION):
-            contents = [
-                u"This file was created in a newer version of Palabra ("
-                , str(version)
-                , u")\n"
-                , "You are running Palabra "
-                , str(constants.VERSION)
-                , u".\nPlease upgrade your version of Palabra to open this file."
-                ]
-            raise InvalidFileError(u"".join(contents))
-        else:
-            raise InvalidFileError(u"Palabra was unable to open this file.")
-    
+    print read_container(filename)
+    doc = _read_palabra_file(filename)
     main = doc.getroot()[0]
     
     if main.tag == "container":
@@ -111,6 +88,47 @@ def write_crossword_to_xml(puzzle, backup=True):
     f = open(puzzle.filename, "w")
     f.write(contents)
     f.close()
+
+def read_container(filename):
+    doc = _read_palabra_file(filename)
+    main = doc.getroot()[0]
+    
+    if main.tag != "container":
+        raise InvalidFileError(u"This file is not a container file.")
+    content = main.get("content")
+    contents = []
+    if content == "grid":
+        for e in main:
+            if e.tag == "grid":
+                contents.append(_read_grid(e))
+    return contents
+
+def _read_palabra_file(filename):
+    try:
+        doc = etree.parse(filename)
+    except etree.XMLSyntaxError:
+        raise InvalidFileError(u"This file does not appear to be a valid Palabra crossword file.")
+    xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
+    try:
+        xmlschema.assertValid(doc)
+    except etree.DocumentInvalid:
+        root = doc.getroot()
+        version = root.get("version")
+        if (root.tag == "palabra" and
+            version is not None and
+            version > constants.VERSION):
+            contents = [
+                u"This file was created in a newer version of Palabra ("
+                , str(version)
+                , u")\n"
+                , "You are running Palabra "
+                , str(constants.VERSION)
+                , u".\nPlease upgrade your version of Palabra to open this file."
+                ]
+            raise InvalidFileError(u"".join(contents))
+        else:
+            raise InvalidFileError(u"Palabra was unable to open this file.")
+    return doc
 
 def _read_metadata(metadata):
     m = {}
