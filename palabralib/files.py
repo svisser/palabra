@@ -57,11 +57,7 @@ def write_crossword_to_xml(puzzle, backup=True):
     root = etree.Element("palabra")
     root.set("version", constants.VERSION)
     
-    crossword = etree.SubElement(root, "crossword")
-    _write_metadata(crossword, puzzle.metadata)
-    _write_grid(crossword, puzzle.grid)
-    for d in ["across", "down"]:
-        _write_clues(crossword, puzzle.grid, d)
+    _write_crossword(root, puzzle)
 
     if backup:
         try:
@@ -90,6 +86,21 @@ def read_container(filename):
             if e.tag == "crossword":
                 contents.append(_read_crossword(e))
     return contents
+    
+def write_container(filename, content, data):
+    root = etree.Element("palabra")
+    root.set("version", constants.VERSION)
+
+    container = etree.SubElement(root, "container")
+    container.set("content", content)
+    for d in data:
+        if content == "crossword":
+            _write_crossword(container, d)
+
+    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
+    f = open(filename, "w")
+    f.write(contents)
+    f.close()
 
 def _read_palabra_file(filename):
     try:
@@ -131,6 +142,13 @@ def _read_crossword(crossword):
     puzzle = Puzzle(grid)
     puzzle.metadata = metadata
     return puzzle
+
+def _write_crossword(parent, puzzle):
+    crossword = etree.SubElement(parent, "crossword")
+    _write_metadata(crossword, puzzle.metadata)
+    _write_grid(crossword, puzzle.grid)
+    for d in ["across", "down"]:
+        _write_clues(crossword, puzzle.grid, d)
 
 def _read_metadata(metadata):
     m = {}
