@@ -44,7 +44,6 @@ def export_puzzle(puzzle, filename, options):
         export_to_png(puzzle, filename, outputs[0], settings)
 
 def read_crossword(filename):
-    print read_container(filename)
     doc = _read_palabra_file(filename)
     main = doc.getroot()[0]
     
@@ -52,18 +51,7 @@ def read_crossword(filename):
         raise InvalidFileError(u"This is a container file instead of a puzzle file.")
     elif main.tag != "crossword":
         raise InvalidFileError(u"This file does not contain a crossword puzzle.")
-    for e in main:
-        if e.tag == "metadata":
-            metadata = _read_metadata(e)
-        elif e.tag == "grid":
-            grid = _read_grid(e)
-        elif e.tag == "clues":
-            direction, clues = _read_clues(e)
-            for x, y, data in clues:
-                grid.cell(x, y)["clues"][direction] = data
-    puzzle = Puzzle(grid)
-    puzzle.metadata = metadata
-    return puzzle
+    return _read_crossword(main)
     
 def write_crossword_to_xml(puzzle, backup=True):
     root = etree.Element("palabra")
@@ -97,10 +85,10 @@ def read_container(filename):
         raise InvalidFileError(u"This file is not a container file.")
     content = main.get("content")
     contents = []
-    if content == "grid":
+    if content == "crossword":
         for e in main:
-            if e.tag == "grid":
-                contents.append(_read_grid(e))
+            if e.tag == "crossword":
+                contents.append(_read_crossword(e))
     return contents
 
 def _read_palabra_file(filename):
@@ -129,6 +117,20 @@ def _read_palabra_file(filename):
         else:
             raise InvalidFileError(u"Palabra was unable to open this file.")
     return doc
+    
+def _read_crossword(crossword):
+    for e in crossword:
+        if e.tag == "metadata":
+            metadata = _read_metadata(e)
+        elif e.tag == "grid":
+            grid = _read_grid(e)
+        elif e.tag == "clues":
+            direction, clues = _read_clues(e)
+            for x, y, data in clues:
+                grid.cell(x, y)["clues"][direction] = data
+    puzzle = Puzzle(grid)
+    puzzle.metadata = metadata
+    return puzzle
 
 def _read_metadata(metadata):
     m = {}
