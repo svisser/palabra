@@ -102,6 +102,7 @@
 <xs:complexType name="container_type">
     <xs:choice minOccurs="1" maxOccurs="unbounded">
         <xs:element name="crossword" type="crossword_type" />
+        <xs:element name="grid" type="grid_type" />
     </xs:choice>
     <xs:attribute name="content" type="xs:string" use="required" />
 </xs:complexType>

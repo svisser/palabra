@@ -85,6 +85,8 @@ def read_container(filename):
         for e in main:
             if e.tag == "crossword":
                 contents.append(_read_crossword(e))
+            elif e.tag == "grid":
+                contents.append(_read_grid(e))
     return contents
     
 def write_container(filename, content, data):
@@ -96,6 +98,8 @@ def write_container(filename, content, data):
     for d in data:
         if content == "crossword":
             _write_crossword(container, d)
+        elif content == "grid":
+            _write_grid(container, d)
 
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     f = open(filename, "w")
@@ -273,89 +277,7 @@ def export_grid(elem, grid, include_statistics=False):
                 cell.set("type", "block")
             elif grid.get_char(x, y) != "":
                 cell.set("content", grid.get_char(x, y))
-
-def import_template(filename, index):
-    try:
-        tree = etree.parse(filename)
-    except etree.XMLSyntaxError:
-        return None
-    palabra = tree.getroot()
-    version = palabra.get("version")
-    
-    try:
-        template = parse_template(palabra[index], True)
-        if template is not None:
-            return template["grid"]
-    except IndexError:
-        return None
         
-def import_templates(filename):
-    try:
-        tree = etree.parse(filename)
-    except etree.XMLSyntaxError:
-        return []
-    palabra = tree.getroot()
-    version = palabra.get("version")
-    
-    templates = []
-    for template in palabra:
-        t = parse_template(template)
-        if t is not None:
-            templates.append((t, filename))
-    return templates
-        
-def parse_template(template, include_grid=False):
-    result = {}
-    
-    metadata = template.find("metadata")
-    
-    grid_elem = template.find("grid")
-    if grid_elem is None:
-        return None
-
-    width = grid_elem.get("width")
-    height = grid_elem.get("height")
-    if width is None or height is None:
-        return None
-
-    result["width"] = int(width)
-    result["height"] = int(height)
-    
-    stats_elem = grid_elem.find("statistics")
-    if stats_elem is None:
-        return None
-
-    result.update(_parse_statistics(stats_elem))
-    
-    if "block_count" in result:
-        size = result["width"] * result["height"]
-        result["letter_count"] = size - result["block_count"]
-    
-    if include_grid:
-        result["grid"] = read_grid(grid_elem)
-            
-    return result
-
-def export_template(grid, filename):
-    palabra = etree.Element("palabra")
-    palabra.set("version", constants.VERSION)
-    
-    template = etree.SubElement(palabra, "template")
-    template.set("type", "crossword")
-    
-    meta_elem = etree.SubElement(template, "metadata")
-
-    source = etree.SubElement(meta_elem, "source")
-        
-    export_grid(template, grid, True)
-
-    contents = etree.tostring(palabra
-        , xml_declaration=True
-        , encoding="UTF-8"
-        , pretty_print=True)
-    file = open(filename, "w")
-    file.write(contents)
-    
 def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
     
