@@ -31,7 +31,6 @@ from files import (
     read_crossword,
     write_crossword_to_xml,
     export_puzzle,
-    export_template,
 )
 import grid
 from grid import Grid
@@ -301,26 +300,6 @@ class PalabraWindow(gtk.Window):
                 dialog.destroy()
         window.destroy()
     
-    def export_as_template(self):
-        dialog = gtk.FileChooserDialog(u"Export as template"
-            , self
-            , gtk.FILE_CHOOSER_ACTION_SAVE
-            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-            , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-        dialog.set_do_overwrite_confirmation(True)
-        filter = gtk.FileFilter()
-        filter.set_name(u"Palabra template files (*.xml)")
-        filter.add_pattern("*.xml")
-        dialog.add_filter(filter)
-        
-        dialog.show_all()
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            grid = self.puzzle_manager.current_puzzle.grid
-            filename = dialog.get_filename()
-            export_template(grid, filename)
-        dialog.destroy()
-    
     def load_puzzle(self):
         self.to_edit_panel()
         self.update_window(True)
@@ -525,11 +504,6 @@ class PalabraWindow(gtk.Window):
             , u"Export the puzzle to various file formats"
             , title=u"_Export..."
             , is_puzzle_sensitive=True))
-        #menu.append(self._create_menu_item(
-        #    lambda item: self.export_as_template()
-        #    , "Save the grid as a template without the words and clues"
-        #    , title="Export as _template..."
-        #    , is_puzzle_sensitive=True))
         
         menu.append(gtk.SeparatorMenuItem())
         
