@@ -124,8 +124,7 @@ class Grid:
         status["block_count"] = self.count_blocks()
         status["void_count"] = self.count_voids()
         
-        nots = len([(x, y) for x, y in self.cells() if not self.is_available(x, y)])
-        status["char_count"] = size - nots
+        status["char_count"] = self.count_chars()
         status["word_count"] = self.count_words()
         
         block_percentage = (float(status["block_count"]) / float(size)) * 100
@@ -372,6 +371,11 @@ class Grid:
             if self.is_start_vertical_word(x, y):
                 total += 1
         return total
+        
+    def count_chars(self):
+        """Return the number of chars in the grid."""
+        nots = len([(x, y) for x, y in self.cells() if not self.is_available(x, y)])
+        return (self.width * self.height) - nots
             
     def mean_word_length(self):
         """Return the mean length of the words in the grid."""
