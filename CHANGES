@@ -4,6 +4,7 @@ This is a list of changes since the initial release of Palabra.
 Version 0.1.2 (unreleased)
 ==========================
 * Partial support for voids.
+* Patterns can be selected for new puzzles.
 
 Version 0.1.1 (September 15, 2009)
 ==================================
