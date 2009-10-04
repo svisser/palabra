@@ -81,7 +81,7 @@ def read_container(filename):
         raise InvalidFileError(u"This file is not a container file.")
     content = main.get("content")
     contents = []
-    if content == "crossword":
+    if content in ["crossword", "grid"]:
         for e in main:
             if e.tag == "crossword":
                 contents.append(_read_crossword(e))

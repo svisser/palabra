@@ -18,6 +18,7 @@
 import gtk
 
 import constants
+from files import read_container
 import grid
 from grid import Grid
 import preferences
@@ -37,12 +38,12 @@ class SizeComponent(gtk.VBox):
         adj = gtk.Adjustment(initial_width
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.width_spinner = gtk.SpinButton(adj, 0.0, 0)
-        self.width_spinner.connect("output", self.on_spinner_changed)
+        self.width_spinner.connect("value-changed", self.on_spinner_changed)
         
         adj = gtk.Adjustment(initial_height
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.height_spinner = gtk.SpinButton(adj, 0.0, 0)
-        self.height_spinner.connect("output", self.on_spinner_changed)
+        self.height_spinner.connect("value-changed", self.on_spinner_changed)
         
         spinners = gtk.HBox(False, 0)
         
@@ -136,7 +137,6 @@ class SizeComponent(gtk.VBox):
         if widget.get_active() == 1:
             self.width_spinner.set_value(data)
             self.height_spinner.set_value(data)
-            
             self.perform_callback()
                 
     def perform_callback(self):
@@ -185,41 +185,81 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
+        self.patterns = read_container("xml/patterns.xml")
+        
         self.set_size_request(640, 480)
         
-        self.grid = None
-        
+        self.grid = Grid(15, 15)
         self.preview = GridPreview()
-        self.preview.display(Grid(15, 15))
+        self.preview.display(self.grid)
+        self.preview.set_size_request(200, -1)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         
-        main = gtk.HBox(False, 0)
-        main.set_spacing(18)
-        
-        hbox.pack_start(main, True, True, 0)
-        
         options_vbox = gtk.VBox(False, 0)
-        
-        self.context_vbox = gtk.VBox(False, 0)
-        options_vbox.pack_start(self.context_vbox, True, True, 0)
-        
-        main.pack_start(options_vbox, False, False, 0)
-        main.pack_start(self.preview, True, True, 0)
+        hbox.pack_start(options_vbox, True, True, 0)
+        hbox.pack_start(self.preview, True, True, 0)
         
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.size_component = SizeComponent(
-            title=u"<b>New puzzle</b>"
+            title=u"<b>Size</b>"
             , callback=self.size_callback)
-        self.context_vbox.pack_start(self.size_component, False, False, 0)
+        options_vbox.pack_start(self.size_component, False, False, 0)
+        
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup(u"<b>Patterns</b>")
+        options_vbox.pack_start(label, False, False, 6)
+        
+        self.store = gtk.ListStore(str)
+        tree = gtk.TreeView(self.store)
+        tree.set_headers_visible(False)
+        tree.get_selection().connect("changed", self.on_pattern_changed)
+        
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("")
+        column.pack_start(cell, True)
+        column.set_attributes(cell, text=0)
+        tree.append_column(column)
+        
+        window = gtk.ScrolledWindow(None, None)
+        window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        window.add(tree)
+        
+        align = gtk.Alignment(0, 0, 1, 1)
+        align.set_padding(0, 0, 12, 0)
+        align.add(window)
+        
+        options_vbox.pack_start(align, True, True, 0)
+
+        self.display_patterns(*self.grid.size)
+        
+    def on_pattern_changed(self, selection):
+        store, it = selection.get_selected()
+        if it is None:
+            self.display_patterns(-1, -1)
+        if it is not None:
+            index = store.get_path(it)[0]
+            self.grid = self.patterns[index]
+            self.preview.display(self.grid)
             
     def size_callback(self, width, height):
         self.grid = Grid(width, height)
         self.preview.display(self.grid)
+        self.display_patterns(width, height)
         
+    def display_patterns(self, width, height):
+        self.store.clear()
+        for grid in self.patterns:
+            if grid.size == (width, height):
+                chars = grid.count_chars()
+                words = grid.count_words()
+                s = "".join([str(words), " words, ", str(chars), " letters"])
+                self.store.append([s])
+                
     def get_configuration(self):
         width, height = self.size_component.get_size()
     
