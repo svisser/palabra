@@ -185,9 +185,7 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
-        self.patterns = []
-        for f in ["xml/patterns.xml"]:
-            self.patterns += read_container(f)
+        self.read_patterns(["xml/patterns.xml"])
         
         self.set_size_request(640, 480)
         
@@ -246,6 +244,14 @@ class NewWindow(gtk.Dialog):
         self.load_empty_grid(*self.size_component.get_size())
         self.clear_button.set_sensitive(False)
         
+    def read_patterns(self, files):
+        self.patterns = []
+        for f in files:
+            self.patterns += read_container(f)
+        stats = [(g.count_words(), g.count_blocks(), g) for g in self.patterns]
+        stats.sort()
+        self.patterns = [grid for (_, _, grid) in stats]
+        
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
         self.clear_button.set_sensitive(it is not None)
@@ -262,9 +268,9 @@ class NewWindow(gtk.Dialog):
         self.store.clear()
         for grid in self.patterns:
             if grid.size == (width, height):
-                chars = grid.count_chars()
+                blocks = grid.count_blocks()
                 words = grid.count_words()
-                s = "".join([str(words), " words, ", str(chars), " letters"])
+                s = "".join([str(words), " words, ", str(blocks), " blocks"])
                 self.store.append([s])
                 
     def get_configuration(self):
