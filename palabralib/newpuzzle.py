@@ -191,9 +191,7 @@ class NewWindow(gtk.Dialog):
         
         self.set_size_request(640, 480)
         
-        self.grid = Grid(15, 15)
         self.preview = GridPreview()
-        self.preview.display(self.grid)
         self.preview.set_size_request(200, -1)
         
         hbox = gtk.HBox(False, 0)
@@ -208,7 +206,7 @@ class NewWindow(gtk.Dialog):
         
         self.size_component = SizeComponent(
             title=u"<b>Size</b>"
-            , callback=self.size_callback)
+            , callback=self.load_empty_grid)
         options_vbox.pack_start(self.size_component, False, False, 0)
         
         label = gtk.Label()
@@ -231,8 +229,9 @@ class NewWindow(gtk.Dialog):
         window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         window.add(tree)
         
+        clear_pattern = lambda button: self.load_empty_grid(*self.grid.size)
         self.clear_button = gtk.Button("Clear pattern")
-        self.clear_button.connect("clicked", lambda button: self.clear_pattern())
+        self.clear_button.connect("clicked", clear_pattern)
         
         patterns_vbox = gtk.VBox(False, 0)
         patterns_vbox.pack_start(window, True, True, 0)
@@ -244,25 +243,17 @@ class NewWindow(gtk.Dialog):
         
         options_vbox.pack_start(align, True, True, 0)
 
-        self.display_patterns(*self.grid.size)
-        
+        self.load_empty_grid(*self.size_component.get_size())
         self.clear_button.set_sensitive(False)
         
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
-        if it is None:
-            self.clear_button.set_sensitive(False)
+        self.clear_button.set_sensitive(it is not None)
         if it is not None:
-            index = store.get_path(it)[0]
-            self.grid = self.patterns[index]
+            self.grid = self.patterns[store.get_path(it)[0]]
             self.preview.display(self.grid)
-            self.clear_button.set_sensitive(True)
             
-    def clear_pattern(self):
-        self.display_patterns(*self.grid.size)
-        self.preview.display(Grid(*self.grid.size))
-            
-    def size_callback(self, width, height):
+    def load_empty_grid(self, width, height):
         self.grid = Grid(width, height)
         self.preview.display(self.grid)
         self.display_patterns(width, height)
@@ -277,8 +268,6 @@ class NewWindow(gtk.Dialog):
                 self.store.append([s])
                 
     def get_configuration(self):
-        width, height = self.size_component.get_size()
-    
         configuration = {}
         configuration["type"] = "crossword"
         
