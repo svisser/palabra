@@ -185,7 +185,9 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
-        self.patterns = read_container("xml/patterns.xml")
+        self.patterns = []
+        for f in ["xml/patterns.xml"]:
+            self.patterns += read_container(f)
         
         self.set_size_request(640, 480)
         
@@ -229,22 +231,36 @@ class NewWindow(gtk.Dialog):
         window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         window.add(tree)
         
+        self.clear_button = gtk.Button("Clear pattern")
+        self.clear_button.connect("clicked", lambda button: self.clear_pattern())
+        
+        patterns_vbox = gtk.VBox(False, 0)
+        patterns_vbox.pack_start(window, True, True, 0)
+        patterns_vbox.pack_start(self.clear_button, False, False, 0)
+        
         align = gtk.Alignment(0, 0, 1, 1)
         align.set_padding(0, 0, 12, 0)
-        align.add(window)
+        align.add(patterns_vbox)
         
         options_vbox.pack_start(align, True, True, 0)
 
         self.display_patterns(*self.grid.size)
         
+        self.clear_button.set_sensitive(False)
+        
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
         if it is None:
-            self.display_patterns(-1, -1)
+            self.clear_button.set_sensitive(False)
         if it is not None:
             index = store.get_path(it)[0]
             self.grid = self.patterns[index]
             self.preview.display(self.grid)
+            self.clear_button.set_sensitive(True)
+            
+    def clear_pattern(self):
+        self.display_patterns(*self.grid.size)
+        self.preview.display(Grid(*self.grid.size))
             
     def size_callback(self, width, height):
         self.grid = Grid(width, height)
