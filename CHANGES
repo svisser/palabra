@@ -5,6 +5,7 @@ Version 0.1.2 (unreleased)
 ==========================
 * Partial support for voids.
 * Patterns can be selected for new puzzles.
+* Added option to create a backup file before saving.
 
 Version 0.1.1 (September 15, 2009)
 ==================================
