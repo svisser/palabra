@@ -116,10 +116,7 @@ def _read_palabra_file(filename):
     xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
         xmlschema.assertValid(doc)
-    except etree.DocumentInvalid, e:
-        print dir(e)
-        print e.error_log
-        print e.message
+    except etree.DocumentInvalid:
         root = doc.getroot()
         version = root.get("version")
         if (root.tag == "palabra" and
