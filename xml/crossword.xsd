@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<xs:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="dc.xsd" />
 
 <xs:simpleType name="format_version_type">
     <xs:restriction base="xs:string">
@@ -92,7 +93,7 @@
 
 <xs:complexType name="crossword_type">
     <xs:sequence>
-        <xs:element name="metadata" type="metadata_type" />
+        <xs:element name="metadata" type="dc:elementContainer" />
         <xs:element name="grid" type="grid_type" />
         <xs:element name="clues" type="across_clues_type" />
         <xs:element name="clues" type="down_clues_type" />

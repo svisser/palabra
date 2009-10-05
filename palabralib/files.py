@@ -26,6 +26,8 @@ from grid import Grid
 from puzzle import Puzzle
 from view import GridView
 
+DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
+
 XML_SCHEMA_CROSSWORD = "xml/crossword.xsd"
 
 class ParserError(Exception):
@@ -114,7 +116,10 @@ def _read_palabra_file(filename):
     xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
         xmlschema.assertValid(doc)
-    except etree.DocumentInvalid:
+    except etree.DocumentInvalid, e:
+        print dir(e)
+        print e.error_log
+        print e.message
         root = doc.getroot()
         version = root.get("version")
         if (root.tag == "palabra" and
@@ -157,14 +162,29 @@ def _write_crossword(parent, puzzle):
 def _read_metadata(metadata):
     m = {}
     for e in metadata:
-        m[e.tag] = e.text
+        m[e.tag[len("{%s}" % DC_NAMESPACE):]] = e.text
     return m
     
 def _write_metadata(parent, metadata):
-    e = etree.SubElement(parent, "metadata")
-    for m in ["title", "author", "copyright", "description"]:
-        prop = etree.SubElement(e, m)
+    e = etree.SubElement(parent, "metadata", nsmap={"dc": DC_NAMESPACE})
+    keys = ["title"
+        , "creator"
+        , "subject"
+        , "description"
+        , "publisher"
+        , "contributor"
+        , "date"
+        , "type"
+        , "format"
+        , "identifier"
+        , "source"
+        , "language"
+        , "relation"
+        , "coverage"
+        , "rights"]
+    for m in keys:
         if m in metadata:
+            prop = etree.SubElement(e, "".join(["{%s}" % DC_NAMESPACE, m]))
             prop.text = metadata[m]
     
 def _read_cell(e):
