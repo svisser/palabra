@@ -85,66 +85,8 @@ class PropertiesWindow(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Puzzle properties", palabra_window
             , gtk.DIALOG_MODAL)
         self.puzzle = puzzle
-        self.set_size_request(512, 512)
-        
-        details = gtk.Table(1, 2, False)
-        
-        title_hbox = gtk.HButtonBox()
-        title_hbox.set_layout(gtk.BUTTONBOX_START)
-        title_hbox.pack_start(gtk.Label("Title"), False, False, 0)
-        title_entry = gtk.Entry(512)
-        
-        def title_changed(item):
-            self.puzzle.metadata["title"] = item.get_text().strip()
-        title_entry.connect("changed", title_changed)
-        alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label(u"Title"))
-        details.attach(alignment, 0, 1, 0, 1)
-        details.attach(title_entry, 1, 2, 0, 1)
-        
-        author_entry = gtk.Entry(512)
-        
-        def author_changed(item):
-            self.puzzle.metadata["author"] = item.get_text().strip()
-        author_entry.connect("changed", author_changed)
-        alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label(u"Author"))
-        details.attach(alignment, 0, 1, 1, 2)
-        details.attach(author_entry, 1, 2, 1, 2)
-        
-        copyright_hbox = gtk.HBox(False, 0)
-        copyright_hbox.pack_start(gtk.Label(u"Copyright"), False, False, 0)
-        copyright_entry = gtk.Entry(512)
-        
-        def copyright_changed(item):
-            self.puzzle.metadata["copyright"] = item.get_text().strip()
-        copyright_entry.connect("changed", copyright_changed)
-        alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label(u"Copyright"))
-        details.attach(alignment, 0, 1, 2, 3)
-        details.attach(copyright_entry, 1, 2, 2, 3)
-        
-        description_hbox = gtk.HBox(False, 0)
-        description_hbox.pack_start(gtk.Label(u"Description"), False, False, 0)
-        description_entry = gtk.Entry(512)
-        
-        def description_changed(item):
-            self.puzzle.metadata["description"] = item.get_text().strip()
-        description_entry.connect("changed", description_changed)
-        alignment = gtk.Alignment(0, 0.5, 0, 0)
-        alignment.add(gtk.Label(u"Description"))
-        details.attach(alignment, 0, 1, 3, 4)
-        details.attach(description_entry, 1, 2, 3, 4)
+        self.set_size_request(512, 384)
 
-        if "title" in puzzle.metadata and puzzle.metadata["title"] is not None:
-            title_entry.set_text(puzzle.metadata["title"])
-        if "author" in puzzle.metadata and puzzle.metadata["author"] is not None:
-            author_entry.set_text(puzzle.metadata["author"])
-        if "copyright" in puzzle.metadata and puzzle.metadata["copyright"] is not None:
-            copyright_entry.set_text(puzzle.metadata["copyright"])
-        if "description" in puzzle.metadata and puzzle.metadata["description"] is not None:
-            description_entry.set_text(puzzle.metadata["description"])
-        
         status = puzzle.grid.determine_status(True)
         message = self.determine_words_message(status, puzzle)
         
@@ -152,10 +94,10 @@ class PropertiesWindow(gtk.Dialog):
         tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label(u"General"))
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
         tabs.append_page(self.create_words_tab(message, status, puzzle), gtk.Label(u"Words"))
+        tabs.append_page(self.create_metadata_tab(puzzle), gtk.Label(u"Metadata"))
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
-        main.pack_start(details, False, False, 0)
         main.pack_start(tabs, True, True, 0)
         
         hbox = gtk.HBox(False, 0)
@@ -373,3 +315,53 @@ class PropertiesWindow(gtk.Dialog):
         r = reduce(operator.concat, map(lambda word: [word,  u"\n"], words))
 
         return ''.join(r[:-1])
+        
+    def create_metadata_tab(self, puzzle):
+        details = gtk.Table(1, 2, False)
+        
+        def metadata_changed(widget, key):
+            value = widget.get_text().strip()
+            self.puzzle.metadata[key] = value
+            if len(value) == 0:
+                del self.puzzle.metadata[key]
+        
+        def create_metadata_entry(key, label, index):
+            entry = gtk.Entry(512)
+            entry.connect("changed", lambda w: metadata_changed(w, key))
+            alignment = gtk.Alignment(0, 0.5, 0, 0)
+            alignment.add(gtk.Label(label))
+            details.attach(alignment, 0, 1, index, index + 1)
+            details.attach(entry, 1, 2, index, index + 1)
+            
+            try:
+                value = puzzle.metadata[key]
+                if value is not None:
+                    entry.set_text(value)
+            except KeyError:
+                pass
+            
+        create_metadata_entry("title", u"Title", 0)
+        create_metadata_entry("creator", u"Creator", 1)
+        create_metadata_entry("rights", u"Rights", 2)
+        create_metadata_entry("description", u"Description", 3)
+        create_metadata_entry("publisher", u"Publisher", 4)
+        create_metadata_entry("date", u"Date", 5)
+        create_metadata_entry("identifier", u"Identifier", 6)
+        #create_metadata_entry("language", u"Language", 6)
+
+        align = gtk.Alignment(0, 0, 1, 0)
+        align.add(details)
+        
+        hhbox = gtk.HBox(False, 0)
+        hhbox.set_spacing(18)
+        hhbox.pack_start(align, True, True, 0)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(hhbox, True, True, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        return hbox
