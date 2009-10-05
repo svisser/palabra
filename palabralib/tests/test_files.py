@@ -52,20 +52,19 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.cell(2, 2)["clues"]["across"] = clues
         self.puzzle.grid.cell(3, 3)["bar"]["top"] = True
         self.puzzle.grid.cell(4, 4)["bar"]["left"] = True
-        self.puzzle.metadata = {"title": "A", "author": "B"}
+        self.puzzle.metadata = {"title": "A", "creator": "B"}
     
         write_crossword_to_xml(self.puzzle)
         puzzle = read_crossword(self.LOCATION)
         for x, y in self.puzzle.grid.cells():
             self.assertEqual(puzzle.grid.cell(x, y), self.puzzle.grid.cell(x, y))
         self.assertEqual(puzzle.metadata["title"], "A")
-        self.assertEqual(puzzle.metadata["author"], "B")
+        self.assertEqual(puzzle.metadata["creator"], "B")
         
     def testReadWriteMetadata(self):
         metadata = {"title": "A"
-            , "author": "B"
-            , "copyright": "C"
-            , "description": "D"}
+            , "creator": "B"
+            , "description": "C"}
         root = etree.Element("root")
         _write_metadata(root, metadata)
         result = _read_metadata(root[0])
