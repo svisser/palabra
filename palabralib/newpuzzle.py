@@ -185,7 +185,8 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
-        self.read_patterns(["xml/patterns.xml"])
+        self.files = ["xml/patterns.xml"]
+        self.patterns = self.read_patterns(self.files)
         
         self.set_size_request(640, 480)
         
@@ -231,9 +232,25 @@ class NewWindow(gtk.Dialog):
         self.clear_button = gtk.Button("Clear pattern")
         self.clear_button.connect("clicked", clear_pattern)
         
+        file_combo = gtk.combo_box_new_text()
+        file_combo.connect("changed", self.on_file_changed)
+        file_combo.append_text("All files")
+        file_combo.append_text("Patterns (patterns.xml)")
+        file_combo.set_active(0)
+        
         patterns_vbox = gtk.VBox(False, 0)
         patterns_vbox.pack_start(window, True, True, 0)
-        patterns_vbox.pack_start(self.clear_button, False, False, 0)
+        
+        buttons_hbox = gtk.HBox(False, 0)
+        
+        align = gtk.Alignment(0, 0, 0, 0)
+        align.add(file_combo)
+        buttons_hbox.pack_start(align, False, False, 0)
+        
+        align = gtk.Alignment(0, 0, 1, 0)
+        align.add(self.clear_button)
+        buttons_hbox.pack_start(align, True, True, 0)
+        patterns_vbox.pack_start(buttons_hbox, False, False, 0)
         
         align = gtk.Alignment(0, 0, 1, 1)
         align.set_padding(0, 0, 12, 0)
@@ -244,14 +261,20 @@ class NewWindow(gtk.Dialog):
         self.load_empty_grid(*self.size_component.get_size())
         self.clear_button.set_sensitive(False)
         
+    def on_file_changed(self, combo):
+        index = combo.get_active()
+        files = self.files if index == 0 else self.files[index - 1:index]
+        self.patterns = self.read_patterns(files)
+        self.load_empty_grid(*self.size_component.get_size())
+        
     def read_patterns(self, files):
-        self.patterns = []
+        patterns = []
         for f in files:
             metadata, data = read_container(f)
-            self.patterns += data
-        stats = [(g.count_words(), g.count_blocks(), g) for g in self.patterns]
+            patterns += data
+        stats = [(g.count_words(), g.count_blocks(), g) for g in patterns]
         stats.sort()
-        self.patterns = [grid for (_, _, grid) in stats]
+        return [grid for (_, _, grid) in stats]
         
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
