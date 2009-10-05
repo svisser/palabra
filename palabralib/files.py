@@ -85,11 +85,13 @@ def read_container(filename):
     contents = []
     if content in ["crossword", "grid"]:
         for e in main:
+            if e.tag == "metadata":
+                metadata = _read_metadata(e)
             if e.tag == "crossword":
                 contents.append(_read_crossword(e))
             elif e.tag == "grid":
                 contents.append(_read_grid(e))
-    return contents
+    return (metadata, contents)
     
 def write_container(filename, content, data):
     root = etree.Element("palabra")

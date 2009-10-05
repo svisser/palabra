@@ -247,7 +247,8 @@ class NewWindow(gtk.Dialog):
     def read_patterns(self, files):
         self.patterns = []
         for f in files:
-            self.patterns += read_container(f)
+            metadata, data = read_container(f)
+            self.patterns += data
         stats = [(g.count_words(), g.count_blocks(), g) for g in self.patterns]
         stats.sort()
         self.patterns = [grid for (_, _, grid) in stats]
