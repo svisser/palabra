@@ -335,8 +335,7 @@ class PropertiesWindow(gtk.Dialog):
             
             try:
                 value = puzzle.metadata[key]
-                if value is not None:
-                    entry.set_text(value)
+                entry.set_text(value)
             except KeyError:
                 pass
             
@@ -347,7 +346,7 @@ class PropertiesWindow(gtk.Dialog):
         create_metadata_entry("publisher", u"Publisher", 4)
         create_metadata_entry("date", u"Date", 5)
         create_metadata_entry("identifier", u"Identifier", 6)
-        #create_metadata_entry("language", u"Language", 6)
+        create_metadata_entry("language", u"Language", 7)
 
         align = gtk.Alignment(0, 0, 1, 0)
         align.add(details)
