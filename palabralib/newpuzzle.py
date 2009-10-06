@@ -268,17 +268,18 @@ class NewWindow(gtk.Dialog):
     def on_file_changed(self, combo):
         index = combo.get_active()
         files = self.files if index == 0 else self.files[index - 1:index]
-        grids = [d for f, m, d in self.patterns if f in files]
-        self.current_patterns = reduce(operator.add, grids)
+        data = [d for (f, _, d) in self.patterns if f in files]
+        grids = reduce(operator.add, data)
+        stats = [(g.count_words(), g.count_blocks(), g) for g in grids]
+        stats.sort()
+        self.current_patterns = [grid for (_, _, grid) in stats]
         self.load_empty_grid(*self.size_component.get_size())
         
     def read_patterns(self):
         patterns = []
         for f in self.files:
             metadata, data = read_container(f)
-            stats = [(g.count_words(), g.count_blocks(), g) for g in data]
-            stats.sort()
-            patterns.append((f, metadata, [grid for (_, _, grid) in stats]))
+            patterns.append((f, metadata, data))
         return patterns
         
     def on_pattern_changed(self, selection):
