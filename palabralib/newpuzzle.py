@@ -17,6 +17,7 @@
 
 import gtk
 import operator
+import os
 
 import constants
 from files import read_container
@@ -239,7 +240,7 @@ class NewWindow(gtk.Dialog):
         file_combo.connect("changed", self.on_file_changed)
         file_combo.append_text("All files")
         for f in self.files:
-            file_combo.append_text(f)
+            file_combo.append_text(f[f.rfind(os.sep) + 1:])
         file_combo.set_active(0)
         
         patterns_vbox = gtk.VBox(False, 0)
