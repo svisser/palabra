@@ -239,8 +239,10 @@ class NewWindow(gtk.Dialog):
         file_combo = gtk.combo_box_new_text()
         file_combo.connect("changed", self.on_file_changed)
         file_combo.append_text("All files")
-        for f in self.files:
-            file_combo.append_text(f[f.rfind(os.sep) + 1:])
+        for path, metadata, data in self.patterns:
+            filename = path[path.rfind(os.sep) + 1:]
+            caption = metadata["title"] if "title" in metadata else filename
+            file_combo.append_text(caption)
         file_combo.set_active(0)
         
         patterns_vbox = gtk.VBox(False, 0)
