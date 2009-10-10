@@ -20,7 +20,7 @@ import operator
 import os
 
 import constants
-from files import read_container
+from files import read_containers
 import grid
 from grid import Grid
 import preferences
@@ -188,7 +188,7 @@ class NewWindow(gtk.Dialog):
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
         self.files = palabra_window.pattern_files
-        self.patterns = self.read_patterns()
+        self.patterns = read_containers(self.files)
         
         self.current_patterns = self.patterns
         
@@ -277,13 +277,6 @@ class NewWindow(gtk.Dialog):
         stats.sort()
         self.current_patterns = [grid for (_, _, grid) in stats]
         self.load_empty_grid(*self.size_component.get_size())
-        
-    def read_patterns(self):
-        patterns = []
-        for f in self.files:
-            metadata, data = read_container(f)
-            patterns.append((f, metadata, data))
-        return patterns
         
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()

@@ -92,6 +92,13 @@ def read_container(filename):
             elif e.tag == "grid":
                 contents.append(_read_grid(e))
     return (metadata, contents)
+
+def read_containers(filenames):
+    result = []
+    for f in filenames:
+        metadata, data = read_container(f)
+        result.append((f, metadata, data))
+    return result
     
 def write_container(filename, content, data):
     root = etree.Element("palabra")
