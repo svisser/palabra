@@ -115,10 +115,13 @@ class PatternFileEditor(gtk.Dialog):
         for p in paths:
             it = store.get_iter(p)
             parent = store.iter_parent(it)
-            display = store.get_value(it, 1) if parent is not None else Grid(0, 0)
-            self.preview.display(display)
-            if len(paths) == 1 and parent is None:
-                self.remove_button.set_sensitive(True)
+            if len(paths) == 1:
+                if parent is None:
+                    self.remove_button.set_sensitive(True)
+                display = store.get_value(it, 1) if parent is not None else Grid(0, 0)
+                self.preview.display(display)
+            else:
+                self.preview.display(Grid(0, 0))
 
 class Pattern:
     def __init__(self):
