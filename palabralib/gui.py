@@ -784,7 +784,7 @@ class PalabraWindow(gtk.Window):
         
         activate = lambda item: toggle_predicate("warn_unchecked_cells", item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Warn visually when cells that belong to (at most) one word exist in the grid")
+            , u"Warn visually when cells that belong to one word exist in the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.CheckMenuItem(u"Warn for _unchecked cells", True)
         item.connect("activate", activate)
