@@ -40,6 +40,7 @@ class PatternFileEditor(gtk.Dialog):
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
+        
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Pattern files")
         column.pack_start(cell, True)
@@ -47,7 +48,7 @@ class PatternFileEditor(gtk.Dialog):
         self.tree.append_column(column)
         
         buttonbox = gtk.HButtonBox()
-        buttonbox.set_layout(gtk.BUTTONBOX_END)
+        buttonbox.set_layout(gtk.BUTTONBOX_START)
         
         add_button = gtk.Button(stock=gtk.STOCK_ADD)
         add_button.connect("clicked", lambda button: self.add_file())
@@ -59,8 +60,18 @@ class PatternFileEditor(gtk.Dialog):
         buttonbox.pack_start(self.remove_button, False, False, 0)
         
         options_vbox = gtk.VBox(False, 6)
-        options_vbox.pack_start(self.tree, True, True, 0)
-        options_vbox.pack_start(buttonbox, False, False, 0)
+        
+        left_vbox = gtk.VBox(False, 6)
+        left_vbox.pack_start(self.tree, True, True, 0)
+        left_vbox.pack_start(buttonbox, False, False, 0)
+        
+        right_vbox = gtk.VBox(False, 6)
+        
+        hbox = gtk.HBox(True, 6)
+        hbox.pack_start(left_vbox, True, True, 0)
+        hbox.pack_start(right_vbox, True, True, 0)
+        
+        options_vbox.pack_start(hbox, True, True, 0)
         options_vbox.pack_start(self.preview, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
@@ -112,8 +123,8 @@ class PatternFileEditor(gtk.Dialog):
     def on_selection_changed(self, selection):
         store, paths = selection.get_selected_rows()
         self.remove_button.set_sensitive(False)
-        for p in paths:
-            it = store.get_iter(p)
+        for path in paths:
+            it = store.get_iter(path)
             parent = store.iter_parent(it)
             if len(paths) == 1:
                 if parent is None:
