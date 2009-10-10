@@ -187,7 +187,7 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
-        self.files = ["xml/patterns.xml", "xml/patterns2.xml"]
+        self.files = palabra_window.pattern_files
         self.patterns = self.read_patterns()
         
         self.current_patterns = self.patterns
