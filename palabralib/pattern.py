@@ -34,7 +34,8 @@ class PatternFileEditor(gtk.Dialog):
         
         self.patterns = read_containers(self.palabra_window.pattern_files)
         
-        self.store = gtk.TreeStore(str, gobject.TYPE_PYOBJECT)
+        # display_string filename grid
+        self.store = gtk.TreeStore(str, str, gobject.TYPE_PYOBJECT)
         self.display_files()
         
         self.tree = gtk.TreeView(self.store)
@@ -129,12 +130,16 @@ class PatternFileEditor(gtk.Dialog):
     def display_files(self):
         self.store.clear()
         for (f, metadata, data) in self.patterns:
-            parent = self.store.append(None, [f, None])
+            if "title" in metadata:
+                s = "".join([metadata["title"], " (", f, ")"])
+            else:
+                s = f
+            parent = self.store.append(None, [s, f, None])
             for grid in data:
                 blocks = grid.count_blocks()
                 words = grid.count_words()
                 s = "".join([str(words), " words, ", str(blocks), " blocks"])
-                self.store.append(parent, [s, grid])
+                self.store.append(parent, [s, f, grid])
         
     def add_file(self):
         dialog = gtk.FileChooserDialog(u"Add pattern file"
@@ -157,7 +162,7 @@ class PatternFileEditor(gtk.Dialog):
         store, paths = self.tree.get_selection().get_selected_rows()
         if len(paths) == 1:
             it = store.get_iter(paths[0])
-            filename = store.get_value(it, 0)
+            filename = store.get_value(it, 1)
             store.remove(it)
             self.palabra_window.pattern_files.remove(filename)
         
@@ -170,7 +175,7 @@ class PatternFileEditor(gtk.Dialog):
             if len(paths) == 1:
                 if parent is None:
                     self.remove_button.set_sensitive(True)
-                display = store.get_value(it, 1) if parent is not None else Grid(0, 0)
+                display = store.get_value(it, 2) if parent is not None else Grid(0, 0)
                 self.preview.display(display)
             else:
                 self.preview.display(Grid(0, 0))
@@ -224,11 +229,11 @@ class PatternFileEditor(gtk.Dialog):
         for path in paths:
             it = store.get_iter(path)
             parent = store.iter_parent(it)
-            grid = store.get_value(it, 1)
+            grid = store.get_value(it, 2)
             try:
-                patterns[store.get_value(parent, 0)].append(grid)
+                patterns[store.get_value(parent, 1)].append(grid)
             except KeyError:
-                patterns[store.get_value(parent, 0)] = [grid]
+                patterns[store.get_value(parent, 1)] = [grid]
         return patterns
 
 class Pattern:
