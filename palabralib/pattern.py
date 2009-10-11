@@ -36,7 +36,8 @@ class PatternFileEditor(gtk.Dialog):
         
         # display_string filename grid
         self.store = gtk.TreeStore(str, str, gobject.TYPE_PYOBJECT)
-        self.display_files()
+        for pattern in self.patterns:
+            self._append_file(*pattern)
         
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
@@ -134,13 +135,8 @@ class PatternFileEditor(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
-    def display_files(self):
-        self.store.clear()
-        for pattern in self.patterns:
-            self._display_file(*pattern)
                 
-    def _display_file(self, path, metadata, data):
+    def _append_file(self, path, metadata, data):
         s = ("".join([metadata["title"], " (", path, ")"])
             if "title" in metadata else path)
         parent = self.store.append(None, [s, path, None])
@@ -149,10 +145,6 @@ class PatternFileEditor(gtk.Dialog):
             words = grid.count_words()
             s = "".join([str(words), " words, ", str(blocks), " blocks"])
             self.store.append(parent, [s, path, grid])
-                
-    def display_metadata(self, metadata=None, clear=False):
-        text = "" if clear else str(metadata)
-        self.info.get_buffer().set_text(text)
         
     def add_file(self):
         dialog = gtk.FileChooserDialog(u"Add pattern file"
@@ -183,64 +175,58 @@ class PatternFileEditor(gtk.Dialog):
                 metadata, data = read_container(path)
                 pattern = (path, metadata, data)
                 self.patterns.append(pattern)
-                self._display_file(*pattern)
+                self._append_file(*pattern)
                 self.tree.columns_autosize()
         
     def remove_file(self):
         store, paths = self.tree.get_selection().get_selected_rows()
-        if len(paths) == 1:
-            it = store.get_iter(paths[0])
-            filename = store.get_value(it, 1)
-            store.remove(it)
-            self.palabra_window.pattern_files.remove(filename)
-            
-            index = 0
-            found = False
-            for (f, metadata, data) in self.patterns:
-                if f == filename:
-                    found = True
-                    break
-                index += 1
-            if found:
-                del self.patterns[index]
-                self.tree.columns_autosize()
+        if len(paths) != 1:
+            return
+        it = store.get_iter(paths[0])
+        filename = store.get_value(it, 1)
+        store.remove(it)
+        self.palabra_window.pattern_files.remove(filename)
+        
+        index = 0
+        found = False
+        for (f, metadata, data) in self.patterns:
+            if f == filename:
+                found = True
+                break
+            index += 1
+        if found:
+            del self.patterns[index]
+            self.tree.columns_autosize()
         
     def on_selection_changed(self, selection):
+        def get_file(store, path):
+            return store.get_value(store.get_iter(path), 1)
+        def is_file(store, path):
+            return store.iter_parent(store.get_iter(path)) is None
+        
         store, paths = selection.get_selected_rows()
         self.remove_button.set_sensitive(False)
-        for path in paths:
-            it = store.get_iter(path)
-            parent = store.iter_parent(it)
-            if len(paths) == 1:
-                if parent is None:
-                    self.remove_button.set_sensitive(True)
-                display = store.get_value(it, 2) if parent is not None else Grid(0, 0)
-                self.preview.display(display)
-            else:
-                self.preview.display(Grid(0, 0))
-        
-        def is_file(store, path):
-            it = store.get_iter(path)
-            parent = store.iter_parent(it)
-            return parent is None
-        only_patterns = True not in [is_file(store, path) for path in paths]
+        self.preview.clear()
+        if len(paths) == 1:
+            file_selected = is_file(store, paths[0])
+            self.remove_button.set_sensitive(file_selected)
+            if not file_selected:
+                it = store.get_iter(paths[0])
+                self.preview.display(store.get_value(it, 2))
+            
+        only_patterns = bool(paths) and True not in [is_file(store, path) for path in paths]
         self.copy_pattern_button.set_sensitive(only_patterns)
         self.move_pattern_button.set_sensitive(only_patterns)
         self.add_pattern_button.set_sensitive(only_patterns)
         self.remove_pattern_button.set_sensitive(only_patterns)
         
-        def get_file(store, path):
-            it = store.get_iter(path)
-            pit = store.iter_parent(it)
-            return store.get_value(pit, 1) if pit is not None else store.get_value(it, 1)
         files = list(set([get_file(store, path) for path in paths]))
+        self.info.get_buffer().set_text("")
         if len(files) == 1:
             for (f, metadata, data) in self.patterns:
                 if f == files[0]:
-                    self.display_metadata(metadata)
+                    self.info.get_buffer().set_text(str(metadata))
                     break
-        else:
-            self.display_metadata(clear=True)
     
     def on_copy_pattern(self, button):
         patterns = self._gather_selected_patterns()        
