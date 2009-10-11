@@ -157,12 +157,24 @@ class PatternFileEditor(gtk.Dialog):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             path = dialog.get_filename()
-            self.palabra_window.pattern_files.append(path)
-            
-            metadata, data = read_container(path)
-            self.patterns.append((path, metadata, data))
-            self.display_files()
-        dialog.destroy()
+            for (f, metadata, data) in self.patterns:
+                if f == path:
+                    dialog.destroy()
+                    
+                    mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
+                        , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, u"This file is already in the list.")
+                    mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+                    mdialog.set_title("Duplicate file")
+                    mdialog.run()
+                    mdialog.destroy()
+                    break
+            else:
+                self.palabra_window.pattern_files.append(path)
+                
+                metadata, data = read_container(path)
+                self.patterns.append((path, metadata, data))
+                self.display_files()
+                dialog.destroy()
         
     def remove_file(self):
         store, paths = self.tree.get_selection().get_selected_rows()
