@@ -85,14 +85,14 @@ class PatternFileEditor(gtk.Dialog):
         self.copy_pattern_button.connect("clicked", self.on_copy_pattern)
         self.move_pattern_button = gtk.Button(u"Move pattern(s) to file...")
         self.move_pattern_button.set_sensitive(False)
-        self.copy_pattern_button.connect("clicked", self.on_move_pattern)
+        self.move_pattern_button.connect("clicked", self.on_move_pattern)
         
         right_vbox.pack_start(self.copy_pattern_button, False, False, 0)
         right_vbox.pack_start(self.move_pattern_button, False, False, 0)
         
         self.add_pattern_button = gtk.Button(stock=gtk.STOCK_ADD);
         self.add_pattern_button.set_sensitive(False)
-        self.copy_pattern_button.connect("clicked", self.on_add_pattern)
+        self.add_pattern_button.connect("clicked", self.on_add_pattern)
         align = self.add_pattern_button.get_children()[0]
         hbox = align.get_children()[0]
         image, label = hbox.get_children()
@@ -101,7 +101,7 @@ class PatternFileEditor(gtk.Dialog):
         
         self.remove_pattern_button = gtk.Button(stock=gtk.STOCK_REMOVE);
         self.remove_pattern_button.set_sensitive(False)     
-        self.copy_pattern_button.connect("clicked", self.on_remove_pattern)   
+        self.remove_pattern_button.connect("clicked", self.on_remove_pattern)   
         align = self.remove_pattern_button.get_children()[0]
         hbox = align.get_children()[0]
         image, label = hbox.get_children()
