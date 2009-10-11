@@ -47,28 +47,69 @@ class PatternFileEditor(gtk.Dialog):
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)
         
-        buttonbox = gtk.HButtonBox()
-        buttonbox.set_layout(gtk.BUTTONBOX_START)
+        options_vbox = gtk.VBox(False, 6)
+        
+        right_vbox = gtk.VBox(False, 6)
+        
+        label = gtk.Label()
+        label.set_markup(u"<b>Pattern files</b>")
+        align = gtk.Alignment(0, 0.5)
+        align.add(label)
+        right_vbox.pack_start(align, False, False, 0)
         
         add_button = gtk.Button(stock=gtk.STOCK_ADD)
         add_button.connect("clicked", lambda button: self.add_file())
-        buttonbox.pack_start(add_button, False, False, 0)
+        align = add_button.get_children()[0]
+        hbox = align.get_children()[0]
+        image, label = hbox.get_children()
+        label.set_text(u"Add pattern file");
+        right_vbox.pack_start(add_button, False, False, 0)
         
         self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
         self.remove_button.connect("clicked", lambda button: self.remove_file())
         self.remove_button.set_sensitive(False)
-        buttonbox.pack_start(self.remove_button, False, False, 0)
+        align = self.remove_button.get_children()[0]
+        hbox = align.get_children()[0]
+        image, label = hbox.get_children()
+        label.set_text(u"Remove pattern file");
+        right_vbox.pack_start(self.remove_button, False, False, 0)
+
+        label = gtk.Label()
+        label.set_markup(u"<b>Patterns</b>")
+        align = gtk.Alignment(0, 0.5)
+        align.add(label)
+        right_vbox.pack_start(align, False, False, 0)
         
-        options_vbox = gtk.VBox(False, 6)
+        self.copy_pattern_button = gtk.Button(u"Copy pattern(s) to file...")
+        self.copy_pattern_button.set_sensitive(False)
+        self.copy_pattern_button.connect("clicked", self.on_copy_pattern)
+        self.move_pattern_button = gtk.Button(u"Move pattern(s) to file...")
+        self.move_pattern_button.set_sensitive(False)
+        self.copy_pattern_button.connect("clicked", self.on_move_pattern)
         
-        left_vbox = gtk.VBox(False, 6)
-        left_vbox.pack_start(self.tree, True, True, 0)
-        left_vbox.pack_start(buttonbox, False, False, 0)
+        right_vbox.pack_start(self.copy_pattern_button, False, False, 0)
+        right_vbox.pack_start(self.move_pattern_button, False, False, 0)
         
-        right_vbox = gtk.VBox(False, 6)
+        self.add_pattern_button = gtk.Button(stock=gtk.STOCK_ADD);
+        self.add_pattern_button.set_sensitive(False)
+        self.copy_pattern_button.connect("clicked", self.on_add_pattern)
+        align = self.add_pattern_button.get_children()[0]
+        hbox = align.get_children()[0]
+        image, label = hbox.get_children()
+        label.set_text(u"Add current pattern to file...");
+        right_vbox.pack_start(self.add_pattern_button, False, False, 0)
+        
+        self.remove_pattern_button = gtk.Button(stock=gtk.STOCK_REMOVE);
+        self.remove_pattern_button.set_sensitive(False)     
+        self.copy_pattern_button.connect("clicked", self.on_remove_pattern)   
+        align = self.remove_pattern_button.get_children()[0]
+        hbox = align.get_children()[0]
+        image, label = hbox.get_children()
+        label.set_text(u"Remove pattern(s)");
+        right_vbox.pack_start(self.remove_pattern_button, False, False, 0)
         
         hbox = gtk.HBox(True, 6)
-        hbox.pack_start(left_vbox, True, True, 0)
+        hbox.pack_start(self.tree, True, True, 0)
         hbox.pack_start(right_vbox, True, True, 0)
         
         options_vbox.pack_start(hbox, True, True, 0)
@@ -133,6 +174,62 @@ class PatternFileEditor(gtk.Dialog):
                 self.preview.display(display)
             else:
                 self.preview.display(Grid(0, 0))
+        
+        def is_file(store, path):
+            it = store.get_iter(path)
+            parent = store.iter_parent(it)
+            return parent is None
+        only_patterns = True not in [is_file(store, path) for path in paths]
+        self.copy_pattern_button.set_sensitive(only_patterns)
+        self.move_pattern_button.set_sensitive(only_patterns)
+        self.add_pattern_button.set_sensitive(only_patterns)
+        self.remove_pattern_button.set_sensitive(only_patterns)
+    
+    def on_copy_pattern(self, button):
+        patterns = self._gather_selected_patterns()        
+        path = self._get_pattern_file()
+        print "TODO"
+        
+    def on_move_pattern(self, button):
+        patterns = self._gather_selected_patterns()        
+        path = self._get_pattern_file()
+        print "TODO"
+        
+    def on_add_pattern(self, button):
+        print "TODO"
+    
+    def on_remove_pattern(self, button):
+        patterns = self._gather_selected_patterns()
+        print "TODO"
+        
+    def _get_pattern_file(self):
+        dialog = gtk.FileChooserDialog(u"Select a pattern file"
+            , self
+            , gtk.FILE_CHOOSER_ACTION_OPEN
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.show_all()
+        
+        path = None
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            path = dialog.get_filename()
+        dialog.destroy()
+        return path
+        
+    def _gather_selected_patterns(self):
+        patterns = {}
+        
+        store, paths = self.tree.get_selection().get_selected_rows()
+        for path in paths:
+            it = store.get_iter(path)
+            parent = store.iter_parent(it)
+            grid = store.get_value(it, 1)
+            try:
+                patterns[store.get_value(parent, 0)].append(grid)
+            except KeyError:
+                patterns[store.get_value(parent, 0)] = [grid]
+        return patterns
 
 class Pattern:
     def __init__(self):
