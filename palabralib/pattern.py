@@ -48,8 +48,6 @@ class PatternFileEditor(gtk.Dialog):
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)
         
-        options_vbox = gtk.VBox(False, 6)
-        
         right_vbox = gtk.VBox(False, 6)
         
         label = gtk.Label()
@@ -109,19 +107,22 @@ class PatternFileEditor(gtk.Dialog):
         label.set_text(u"Remove pattern(s)");
         right_vbox.pack_start(self.remove_pattern_button, False, False, 0)
         
-        hbox = gtk.HBox(True, 6)
-        hbox.pack_start(self.tree, True, True, 0)
-        hbox.pack_start(right_vbox, True, True, 0)
+        hbox1 = gtk.HBox(True, 12)
+        hbox1.pack_start(self.tree, True, True, 0)
+        hbox1.pack_start(right_vbox, True, True, 0)
         
-        options_vbox.pack_start(hbox, True, True, 0)
-        options_vbox.pack_start(self.preview, False, False, 0)
+        hbox2 = gtk.HBox(True, 12)
+        hbox2.pack_start(self.preview, True, True, 0)
+        hbox2.pack_start(gtk.HBox(False, 0), True, True, 0)
+        
+        options_vbox = gtk.VBox(False, 12)
+        options_vbox.pack_start(hbox1, True, True, 0)
+        options_vbox.pack_start(hbox2, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        
         hbox.pack_start(options_vbox, True, True, 0)
-        
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
