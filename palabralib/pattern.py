@@ -137,15 +137,18 @@ class PatternFileEditor(gtk.Dialog):
         
     def display_files(self):
         self.store.clear()
-        for (f, metadata, data) in self.patterns:
-            s = ("".join([metadata["title"], " (", f, ")"])
-                if "title" in metadata else f)
-            parent = self.store.append(None, [s, f, None])
-            for grid in data:
-                blocks = grid.count_blocks()
-                words = grid.count_words()
-                s = "".join([str(words), " words, ", str(blocks), " blocks"])
-                self.store.append(parent, [s, f, grid])
+        for pattern in self.patterns:
+            self._display_file(*pattern)
+                
+    def _display_file(self, path, metadata, data):
+        s = ("".join([metadata["title"], " (", path, ")"])
+            if "title" in metadata else path)
+        parent = self.store.append(None, [s, path, None])
+        for grid in data:
+            blocks = grid.count_blocks()
+            words = grid.count_words()
+            s = "".join([str(words), " words, ", str(blocks), " blocks"])
+            self.store.append(parent, [s, path, grid])
                 
     def display_metadata(self, metadata=None, clear=False):
         text = "" if clear else str(metadata)
@@ -173,12 +176,15 @@ class PatternFileEditor(gtk.Dialog):
                     mdialog.destroy()
                     break
             else:
+                dialog.destroy()
+                
                 self.palabra_window.pattern_files.append(path)
                 
                 metadata, data = read_container(path)
-                self.patterns.append((path, metadata, data))
-                self.display_files()
-                dialog.destroy()
+                pattern = (path, metadata, data)
+                self.patterns.append(pattern)
+                self._display_file(*pattern)
+                self.tree.columns_autosize()
         
     def remove_file(self):
         store, paths = self.tree.get_selection().get_selected_rows()
@@ -187,6 +193,17 @@ class PatternFileEditor(gtk.Dialog):
             filename = store.get_value(it, 1)
             store.remove(it)
             self.palabra_window.pattern_files.remove(filename)
+            
+            index = 0
+            found = False
+            for (f, metadata, data) in self.patterns:
+                if f == filename:
+                    found = True
+                    break
+                index += 1
+            if found:
+                del self.patterns[index]
+                self.tree.columns_autosize()
         
     def on_selection_changed(self, selection):
         store, paths = selection.get_selected_rows()
