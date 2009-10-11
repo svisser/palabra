@@ -130,10 +130,8 @@ class PatternFileEditor(gtk.Dialog):
     def display_files(self):
         self.store.clear()
         for (f, metadata, data) in self.patterns:
-            if "title" in metadata:
-                s = "".join([metadata["title"], " (", f, ")"])
-            else:
-                s = f
+            s = ("".join([metadata["title"], " (", f, ")"])
+                if "title" in metadata else f)
             parent = self.store.append(None, [s, f, None])
             for grid in data:
                 blocks = grid.count_blocks()
