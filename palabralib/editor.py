@@ -87,7 +87,7 @@ class WordTool:
                     
     def _perform_overlay_callback(self, it):
         if it is None:
-            self.callbacks["overlay"](None)
+            self.clear_overlay()
         else:
             self.callbacks["overlay"](self.store.get_value(it, 0))
         
@@ -100,6 +100,14 @@ class WordTool:
             display = "".join(["<span color=\"", color,"\">", word, "</span>"])
             self.store.append([word, display])
         self.tree.queue_draw()
+        
+    def display_overlay(self):
+        store, it = self.tree.get_selection().get_selected()
+        if it is not None:
+            self.callbacks["overlay"](store.get_value(it, 0))
+        
+    def clear_overlay(self):
+        self.callbacks["overlay"](None)
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
@@ -579,6 +587,9 @@ class Editor(gtk.HBox):
                     if self.puzzle.grid.is_available(x, y + 1):
                         self.settings["selection_y"] += 1
                     self.puzzle.view.refresh_vertical_line(drawing_area, x)
+                    
+    def clear_overlay(self):
+        self._display_overlay([])
         
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""

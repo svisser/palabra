@@ -144,6 +144,12 @@ class PalabraWindow(gtk.Window):
         tabs.set_property("tab-vborder", 8)
         tabs.append_page(word_tool.create(), gtk.Label(u"Word"))
         tabs.append_page(clue_tool.create(puzzle), gtk.Label(u"Clue"))
+        def on_switch_page(tabs, do_not_use, num):
+            if num == 0:
+                word_tool.display_overlay()
+            else:
+                word_tool.clear_overlay()
+        tabs.connect("switch-page", on_switch_page)
         
         all_hbox = gtk.HBox(False, 0)
         all_hbox.pack_start(main, True, True, 0)
