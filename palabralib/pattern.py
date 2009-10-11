@@ -107,8 +107,12 @@ class PatternFileEditor(gtk.Dialog):
         label.set_text(u"Remove pattern(s)");
         right_vbox.pack_start(self.remove_pattern_button, False, False, 0)
         
+        scrolled_window = gtk.ScrolledWindow(None, None)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add_with_viewport(self.tree)
+        
         hbox1 = gtk.HBox(True, 12)
-        hbox1.pack_start(self.tree, True, True, 0)
+        hbox1.pack_start(scrolled_window, True, True, 0)
         hbox1.pack_start(right_vbox, True, True, 0)
         
         self.info = gtk.TextView()
