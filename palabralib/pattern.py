@@ -111,9 +111,12 @@ class PatternFileEditor(gtk.Dialog):
         hbox1.pack_start(self.tree, True, True, 0)
         hbox1.pack_start(right_vbox, True, True, 0)
         
+        self.info = gtk.TextView()
+        self.info.set_buffer(gtk.TextBuffer())
+        
         hbox2 = gtk.HBox(True, 12)
         hbox2.pack_start(self.preview, True, True, 0)
-        hbox2.pack_start(gtk.HBox(False, 0), True, True, 0)
+        hbox2.pack_start(self.info, True, True, 0)
         
         options_vbox = gtk.VBox(False, 12)
         options_vbox.pack_start(hbox1, True, True, 0)
@@ -139,6 +142,10 @@ class PatternFileEditor(gtk.Dialog):
                 words = grid.count_words()
                 s = "".join([str(words), " words, ", str(blocks), " blocks"])
                 self.store.append(parent, [s, f, grid])
+                
+    def display_metadata(self, metadata=None, clear=False):
+        text = "" if clear else str(metadata)
+        self.info.get_buffer().set_text(text)
         
     def add_file(self):
         dialog = gtk.FileChooserDialog(u"Add pattern file"
@@ -188,6 +195,19 @@ class PatternFileEditor(gtk.Dialog):
         self.move_pattern_button.set_sensitive(only_patterns)
         self.add_pattern_button.set_sensitive(only_patterns)
         self.remove_pattern_button.set_sensitive(only_patterns)
+        
+        def get_file(store, path):
+            it = store.get_iter(path)
+            pit = store.iter_parent(it)
+            return store.get_value(pit, 1) if pit is not None else store.get_value(it, 1)
+        files = list(set([get_file(store, path) for path in paths]))
+        if len(files) == 1:
+            for (f, metadata, data) in self.patterns:
+                if f == files[0]:
+                    self.display_metadata(metadata)
+                    break
+        else:
+            self.display_metadata(clear=True)
     
     def on_copy_pattern(self, button):
         patterns = self._gather_selected_patterns()        
