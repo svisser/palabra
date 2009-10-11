@@ -86,10 +86,8 @@ class WordTool:
                     self._perform_overlay_callback(it)
                     
     def _perform_overlay_callback(self, it):
-        if it is None:
-            self.clear_overlay()
-        else:
-            self.callbacks["overlay"](self.store.get_value(it, 0))
+        word = self.store.get_value(it, 0) if it is not None else None
+        self.callbacks["overlay"](word)
         
     def display(self, strings, show_intersections):
         self.store.clear()
@@ -103,11 +101,10 @@ class WordTool:
         
     def display_overlay(self):
         store, it = self.tree.get_selection().get_selected()
-        if it is not None:
-            self.callbacks["overlay"](store.get_value(it, 0))
+        self._perform_overlay_callback(it)
         
     def clear_overlay(self):
-        self.callbacks["overlay"](None)
+        self._perform_overlay_callback(None)
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
