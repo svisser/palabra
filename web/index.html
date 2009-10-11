@@ -1,0 +1,77 @@
+<html>
+<head>
+<script type="application/x-javascript">
+function Grid(width, height) {
+    this.width = width;
+    this.height = height;
+    this.data = new Array(this.width);
+    for (i = 0; i < this.width; i++) {
+        this.data[i] = new Array(this.height);
+    }
+    for (i = 0; i < this.width; i++) {
+        for (j = 0; j < this.height; j++) {
+            this.data[i][j] = false;
+        }
+    }
+}
+
+function parsePalabraFile(xmlDoc) {
+    g = xmlDoc.getElementsByTagName("grid");
+    if (g.length == 1) {
+        width = g[0].getAttribute("width");
+        height = g[0].getAttribute("height");
+        
+        grid = new Grid(width, height);
+        c = g[0].childNodes
+        for (i = 0; i < c.length; i++) {
+            if (c[i].nodeType == 1) {
+                if (c[i].nodeName == "block") {
+                    x = parseInt(c[i].getAttribute("x")) - 1;
+                    y = parseInt(c[i].getAttribute("y")) - 1;
+                    grid.data[x][y] = true;
+                }
+            }
+        }
+    }
+    return grid;
+}
+
+function draw() {
+    var canvas = document.getElementById("palabra");
+    if (canvas.getContext) {
+        var ctx = canvas.getContext("2d");
+        
+        var cell_size = 32;
+        
+        if (window.XMLHttpRequest) {
+            xhttp = new window.XMLHttpRequest();
+            xhttp.open("GET", "example.xml", false);
+            xhttp.send("");
+            xmlDoc = xhttp.responseXML;
+
+            var grid = parsePalabraFile(xmlDoc);
+        } else {
+            var grid = new Grid(15, 15);
+        }
+        
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = "black";
+        for (x = 0; x < grid.width; x++) {
+            for (y = 0; y < grid.height; y++) {
+                var rx = 10.5 + x * cell_size;
+                var ry = 10.5 + y * cell_size;
+                ctx.strokeRect(rx, ry, cell_size, cell_size);
+                if (grid.data[x][y]) {
+                    ctx.fillRect(rx, ry, cell_size, cell_size);
+                }
+            }
+        }
+    }
+}
+</script>
+</head>
+<body onload="draw();">
+<canvas id="palabra" width="800" height="600">
+</canvas>
+</body>
+</html>
