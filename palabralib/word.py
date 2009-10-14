@@ -142,7 +142,7 @@ class WordList:
         return result
             
     def has_matches(self, length, constraints):
-        # preprocess constraints
+        # check whether for each constraint at least one word exists
         for i, c in constraints:
             try:
                 if not self.combinations[length][i][c]:
