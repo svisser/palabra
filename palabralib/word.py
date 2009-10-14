@@ -118,20 +118,21 @@ class WordList:
         self.size = 0
         
     def add_word(self, word):
+        length = len(word)
         try:
-            self.lengths[len(word)].append(word)
+            self.lengths[length].append(word)
         except KeyError:
-            self.lengths[len(word)] = [word]
-        if len(word) not in self.combinations:
-            self.combinations[len(word)] = {}
-        for x in xrange(len(word)):
-            if x not in self.combinations[len(word)]:
-                self.combinations[len(word)][x] = {}
+            self.lengths[length] = [word]
+        if length not in self.combinations:
+            self.combinations[length] = {}
+        for x in xrange(length):
+            if x not in self.combinations[length]:
+                self.combinations[length][x] = {}
         for i, c in enumerate(word):
             try:
-                self.combinations[len(word)][i][c].append(self.size)
+                self.combinations[length][i][c].add(self.size)
             except KeyError:
-                self.combinations[len(word)][i][c] = [self.size]
+                self.combinations[length][i][c] = set([self.size])
         self.size += 1
         
     def get_substring_matches(self, word):
@@ -141,56 +142,32 @@ class WordList:
         return result
             
     def has_matches(self, length, constraints):
-        if length not in self.lengths:
-            return False
-
         # preprocess constraints
         for i, c in constraints:
-            if i not in self.combinations[length]:
-                return False
-            if c not in self.combinations[length][i]:
-                return False
-            if len(self.combinations[length][i][c]) == 0:
+            try:
+                if not self.combinations[length][i][c]:
+                    return False
+            except KeyError:
                 return False
                 
-        # store the words available per constraint and sort
-        counts = [(i, c, self.combinations[length][i][c]) for i, c in constraints]
-        counts.sort(key=lambda x: len(x[2]))
-        
-        # use each constraint to reduce the number of words available
-        # if it reaches zero at any time, there are no matches
-        result = None
-        for i, c, words in counts:
-            if result is None:
-                result = words
-                continue
-            else:
-                reduced = filter(lambda w: w in result, words)
-                if len(reduced) == 0:
-                    return False
-                result = reduced
-        return True
+        # check whether all constraints are satisfied for at least one word
+        words = [self.combinations[length][i][c] for i, c in constraints]
+        return len(reduce(set.intersection, words)) > 0
     
     def search(self, length, constraints, more_constraints=None):
-        if length not in self.lengths:
-            return []
-        result = []
         for word in self.lengths[length]:
             if self._predicate(constraints, word):
                 if more_constraints is not None:
-                    filled_constraints = []
-                    for j, (i, l, cs) in enumerate(more_constraints):
-                        filled_constraints.append((l, cs + [(i, word[j])]))
+                    filled_constraints = [(l, cs + [(i, word[j])]) for j, (i, l, cs) in enumerate(more_constraints)]
                     
-                    for l, cs in filled_constraints:
-                        if not self.has_matches(l, cs):
-                            result.append((word, False))
+                    for args in filled_constraints:
+                        if not self.has_matches(*args):
+                            yield word, False
                             break
                     else:
-                        result.append((word, True))
+                        yield word, True
                 else:
-                    result.append((word, True))
-        return result
+                    yield word, True
         
     @staticmethod
     def _predicate(constraints, word):
@@ -201,7 +178,7 @@ class WordList:
 
 def _process_word(word):
     word = word.strip("\n")
-    if len(word) == 0:
+    if not word:
         return None
     ord_A = ord("A")
     ord_Z = ord("Z")
