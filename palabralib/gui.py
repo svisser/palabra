@@ -48,7 +48,7 @@ class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
         self.set_title("Palabra")
-        self.set_size_request(960, 720)
+        self.set_size_request(800, 600)
         
         self.puzzle_toggle_items = []
         self.selection_toggle_items = []
