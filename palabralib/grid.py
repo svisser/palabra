@@ -259,31 +259,37 @@ class Grid:
             for x in xrange(self.width):
                 yield x, y
                 
+    def lines_of_cell(self, x, y):
+        """Return the lines of a cell (uses nonexistent cells for outer lines)."""
+        lines = []
+        for edge, (dx, dy) in [("left", (-1, 0)), ("top", (0, -1))]:
+            if self.is_valid(x + dx, y + dy):
+                v0 = self.is_void(x, y)
+                v1 = self.is_void(x + dx, y + dy)
+                if not (v0 and v1):
+                    side = "normal"
+                    if v0 and not v1:
+                        side = "innerborder"
+                    elif not v0 and v1:
+                        side = "outerborder"
+                    lines.append((x, y, edge, side))
+            elif not self.is_void(x, y):
+                lines.append((x, y, edge, "outerborder"))
+                
+        # also include lines at the bottom and the right
+        if y == self.height - 1:
+            if not self.is_void(x, self.height - 1):
+                lines.append((x, self.height, "top", "innerborder"))
+        if x == self.width - 1:
+            if not self.is_void(self.width - 1, y):
+                lines.append((self.width, y, "left", "innerborder"))
+        return lines
+                
     def lines(self):
         """Return the lines of the grid (uses nonexistent cells for outer lines)."""
         lines = []
         for x, y in self.cells():
-            for edge, (dx, dy) in [("left", (-1, 0)), ("top", (0, -1))]:
-                if self.is_valid(x + dx, y + dy):
-                    v0 = self.is_void(x, y)
-                    v1 = self.is_void(x + dx, y + dy)
-                    if not (v0 and v1):
-                        side = "normal"
-                        if v0 and not v1:
-                            side = "innerborder"
-                        elif not v0 and v1:
-                            side = "outerborder"
-                        lines.append((x, y, edge, side))
-                elif not self.is_void(x, y):
-                    lines.append((x, y, edge, "outerborder"))
-                
-        # also include lines at the bottom and the right
-        for x in xrange(self.width):
-            if not self.is_void(x, self.height - 1):
-                lines.append((x, self.height, "top", "innerborder"))
-        for y in xrange(self.height):
-            if not self.is_void(self.width - 1, y):
-                lines.append((self.width, y, "left", "innerborder"))
+            lines.extend(self.lines_of_cell(x, y))
         return lines
                     
     def gather_word(self, x, y, direction, empty_char="?"):
