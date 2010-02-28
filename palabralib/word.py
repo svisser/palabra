@@ -155,19 +155,20 @@ class WordList:
         return len(reduce(set.intersection, words)) > 0
     
     def search(self, length, constraints, more_constraints=None):
-        for word in self.lengths[length]:
-            if self._predicate(constraints, word):
-                if more_constraints is not None:
-                    filled_constraints = [(l, cs + [(i, word[j])]) for j, (i, l, cs) in enumerate(more_constraints)]
-                    
-                    for args in filled_constraints:
-                        if not self.has_matches(*args):
-                            yield word, False
-                            break
+        if length in self.lengths.keys():
+            for word in self.lengths[length]:
+                if self._predicate(constraints, word):
+                    if more_constraints is not None:
+                        filled_constraints = [(l, cs + [(i, word[j])]) for j, (i, l, cs) in enumerate(more_constraints)]
+                        
+                        for args in filled_constraints:
+                            if not self.has_matches(*args):
+                                yield word, False
+                                break
+                        else:
+                            yield word, True
                     else:
                         yield word, True
-                else:
-                    yield word, True
         
     @staticmethod
     def _predicate(constraints, word):
