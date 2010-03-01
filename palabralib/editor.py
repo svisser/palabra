@@ -308,12 +308,9 @@ class Editor(gtk.HBox):
         self.current.y = cy
 
         if (prev_x, prev_y) != (cx, cy):
-            for p, q in self.apply_symmetry(prev_x, prev_y):
-                self._render_cell(p, q)
-            for p, q in self.apply_symmetry(cx, cy):
-                self._render_cell(p, q)
-            self._render_cell(prev_x, prev_y)
-            self._render_cell(cx, cy)
+            c0 = self.apply_symmetry(prev_x, prev_y)
+            c1 = self.apply_symmetry(cx, cy)
+            self._render_cells(c0 + c1 + [(prev_x, prev_y), (cx, cy)])
         
         if (estate & gtk.gdk.SHIFT_MASK and not self.settings["locked_grid"]):
             if self.mouse_buttons_down[0]:
