@@ -520,11 +520,7 @@ class GridView:
                         rwidth -= (2 * offset)
                         rheight -= (2 * offset)
                     
-                    b = gtk.gdk.Rectangle(rx, ry, rwidth, rheight)
-                    if area is not None:
-                        i = b.intersect(self._determine_area(area))
-                    else:
-                        i = b
+                    i = gtk.gdk.Rectangle(rx, ry, rwidth, rheight)
                     if props.block["margin"] == 0:
                         # -0.5 for coordinates and +1 for size
                         # are needed to render seamlessly in PDF
@@ -585,55 +581,50 @@ class GridView:
                 by = sy - props.line["width"] - props.border["width"]
                 bsize = props.cell["size"] + 2 * props.border["width"] + 2 * props.line["width"]
                 
-                b = gtk.gdk.Rectangle(bx, by, bsize, bsize)
-                if area is not None:
-                    i = b.intersect(self._determine_area(area))
-                else:
-                    i = b
+                i = gtk.gdk.Rectangle(bx, by, bsize, bsize)
                 
                 # only render when cell intersects the specified area
-                if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
-                    bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
-                    border = "border" in side
-                    if ltype == "top":
-                        rx = sx
-                        if side == "normal":
-                            context.set_line_width(props.line["width"])
-                            ry = sy - 0.5 * props.line["width"]
-                            rdx = props.cell["size"]
-                        elif border:
-                            context.set_line_width(props.border["width"])
-                            if side == "outerborder":
-                                ry = sy - 0.5 * props.border["width"]
-                            elif side == "innerborder":
-                                ry = sy + 0.5 * props.border["width"]
-                                if not grid.is_available(x, y):
-                                    ry -= props.line["width"]
-                            rdx = props.cell["size"]
-                            
-                        # adjust horizontal lines to fill empty spaces in corners
-                        dxl, dxr = get_adjustments(lines, props, x, y)
-                        rx -= dxl
-                        rdx += dxl
-                        rdx += dxr
-                            
-                        render_line(context, props, rx, ry, rdx, 0, bar, border)
-                    elif ltype == "left":
-                        if side == "normal":
-                            context.set_line_width(props.line["width"])
-                            rx = sx - 0.5 * props.line["width"]
-                            rdy = props.cell["size"]
-                            
-                        elif border:
-                            context.set_line_width(props.border["width"])
-                            if side == "outerborder":
-                                rx = sx - 0.5 * props.border["width"]
-                            elif side == "innerborder":
-                                rx = sx + 0.5 * props.border["width"]
-                                if not grid.is_available(x, y):
-                                    rx -= props.line["width"]
-                            rdy = props.cell["size"]
-                        render_line(context, props, rx, sy, 0, rdy, bar, border)
+                bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
+                border = "border" in side
+                if ltype == "top":
+                    rx = sx
+                    if side == "normal":
+                        context.set_line_width(props.line["width"])
+                        ry = sy - 0.5 * props.line["width"]
+                        rdx = props.cell["size"]
+                    elif border:
+                        context.set_line_width(props.border["width"])
+                        if side == "outerborder":
+                            ry = sy - 0.5 * props.border["width"]
+                        elif side == "innerborder":
+                            ry = sy + 0.5 * props.border["width"]
+                            if not grid.is_available(x, y):
+                                ry -= props.line["width"]
+                        rdx = props.cell["size"]
+                        
+                    # adjust horizontal lines to fill empty spaces in corners
+                    dxl, dxr = get_adjustments(lines, props, x, y)
+                    rx -= dxl
+                    rdx += dxl
+                    rdx += dxr
+                        
+                    render_line(context, props, rx, ry, rdx, 0, bar, border)
+                elif ltype == "left":
+                    if side == "normal":
+                        context.set_line_width(props.line["width"])
+                        rx = sx - 0.5 * props.line["width"]
+                        rdy = props.cell["size"]
+                        
+                    elif border:
+                        context.set_line_width(props.border["width"])
+                        if side == "outerborder":
+                            rx = sx - 0.5 * props.border["width"]
+                        elif side == "innerborder":
+                            rx = sx + 0.5 * props.border["width"]
+                            if not grid.is_available(x, y):
+                                rx -= props.line["width"]
+                        rdy = props.cell["size"]
+                    render_line(context, props, rx, sy, 0, rdy, bar, border)
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
         self._render(context, render, color=color)
         
@@ -650,7 +641,7 @@ class GridView:
         def render(context, grid, props):
             for x, y in grid.cells():
                 c = grid.get_char(x, y)
-                if c != '': #and self._intersect_with_cell(area, props, x, y):
+                if c != '':
                     self._render_char(context, props, x, y, c)
         color = map(lambda x: x / 65535.0, self.properties.char["color"])
         self._render(context, render, color=color)          
@@ -658,8 +649,7 @@ class GridView:
     def render_overlay_chars(self, context, area):
         def render(context, grid, props):
             for x, y, c in self.overlay:
-                if self._intersect_with_cell(area, props, x, y):
-                    self._render_char(context, props, x, y, c)
+                self._render_char(context, props, x, y, c)
         color = map(lambda x: x / 65535.0, (65535.0 / 2, 65535.0 / 2, 65535.0 / 2))
         self._render(context, render, color=color)
         
@@ -667,8 +657,7 @@ class GridView:
         """Render the word numbers of the grid."""
         def render(context, grid, props):
             for n, x, y in grid.words(False):
-                if self._intersect_with_cell(area, props, x, y):
-                    self._render_number(context, props, x, y, n)
+                self._render_number(context, props, x, y, n)
         color = map(lambda x: x / 65535.0, self.properties.number["color"])
         self._render(context, render, color=color)
     
@@ -701,14 +690,9 @@ class GridView:
             bwidth = self.properties.get_grid_width()
             bheight = self.properties.get_grid_height()
             
-            b = gtk.gdk.Rectangle(0, 0, bwidth, bheight)
-            if area is not None:
-                i = b.intersect(self._determine_area(area))
-            else:
-                i = b
-            if (i.x, i.y, i.width, i.height) != (0, 0, 0, 0):
-                context.rectangle(i.x, i.y, i.width, i.height)
-                context.fill()
+            i = gtk.gdk.Rectangle(0, 0, bwidth, bheight)
+            context.rectangle(i.x, i.y, i.width, i.height)
+            context.fill()
         color = map(lambda x: x / 65535.0, self.properties.cell["color"])
         self._render(context, render, color=color)
         
@@ -752,28 +736,6 @@ class GridView:
         
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
-            
-    def _intersect_with_cell(self, area, props, x, y):
-        """Return True if the specified area intersects with the cell (x, y)."""
-        sx = props.grid_to_screen_x(x, False)
-        sy = props.grid_to_screen_y(y, False)
-        
-        b = gtk.gdk.Rectangle(sx, sy, props.cell["size"], props.cell["size"])
-        if area is not None:
-            i = b.intersect(self._determine_area(area))
-        else:
-            i = b
-        return (i.x, i.y, i.width, i.height) != (0, 0, 0, 0)
-            
-    def _determine_area(self, area):
-        """Adjust the area for the current settings and return a gtk.gdk.Rectangle."""
-        ax = area.x
-        if self.settings["has_padding"]:
-            ax -= self.properties.margin_x
-        ay = area.y
-        if self.settings["has_padding"]:
-            ay -= self.properties.margin_y
-        return gtk.gdk.Rectangle(ax, ay, area.width, area.height)
         
     def refresh_horizontal_line(self, drawing_area, y):
         """Redraw a horizontal sequence of cells at the specified y-coordinate."""

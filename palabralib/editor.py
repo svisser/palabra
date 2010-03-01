@@ -118,12 +118,6 @@ class Selection:
         self.x = x
         self.y = y
         self.direction = direction
-        
-    def toggle_direction(self):
-        self.direction = self.other_direction()
-        
-    def other_direction(self):
-        return {"across": "down", "down": "across"}[self.direction]
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
@@ -479,21 +473,14 @@ class Editor(gtk.HBox):
             
     def apply_symmetry(self, x, y):
         """Apply one or more symmetrical transforms to (x, y)."""
-        names = []
-        if self.settings["keep_horizontal_symmetry"]:
-            names.append("horizontal")
-        if self.settings["keep_vertical_symmetry"]:
-            names.append("vertical")
-        if self.settings["keep_point_symmetry"]:
-            names.append("point")
-        
         cells = []
-        if "horizontal" in names:
+        if self.settings["keep_horizontal_symmetry"]:
             cells.append((x, self.puzzle.grid.height - 1 - y))
-        if "vertical" in names:
+        if self.settings["keep_vertical_symmetry"]:
             cells.append((self.puzzle.grid.width - 1 - x, y))
-        if (("horizontal" in names and "vertical" in names)
-            or "point" in names):
+        if ((self.settings["keep_horizontal_symmetry"]
+            and self.settings["keep_vertical_symmetry"])
+            or self.settings["keep_point_symmetry"]):
             p = self.puzzle.grid.width - 1 - x
             q = self.puzzle.grid.height - 1 - y
             cells.append((p, q))
