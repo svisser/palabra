@@ -252,6 +252,167 @@ class GridView:
             
         if self.settings["render_overlays"]:
             self.render_overlay_chars(context, area)
+
+    def render_bottom(self, context, x, y):
+        # background
+        def render(context, grid, props):
+            bx = props.grid_to_screen_x(x, False)
+            by = props.grid_to_screen_y(y, False)
+            bsize = props.cell["size"]
+            i = gtk.gdk.Rectangle(bx, by, bsize, bsize)
+            
+            # -0.5 for coordinates and +1 for size
+            # are needed to render seamlessly in PDF
+            context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
+            context.fill()
+        r, g, b = map(lambda x: x / 65535.0, self.properties.cell["color"])
+        self._render(context, render, color=(r, g, b))
+        
+    def render_top(self, context, x, y):
+        # char
+        def render(context, grid, props):
+            c = grid.get_char(x, y)
+            if c != '':
+                self._render_char(context, props, x, y, c)
+        color = map(lambda x: x / 65535.0, self.properties.char["color"])
+        self._render(context, render, color=color)
+        
+        # overlay char
+        def render(context, grid, props):
+            for p, q, c in self.overlay:
+                if (x, y) == (p, q):
+                    self._render_char(context, props, x, y, c)
+        color = map(lambda x: x / 65535.0, (65535.0 / 2, 65535.0 / 2, 65535.0 / 2))
+        if self.settings["render_overlays"]:
+            self._render(context, render, color=color)
+        
+        # block
+        def render(context, grid, props):
+            if grid.is_block(x, y):
+                rx = props.grid_to_screen_x(x, False)
+                ry = props.grid_to_screen_y(y, False)
+                rwidth = props.cell["size"]
+                rheight = props.cell["size"]
+                
+                if props.block["margin"] != 0:
+                    offset = int((props.block["margin"] / 100.0) * props.cell["size"])
+                    rx += offset
+                    ry += offset
+                    rwidth -= (2 * offset)
+                    rheight -= (2 * offset)
+                
+                i = gtk.gdk.Rectangle(rx, ry, rwidth, rheight)
+                if props.block["margin"] == 0:
+                    # -0.5 for coordinates and +1 for size
+                    # are needed to render seamlessly in PDF
+                    context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
+                else:                
+                    context.rectangle(i.x, i.y, i.width, i.height)
+            context.fill()
+        color = map(lambda x: x / 65535.0, self.properties.block["color"])
+        self._render(context, render, color=color)
+        
+        self.render_all_lines_of_cell(context, x, y)
+            
+        # number
+        # TODO slow
+        #def render(context, grid, props):
+        #    for n, p, q in grid.words(False):
+        #        if (x, y) == (p, q):
+        #            self._render_number(context, props, x, y, n)
+        #color = map(lambda x: x / 65535.0, self.properties.number["color"])
+        #if self.settings["show_numbers"]:
+        #    self._render(context, render, color=color)
+        
+    def render_lines_of_cell(self, context, x, y):
+        # lines
+        """Render the internal lines of the grid (i.e., all lines except the border)."""
+        def render_line(context, props, rx, ry, rdx, rdy, bar, border):
+            if bar:
+                context.set_line_width(props.bar["width"])
+            if border:
+                r, g, b = map(lambda x: x / 65535.0, props.border["color"])
+                context.set_source_rgb(r, g, b)
+            context.move_to(rx, ry)
+            context.rel_line_to(rdx, rdy)
+            context.stroke()
+            if bar:
+                context.set_line_width(props.line["width"])
+            if border:
+                r, g, b = map(lambda x: x / 65535.0, props.line["color"])
+                context.set_source_rgb(r, g, b)
+                
+        def get_adjustments(lines, props, x, y):
+            def get_delta(x, y, side_no_extend, side_extend):
+                """
+                Determine the delta in pixels.
+                The delta is at least the normal line width.
+                """
+                if ((x, y, "left", side_no_extend) in lines
+                    or (x, y - 1, "left", side_no_extend) in lines):
+                    return props.line["width"]
+                elems = [(x, y, "left", "normal"), (x, y - 1, "left", "normal")]
+                if True in map(lambda e: e in lines, elems):
+                    return props.line["width"]
+                elems = [(x, y, "left", side_extend), (x, y - 1, "left", side_extend)]
+                if True in map(lambda e: e in lines, elems):
+                    return props.border["width"]
+                return 0
+            dx_left = get_delta(x, y, "innerborder", "outerborder")
+            dx_right = get_delta(x + 1, y, "outerborder", "innerborder")
+            return (dx_left, dx_right)
+        
+        def render(context, grid, props):
+            context.set_line_width(props.line["width"])
+            
+            lines = grid.lines_of_cell(x, y)
+            for p, q, ltype, side in lines:
+                sx = props.grid_to_screen_x(p, False)
+                sy = props.grid_to_screen_y(q, False)
+                
+                bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
+                border = "border" in side
+                if ltype == "top":
+                    rx = sx
+                    if side == "normal":
+                        context.set_line_width(props.line["width"])
+                        ry = sy - 0.5 * props.line["width"]
+                        rdx = props.cell["size"]
+                    elif border:
+                        context.set_line_width(props.border["width"])
+                        if side == "outerborder":
+                            ry = sy - 0.5 * props.border["width"]
+                        elif side == "innerborder":
+                            ry = sy + 0.5 * props.border["width"]
+                            if not grid.is_available(x, y):
+                                ry -= props.line["width"]
+                        rdx = props.cell["size"]
+                        
+                    # adjust horizontal lines to fill empty spaces in corners
+                    dxl, dxr = get_adjustments(lines, props, x, y)
+                    rx -= dxl
+                    rdx += dxl
+                    rdx += dxr
+                        
+                    render_line(context, props, rx, ry, rdx, 0, bar, border)
+                elif ltype == "left":
+                    if side == "normal":
+                        context.set_line_width(props.line["width"])
+                        rx = sx - 0.5 * props.line["width"]
+                        rdy = props.cell["size"]
+                        
+                    elif border:
+                        context.set_line_width(props.border["width"])
+                        if side == "outerborder":
+                            rx = sx - 0.5 * props.border["width"]
+                        elif side == "innerborder":
+                            rx = sx + 0.5 * props.border["width"]
+                            if not grid.is_available(x, y):
+                                rx -= props.line["width"]
+                        rdy = props.cell["size"]
+                    render_line(context, props, rx, sy, 0, rdy, bar, border)
+        color = map(lambda x: x / 65535.0, self.properties.line["color"])
+        self._render(context, render, color=color)
             
     def render_blacklist(self, context, area, r, g, b, blacklist):
         """Render blacklisted words in the specified color."""
@@ -335,10 +496,12 @@ class GridView:
         """Color words with length two."""
         for n, x, y in self.grid.horizontal_words():
             if self.grid.word_length(x, y, "across") == 2:
-                self.render_horizontal_line(context, area, x, y, r, g, b)
+                #self.render_horizontal_line(context, area, x, y, r, g, b)
+                self.render_line(context, None, x, y, "across", r, g, b)
         for n, x, y in self.grid.vertical_words():
             if self.grid.word_length(x, y, "down") == 2:
-                self.render_vertical_line(context, area, x, y, r, g, b)
+                self.render_line(context, None, x, y, "down", r, g, b)
+                #self.render_vertical_line(context, area, x, y, r, g, b)
         
     def render_blocks(self, context, area):
         """Render all blocks of the grid."""
@@ -476,24 +639,11 @@ class GridView:
         
     def render_line(self, context, area, x, y, direction, r, g, b):
         """Render a sequence of cells."""
-        if direction == "across":
-            self.render_horizontal_line(context, area, x, y, r, g, b)
-        elif direction == "down":
-            self.render_vertical_line(context, area, x, y, r, g, b)
-        
-    def render_horizontal_line(self, context, area, x, y, r, g, b):
-        """Render a horizontal sequence of cells."""
-        v0 = self.grid.in_direction("across", x, y)
-        v1 = self.grid.in_direction("across", x, y, reverse=True)
+        v0 = self.grid.in_direction(direction, x, y)
+        v1 = self.grid.in_direction(direction, x, y, reverse=True)
         for p, q in chain(v0, v1):
             self.render_location(context, area, p, q, r, g, b)
-        
-    def render_vertical_line(self, context, area, x, y, r, g, b):
-        """Render a vertical sequence of cells."""
-        v0 = self.grid.in_direction("down", x, y)
-        v1 = self.grid.in_direction("down", x, y, reverse=True)
-        for p, q in chain(v0, v1):
-            self.render_location(context, area, p, q, r, g, b)
+            self.render_char(context, p, q)
         
     def render_chars(self, context, area):
         """Render the letters of the grid."""
@@ -503,7 +653,7 @@ class GridView:
                 if c != '': #and self._intersect_with_cell(area, props, x, y):
                     self._render_char(context, props, x, y, c)
         color = map(lambda x: x / 65535.0, self.properties.char["color"])
-        self._render(context, render, color=color)
+        self._render(context, render, color=color)          
         
     def render_overlay_chars(self, context, area):
         def render(context, grid, props):
@@ -528,20 +678,22 @@ class GridView:
             bx = props.grid_to_screen_x(x, False)
             by = props.grid_to_screen_y(y, False)
             bsize = props.cell["size"]
-            b = gtk.gdk.Rectangle(bx, by, bsize, bsize)
-            if area is not None:
-                i = b.intersect(self._determine_area(area))
-            else:
-                i = b
-            
-            if (i.x, i.y, i.width, i.height) == (0, 0, 0, 0):
-                return
+            i = gtk.gdk.Rectangle(bx, by, bsize, bsize)
             
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
             context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
             context.fill()
         self._render(context, render, color=(r, g, b))
+        
+        self.render_all_lines_of_cell(context, x, y)
+        
+    def render_all_lines_of_cell(self, context, x, y):
+        self.render_lines_of_cell(context, x, y)
+        if self.grid.is_valid(x + 1, y):
+            self.render_lines_of_cell(context, x + 1, y)
+        if self.grid.is_valid(x, y + 1):
+            self.render_lines_of_cell(context, x, y + 1)
     
     def render_background(self, context, area):
         """Render the background of all cells of the grid."""

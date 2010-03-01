@@ -722,6 +722,10 @@ class PalabraWindow(gtk.Window):
         self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
         self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
+        # TODO needed to make app feels responsive (refreshing words
+        # takes a long time)
+        self.panel.queue_draw()
+        
         try:
             if content_changed:
                 self.editor.refresh_clues()
