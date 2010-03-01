@@ -471,11 +471,9 @@ class Editor(gtk.HBox):
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
         
     def set_symmetry(self, options):
-        symmetries = \
-            ["keep_horizontal_symmetry"
+        symmetries = ["keep_horizontal_symmetry"
             ,"keep_vertical_symmetry"
-            ,"keep_point_symmetry"
-            ]
+            ,"keep_point_symmetry"]
         for key in symmetries:
             self.settings[key] = key in options
             
@@ -542,37 +540,28 @@ class Editor(gtk.HBox):
             return True
             
         if event.keyval == gtk.keysyms.BackSpace and not self.settings["locked_grid"]:
-            self.on_backspace(drawing_area, event)
-            x = self.selection.x
-            y = self.selection.y
-            self._render_cell(x, y)
+            self.on_backspace()
         elif event.keyval == gtk.keysyms.Tab:
             self.change_typing_direction()
         elif event.keyval == gtk.keysyms.Home:
-            self._on_jump_to_cell(drawing_area, "start")
+            self._on_jump_to_cell("start")
         elif event.keyval == gtk.keysyms.End:
-            self._on_jump_to_cell(drawing_area, "end")
+            self._on_jump_to_cell("end")
         elif event.keyval == gtk.keysyms.Left:
-            self.on_arrow_key(drawing_area, event, -1, 0)
+            self.on_arrow_key(-1, 0)
         elif event.keyval == gtk.keysyms.Up:
-            self.on_arrow_key(drawing_area, event, 0, -1)
+            self.on_arrow_key(0, -1)
         elif event.keyval == gtk.keysyms.Right:
-            self.on_arrow_key(drawing_area, event, 1, 0)
+            self.on_arrow_key(1, 0)
         elif event.keyval == gtk.keysyms.Down:
-            self.on_arrow_key(drawing_area, event, 0, 1)
+            self.on_arrow_key(0, 1)
         elif event.keyval == gtk.keysyms.Delete and not self.settings["locked_grid"]:
-            x = self.selection.x
-            y = self.selection.y
-            self.on_delete(drawing_area, event)
-            self._render_cell(x, y)
+            self.on_delete()
         elif not self.settings["locked_grid"]:
-            x = self.selection.x
-            y = self.selection.y
-            self.on_typing(drawing_area, event)
-            self._render_cell(x, y)
+            self.on_typing(event.keyval)
         return True
         
-    def on_backspace(self, drawing_area, event):
+    def on_backspace(self):
         """Remove a character in the current or previous cell."""
         x = self.selection.x
         y = self.selection.y
@@ -584,6 +573,7 @@ class Editor(gtk.HBox):
                 , x=x
                 , y=y
                 , next_char="")
+            self._render_cell(x, y)
         else:
             # remove character in previous cell if needed and move selection
             x += (-1 if direction == "across" else 0)
@@ -596,33 +586,26 @@ class Editor(gtk.HBox):
                         , next_char="")
                 self.set_selection(x, y)
             
-    def on_arrow_key(self, drawing_area, event, dx, dy):
+    def on_arrow_key(self, dx, dy):
         """Move the selection to an available nearby cell."""
         x = self.selection.x
         y = self.selection.y
         if self.puzzle.grid.is_available(x + dx, y + dy):
             self.set_selection(x + dx, y + dy)
-            if dy != 0:
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y)
-                self.puzzle.view.refresh_horizontal_line(drawing_area, y + dy)
-            if dx != 0:
-                self.puzzle.view.refresh_vertical_line(drawing_area, x)
-                self.puzzle.view.refresh_vertical_line(drawing_area, x + dx)
             self.refresh_words()
         
-    def _on_jump_to_cell(self, drawing_area, target):
+    def _on_jump_to_cell(self, target):
         """Jump to the start or end (i.e., first or last cell) of a word."""
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
         if target == "start":
-            p, q = self.puzzle.grid.get_start_word(x, y, direction)
+            cell = self.puzzle.grid.get_start_word(x, y, direction)
         elif target == "end":
-            p, q = self.puzzle.grid.get_end_word(x, y, direction)
-        self.set_selection(p, q)
-        self.puzzle.view.refresh_line(drawing_area, x, y, direction)
+            cell = self.puzzle.grid.get_end_word(x, y, direction)
+        self.set_selection(*cell)
         
-    def on_delete(self, drawing_area, event):
+    def on_delete(self):
         """Remove the character in the selected cell."""
         x = self.selection.x
         y = self.selection.y
@@ -631,16 +614,16 @@ class Editor(gtk.HBox):
                 , x=x
                 , y=y
                 , next_char="")
-            self.puzzle.view.refresh_location(drawing_area, x, y)
+            self._render_cell(x, y)
         
-    def on_typing(self, drawing_area, event):
+    def on_typing(self, keyval):
         """Place an alphabetical character in the grid and move the selection."""
-        if gtk.keysyms.a <= event.keyval <= gtk.keysyms.z:
+        if gtk.keysyms.a <= keyval <= gtk.keysyms.z:
             x = self.selection.x
             y = self.selection.y
             direction = self.selection.direction
             if self.puzzle.grid.is_valid(x, y):
-                c = chr(event.keyval).capitalize()
+                c = chr(keyval).capitalize()
                 
                 self.palabra_window.transform_grid(transform.modify_char
                         , x=x
@@ -708,6 +691,6 @@ class Editor(gtk.HBox):
         direction = self.selection.direction
         if x >= 0 and y >= 0:
             p, q = self.puzzle.grid.get_start_word(x, y, direction)
-            self.tools["clue"].select(p, q, self.selection.direction)
+            self.tools["clue"].select(p, q, direction)
         else:
             self.tools["clue"].deselect()
