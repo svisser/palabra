@@ -575,11 +575,10 @@ class Editor(gtk.HBox):
             
     def on_arrow_key(self, dx, dy):
         """Move the selection to an available nearby cell."""
-        x = self.selection.x
-        y = self.selection.y
-        if self.puzzle.grid.is_available(x + dx, y + dy):
-            self.set_selection(x + dx, y + dy)
-            self.refresh_words()
+        nx = self.selection.x + dx
+        ny = self.selection.y + dy
+        if self.puzzle.grid.is_available(nx, ny):
+            self.set_selection(nx, ny)
         
     def _on_jump_to_cell(self, target):
         """Jump to the start or end (i.e., first or last cell) of a word."""
@@ -610,24 +609,18 @@ class Editor(gtk.HBox):
             y = self.selection.y
             direction = self.selection.direction
             if self.puzzle.grid.is_valid(x, y):
-                c = chr(keyval).capitalize()
-                
                 self.palabra_window.transform_grid(transform.modify_char
                         , x=x
                         , y=y
-                        , next_char=c)
-                if direction == "across":
-                    if self.puzzle.grid.is_available(x + 1, y):
-                        self.selection.x += 1
-                    x = self.selection.x
-                    y = self.selection.y
-                    self._render_selection(x, y, "across")
-                elif direction == "down":
-                    if self.puzzle.grid.is_available(x, y + 1):
-                        self.selection.y += 1
-                    x = self.selection.x
-                    y = self.selection.y
-                    self._render_selection(x, y, "down")
+                        , next_char=chr(keyval).capitalize())
+                nx = x + (1 if direction == "across" else 0)
+                ny = y + (1 if direction == "down" else 0)
+                if self.puzzle.grid.is_available(nx, ny):
+                    self.selection.x = nx
+                    self.selection.y = ny
+                x = self.selection.x
+                y = self.selection.y
+                self._render_selection(x, y, direction)
                     
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""
