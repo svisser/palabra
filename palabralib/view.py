@@ -683,6 +683,8 @@ class GridView:
             self.render_lines_of_cell(context, x + 1, y)
         if self.grid.is_valid(x, y + 1):
             self.render_lines_of_cell(context, x, y + 1)
+        if self.grid.is_valid(x + 1, y + 1):
+            self.render_lines_of_cell(context, x + 1, y + 1)
     
     def render_background(self, context, area):
         """Render the background of all cells of the grid."""
