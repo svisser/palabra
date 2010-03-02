@@ -166,16 +166,17 @@ class Editor(gtk.HBox):
     
     def _render_cells(self, cells, editor=True):
         self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
-        context = cairo.Context(self.editor_surface)
-        for x, y in cells:
-            if self.puzzle.grid.is_valid(x, y):
-                self.puzzle.view.render_bottom(context, x, y)
-                if editor:
-                    self._render_editor_of_cell(context, x, y)
-                self.puzzle.view.render_top(context, x, y)
-        context = self.drawing_area.window.cairo_create()
-        context.set_source(self.editor_pattern)
-        context.paint()
+        if self.editor_surface:
+            context = cairo.Context(self.editor_surface)
+            for x, y in cells:
+                if self.puzzle.grid.is_valid(x, y):
+                    self.puzzle.view.render_bottom(context, x, y)
+                    if editor:
+                        self._render_editor_of_cell(context, x, y)
+                    self.puzzle.view.render_top(context, x, y)
+            context = self.drawing_area.window.cairo_create()
+            context.set_source(self.editor_pattern)
+            context.paint()
         
     def _render_cell(self, x, y):
         self._render_cells([(x, y)])
@@ -243,7 +244,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.render_location(context, None, x, y, r, g, b)
         
     def on_expose_event(self, drawing_area, event):
-        if not self.editor_pattern or self.force_redraw:
+        if not self.editor_surface or self.force_redraw:
             width = self.puzzle.view.properties.visual_width(True)
             height = self.puzzle.view.properties.visual_height(True)
             self.editor_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -412,12 +413,7 @@ class Editor(gtk.HBox):
         """Display the (x, y, c) items in the grid's overlay."""
         old = self.puzzle.view.overlay
         self.puzzle.view.overlay = new
-        
-        x = self.selection.x
-        y = self.selection.y
-        direction = self.selection.direction
-        for x, y, c in (old + new):
-            self._render_cell(x, y)
+        self._render_cells([(x, y) for x, y, c in (old + new)])
             
     def clear_overlay(self):
         self._display_overlay([])
@@ -515,8 +511,7 @@ class Editor(gtk.HBox):
             direction = self.selection.direction
             self._render_selection(x, y, direction)
             
-            for x, y, status in blocks:
-                self._render_cell(x, y)
+            self._render_cells([(x, y) for x, y, status in blocks])
 
     # needed to capture the press of a tab button
     # so focus won't switch to the toolbar
