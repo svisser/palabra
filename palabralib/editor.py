@@ -131,6 +131,8 @@ class Editor(gtk.HBox):
         self.editor_surface = None
         self.editor_pattern = None
         
+        self.force_redraw = True
+        
         self.settings = {}
         self.settings["keep_horizontal_symmetry"] = False
         self.settings["keep_vertical_symmetry"] = False
@@ -241,11 +243,11 @@ class Editor(gtk.HBox):
                 self.puzzle.view.render_location(context, None, x, y, r, g, b)
         
     def on_expose_event(self, drawing_area, event):
-        if not self.editor_surface:
+        if not self.editor_pattern or self.force_redraw:
             width = self.puzzle.view.properties.visual_width(True)
             height = self.puzzle.view.properties.visual_height(True)
             self.editor_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-        if not self.editor_pattern:
+            
             self.editor_pattern = cairo.SurfacePattern(self.editor_surface)
             self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
             context = cairo.Context(self.editor_surface)
@@ -253,6 +255,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.render_bottom(context, x, y)
                 self._render_editor_of_cell(context, x, y)
                 self.puzzle.view.render_top(context, x, y)
+            self.force_redraw = False
         context = self.drawing_area.window.cairo_create()
         context.set_source(self.editor_pattern)
         context.paint()

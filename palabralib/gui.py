@@ -729,6 +729,7 @@ class PalabraWindow(gtk.Window):
         try:
             if content_changed:
                 self.editor.refresh_clues()
+            self.editor.force_redraw = True
             self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
