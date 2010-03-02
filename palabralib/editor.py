@@ -355,7 +355,7 @@ class Editor(gtk.HBox):
         def select(x, y, direction):
             """Select the word at (x, y, direction) in the grid."""
             self.tools["clue"].settings["use_scrolling"] = False
-            self.set_full_selection(x, y, direction)
+            self._set_full_selection(x, y, direction)
             self.tools["clue"].settings["use_scrolling"] = True
         def clue(x, y, direction, key, value):
             """
