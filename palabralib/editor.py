@@ -355,8 +355,7 @@ class Editor(gtk.HBox):
         def select(x, y, direction):
             """Select the word at (x, y, direction) in the grid."""
             self.tools["clue"].settings["use_scrolling"] = False
-            self.set_typing_direction(direction)
-            self.set_selection(x, y)
+            self.set_full_selection(x, y, direction)
             self.tools["clue"].settings["use_scrolling"] = True
         def clue(x, y, direction, key, value):
             """
@@ -630,35 +629,43 @@ class Editor(gtk.HBox):
         
     def get_selection(self):
         return (self.selection.x, self.selection.y)
+    
+    def _set_full_selection(self, x=None, y=None, direction=None):
+        px = self.selection.x
+        py = self.selection.y
+        pdir = self.selection.direction
+        
+        has_xy = x is not None and y is not None
+        has_dir = direction is not None
+        
+        if has_xy and not has_dir and (x, y) == (px, py):
+            return
+        if not has_xy and has_dir and direction == pdir:
+            return
+        if has_xy and has_dir and (x, y, direction) == (px, py, pdir):
+            return
+        
+        self._clear_selection(px, py, pdir)
+        if x is not None:
+            self.selection.x = x
+        if y is not None:
+            self.selection.y = y
+        if direction is not None:
+            self.selection.direction = direction
+        self._on_selection_change()
+        
+        rx = x if x is not None else px
+        ry = y if y is not None else py
+        rdir = direction if direction is not None else pdir
+        self._render_selection(rx, ry, rdir)
+        self.palabra_window.update_window()
+        self.clear_overlay()
         
     def set_selection(self, x, y):
-        px = self.selection.x
-        py = self.selection.y
-        pdir = self.selection.direction
-        if (x, y) == (px, py):
-            return
-        self._clear_selection(px, py, pdir)
-        
-        self.selection.x = x
-        self.selection.y = y
-        self._on_selection_change()
-        self._render_selection(x, y, pdir)
-        self.palabra_window.update_window()
-        self.clear_overlay()
+        self._set_full_selection(x=x, y=y)
         
     def set_typing_direction(self, direction):
-        px = self.selection.x
-        py = self.selection.y
-        pdir = self.selection.direction
-        if pdir == direction:
-            return
-        self._clear_selection(px, py, pdir)
-        
-        self.selection.direction = direction
-        self._on_selection_change()
-        self._render_selection(px, py, direction)
-        self.palabra_window.update_window()
-        self.clear_overlay()
+        self._set_full_selection(direction=direction)
         
     def _on_selection_change(self):
         """
