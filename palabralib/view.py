@@ -495,11 +495,7 @@ class GridView:
         """Color words with length two."""
         for d in ["across", "down"]:
             for n, x, y in self.grid.words_by_direction(d):
-                if self.grid.word_length(x, y, d) == 2:def render_all_lines_of_cell(self, context, x, y):
-        self.render_lines_of_cell(context, x, y)
-        for p, q in [(x + 1, y), (x, y + 1), (x + 1, y + 1)]:
-            if self.grid.is_valid(p, q):
-                self.render_lines_of_cell(context, p, q)
+                if self.grid.word_length(x, y, d) == 2:
                     self.render_line(context, None, x, y, d, r, g, b)
         
     def render_blocks(self, context, area):
