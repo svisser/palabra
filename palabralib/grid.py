@@ -51,8 +51,13 @@ class Grid:
         bottom = self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top")
         return top and bottom
             
-    def is_start_word(self, x, y):
-        """Return True when a word begins in either direction in the cell (x, y)."""
+    def is_start_word(self, x, y, direction=None):
+        """Return True when a word begins in the specified direction or in either direction in the cell (x, y)."""
+        if direction:
+            if direction == "across":
+                return self.is_start_horizontal_word(x, y)
+            elif direction == "down":
+                return self.is_start_vertical_word(x, y)
         return (self.is_start_horizontal_word(x, y) or
             self.is_start_vertical_word(x, y))
             
@@ -202,10 +207,7 @@ class Grid:
         for x, y in self.cells():
             if self.is_start_word(x, y):
                 n += 1
-                
-            if direction == "across" and self.is_start_horizontal_word(x, y):
-                yield n, x, y
-            if direction == "down" and self.is_start_vertical_word(x, y):
+            if self.is_start_word(x, y, direction):
                 yield n, x, y
                     
     def horizontal_clues(self):
@@ -234,16 +236,15 @@ class Grid:
         """
         n = 0
         for x, y in self.cells():
+            if self.is_start_word(x, y):
+                n += 1
             if allow_duplicates:
-                if self.is_start_horizontal_word(x, y):
-                    n += 1
+                if self.is_start_word(x, y, "across"):
                     yield n, x, y
-                if self.is_start_vertical_word(x, y):
+                if self.is_start_word(x, y, "down"):
                     yield n, x, y
             else:
-                if self.is_start_word(x, y):
-                    n += 1
-                    yield n, x, y
+                yield n, x, y
                     
     def cells(self):
         """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""
@@ -361,10 +362,9 @@ class Grid:
         """Return the number of words in the grid."""
         total = 0
         for x, y in self.cells():
-            if self.is_start_horizontal_word(x, y):
-                total += 1
-            if self.is_start_vertical_word(x, y):
-                total += 1
+            for d in ["across", "down"]:
+                if self.is_start_word(x, y, d):
+                    total += 1
         return total
         
     def count_chars(self):
@@ -377,14 +377,11 @@ class Grid:
         word_count = self.count_words()
         if word_count == 0:
             return 0
-        
         char_count = 0
         for x, y in self.cells():
-            if self.is_start_horizontal_word(x, y):
-                char_count += self.word_length(x, y, "across")
-            if self.is_start_vertical_word(x, y):
-                char_count += self.word_length(x, y, "down")
-        
+            for d in ["across", "down"]:
+                if self.is_start_word(x, y, d):
+                    char_count += self.word_length(x, y, d)
         return float(char_count) / float(word_count)
             
     def resize(self, width, height, make_dirty=True):
