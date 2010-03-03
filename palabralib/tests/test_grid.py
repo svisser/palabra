@@ -199,22 +199,22 @@ class GridTestCase(unittest.TestCase):
     def testGetStartWordOne(self):
         """All cells in a word return the first cell as the word's start."""
         for x in range(self.grid.width):
-            p, q = self.grid.get_start_horizontal_word(x, 0)
+            p, q = self.grid.get_start_word(x, 0, "across")
             self.assertEqual(p, 0)
             self.assertEqual(q, 0)
         for y in range(self.grid.height):
-            p, q = self.grid.get_start_vertical_word(0, y)
+            p, q = self.grid.get_start_word(0, y, "down")
             self.assertEqual(p, 0)
             self.assertEqual(q, 0)
         
     def testGetStartWordTwo(self):
         """Return the cell itself when the start is requested of a block."""   
         self.grid.set_block(5, 0, True)
-        p, q = self.grid.get_start_horizontal_word(5, 0)
+        p, q = self.grid.get_start_word(5, 0, "across")
         self.assertEqual(p, 5)
         self.assertEqual(q, 0)
         self.grid.set_block(0, 5, True)
-        p, q = self.grid.get_start_vertical_word(0, 5)
+        p, q = self.grid.get_start_word(0, 5, "down")
         self.assertEqual(p, 0)
         self.assertEqual(q, 5)
         
@@ -222,20 +222,20 @@ class GridTestCase(unittest.TestCase):
         """A block splits a word into two."""
         self.grid.set_block(5, 0, True)
         for x in range(0, 5):
-            p, q = self.grid.get_start_horizontal_word(x, 0)
+            p, q = self.grid.get_start_word(x, 0, "across")
             self.assertEqual(p, 0)
             self.assertEqual(q, 0)
         for x in range(6, self.grid.width):
-            p, q = self.grid.get_start_horizontal_word(x, 0)
+            p, q = self.grid.get_start_word(x, 0, "across")
             self.assertEqual(p, 6)
             self.assertEqual(q, 0)
         self.grid.set_block(0, 5, True)
         for y in range(0, 5):
-            p, q = self.grid.get_start_vertical_word(0, y)
+            p, q = self.grid.get_start_word(0, y, "down")
             self.assertEqual(p, 0)
             self.assertEqual(q, 0)
         for y in range(6, self.grid.height):
-            p, q = self.grid.get_start_vertical_word(0, y)
+            p, q = self.grid.get_start_word(0, y, "down")
             self.assertEqual(p, 0)
             self.assertEqual(q, 6)
             

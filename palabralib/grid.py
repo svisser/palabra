@@ -52,7 +52,7 @@ class Grid:
         return top and bottom
             
     def is_start_word(self, x, y, direction=None):
-        """Return True when a word begins in the specified direction or in either direction in the cell (x, y)."""
+        """Return True when a word begins in the cell (x, y)."""
         if direction:
             if direction == "across":
                 return self.is_start_horizontal_word(x, y)
@@ -60,18 +60,6 @@ class Grid:
                 return self.is_start_vertical_word(x, y)
         return (self.is_start_horizontal_word(x, y) or
             self.is_start_vertical_word(x, y))
-            
-    def get_start_horizontal_word(self, x, y):
-        """Return the first cell of a horizontal word that contains the cell (x, y)."""
-        if not self.is_available(x, y):
-            return x, y
-        return [(x, y) for x, y in self.in_direction("across", x, y, reverse=True)][-1]
-        
-    def get_start_vertical_word(self, x, y):
-        """Return the first cell of a vertical word that contains the cell (x, y)."""
-        if not self.is_available(x, y):
-            return x, y
-        return [(x, y) for x, y in self.in_direction("down", x, y, reverse=True)][-1]
         
     def get_end_horizontal_word(self, x, y):
         """Return the last cell of a horizontal word that contains the cell (x, y)."""
@@ -87,10 +75,9 @@ class Grid:
         
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
-        if direction == "across":
-            return self.get_start_horizontal_word(x, y)
-        elif direction == "down":
-            return self.get_start_vertical_word(x, y)
+        if not self.is_available(x, y):
+            return x, y
+        return [(x, y) for x, y in self.in_direction(direction, x, y, reverse=True)][-1]
             
     def get_end_word(self, x, y, direction):
         """Return the last cell of a word in the given direction that contains the cell (x, y)."""
@@ -236,15 +223,17 @@ class Grid:
         """
         n = 0
         for x, y in self.cells():
-            if self.is_start_word(x, y):
-                n += 1
             if allow_duplicates:
+                if self.is_start_word(x, y):
+                    n += 1
                 if self.is_start_word(x, y, "across"):
                     yield n, x, y
                 if self.is_start_word(x, y, "down"):
                     yield n, x, y
             else:
-                yield n, x, y
+                if self.is_start_word(x, y):
+                    n += 1
+                    yield n, x, y
                     
     def cells(self):
         """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""
@@ -311,9 +300,7 @@ class Grid:
                 
     def gather_words(self, direction):
         """Iterate over the word data in the given direction."""
-        iter_words = self.words_by_direction(direction)
-            
-        for n, x, y in iter_words:
+        for n, x, y in self.words_by_direction(direction):
             try:
                 clue = self.cell(x, y)["clues"][direction]["text"]
             except KeyError:
@@ -412,22 +399,15 @@ class Grid:
     def _clear_clues(self, dirty_cells):
         """Remove the clues of the words that contain a dirty cell."""
         for x, y, direction in dirty_cells:
-            if direction == "across":
-                p, q = self.get_start_horizontal_word(x, y)
-                try:
-                    del self.cell(p, q)["clues"]["across"]
-                except KeyError:
-                    pass
-            elif direction == "down":
-                p, q = self.get_start_vertical_word(x, y)
-                try:
-                    del self.cell(p, q)["clues"]["down"]
-                except KeyError:
-                    pass
+            p, q = self.get_start_word(x, y, direction)
+            try:
+                del self.cell(p, q)["clues"][direction]
+            except KeyError:
+                pass
                     
     def _clear_clues_related_to_cell(self, x, y):
-        sx, sy = self.get_start_horizontal_word(x, y)
-        tx, ty = self.get_start_vertical_word(x, y)
+        sx, sy = self.get_start_word(x, y, "across")
+        tx, ty = self.get_start_word(x, y, "down")
         self._clear_clues([(sx, sy, "across"), (tx, ty, "down")])
         
     def insert_row(self, y, insert_above=True):
@@ -722,10 +702,10 @@ class Grid:
         
     def set_bar(self, x, y, side, status):
         if side == "top":
-            tx, ty = self.get_start_vertical_word(x, y)
+            tx, ty = self.get_start_word(x, y, "down")
             self._clear_clues([(tx, ty, "down")])
         elif side == "left":
-            sx, sy = self.get_start_horizontal_word(x, y)
+            sx, sy = self.get_start_word(x, y, "across")
             self._clear_clues([(sx, sy, "across")])
         self.data[y][x]["bar"][side] = status
         
