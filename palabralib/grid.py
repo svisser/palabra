@@ -40,11 +40,10 @@ class Grid:
         if not self.is_available(x, y):
             return False
         def _is_start_word(d):
-            bdx = -1 if d == "across" else 0
-            bdy = -1 if d == "down" else 0
-            adx = 1 if d == "across" else 0
-            ady = 1 if d == "down" else 0
-            bar_side = "left" if d == "across" else "top"
+            if d == "across":
+                bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
+            elif d == "down":
+                bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
             
             before = not self.is_available(x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
             after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
@@ -52,18 +51,6 @@ class Grid:
         if direction:
             return _is_start_word(direction)
         return _is_start_word("across") or _is_start_word("down")
-        
-    def get_end_horizontal_word(self, x, y):
-        """Return the last cell of a horizontal word that contains the cell (x, y)."""
-        if not self.is_available(x, y):
-            return x, y
-        return [(x, y) for x, y in self.in_direction("across", x, y)][-1]
-        
-    def get_end_vertical_word(self, x, y):
-        """Return the last cell of a vertical word that contains the cell (x, y)."""
-        if not self.is_available(x, y):
-            return x, y
-        return [(x, y) for x, y in self.in_direction("down", x, y)][-1]
         
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
@@ -73,10 +60,9 @@ class Grid:
             
     def get_end_word(self, x, y, direction):
         """Return the last cell of a word in the given direction that contains the cell (x, y)."""
-        if direction == "across":
-            return self.get_end_horizontal_word(x, y)
-        elif direction == "down":
-            return self.get_end_vertical_word(x, y)
+        if not self.is_available(x, y):
+            return x, y
+        return [(x, y) for x, y in self.in_direction(direction, x, y)][-1]
         
     def get_check_count(self, x, y):
         """
