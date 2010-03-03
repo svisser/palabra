@@ -481,6 +481,8 @@ class Editor(gtk.HBox):
             
     def apply_symmetry(self, x, y):
         """Apply one or more symmetrical transforms to (x, y)."""
+        if not self.puzzle.grid.is_valid(x, y):
+            return []
         cells = []
         if self.settings["keep_horizontal_symmetry"]:
             cells.append((x, self.puzzle.grid.height - 1 - y))
@@ -496,9 +498,11 @@ class Editor(gtk.HBox):
 
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
-        blocks = []
+        if not self.puzzle.grid.is_valid(x, y):
+            return []
         
         # determine blocks that need to be modified
+        blocks = []
         if status != self.puzzle.grid.is_block(x, y):
             blocks.append((x, y, status))
         for p, q in self.apply_symmetry(x, y):
