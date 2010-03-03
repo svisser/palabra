@@ -256,14 +256,13 @@ class GridView:
     def render_bottom(self, context, x, y):
         # background
         def render(context, grid, props):
-            bx = props.grid_to_screen_x(x, False)
-            by = props.grid_to_screen_y(y, False)
-            bsize = props.cell["size"]
-            i = gtk.gdk.Rectangle(bx, by, bsize, bsize)
+            rx = props.grid_to_screen_x(x, False)
+            ry = props.grid_to_screen_y(y, False)
+            rsize = props.cell["size"]
             
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
-            context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
+            context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
         r, g, b = map(lambda x: x / 65535.0, self.properties.cell["color"])
         self._render(context, render, color=(r, g, b))
@@ -291,23 +290,20 @@ class GridView:
             if grid.is_block(x, y):
                 rx = props.grid_to_screen_x(x, False)
                 ry = props.grid_to_screen_y(y, False)
-                rwidth = props.cell["size"]
-                rheight = props.cell["size"]
+                rsize = props.cell["size"]
                 
                 if props.block["margin"] != 0:
                     offset = int((props.block["margin"] / 100.0) * props.cell["size"])
                     rx += offset
                     ry += offset
-                    rwidth -= (2 * offset)
-                    rheight -= (2 * offset)
+                    rsize -= (2 * offset)
                 
-                i = gtk.gdk.Rectangle(rx, ry, rwidth, rheight)
                 if props.block["margin"] == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
-                    context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
+                    context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
                 else:                
-                    context.rectangle(i.x, i.y, i.width, i.height)
+                    context.rectangle(rx, ry, rsize, rsize)
             context.fill()
         color = map(lambda x: x / 65535.0, self.properties.block["color"])
         self._render(context, render, color=color)
@@ -323,10 +319,17 @@ class GridView:
         #color = map(lambda x: x / 65535.0, self.properties.number["color"])
         #if self.settings["show_numbers"]:
         #    self._render(context, render, color=color)
+    
+    def render_all_lines_of_cell(self, context, x, y):
+        """Render the lines that surround a cell (all four sides)."""
+        self.render_lines_of_cell(context, x, y)
+        for p, q in [(x + 1, y), (x, y + 1), (x + 1, y + 1)]:
+            if self.grid.is_valid(p, q):
+                self.render_lines_of_cell(context, p, q)
         
     def render_lines_of_cell(self, context, x, y):
         # lines
-        """Render the internal lines of the grid (i.e., all lines except the border)."""
+        """Render the lines that belong to a cell (top and left line)."""
         def render_line(context, props, rx, ry, rdx, rdy, bar, border):
             if bar:
                 context.set_line_width(props.bar["width"])
@@ -492,7 +495,11 @@ class GridView:
         """Color words with length two."""
         for d in ["across", "down"]:
             for n, x, y in self.grid.words_by_direction(d):
-                if self.grid.word_length(x, y, d) == 2:
+                if self.grid.word_length(x, y, d) == 2:def render_all_lines_of_cell(self, context, x, y):
+        self.render_lines_of_cell(context, x, y)
+        for p, q in [(x + 1, y), (x, y + 1), (x + 1, y + 1)]:
+            if self.grid.is_valid(p, q):
+                self.render_lines_of_cell(context, p, q)
                     self.render_line(context, None, x, y, d, r, g, b)
         
     def render_blocks(self, context, area):
@@ -502,27 +509,24 @@ class GridView:
                 if grid.is_block(x, y):
                     rx = props.grid_to_screen_x(x, False)
                     ry = props.grid_to_screen_y(y, False)
-                    rwidth = props.cell["size"]
-                    rheight = props.cell["size"]
+                    rsize = props.cell["size"]
                     
                     if props.block["margin"] != 0:
                         offset = int((props.block["margin"] / 100.0) * props.cell["size"])
                         rx += offset
                         ry += offset
-                        rwidth -= (2 * offset)
-                        rheight -= (2 * offset)
+                        rsize -= (2 * offset)
                     
-                    i = gtk.gdk.Rectangle(rx, ry, rwidth, rheight)
                     if props.block["margin"] == 0:
                         # -0.5 for coordinates and +1 for size
                         # are needed to render seamlessly in PDF
-                        context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
+                        context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
                     else:                
-                        context.rectangle(i.x, i.y, i.width, i.height)
+                        context.rectangle(rx, ry, rsize, rsize)
             context.fill()
         color = map(lambda x: x / 65535.0, self.properties.block["color"])
         self._render(context, render, color=color)
-        
+
     def render_lines(self, context, area):
         """Render the internal lines of the grid (i.e., all lines except the border)."""
         def render_line(context, props, rx, ry, rdx, rdy, bar, border):
@@ -668,15 +672,6 @@ class GridView:
         self._render(context, render, color=(r, g, b))
         
         self.render_all_lines_of_cell(context, x, y)
-        
-    def render_all_lines_of_cell(self, context, x, y):
-        self.render_lines_of_cell(context, x, y)
-        if self.grid.is_valid(x + 1, y):
-            self.render_lines_of_cell(context, x + 1, y)
-        if self.grid.is_valid(x, y + 1):
-            self.render_lines_of_cell(context, x, y + 1)
-        if self.grid.is_valid(x + 1, y + 1):
-            self.render_lines_of_cell(context, x + 1, y + 1)
     
     def render_background(self, context, area):
         """Render the background of all cells of the grid."""
@@ -725,37 +720,9 @@ class GridView:
         
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
-        
         render(context, self.grid, self.properties)
-        
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
-        
-    def refresh_horizontal_line(self, drawing_area, y):
-        """Redraw a horizontal sequence of cells at the specified y-coordinate."""
-        self._refresh(drawing_area, [(x, y) for x in xrange(self.grid.width)])
-        
-    def refresh_vertical_line(self, drawing_area, x):
-        """Redraw a vertical sequence of cells at the specified x-coordinate."""
-        self._refresh(drawing_area, [(x, y) for y in xrange(self.grid.height)])
-        
-    def refresh_line(self, drawing_area, x, y, direction):
-        """Redraw a sequence of cells in the given direction at the specified coordinates."""
-        if direction == "across":
-            self.refresh_horizontal_line(drawing_area, y)
-        elif direction == "down":
-            self.refresh_vertical_line(drawing_area, x)
-        
-    def refresh_location(self, drawing_area, x, y):
-        """Refresh the cell at the specified coordinates."""
-        self._refresh(drawing_area, [(x, y)])
-        
-    def _refresh(self, drawing_area, cells):
-        for x, y in cells:
-            rx = self.properties.grid_to_screen_x(x)
-            ry = self.properties.grid_to_screen_y(y)
-            size = self.properties.cell["size"]
-            drawing_area.queue_draw_area(rx, ry, size, size)
             
     # needs manual queue_draw() on drawing_area afterwards
     def refresh_visual_size(self, drawing_area):
