@@ -16,7 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cairo
+import gobject
 import gtk
+from threading import Thread
 
 import action
 from action import ClueTransformAction
@@ -25,6 +27,10 @@ from itertools import *
 import preferences
 import transform
 from word import search_wordlists
+
+def load_words(wordlists, length, constraints, more, editor, show_intersections):
+    result = search_wordlists(wordlists, length, constraints, more)
+    gobject.idle_add(editor.tools["word"].display, result, show_intersections)
 
 class WordTool:
     def __init__(self, callbacks):
@@ -345,7 +351,10 @@ class Editor(gtk.HBox):
             elif len(constraints) != length:
                 more = self._gather_all_constraints(x, y, self.selection.direction)
                 wordlists = self.palabra_window.wordlists
-                result = search_wordlists(wordlists, length, constraints, more)
+                
+                args = (wordlists, length, constraints, more, self, show_intersections)
+                t = Thread(target=load_words, args=args)
+                t.start()
         if result is not None:
             self.tools["word"].display(result, show_intersections)
         else:
