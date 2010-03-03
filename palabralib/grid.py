@@ -136,7 +136,7 @@ class Grid:
             status["word_counts"] = {}
             status["across_word_count"] = 0
             status["down_word_count"] = 0
-            for n, x, y in self.horizontal_words():
+            for n, x, y in self.words_by_direction("across"):
                 length = self.word_length(x, y, "across")
                 
                 status["across_word_count"] += 1
@@ -146,7 +146,7 @@ class Grid:
                 except KeyError:
                     status["word_counts"][length] = 1
                     
-            for n, x, y in self.vertical_words():
+            for n, x, y in self.words_by_direction("down"):
                 length = self.word_length(x, y, "down")
                 
                 status["down_word_count"] += 1
@@ -195,30 +195,22 @@ class Grid:
                 status["clue_count"] += len(self.data[y][x]["clues"])
         
         return status
-            
-    def horizontal_words(self):
-        """Iterate over the horizontal words in the grid."""
+        
+    def words_by_direction(self, direction):
+        """Iterate over the words in the grid by direction."""
         n = 0
         for x, y in self.cells():
             if self.is_start_word(x, y):
                 n += 1
                 
-            if self.is_start_horizontal_word(x, y):
+            if direction == "across" and self.is_start_horizontal_word(x, y):
                 yield n, x, y
-                    
-    def vertical_words(self):
-        """Iterate over the vertical words in the grid."""
-        n = 0
-        for x, y in self.cells():
-            if self.is_start_word(x, y):
-                n += 1
-                
-            if self.is_start_vertical_word(x, y):
+            if direction == "down" and self.is_start_vertical_word(x, y):
                 yield n, x, y
                     
     def horizontal_clues(self):
         """Iterate over the horizontal clues of the grid."""
-        for n, x, y in self.horizontal_words():
+        for n, x, y in self.words_by_direction("across"):
             try:
                 yield n, x, y, self.cell(x, y)["clues"]["across"]
             except KeyError:
@@ -226,7 +218,7 @@ class Grid:
                 
     def vertical_clues(self):
         """Iterate over the vertical clues of the grid."""
-        for n, x, y in self.vertical_words():
+        for n, x, y in self.words_by_direction("down"):
             try:
                 yield n, x, y, self.cell(x, y)["clues"]["down"]
             except KeyError:
@@ -318,10 +310,7 @@ class Grid:
                 
     def gather_words(self, direction):
         """Iterate over the word data in the given direction."""
-        if direction == "across":
-            iter_words = self.horizontal_words()
-        elif direction == "down":
-            iter_words = self.vertical_words()
+        iter_words = self.words_by_direction(direction)
             
         for n, x, y in iter_words:
             try:

@@ -449,15 +449,11 @@ class GridView:
                         if word[i:i + len(bad)] == bad:
                             cells += s["cells"][i:i + len(bad)]
             return cells                    
-        a = []
-        d = []
-        for n, x, y in self.grid.horizontal_words():
-            a += check_word(x, y, "across")
-        for n, x, y in self.grid.vertical_words():
-            d += check_word(x, y, "down")
-        for x, y in a:
-            self.render_location(context, area, x, y, r, g, b)
-        for x, y in d:
+        b = []
+        for d in ["across", "down"]:
+            for n, x, y in self.grid.words_by_direction(d):
+                b += check_word(x, y, d)
+        for x, y in b:
             self.render_location(context, area, x, y, r, g, b)
             
     def render_warnings(self, context, area, r, g, b):
@@ -494,14 +490,10 @@ class GridView:
             
     def _render_two_letter_warnings(self, context, area, r, g, b):
         """Color words with length two."""
-        for n, x, y in self.grid.horizontal_words():
-            if self.grid.word_length(x, y, "across") == 2:
-                #self.render_horizontal_line(context, area, x, y, r, g, b)
-                self.render_line(context, None, x, y, "across", r, g, b)
-        for n, x, y in self.grid.vertical_words():
-            if self.grid.word_length(x, y, "down") == 2:
-                self.render_line(context, None, x, y, "down", r, g, b)
-                #self.render_vertical_line(context, area, x, y, r, g, b)
+        for d in ["across", "down"]:
+            for n, x, y in self.grid.words_by_direction(d):
+                if self.grid.word_length(x, y, d) == 2:
+                    self.render_line(context, None, x, y, d, r, g, b)
         
     def render_blocks(self, context, area):
         """Render all blocks of the grid."""

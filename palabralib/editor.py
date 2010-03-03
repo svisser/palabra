@@ -355,6 +355,7 @@ class Editor(gtk.HBox):
                 args = (wordlists, length, constraints, more, self, show_intersections)
                 t = Thread(target=load_words, args=args)
                 t.start()
+                return
         if result is not None:
             self.tools["word"].display(result, show_intersections)
         else:

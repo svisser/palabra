@@ -572,21 +572,21 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(n, 29)
         
     def testHorizontalWords(self):
-        n = len([1 for x in self.grid.horizontal_words()])
+        n = len([1 for x in self.grid.words_by_direction("across")])
         self.assertEquals(self.grid.height, n)
         
         for y in xrange(self.grid.height):
             self.grid.set_block(2, y, True)
-        xs = [x for n, x, y in self.grid.horizontal_words()]
+        xs = [x for n, x, y in self.grid.words_by_direction("across")]
         self.assertEquals(xs, [0, 3] * self.grid.height)
         
     def testVerticalWords(self):
-        n = len([1 for x in self.grid.vertical_words()])
+        n = len([1 for x in self.grid.words_by_direction("down")])
         self.assertEquals(self.grid.width, n)
         
         for x in xrange(self.grid.width):
             self.grid.set_block(x, 2, True)
-        ys = [y for n, x, y in self.grid.vertical_words()]
+        ys = [y for n, x, y in self.grid.words_by_direction("down")]
         self.assertEquals(ys, [0] * self.grid.width + [3] * self.grid.width)
         
     def testInsertRow(self):
