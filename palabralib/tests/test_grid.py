@@ -66,121 +66,121 @@ class GridTestCase(unittest.TestCase):
         
     def testIsStartHorizontalWordOne(self):
         """A single cell (ended by a block) is not a horizontal word."""
-        self.assertEqual(self.grid.is_start_horizontal_word(0, 0), True)
+        self.assertEqual(self.grid.is_start_word(0, 0, "across"), True)
         self.grid.set_block(1, 0, True)
-        self.assertEqual(self.grid.is_start_horizontal_word(0, 0), False)
+        self.assertEqual(self.grid.is_start_word(0, 0, "across"), False)
         
     def testIsStartHorizontalWordTwo(self):
         """Two or more cells constitute a horizontal word."""
         for x in xrange(2, self.grid.width):
             self.grid.set_block(x, 0, True)
-            self.assertEqual(self.grid.is_start_horizontal_word(0, 0), True)
+            self.assertEqual(self.grid.is_start_word(0, 0, "across"), True)
             self.grid.set_block(x, 0, False)
         
     def testIsStartHorizontalWordThree(self):
         """A block in the cell to the left can start a horizontal word."""
-        self.assertEqual(self.grid.is_start_horizontal_word(5, 5), False)
+        self.assertEqual(self.grid.is_start_word(5, 5, "across"), False)
         self.grid.set_block(4, 5, True)
-        self.assertEqual(self.grid.is_start_horizontal_word(5, 5), True)
+        self.assertEqual(self.grid.is_start_word(5, 5, "across"), True)
         
     def testIsStartHorizontalWordFour(self):
         """Only the first cell is the start of a horizontal word."""
         for x in xrange(1, self.grid.width):
-            self.assertEqual(self.grid.is_start_horizontal_word(x, 0), False)
+            self.assertEqual(self.grid.is_start_word(x, 0, "across"), False)
     
     def testIsStartHorizontalWordBarsOne(self):
         """A single cell (ended by a bar) is not a horizontal word."""
         self.grid.set_bar(1, 0, "left", True)
-        self.assertEqual(self.grid.is_start_horizontal_word(0, 0), False)
+        self.assertEqual(self.grid.is_start_word(0, 0, "across"), False)
         
     def testIsStartHorizontalWordBarsTwo(self):
         """A bar to the left starts a horizontal word."""
         self.grid.set_bar(5, 5, "left", True)
-        self.assertEqual(self.grid.is_start_horizontal_word(5, 5), True)
+        self.assertEqual(self.grid.is_start_word(5, 5, "across"), True)
         
     def testIsStartHorizontalWordBarsThree(self):
         """A bar on both sides is not a horizontal word."""
         self.grid.set_bar(5, 5, "left", True)
         self.grid.set_bar(6, 5, "left", True)
-        self.assertEqual(self.grid.is_start_horizontal_word(5, 5), False)
+        self.assertEqual(self.grid.is_start_word(5, 5, "across"), False)
         
     def testIsStartHorizontalWordBarsFour(self):
         """A bar on the left and a bar on the right is not a horizontal word."""
         self.grid.set_bar(4, 4, "left", True)
         self.grid.set_block(5, 4, True)
-        self.assertEqual(self.grid.is_start_horizontal_word(4, 4), False)
+        self.assertEqual(self.grid.is_start_word(4, 4, "across"), False)
         
     def testIsStartHorizontalWordBarsFive(self):
         """A block on the left and a bar on the right is not a horizontal word."""
         self.grid.set_block(7, 7, True)
         self.grid.set_bar(9, 7, "left", True)
-        self.assertEqual(self.grid.is_start_horizontal_word(8, 7), False)
+        self.assertEqual(self.grid.is_start_word(8, 7, "across"), False)
         
     def testIsStartHorizontalWordBarsSix(self):
         """A bar on both sides is not a horizontal word."""
         self.grid.set_bar(8, 8, "left", True)
-        self.assertEqual(self.grid.is_start_horizontal_word(8, 8), True)
+        self.assertEqual(self.grid.is_start_word(8, 8, "across"), True)
         self.grid.set_bar(9, 8, "left", True)
-        self.assertEqual(self.grid.is_start_horizontal_word(8, 8), False)
+        self.assertEqual(self.grid.is_start_word(8, 8, "across"), False)
         
     def testIsStartVerticalWordOne(self):
         """A single cell (ended by a block) is not a vertical word."""
-        self.assertEqual(self.grid.is_start_vertical_word(0, 0), True)
+        self.assertEqual(self.grid.is_start_word(0, 0, "down"), True)
         self.grid.set_block(0, 1, True)
-        self.assertEqual(self.grid.is_start_vertical_word(0, 0), False)
+        self.assertEqual(self.grid.is_start_word(0, 0, "down"), False)
         
     def testIsStartVerticalWordTwo(self):
         """Two or more cells constitute a vertical word."""
         for y in xrange(2, self.grid.height):
             self.grid.set_block(0, y, True)
-            self.assertEqual(self.grid.is_start_vertical_word(0, 0), True)
+            self.assertEqual(self.grid.is_start_word(0, 0, "down"), True)
             self.grid.set_block(0, y, False)
         
     def testIsStartVerticalWordThree(self):
         """A block in the cell above can start a vertical word."""
-        self.assertEqual(self.grid.is_start_vertical_word(5, 5), False)
+        self.assertEqual(self.grid.is_start_word(5, 5, "down"), False)
         self.grid.set_block(5, 4, True)
-        self.assertEqual(self.grid.is_start_vertical_word(5, 5), True)
+        self.assertEqual(self.grid.is_start_word(5, 5, "down"), True)
         
     def testIsStartVerticalWordFour(self):
         """Only the first cell is the start of a vertical word."""
         for y in xrange(1, self.grid.height):
-            self.assertEqual(self.grid.is_start_vertical_word(0, y), False)
+            self.assertEqual(self.grid.is_start_word(0, y, "down"), False)
         
     def testIsStartVerticalWordBarsOne(self):
         """A single cell (ended by a bar) is not a vertical word."""
         self.grid.set_bar(0, 1, "top", True)
-        self.assertEqual(self.grid.is_start_vertical_word(0, 0), False)
+        self.assertEqual(self.grid.is_start_word(0, 0, "down"), False)
         
     def testIsStartVerticalWordBarsTwo(self):
         """A bar above starts a vertical word."""
         self.grid.set_bar(5, 5, "top", True)
-        self.assertEqual(self.grid.is_start_vertical_word(5, 5), True)
+        self.assertEqual(self.grid.is_start_word(5, 5, "down"), True)
         
     def testIsStartVerticalWordBarsThree(self):
         """A bar above and below is not a vertical word."""
         self.grid.set_bar(5, 5, "top", True)
         self.grid.set_bar(5, 6, "top", True)
-        self.assertEqual(self.grid.is_start_vertical_word(5, 5), False)
+        self.assertEqual(self.grid.is_start_word(5, 5, "down"), False)
         
     def testIsStartVerticalWordBarsFour(self):
         """A bar above and a block below is not a vertical word."""
         self.grid.set_bar(4, 4, "top", True)
         self.grid.set_block(4, 5, True)
-        self.assertEqual(self.grid.is_start_vertical_word(4, 4), False)
+        self.assertEqual(self.grid.is_start_word(4, 4, "down"), False)
         
     def testIsStartVerticalWordBarsFive(self):
         """A block above and a block below is not a vertical word."""
         self.grid.set_block(7, 7, True)
         self.grid.set_bar(7, 9, "top", True)
-        self.assertEqual(self.grid.is_start_vertical_word(7, 8), False)
+        self.assertEqual(self.grid.is_start_word(7, 8, "down"), False)
         
     def testIsStartVerticalWordBarsSix(self):
         """A bar on both sides is not a vertical word."""
         self.grid.set_bar(8, 8, "top", True)
-        self.assertEqual(self.grid.is_start_vertical_word(8, 8), True)
+        self.assertEqual(self.grid.is_start_word(8, 8, "down"), True)
         self.grid.set_bar(8, 9, "top", True)
-        self.assertEqual(self.grid.is_start_vertical_word(8, 8), False)
+        self.assertEqual(self.grid.is_start_word(8, 8, "down"), False)
         
     def testIsStartWord(self):
         """A cell must have at least one word to be a word starting cell."""

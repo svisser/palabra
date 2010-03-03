@@ -34,32 +34,24 @@ class Grid:
         cell["clues"] = {}
         cell["void"] = False
         return cell
-
-    def is_start_horizontal_word(self, x, y):
-        """Return True when a horizontal words begins in the cell at (x, y)."""
-        if not self.is_available(x, y):
-            return False
-        left = not self.is_available(x - 1, y) or self.has_bar(x, y, "left")
-        right = self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left")
-        return left and right
-            
-    def is_start_vertical_word(self, x, y):
-        """Return True when a vertical word begins in the cell at (x, y)."""
-        if not self.is_available(x, y):
-            return False
-        top = not self.is_available(x, y - 1) or self.has_bar(x, y, "top")
-        bottom = self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top")
-        return top and bottom
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
+        if not self.is_available(x, y):
+            return False
+        def _is_start_word(d):
+            bdx = -1 if d == "across" else 0
+            bdy = -1 if d == "down" else 0
+            adx = 1 if d == "across" else 0
+            ady = 1 if d == "down" else 0
+            bar_side = "left" if d == "across" else "top"
+            
+            before = not self.is_available(x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
+            after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
+            return before and after
         if direction:
-            if direction == "across":
-                return self.is_start_horizontal_word(x, y)
-            elif direction == "down":
-                return self.is_start_vertical_word(x, y)
-        return (self.is_start_horizontal_word(x, y) or
-            self.is_start_vertical_word(x, y))
+            return _is_start_word(direction)
+        return _is_start_word("across") or _is_start_word("down")
         
     def get_end_horizontal_word(self, x, y):
         """Return the last cell of a horizontal word that contains the cell (x, y)."""
