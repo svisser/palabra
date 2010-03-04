@@ -42,7 +42,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import WordListEditor, read_wordlist_from_iter, read_wordlists
+from word import WordListEditor, read_wordlist_from_iter
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -82,9 +82,9 @@ class PalabraWindow(gtk.Window):
         self.pattern_files = ["xml/patterns.xml", "xml/patterns2.xml"]
         
         self.wordlists = {}
-        for path in ["/usr/share/dict/words"]:
-            self.wordlists[path] = {"list": None, "status": "loading"}
-        gobject.idle_add(read_wordlists(self, self.wordlists.keys()).next)
+        #for path in ["/usr/share/dict/words"]:
+        #    self.wordlists[path] = {"list": None, "status": "loading"}
+        #gobject.idle_add(read_wordlists(self, self.wordlists.keys()).next)
         
         self.blacklist = None
         def callback(wordlist):
@@ -1062,13 +1062,14 @@ class PalabraWindow(gtk.Window):
             adds = [p for p, a in editor.modifications.items() if a == "add"]
             removes = [p for p, a in editor.modifications.items() if a == "remove"]
             
-            gobject.idle_add(read_wordlists(self, adds).next)
-            for path in removes:
-                del self.wordlists[path]
-            try:
-                self.editor.refresh_words(True)
-            except AttributeError:
-                pass
+            print "TODO"
+            #gobject.idle_add(read_wordlists(self, adds).next)
+            #for path in removes:
+            #    del self.wordlists[path]
+            #try:
+            #    self.editor.refresh_words(True)
+            #except AttributeError:
+            #    pass
                 
     def manage_patterns(self):
         editor = PatternFileEditor(self)

@@ -28,12 +28,19 @@ import gobject
 
 from palabralib.gui import PalabraWindow
 from palabralib.preferences import read_config_file
+from palabralib.word import read_wordlists
 
 if __name__ == "__main__":
     try:
         read_config_file()
         gobject.threads_init()
+        
+        print "Loading wordlists..."
+        data = read_wordlists(["/usr/share/dict/words"])
+        
         palabra = PalabraWindow()
+        palabra.wordlists.update(data)
+        
         palabra.show_all()
         gtk.main()
         #import pstats

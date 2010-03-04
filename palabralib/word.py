@@ -208,22 +208,14 @@ def read_wordlist_from_iter(callback, words):
     callback(wordlist)
     yield False
 
-def read_wordlists(window, paths):
-    for path in paths:
-        window.wordlists[path] = {"list": None, "status": "loading"}
+def read_wordlists(paths):
     wordlists = {}
     for path in paths:
         wordlist = WordList()
         for word in read_wordlist(path):
             wordlist.add_word(word.lower())
-            yield True
         wordlists[path] = {"list": wordlist, "status": "ready"}
-    window.wordlists.update(wordlists)
-    try:
-        window.editor.refresh_words(True)
-    except AttributeError:
-        pass
-    yield False
+    return wordlists
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result = []
