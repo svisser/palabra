@@ -778,6 +778,7 @@ class PalabraWindow(gtk.Window):
         def toggle_predicate(predicate, status):
             view.custom_settings[predicate] = status
             try:
+                self.editor.force_redraw = True
                 self.panel.queue_draw()
             except AttributeError:
                 pass
