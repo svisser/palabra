@@ -635,8 +635,8 @@ class Editor(gtk.HBox):
                     
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""
-        other = {"across": "down", "down": "across"}
-        self.set_typing_direction(other[self.selection.direction])
+        d = {"across": "down", "down": "across"}[self.selection.direction]
+        self._set_full_selection(direction=d)
         
     def refresh_visual_size(self):
         self.puzzle.view.refresh_visual_size(self.drawing_area)
@@ -645,51 +645,41 @@ class Editor(gtk.HBox):
         return (self.selection.x, self.selection.y)
     
     def _set_full_selection(self, x=None, y=None, direction=None):
-        px = self.selection.x
-        py = self.selection.y
-        pdir = self.selection.direction
+        """Select (x, y), the direction or both."""
+        prev_x = self.selection.x
+        prev_y = self.selection.y
+        prev_dir = self.selection.direction
         
+        # determine whether updating is needed
         has_xy = x is not None and y is not None
         has_dir = direction is not None
-        
-        if has_xy and not has_dir and (x, y) == (px, py):
+        if has_xy and not has_dir and (x, y) == (prev_x, prev_y):
             return
-        if not has_xy and has_dir and direction == pdir:
+        if not has_xy and has_dir and direction == prev_dir:
             return
-        if has_xy and has_dir and (x, y, direction) == (px, py, pdir):
+        if has_xy and has_dir and (x, y, direction) == (prev_x, prev_y, prev_dir):
             return
         
-        self._clear_selection(px, py, pdir)
-        if x is not None:
-            self.selection.x = x
-        if y is not None:
-            self.selection.y = y
-        if direction is not None:
-            self.selection.direction = direction
-        self._on_selection_change()
+        # determine the next selection
+        nx = x if x is not None else prev_x
+        ny = y if y is not None else prev_y
+        ndir = direction if direction is not None else prev_dir
         
-        rx = x if x is not None else px
-        ry = y if y is not None else py
-        rdir = direction if direction is not None else pdir
-        self._render_selection(rx, ry, rdir)
+        # update the selection of the clue tool when the grid selection changes
+        if self.puzzle.grid.is_part_of_word(nx, ny, ndir):
+            p, q = self.puzzle.grid.get_start_word(nx, ny, ndir)
+            self.tools["clue"].select(p, q, ndir)
+        else:
+            self.tools["clue"].deselect()
+            
+        self._clear_selection(prev_x, prev_y, prev_dir)
+        self.selection.x = nx
+        self.selection.y = ny
+        self.selection.direction = ndir
+        self._render_selection(nx, ny, ndir)
         self.palabra_window.update_window()
         self.clear_overlay()
         
     def set_selection(self, x, y):
+        """Select the specified cell (x, y)."""
         self._set_full_selection(x=x, y=y)
-        
-    def set_typing_direction(self, direction):
-        self._set_full_selection(direction=direction)
-        
-    def _on_selection_change(self):
-        """
-        Update the selection of the clue tool when the grid selection changes.
-        """
-        x = self.selection.x
-        y = self.selection.y
-        direction = self.selection.direction
-        if self.puzzle.grid.is_part_of_word(x, y, direction):
-            p, q = self.puzzle.grid.get_start_word(x, y, direction)
-            self.tools["clue"].select(p, q, direction)
-        else:
-            self.tools["clue"].deselect()
