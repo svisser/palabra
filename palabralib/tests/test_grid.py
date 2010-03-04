@@ -266,6 +266,28 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_bar(1, 1, "top", True)
         self.assertEqual(self.grid.get_check_count(1, 0), 1)
         
+    def testIsPartOfWordAcross(self):
+        """A word consists of 2+ letters."""
+        self.grid.set_bar(5, 5, "left", True)
+        self.assertEqual(self.grid.is_part_of_word(5, 5, "across"), True)
+        self.grid.set_bar(6, 5, "left", True)
+        self.assertEqual(self.grid.is_part_of_word(5, 5, "across"), False)
+        self.grid.set_block(7, 7, True)
+        self.assertEqual(self.grid.is_part_of_word(8, 7, "across"), True)
+        self.grid.set_void(9, 7, True)
+        self.assertEqual(self.grid.is_part_of_word(8, 7, "across"), False)
+
+    def testIsPartOfWordDown(self):
+        """A word consists of 2+ letters."""
+        self.grid.set_bar(5, 5, "top", True)
+        self.assertEqual(self.grid.is_part_of_word(5, 5, "down"), True)
+        self.grid.set_bar(5, 6, "top", True)
+        self.assertEqual(self.grid.is_part_of_word(5, 5, "down"), False)
+        self.grid.set_block(7, 7, True)
+        self.assertEqual(self.grid.is_part_of_word(7, 8, "down"), True)
+        self.grid.set_void(7, 9, True)
+        self.assertEqual(self.grid.is_part_of_word(7, 8, "down"), False)
+        
     def testInDirectionNormal(self):
         """Direction iterator returns all cells in the given direction."""
         cells = [(x, 0) for x in xrange(self.grid.width)]
