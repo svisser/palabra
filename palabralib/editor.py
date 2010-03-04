@@ -688,7 +688,7 @@ class Editor(gtk.HBox):
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
-        if x >= 0 and y >= 0:
+        if self.puzzle.grid.is_part_of_word(x, y, direction):
             p, q = self.puzzle.grid.get_start_word(x, y, direction)
             self.tools["clue"].select(p, q, direction)
         else:

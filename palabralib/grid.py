@@ -88,15 +88,21 @@ class Grid:
         """
         if not self.is_available(x, y):
             return -1
-            
-        check_count = 0
-        if ((self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top"))
-            or (self.is_available(x, y - 1) and not self.has_bar(x, y, "top"))):
-            check_count += 1
-        if ((self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left"))
-            or (self.is_available(x - 1, y) and not self.has_bar(x, y, "left"))):
-            check_count += 1
-        return check_count
+        count = 0
+        for d in ["across", "down"]:
+            if self.is_part_of_word(x, y, d):
+                count += 1
+        return count
+        
+    def is_part_of_word(self, x, y, direction):
+        """Return True if the specified (x, y, direction) is part of a word (2+ letters)."""
+        if direction == "across":
+            bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
+        elif direction == "down":
+            bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
+        before = self.is_available(x + bdx, y + bdy) and not self.has_bar(x, y, bar_side)
+        after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
+        return before or after
 
     def determine_status(self, full=False):
         """Return a dictionary with the grid's properties."""
