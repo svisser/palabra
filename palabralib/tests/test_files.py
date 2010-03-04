@@ -52,6 +52,8 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.cell(2, 2)["clues"]["across"] = clues
         self.puzzle.grid.cell(3, 3)["bar"]["top"] = True
         self.puzzle.grid.cell(4, 4)["bar"]["left"] = True
+        # TODO modify when arbitrary number schemes are implemented
+        self.puzzle.grid.assign_numbers()
         self.puzzle.metadata = {"title": "A", "creator": "B"}
     
         write_crossword_to_xml(self.puzzle)

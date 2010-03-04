@@ -25,6 +25,8 @@ class Grid:
         self.width = width
         self.height = height
         self.data = [[self._default_cell() for x in range(width)] for y in range(height)]
+        # TODO modify when arbitrary number schemes are implemented
+        self.assign_numbers()
         
     def _default_cell(self):
         cell = {}
@@ -32,8 +34,18 @@ class Grid:
         cell["block"] = False
         cell["char"] = ""
         cell["clues"] = {}
+        cell["number"] = 0
         cell["void"] = False
         return cell
+        
+    def assign_numbers(self):
+        """Assign word numbers to cells as they are commonly numbered."""
+        n = 1
+        for x, y in self.cells():
+            self.cell(x, y)["number"] = 0
+            if self.is_start_word(x, y):
+                self.cell(x, y)["number"] = n
+                n += 1
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
@@ -168,12 +180,9 @@ class Grid:
         
     def words_by_direction(self, direction):
         """Iterate over the words in the grid by direction."""
-        n = 0
         for x, y in self.cells():
-            if self.is_start_word(x, y):
-                n += 1
             if self.is_start_word(x, y, direction):
-                yield n, x, y
+                yield self.cell(x, y)["number"], x, y
                     
     def horizontal_clues(self):
         """Iterate over the horizontal clues of the grid."""
@@ -199,18 +208,15 @@ class Grid:
         of two words are encountered twice when iterating. Otherwise,
         they are encountered only once.
         """
-        n = 0
         for x, y in self.cells():
+            n = self.cell(x, y)["number"]
             if allow_duplicates:
-                if self.is_start_word(x, y):
-                    n += 1
                 if self.is_start_word(x, y, "across"):
                     yield n, x, y
                 if self.is_start_word(x, y, "down"):
                     yield n, x, y
             else:
                 if self.is_start_word(x, y):
-                    n += 1
                     yield n, x, y
                     
     def cells(self):

@@ -154,6 +154,8 @@ def _read_crossword(crossword):
             direction, clues = _read_clues(e)
             for x, y, data in clues:
                 grid.cell(x, y)["clues"][direction] = data
+    # TODO modify when arbitrary number schemes are implemented
+    grid.assign_numbers()
     puzzle = Puzzle(grid)
     puzzle.metadata = metadata
     return puzzle
@@ -206,6 +208,7 @@ def _read_cell(e):
     c["bar"] = {}
     c["bar"]["top"] = e.get("top-bar") == "true"
     c["bar"]["left"] = e.get("left-bar") == "true"
+    c["number"] = 0
     c["void"] = e.tag == "void"
     return x, y, c
     

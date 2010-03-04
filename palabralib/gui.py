@@ -728,6 +728,9 @@ class PalabraWindow(gtk.Window):
         
         try:
             if content_changed:
+                # TODO modify when arbitrary number schemes are implemented
+                self.editor.puzzle.grid.assign_numbers()
+                
                 self.editor.refresh_clues()
             self.editor.force_redraw = True
             self.editor.refresh_words()

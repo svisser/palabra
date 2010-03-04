@@ -311,14 +311,13 @@ class GridView:
         self.render_all_lines_of_cell(context, x, y)
             
         # number
-        # TODO slow
-        #def render(context, grid, props):
-        #    for n, p, q in grid.words(False):
-        #        if (x, y) == (p, q):
-        #            self._render_number(context, props, x, y, n)
-        #color = map(lambda x: x / 65535.0, self.properties.number["color"])
-        #if self.settings["show_numbers"]:
-        #    self._render(context, render, color=color)
+        def render(context, grid, props):
+            n = grid.cell(x, y)["number"]
+            if n > 0:
+                self._render_number(context, props, x, y, n)
+        color = map(lambda x: x / 65535.0, self.properties.number["color"])
+        if self.settings["show_numbers"]:
+            self._render(context, render, color=color)
     
     def render_all_lines_of_cell(self, context, x, y):
         """Render the lines that surround a cell (all four sides)."""
