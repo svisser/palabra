@@ -200,11 +200,13 @@ class Editor(gtk.HBox):
         self._render_cells(chain(p, q))
     
     def _render_editor_of_cell(self, context, x, y):
+        # warnings for undesired cells
         r = preferences.prefs["color_warning_red"] / 65535.0
         g = preferences.prefs["color_warning_green"] / 65535.0
         b = preferences.prefs["color_warning_blue"] / 65535.0
         self.puzzle.view.render_warnings_of_cell(context, x, y, r, g, b)
         
+        # blacklist
         if self.puzzle.view.settings["warn_blacklist"]:
             for p, q, direction, length in self.blacklist:
                 if direction == "across" and p <= x < p + length and q == y:
@@ -694,7 +696,7 @@ class Editor(gtk.HBox):
         
     def refresh_visual_size(self):
         self.puzzle.view.refresh_visual_size(self.drawing_area)
-        
+       
     def get_selection(self):
         return (self.selection.x, self.selection.y)
     

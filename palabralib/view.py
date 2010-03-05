@@ -416,48 +416,6 @@ class GridView:
         color = map(lambda x: x / 65535.0, self.properties.line["color"])
         self._render(context, render, color=color)
             
-    def render_blacklist(self, context, area, r, g, b, blacklist):
-        """Render blacklisted words in the specified color."""
-        if not self.settings["warn_blacklist"]:
-            return
-        def gather_segments(word, sx, sy, direction):
-            segments = []
-            segment = {"word": "", "cells": []}
-            dx = 1 if direction == "across" else 0
-            dy = 1 if direction == "down" else 0
-            for i, c in enumerate(word):
-                if c != "?":
-                    p = sx + i * dx
-                    q = sy + i * dy
-                    segment["word"] = segment["word"] + c
-                    segment["cells"] = segment["cells"] + [(p, q)]
-                else:
-                    if len(segment["cells"]):
-                        segments.append(segment)
-                    segment = {"word": "", "cells": []}
-            if len(segment["cells"]):
-                segments.append(segment)
-            return segments
-        def check_word(x, y, direction):
-            sx, sy = self.grid.get_start_word(x, y, direction)
-            word = self.grid.gather_word(x, y, direction, "?")
-            segments = gather_segments(word, sx, sy, direction)
-            cells = []
-            for s in segments:
-                word = "".join(map(lambda c: c.lower(), s["word"]))
-                badwords = blacklist.get_substring_matches(word)
-                for i in xrange(len(word)):
-                    for bad in badwords:
-                        if word[i:i + len(bad)] == bad:
-                            cells += s["cells"][i:i + len(bad)]
-            return cells                    
-        b = []
-        for d in ["across", "down"]:
-            for n, x, y in self.grid.words_by_direction(d):
-                b += check_word(x, y, d)
-        for x, y in b:
-            self.render_location(context, area, x, y, r, g, b)
-            
     def render_warnings_of_cell(self, context, x, y, r, g, b):
         """Render undesired cell in the specified color."""
         count = self.grid.get_check_count(x, y)
