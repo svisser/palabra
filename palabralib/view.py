@@ -607,18 +607,6 @@ class GridView:
         
         self.render_all_lines_of_cell(context, x, y)
     
-    def render_background(self, context, area):
-        """Render the background of all cells of the grid."""
-        def render(context, grid, props):
-            bwidth = self.properties.get_grid_width()
-            bheight = self.properties.get_grid_height()
-            
-            i = gtk.gdk.Rectangle(0, 0, bwidth, bheight)
-            context.rectangle(i.x, i.y, i.width, i.height)
-            context.fill()
-        color = map(lambda x: x / 65535.0, self.properties.cell["color"])
-        self._render(context, render, color=color)
-        
     def _render_pango(self, context, x, y, font, content):
         """Render the content at (x, y) using the specified font description."""
         pcr = pangocairo.CairoContext(context)

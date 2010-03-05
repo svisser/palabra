@@ -345,5 +345,6 @@ class GridPreview(gtk.VBox):
         if self.view is not None:
             context = drawing_area.window.cairo_create()
             self.view.select_mode(constants.VIEW_MODE_PREVIEW)
-            self.view.render_background(context, event.area)
-            self.view.render(context, event.area, mode=constants.VIEW_MODE_PREVIEW)
+            for x, y in self.view.grid.cells():
+                self.view.render_bottom(context, x, y)
+                self.view.render_top(context, x, y)
