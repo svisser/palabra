@@ -642,6 +642,10 @@ class Editor(gtk.HBox):
                 self._render_selection(x, y, direction)
                 
     def _check_blacklist_for_cell(self, x, y):
+        """
+        Check whether the cell (x, y) is part of a blacklisted word.
+        The blacklist is updated accordingly.
+        """
         def get_segment(direction, x, y, dx, dy):
             segment = []
             cells = []
@@ -685,14 +689,10 @@ class Editor(gtk.HBox):
             else:
                 direction, segment, cells = data
                 clear_blacklist(direction, cells)
-            
         across = get_segment("across", x, y, 1, 0)
-        r = check_segment(*across)
-        process_results(r, across)
-
+        process_results(check_segment(*across), across)
         down = get_segment("down", x, y, 0, 1)
-        r = check_segment(*down)
-        process_results(r, down)
+        process_results(check_segment(*down), down)
                     
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""
