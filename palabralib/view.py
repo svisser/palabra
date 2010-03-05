@@ -427,14 +427,6 @@ class GridView:
                 if self.grid.word_length(sx, sy, d) == 2:
                     self.render_location(context, x, y, r, g, b)
         
-    def render_line(self, context, area, x, y, direction, r, g, b):
-        """Render a sequence of cells."""
-        v0 = self.grid.in_direction(direction, x, y)
-        v1 = self.grid.in_direction(direction, x, y, reverse=True)
-        for p, q in chain(v0, v1):
-            self.render_location(context, p, q, r, g, b)
-            self.render_char(context, p, q)
-        
     def render_location(self, context, x, y, r, g, b):
         """Render a cell."""
         def render(context, grid, props):
