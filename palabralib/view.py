@@ -413,29 +413,29 @@ class GridView:
         if self.settings["warn_unchecked_cells"]:
             # Color cells that are unchecked. Isolated cells are also colored.
             if 0 <= count <= 1:
-                self.render_location(context, None, x, y, r, g, b)
+                self.render_location(context, x, y, r, g, b)
         if self.settings["warn_consecutive_unchecked"]:
             # Color consecutive (two or more) unchecked cells.
             if 0 <= count <= 1:
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     if 0 <= self.grid.get_check_count(x + dx, y + dy) <= 1:
-                        self.render_location(context, None, x, y, r, g, b)
+                        self.render_location(context, x, y, r, g, b)
         if self.settings["warn_two_letter_words"]:
             # Color words with length two.
             for d in ["across", "down"]:
                 sx, sy = self.grid.get_start_word(x, y, d)
                 if self.grid.word_length(sx, sy, d) == 2:
-                    self.render_location(context, None, x, y, r, g, b)
+                    self.render_location(context, x, y, r, g, b)
         
     def render_line(self, context, area, x, y, direction, r, g, b):
         """Render a sequence of cells."""
         v0 = self.grid.in_direction(direction, x, y)
         v1 = self.grid.in_direction(direction, x, y, reverse=True)
         for p, q in chain(v0, v1):
-            self.render_location(context, area, p, q, r, g, b)
+            self.render_location(context, p, q, r, g, b)
             self.render_char(context, p, q)
         
-    def render_location(self, context, area, x, y, r, g, b):
+    def render_location(self, context, x, y, r, g, b):
         """Render a cell."""
         def render(context, grid, props):
             bx = props.grid_to_screen_x(x, False)

@@ -210,9 +210,9 @@ class Editor(gtk.HBox):
         if self.puzzle.view.settings["warn_blacklist"]:
             for p, q, direction, length in self.blacklist:
                 if direction == "across" and p <= x < p + length and q == y:
-                    self.puzzle.view.render_location(context, None, x, y, r, g, b)
+                    self.puzzle.view.render_location(context, x, y, r, g, b)
                 elif direction == "down" and q <= y < q + length and p == x:
-                    self.puzzle.view.render_location(context, None, x, y, r, g, b)
+                    self.puzzle.view.render_location(context, x, y, r, g, b)
         
         sx = self.selection.x
         sy = self.selection.y
@@ -229,7 +229,7 @@ class Editor(gtk.HBox):
                 q = self.puzzle.grid.in_direction(sdir, sx, sy, reverse=True)
                 for cell in chain(p, q):
                     if (x, y) == cell:
-                        self.puzzle.view.render_location(context, None, x, y, r, g, b)
+                        self.puzzle.view.render_location(context, x, y, r, g, b)
                         break
         
         # selection cell                    
@@ -237,7 +237,7 @@ class Editor(gtk.HBox):
             r = preferences.prefs["color_primary_selection_red"] / 65535.0
             g = preferences.prefs["color_primary_selection_green"] / 65535.0
             b = preferences.prefs["color_primary_selection_blue"] / 65535.0
-            self.puzzle.view.render_location(context, None, x, y, r, g, b)
+            self.puzzle.view.render_location(context, x, y, r, g, b)
                 
         # current cell and symmetrical cells
         if self.current.x >= 0 and self.current.y >= 0:
@@ -245,7 +245,7 @@ class Editor(gtk.HBox):
             g = preferences.prefs["color_secondary_active_green"] / 65535.0
             b = preferences.prefs["color_secondary_active_blue"] / 65535.0
             if (x, y) in self.apply_symmetry(self.current.x, self.current.y):
-                self.puzzle.view.render_location(context, None, x, y, r, g, b)
+                self.puzzle.view.render_location(context, x, y, r, g, b)
                 
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
@@ -253,7 +253,7 @@ class Editor(gtk.HBox):
             g = preferences.prefs["color_primary_active_green"] / 65535.0
             b = preferences.prefs["color_primary_active_blue"] / 65535.0
             if (x, y) == (self.current.x, self.current.y):
-                self.puzzle.view.render_location(context, None, x, y, r, g, b)
+                self.puzzle.view.render_location(context, x, y, r, g, b)
         
     def on_expose_event(self, drawing_area, event):
         if not self.editor_surface or self.force_redraw:
