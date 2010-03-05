@@ -647,6 +647,7 @@ class Editor(gtk.HBox):
         The blacklist is updated accordingly.
         """
         def get_segment(direction, x, y, dx, dy):
+            """Gather the content of the cells touching and including (x, y)."""
             segment = []
             cells = []
             for p, q in self.puzzle.grid.in_direction(direction, x + dx, y + dy):
@@ -666,6 +667,7 @@ class Editor(gtk.HBox):
                 cells.insert(0, (p, q))
             return direction, segment, cells
         def check_segment(direction, segment, cells):
+            """Determine the cells that need to be blacklisted."""
             result = []
             word = "".join([c.lower() if c else " " for c in segment])
             badwords = self.palabra_window.blacklist.get_substring_matches(word)
@@ -675,7 +677,9 @@ class Editor(gtk.HBox):
                         p, q = cells[i]
                         result.append((p, q, direction, len(b)))
             return result
-        def clear_blacklist(direction, cells):
+        def clear_blacklist(data):
+            """Remove all blacklist entries related to cells in data."""
+            direction, segment, cells = data
             remove = []
             for p, q, bdir, length in self.blacklist:
                 for r, s in cells:
@@ -683,16 +687,12 @@ class Editor(gtk.HBox):
                         remove.append((p, q, bdir, length))
             for x in remove:
                 self.blacklist.remove(x)
-        def process_results(results, data):
-            if results:
-                self.blacklist.extend(results)
-            else:
-                direction, segment, cells = data
-                clear_blacklist(direction, cells)
-        across = get_segment("across", x, y, 1, 0)
-        process_results(check_segment(*across), across)
-        down = get_segment("down", x, y, 0, 1)
-        process_results(check_segment(*down), down)
+        def process_segment(data):
+            clear_blacklist(data)
+            results = check_segment(*data)
+            self.blacklist.extend(results)
+        process_segment(get_segment("across", x, y, 1, 0))
+        process_segment(get_segment("down", x, y, 0, 1))
                     
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""
