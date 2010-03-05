@@ -575,6 +575,7 @@ class Editor(gtk.HBox):
                 , x=x
                 , y=y
                 , next_char="")
+            self._check_blacklist_for_cell(x, y)
             self._render_cell(x, y)
         else:
             # remove character in previous cell if needed and move selection
@@ -586,6 +587,7 @@ class Editor(gtk.HBox):
                         , x=x
                         , y=y
                         , next_char="")
+                self._check_blacklist_for_cell(x, y)
                 self.set_selection(x, y)
             
     def on_arrow_key(self, dx, dy):
@@ -615,6 +617,7 @@ class Editor(gtk.HBox):
                 , x=x
                 , y=y
                 , next_char="")
+            self._check_blacklist_for_cell(x, y)
             self._render_cell(x, y)
         
     def on_typing(self, keyval):
@@ -648,28 +651,48 @@ class Editor(gtk.HBox):
                     break
                 segment.append(c)
                 cells.append((p, q))
-            for p, q in self.puzzle.grid.in_direction(direction, x, y, reverse=True):
+            c = self.puzzle.grid.get_char(x, y)
+            segment.insert(0, c)
+            cells.insert(0, (x, y))
+            for p, q in self.puzzle.grid.in_direction(direction, x - dx, y - dy, reverse=True):
                 c = self.puzzle.grid.get_char(p, q)
                 if not c:
                     break
                 segment.insert(0, c)
                 cells.insert(0, (p, q))
             return direction, segment, cells
-        across = get_segment("across", x, y, 1, 0)
-        down = get_segment("down", x, y, 0, 1)
-        blacklist = []
-        for direction, seg, cells in [across, down]:
-            word = "".join(map(lambda c: c.lower(), seg))
+        def check_segment(direction, segment, cells):
+            result = []
+            word = "".join(map(lambda c: c.lower(), segment))
             badwords = self.palabra_window.blacklist.get_substring_matches(word)
             for i in xrange(len(word)):
                 for b in badwords:
                     if word[i:i + len(b)] == b:
                         p, q = cells[i]
-                        blacklist.append((p, q, direction, len(b)))
-        if blacklist:
-            self.blacklist.extend(blacklist)
-        else:
-            print "TODO"
+                        result.append((p, q, direction, len(b)))
+            return result
+        def clear_blacklist(direction, cells):
+            remove = []
+            for p, q, bdir, length in self.blacklist:
+                for r, s in cells:
+                    if (p, q, bdir) == (r, s, direction):
+                        remove.append((p, q, bdir, length))
+            for x in remove:
+                self.blacklist.remove(x)
+        def process_results(results, data):
+            if results:
+                self.blacklist.extend(results)
+            else:
+                direction, segment, cells = data
+                clear_blacklist(direction, cells)
+            
+        across = get_segment("across", x, y, 1, 0)
+        r = check_segment(*across)
+        process_results(r, across)
+
+        down = get_segment("down", x, y, 0, 1)
+        r = check_segment(*down)
+        process_results(r, down)
                     
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""
