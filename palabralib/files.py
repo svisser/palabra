@@ -392,9 +392,9 @@ def export_to_png(puzzle, filename, output, settings):
     context.fill()
     
     if output == "grid":
-        puzzle.view.render(context, None, constants.VIEW_MODE_EMPTY)
+        puzzle.view.render(context, constants.VIEW_MODE_EMPTY)
     elif output == "solution":
-        puzzle.view.render(context, None, constants.VIEW_MODE_SOLUTION)
+        puzzle.view.render(context, constants.VIEW_MODE_SOLUTION)
     
     surface.write_to_png(filename)
     surface.finish()

@@ -231,7 +231,7 @@ class GridView:
         elif mode == constants.VIEW_MODE_SOLUTION:
             self.settings.update(SETTINGS_SOLUTION)
         
-    def render(self, context, area, mode=None):
+    def render(self, context, mode=None):
         """
         Render the grid in the current render mode.
         
@@ -240,18 +240,9 @@ class GridView:
         """
         if mode is not None:
             self.select_mode(mode)
-            
-        self.render_blocks(context, area)
-        self.render_lines(context, area)
-        
-        if self.settings["show_chars"]:
-            self.render_chars(context, area)
-
-        if self.settings["show_numbers"]:
-            self.render_numbers(context, area)
-            
-        if self.settings["render_overlays"]:
-            self.render_overlay_chars(context, area)
+        for x, y in self.grid.cells():
+            self.render_bottom(context, x, y)
+            self.render_top(context, x, y)
 
     def render_bottom(self, context, x, y):
         # background
