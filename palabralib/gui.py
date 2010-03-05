@@ -82,9 +82,6 @@ class PalabraWindow(gtk.Window):
         self.pattern_files = ["xml/patterns.xml", "xml/patterns2.xml"]
         
         self.wordlists = {}
-        #for path in ["/usr/share/dict/words"]:
-        #    self.wordlists[path] = {"list": None, "status": "loading"}
-        #gobject.idle_add(read_wordlists(self, self.wordlists.keys()).next)
         
         self.blacklist = None
         def callback(wordlist):

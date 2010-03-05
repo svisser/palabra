@@ -137,6 +137,8 @@ class Editor(gtk.HBox):
         self.editor_surface = None
         self.editor_pattern = None
         
+        self.blacklist = []
+        
         self.force_redraw = True
         
         self.settings = {}
@@ -203,9 +205,12 @@ class Editor(gtk.HBox):
         b = preferences.prefs["color_warning_blue"] / 65535.0
         self.puzzle.view.render_warnings_of_cell(context, x, y, r, g, b)
         
-        # TODO speed
-        #if self.palabra_window.blacklist is not None:
-        #    self.puzzle.view.render_blacklist(context, None, r, g, b, self.palabra_window.blacklist)
+        if self.puzzle.view.settings["warn_blacklist"]:
+            for p, q, direction, length in self.blacklist:
+                if direction == "across" and p <= x < p + length and q == y:
+                    self.puzzle.view.render_location(context, None, x, y, r, g, b)
+                elif direction == "down" and q <= y < q + length and p == x:
+                    self.puzzle.view.render_location(context, None, x, y, r, g, b)
         
         sx = self.selection.x
         sy = self.selection.y
@@ -625,12 +630,46 @@ class Editor(gtk.HBox):
                         , next_char=chr(keyval).capitalize())
                 nx = x + (1 if direction == "across" else 0)
                 ny = y + (1 if direction == "down" else 0)
+                self._check_blacklist_for_cell(x, y)
                 if self.puzzle.grid.is_available(nx, ny):
                     self.selection.x = nx
                     self.selection.y = ny
                 x = self.selection.x
                 y = self.selection.y
                 self._render_selection(x, y, direction)
+                
+    def _check_blacklist_for_cell(self, x, y):
+        def get_segment(direction, x, y, dx, dy):
+            segment = []
+            cells = []
+            for p, q in self.puzzle.grid.in_direction(direction, x + dx, y + dy):
+                c = self.puzzle.grid.get_char(p, q)
+                if not c:
+                    break
+                segment.append(c)
+                cells.append((p, q))
+            for p, q in self.puzzle.grid.in_direction(direction, x, y, reverse=True):
+                c = self.puzzle.grid.get_char(p, q)
+                if not c:
+                    break
+                segment.insert(0, c)
+                cells.insert(0, (p, q))
+            return direction, segment, cells
+        across = get_segment("across", x, y, 1, 0)
+        down = get_segment("down", x, y, 0, 1)
+        blacklist = []
+        for direction, seg, cells in [across, down]:
+            word = "".join(map(lambda c: c.lower(), seg))
+            badwords = self.palabra_window.blacklist.get_substring_matches(word)
+            for i in xrange(len(word)):
+                for b in badwords:
+                    if word[i:i + len(b)] == b:
+                        p, q = cells[i]
+                        blacklist.append((p, q, direction, len(b)))
+        if blacklist:
+            self.blacklist.extend(blacklist)
+        else:
+            print "TODO"
                     
     def change_typing_direction(self):
         """Switch the typing direction to the other direction."""
