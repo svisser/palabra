@@ -663,7 +663,7 @@ class Editor(gtk.HBox):
             return direction, segment, cells
         def check_segment(direction, segment, cells):
             result = []
-            word = "".join(map(lambda c: c.lower(), segment))
+            word = "".join([c.lower() if c else " " for c in segment])
             badwords = self.palabra_window.blacklist.get_substring_matches(word)
             for i in xrange(len(word)):
                 for b in badwords:
