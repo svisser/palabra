@@ -458,45 +458,26 @@ class GridView:
         for x, y in b:
             self.render_location(context, area, x, y, r, g, b)
             
-    def render_warnings(self, context, area, r, g, b):
-        """Render undesired cells in the specified color."""
+    def render_warnings_of_cell(self, context, x, y, r, g, b):
+        """Render undesired cell in the specified color."""
+        count = self.grid.get_check_count(x, y)
         if self.settings["warn_unchecked_cells"]:
-            self._render_unchecked_cell_warnings(context, area, r, g, b)
-            
+            # Color cells that are unchecked. Isolated cells are also colored.
+            if 0 <= count <= 1:
+                self.render_location(context, None, x, y, r, g, b)
         if self.settings["warn_consecutive_unchecked"]:
-            self._render_consecutive_unchecked_warnings(context, area, r, g, b)
-        
+            # Color consecutive (two or more) unchecked cells.
+            if 0 <= count <= 1:
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    if 0 <= self.grid.get_check_count(x + dx, y + dy) <= 1:
+                        self.render_location(context, None, x, y, r, g, b)
         if self.settings["warn_two_letter_words"]:
-            self._render_two_letter_warnings(context, area, r, g, b)
+            # Color words with length two.
+            for d in ["across", "down"]:
+                sx, sy = self.grid.get_start_word(x, y, d)
+                if self.grid.word_length(sx, sy, d) == 2:
+                    self.render_location(context, None, x, y, r, g, b)
             
-    def _render_consecutive_unchecked_warnings(self, context, area, r, g, b):
-        """Color consecutive (two or more) unchecked cells."""
-        checks = {}
-        for x, y in self.grid.cells():
-            checks[x, y] = self.grid.get_check_count(x, y)
-        def is_consecutive_unchecked(x, y):
-            if checks[x, y] < 0 or checks[x, y] > 1:
-                return False
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                if (x + dx, y + dy) in checks and 0 <= checks[x + dx, y + dy] <= 1:
-                    return True
-        cells = filter(lambda p: is_consecutive_unchecked(*p), self.grid.cells())
-        for x, y in cells:
-            self.render_location(context, area, x, y, r, g, b)
-            
-    def _render_unchecked_cell_warnings(self, context, area, r, g, b):
-        """Color cells that are unchecked. Isolated cells are also colored."""
-        for x, y in self.grid.cells():
-            if 0 <= self.grid.get_check_count(x, y) <= 1:
-                self.render_location(context, area, x, y, r, g, b)
-            
-    def _render_two_letter_warnings(self, context, area, r, g, b):
-        """Color words with length two."""
-        for d in ["across", "down"]:
-            for n, x, y in self.grid.words_by_direction(d):
-                if self.grid.word_length(x, y, d) == 2:
-                    self.render_line(context, None, x, y, d, r, g, b)
-        
     def render_blocks(self, context, area):
         """Render all blocks of the grid."""
         def render(context, grid, props):

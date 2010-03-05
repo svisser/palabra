@@ -198,11 +198,10 @@ class Editor(gtk.HBox):
         self._render_cells(chain(p, q))
     
     def _render_editor_of_cell(self, context, x, y):
-        # TODO speed
         r = preferences.prefs["color_warning_red"] / 65535.0
         g = preferences.prefs["color_warning_green"] / 65535.0
         b = preferences.prefs["color_warning_blue"] / 65535.0
-        #self.puzzle.view.render_warnings(context, None, r, g, b)
+        self.puzzle.view.render_warnings_of_cell(context, x, y, r, g, b)
         
         # TODO speed
         #if self.palabra_window.blacklist is not None:
