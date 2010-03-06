@@ -1,5 +1,4 @@
-* Fix word numbers
-* Re-enable visual warnings in editor
-* Finish pattern window
-* Finish wordlists winow
+* Implement read/write operations on pattern files, such as moving/copying grids.
+* Finish functionality of pattern window
+* Finish functionality of wordlists winow
 * Make loading and displaying of words smooth
