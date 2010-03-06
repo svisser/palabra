@@ -100,8 +100,8 @@ def write_pattern_file(filename, metadata, contents):
     container = etree.SubElement(root, "container")
     container.set("content", "grid")
     _write_metadata(container, metadata)
-    for i, grid in enumerate(contents, start=1):
-        _write_grid(container, grid, str(i))
+    for i in sorted(contents.keys()):
+        _write_grid(container, contents[i], str(i))
 
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     f = open(filename, "w")

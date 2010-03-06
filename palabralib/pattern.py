@@ -18,7 +18,7 @@
 import gobject
 import gtk
 
-from files import read_pattern_file, write_pattern_file
+from files import InvalidFileError, read_pattern_file, write_pattern_file
 from grid import Grid
 from newpuzzle import GridPreview
 
@@ -234,11 +234,24 @@ class PatternFileEditor(gtk.Dialog):
                 if g == files[0]:
                     self.info.get_buffer().set_text(str(pattern["metadata"]))
                     break
+                    
+    def append_to_file(self, path, patterns):
+        try:
+            g, meta, data = read_pattern_file(path)
+        except InvalidFileError, e:
+            print "TODO", e.message
+            return
+        max_id = int(max(data.keys())) + 1
+        for f, keys in patterns.items():
+            for k in keys:
+                data[str(max_id)] = self.patterns[f]["data"][k]
+                max_id += 1
+        write_pattern_file(g, meta, data)
     
     def on_copy_pattern(self, button):
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
-        print "TODO"
+        self.append_to_file(path, patterns)
         
     def on_move_pattern(self, button):
         patterns = self._gather_selected_patterns()        
@@ -274,12 +287,11 @@ class PatternFileEditor(gtk.Dialog):
         for path in paths:
             it = store.get_iter(path)
             parent = store.iter_parent(it)
-            grid = self.patterns[store.get_value(it, 1)]["data"][store.get_value(it, 2)]
+            id = store.get_value(it, 2)
             try:
-                patterns[store.get_value(parent, 1)].append(grid)
+                patterns[store.get_value(parent, 1)].append(id)
             except KeyError:
-                patterns[store.get_value(parent, 1)] = [grid]
-        print patterns
+                patterns[store.get_value(parent, 1)] = [id]
         return patterns
 
 class Pattern:
