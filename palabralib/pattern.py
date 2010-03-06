@@ -99,7 +99,6 @@ class PatternFileEditor(gtk.Dialog):
         right_vbox.pack_start(self.move_pattern_button, False, False, 0)
         
         self.add_pattern_button = gtk.Button(stock=gtk.STOCK_ADD);
-        self.add_pattern_button.set_sensitive(False)
         self.add_pattern_button.connect("clicked", self.on_add_pattern)
         align = self.add_pattern_button.get_children()[0]
         hbox = align.get_children()[0]
@@ -224,7 +223,6 @@ class PatternFileEditor(gtk.Dialog):
         only_patterns = bool(paths) and True not in [is_file(store, path) for path in paths]
         self.copy_pattern_button.set_sensitive(only_patterns)
         self.move_pattern_button.set_sensitive(only_patterns)
-        self.add_pattern_button.set_sensitive(only_patterns)
         self.remove_pattern_button.set_sensitive(only_patterns)
         
         files = list(set([get_file(store, path) for path in paths]))
@@ -275,7 +273,7 @@ class PatternFileEditor(gtk.Dialog):
         # TODO ugly
         try:
             grid = self.palabra_window.puzzle_manager.current_puzzle.grid
-        except KeyError:
+        except AttributeError:
             print "TODO"
             return
         try:
