@@ -39,12 +39,13 @@ class PatternFileEditor(gtk.Dialog):
         
         self.patterns = {}
         for f in self.palabra_window.pattern_files:
-            self.patterns[f] = read_pattern_file(f)
+            g, meta, data = read_pattern_file(f)
+            self.patterns[f] = {"metadata": meta, "data": data}
         
-        # display_string filename grid
-        self.store = gtk.TreeStore(str, str, gobject.TYPE_PYOBJECT)
-        for f, pattern in self.patterns.items():
-            self._append_file(*pattern)
+        # display_string filename id_of_grid
+        self.store = gtk.TreeStore(str, str, str)
+        for item in self.patterns.items():
+            self._append_file(*item)
         
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
@@ -143,15 +144,17 @@ class PatternFileEditor(gtk.Dialog):
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
                 
-    def _append_file(self, path, metadata, data):
+    def _append_file(self, path, patterns):
+        metadata = patterns["metadata"]
+        data = patterns["data"]
         s = ("".join([metadata["title"], " (", path, ")"])
             if "title" in metadata else path)
-        parent = self.store.append(None, [s, path, None])
+        parent = self.store.append(None, [s, path, "0"])
         for id, grid in data.items():
             blocks = grid.count_blocks()
             words = grid.count_words()
             s = "".join([str(words), " words, ", str(blocks), " blocks"])
-            self.store.append(parent, [s, path, grid])
+            self.store.append(parent, [s, path, id])
         
     def add_file(self):
         dialog = gtk.FileChooserDialog(u"Add pattern file"
@@ -163,8 +166,8 @@ class PatternFileEditor(gtk.Dialog):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             path = dialog.get_filename()
-            for g, (f, metadata, data) in self.patterns.items():
-                if f == path:
+            for g, pattern in self.patterns.items():
+                if g == path:
                     dialog.destroy()
                     
                     mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
@@ -179,9 +182,9 @@ class PatternFileEditor(gtk.Dialog):
                 
                 self.palabra_window.pattern_files.append(path)
                 
-                pattern = read_pattern_file(path)
-                self.patterns[path] = pattern
-                self._append_file(*pattern)
+                g, meta, data = read_pattern_file(path)
+                self.patterns[path] = {"metadata": meta, "data": data}
+                self._append_file(path, self.patterns[path])
                 self.tree.columns_autosize()
         
     def remove_file(self):
@@ -215,7 +218,8 @@ class PatternFileEditor(gtk.Dialog):
             self.remove_button.set_sensitive(file_selected)
             if not file_selected:
                 it = store.get_iter(paths[0])
-                self.preview.display(store.get_value(it, 2))
+                grid = self.patterns[store.get_value(it, 1)]["data"][store.get_value(it, 2)]
+                self.preview.display(grid)
             
         only_patterns = bool(paths) and True not in [is_file(store, path) for path in paths]
         self.copy_pattern_button.set_sensitive(only_patterns)
@@ -226,9 +230,9 @@ class PatternFileEditor(gtk.Dialog):
         files = list(set([get_file(store, path) for path in paths]))
         self.info.get_buffer().set_text("")
         if len(files) == 1:
-            for g, (f, metadata, data) in self.patterns.items():
-                if f == files[0]:
-                    self.info.get_buffer().set_text(str(metadata))
+            for g, pattern in self.patterns.items():
+                if g == files[0]:
+                    self.info.get_buffer().set_text(str(pattern["metadata"]))
                     break
     
     def on_copy_pattern(self, button):
@@ -270,11 +274,12 @@ class PatternFileEditor(gtk.Dialog):
         for path in paths:
             it = store.get_iter(path)
             parent = store.iter_parent(it)
-            grid = store.get_value(it, 2)
+            grid = self.patterns[store.get_value(it, 1)]["data"][store.get_value(it, 2)]
             try:
                 patterns[store.get_value(parent, 1)].append(grid)
             except KeyError:
                 patterns[store.get_value(parent, 1)] = [grid]
+        print patterns
         return patterns
 
 class Pattern:
