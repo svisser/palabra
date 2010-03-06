@@ -230,7 +230,17 @@ class PatternFileEditor(gtk.Dialog):
         if len(files) == 1:
             for g, pattern in self.patterns.items():
                 if g == files[0]:
-                    self.info.get_buffer().set_text(str(pattern["metadata"]))
+                    info = []
+                    # TODO prepare for localization
+                    #for k, v in pattern["metadata"].items():
+                    #    info.append("".join([k.capitalize(), " : ", v, "\n"]))
+                    if grid:
+                        stats = grid.determine_status()
+                        info.append("".join(["Blocks: ", str(stats["block_count"]), "\n"]))
+                        info.append("".join(["Letters: ", str(stats["char_count"]), "\n"]))
+                        info.append("".join(["Words: ", str(stats["word_count"]), "\n"]))
+                        info.append("".join(["Voids: ", str(stats["void_count"]), "\n"]))
+                    self.info.get_buffer().set_text("".join(info))
                     break
                     
     def append_to_file(self, path, patterns):
