@@ -236,6 +236,7 @@ class PatternFileEditor(gtk.Dialog):
                     break
                     
     def append_to_file(self, path, patterns):
+        """Append all patterns to the specified file."""
         try:
             g, meta, data = read_pattern_file(path)
         except InvalidFileError, e:
@@ -247,6 +248,16 @@ class PatternFileEditor(gtk.Dialog):
                 data[str(max_id)] = self.patterns[f]["data"][k]
                 max_id += 1
         write_pattern_file(g, meta, data)
+        
+    def remove_from_files(self, patterns):
+        """Remove the patterns from their respective files."""
+        for f, keys in patterns.items():
+            g, meta, data = read_pattern_file(f)
+            ndata = {}
+            for k, v in data.items():
+                if k not in keys:
+                    ndata[k] = v
+            write_pattern_file(g, meta, ndata)
     
     def on_copy_pattern(self, button):
         patterns = self._gather_selected_patterns()        
@@ -256,7 +267,8 @@ class PatternFileEditor(gtk.Dialog):
     def on_move_pattern(self, button):
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
-        print "TODO"
+        self.append_to_file(path, patterns)
+        self.remove_from_files(patterns)
         
     def on_add_pattern(self, button):
         print "TODO"
