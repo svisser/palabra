@@ -271,11 +271,24 @@ class PatternFileEditor(gtk.Dialog):
         self.remove_from_files(patterns)
         
     def on_add_pattern(self, button):
-        print "TODO"
+        path = self._get_pattern_file()
+        # TODO ugly
+        try:
+            grid = self.palabra_window.puzzle_manager.current_puzzle.grid
+        except KeyError:
+            print "TODO"
+            return
+        try:
+            g, meta, data = read_pattern_file(path)
+        except InvalidFileError, e:
+            print "TODO", e.message
+            return
+        max_id = int(max(data.keys())) + 1
+        data[str(max_id)] = grid
+        write_pattern_file(g, meta, data)
     
     def on_remove_pattern(self, button):
         patterns = self._gather_selected_patterns()
-        print "TODO"
         
     def _get_pattern_file(self):
         dialog = gtk.FileChooserDialog(u"Select a pattern file"
