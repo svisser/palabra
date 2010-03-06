@@ -108,7 +108,7 @@ class PatternFileEditor(gtk.Dialog):
         
         self.remove_pattern_button = gtk.Button(stock=gtk.STOCK_REMOVE);
         self.remove_pattern_button.set_sensitive(False)     
-        self.remove_pattern_button.connect("clicked", self.on_remove_pattern)   
+        self.remove_pattern_button.connect("clicked", self.on_remove_patterns)   
         align = self.remove_pattern_button.get_children()[0]
         hbox = align.get_children()[0]
         image, label = hbox.get_children()
@@ -285,8 +285,9 @@ class PatternFileEditor(gtk.Dialog):
         data[str(max_id)] = grid
         write_pattern_file(g, meta, data)
     
-    def on_remove_pattern(self, button):
+    def on_remove_patterns(self, button):
         patterns = self._gather_selected_patterns()
+        self.remove_from_files(patterns)
         
     def _get_pattern_file(self):
         dialog = gtk.FileChooserDialog(u"Select a pattern file"
