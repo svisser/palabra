@@ -100,12 +100,20 @@
     </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="container_grid_type">
+    <xs:complexContent>
+        <xs:extension base="grid_type">
+            <xs:attribute name="id" type="xs:integer" use="required" />
+        </xs:extension>
+    </xs:complexContent>
+</xs:complexType>
+
 <xs:complexType name="container_type">
     <xs:sequence>
         <xs:element name="metadata" type="dc:elementContainer" />
         <xs:choice minOccurs="1" maxOccurs="unbounded">
             <xs:element name="crossword" type="crossword_type" />
-            <xs:element name="grid" type="grid_type" />
+            <xs:element name="grid" type="container_grid_type" />
         </xs:choice>
     </xs:sequence>
     <xs:attribute name="content" type="xs:string" use="required" />
