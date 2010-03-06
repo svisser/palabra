@@ -18,9 +18,14 @@
 import gobject
 import gtk
 
-from files import read_container, read_containers
+from files import read_pattern_file, write_pattern_file
 from grid import Grid
 from newpuzzle import GridPreview
+
+def gather_content(data, keys):
+    filename, metadata, contents = data
+    s = [contents[str(k)] for k in keys]
+    write_pattern_file("xml/patterns_TEMP.xml", {}, s)
 
 class PatternFileEditor(gtk.Dialog):
     def __init__(self, palabra_window):
@@ -32,7 +37,7 @@ class PatternFileEditor(gtk.Dialog):
         self.preview = GridPreview()
         self.preview.set_size_request(200, 250)
         
-        self.patterns = read_containers(self.palabra_window.pattern_files)
+        self.patterns = [read_pattern_file(f) for f in self.palabra_window.pattern_files]
         
         # display_string filename grid
         self.store = gtk.TreeStore(str, str, gobject.TYPE_PYOBJECT)
@@ -140,7 +145,7 @@ class PatternFileEditor(gtk.Dialog):
         s = ("".join([metadata["title"], " (", path, ")"])
             if "title" in metadata else path)
         parent = self.store.append(None, [s, path, None])
-        for grid in data:
+        for id, grid in data.items():
             blocks = grid.count_blocks()
             words = grid.count_words()
             s = "".join([str(words), " words, ", str(blocks), " blocks"])
@@ -172,8 +177,7 @@ class PatternFileEditor(gtk.Dialog):
                 
                 self.palabra_window.pattern_files.append(path)
                 
-                metadata, data = read_container(path)
-                pattern = (path, metadata, data)
+                pattern = read_pattern_file(path)
                 self.patterns.append(pattern)
                 self._append_file(*pattern)
                 self.tree.columns_autosize()

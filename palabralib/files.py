@@ -75,6 +75,39 @@ def write_crossword_to_xml(puzzle, backup=True):
     f.write(contents)
     f.close()
 
+# TODO refactor
+
+def read_pattern_file(filename):
+    doc = _read_palabra_file(filename)
+    main = doc.getroot()[0]
+    if main.tag != "container":
+        raise InvalidFileError(u"This file is not a container file.")
+    content = main.get("content")
+    metadata = {}
+    contents = {}
+    if content == "grid":
+        for e in main:
+            if e.tag == "metadata":
+                metadata = _read_metadata(e)
+            elif e.tag == "grid":
+                contents[e.get("id")] = _read_grid(e)
+    return (filename, metadata, contents)
+    
+def write_pattern_file(filename, metadata, contents):
+    root = etree.Element("palabra")
+    root.set("version", constants.VERSION)
+
+    container = etree.SubElement(root, "container")
+    container.set("content", "grid")
+    _write_metadata(container, metadata)
+    for i, grid in enumerate(contents, start=1):
+        _write_grid(container, grid, str(i))
+
+    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
+    f = open(filename, "w")
+    f.write(contents)
+    f.close()
+    
 def read_container(filename):
     doc = _read_palabra_file(filename)
     main = doc.getroot()[0]
@@ -240,8 +273,10 @@ def _read_grid(e):
             print "".join(["Warning: Invalid cell encountered: ", str((x + 1, y + 1))])
     return grid
     
-def _write_grid(parent, grid):
+def _write_grid(parent, grid, id=None):
     e = etree.SubElement(parent, "grid")
+    if id:
+        e.set("id", id)
     e.set("width", str(grid.width))
     e.set("height", str(grid.height))
     for x, y in grid.cells():
