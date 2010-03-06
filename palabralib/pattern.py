@@ -22,11 +22,6 @@ from files import InvalidFileError, read_pattern_file, write_pattern_file
 from grid import Grid
 from newpuzzle import GridPreview
 
-def gather_content(data, keys):
-    filename, metadata, contents = data
-    s = [contents[str(k)] for k in keys]
-    write_pattern_file("xml/patterns_TEMP.xml", {}, s)
-
 class PatternFileEditor(gtk.Dialog):
     def __init__(self, palabra_window):
         gtk.Dialog.__init__(self, u"Pattern file manager"
@@ -194,9 +189,6 @@ class PatternFileEditor(gtk.Dialog):
         filename = store.get_value(it, 1)
         store.remove(it)
         self.palabra_window.pattern_files.remove(filename)
-        
-        index = 0
-        found = False
         try:
             del self.patterns[filename]
             self.tree.columns_autosize()
@@ -268,17 +260,20 @@ class PatternFileEditor(gtk.Dialog):
             write_pattern_file(g, meta, ndata)
     
     def on_copy_pattern(self, button):
+        """Copy the currently selected patterns to a specified file."""
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
         self.append_to_file(path, patterns)
         
     def on_move_pattern(self, button):
+        """Move the currently selected patterns to a specified file."""
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
         self.append_to_file(path, patterns)
         self.remove_from_files(patterns)
         
     def on_add_pattern(self, button):
+        """Add the pattern of the current puzzle to a specified file."""
         path = self._get_pattern_file()
         # TODO ugly
         try:
@@ -296,10 +291,12 @@ class PatternFileEditor(gtk.Dialog):
         write_pattern_file(g, meta, data)
     
     def on_remove_patterns(self, button):
+        """Remove the currently selected patterns from their respective files."""
         patterns = self._gather_selected_patterns()
         self.remove_from_files(patterns)
         
     def _get_pattern_file(self):
+        """Request a filepath from the user."""
         dialog = gtk.FileChooserDialog(u"Select a pattern file"
             , self
             , gtk.FILE_CHOOSER_ACTION_OPEN
@@ -315,8 +312,8 @@ class PatternFileEditor(gtk.Dialog):
         return path
         
     def _gather_selected_patterns(self):
+        """Gather the currently selected patterns and the files they belong to."""
         patterns = {}
-        
         store, paths = self.tree.get_selection().get_selected_rows()
         for path in paths:
             it = store.get_iter(path)
