@@ -37,11 +37,13 @@ class PatternFileEditor(gtk.Dialog):
         self.preview = GridPreview()
         self.preview.set_size_request(200, 250)
         
-        self.patterns = [read_pattern_file(f) for f in self.palabra_window.pattern_files]
+        self.patterns = {}
+        for f in self.palabra_window.pattern_files:
+            self.patterns[f] = read_pattern_file(f)
         
         # display_string filename grid
         self.store = gtk.TreeStore(str, str, gobject.TYPE_PYOBJECT)
-        for pattern in self.patterns:
+        for f, pattern in self.patterns.items():
             self._append_file(*pattern)
         
         self.tree = gtk.TreeView(self.store)
@@ -161,7 +163,7 @@ class PatternFileEditor(gtk.Dialog):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             path = dialog.get_filename()
-            for (f, metadata, data) in self.patterns:
+            for g, (f, metadata, data) in self.patterns.items():
                 if f == path:
                     dialog.destroy()
                     
@@ -178,7 +180,7 @@ class PatternFileEditor(gtk.Dialog):
                 self.palabra_window.pattern_files.append(path)
                 
                 pattern = read_pattern_file(path)
-                self.patterns.append(pattern)
+                self.patterns[path] = pattern
                 self._append_file(*pattern)
                 self.tree.columns_autosize()
         
@@ -193,14 +195,11 @@ class PatternFileEditor(gtk.Dialog):
         
         index = 0
         found = False
-        for (f, metadata, data) in self.patterns:
-            if f == filename:
-                found = True
-                break
-            index += 1
-        if found:
-            del self.patterns[index]
+        try:
+            del self.patterns[filename]
             self.tree.columns_autosize()
+        except KeyError:
+            pass
         
     def on_selection_changed(self, selection):
         def get_file(store, path):
@@ -227,7 +226,7 @@ class PatternFileEditor(gtk.Dialog):
         files = list(set([get_file(store, path) for path in paths]))
         self.info.get_buffer().set_text("")
         if len(files) == 1:
-            for (f, metadata, data) in self.patterns:
+            for g, (f, metadata, data) in self.patterns.items():
                 if f == files[0]:
                     self.info.get_buffer().set_text(str(metadata))
                     break
