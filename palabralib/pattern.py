@@ -310,20 +310,24 @@ class PatternFileEditor(gtk.Dialog):
         """Copy the currently selected patterns to a specified file."""
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
-        if path:
-            self.append_to_file(path, patterns)
+        if not path:
+            return
+        self.append_to_file(path, patterns)
         
     def on_move_patterns(self, button):
         """Move the currently selected patterns to a specified file."""
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
-        if path:
-            self.append_to_file(path, patterns)
-            self.remove_from_files(patterns)
+        if not path:
+            return
+        self.append_to_file(path, patterns)
+        self.remove_from_files(patterns)
         
     def on_add_pattern(self, button):
         """Add the pattern of the current puzzle to a specified file."""
         path = self._get_pattern_file()
+        if not path:
+            return
         # TODO ugly
         try:
             grid = self.palabra_window.puzzle_manager.current_puzzle.grid
