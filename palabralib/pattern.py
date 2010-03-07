@@ -233,7 +233,7 @@ class PatternFileEditor(gtk.Dialog):
                     self.tree.columns_autosize()
                 except KeyError:
                     pass
-        
+                    
     def on_selection_changed(self, selection):
         def get_file(store, path):
             return store.get_value(store.get_iter(path), 1)
@@ -365,6 +365,20 @@ class PatternFileEditor(gtk.Dialog):
         response = dialog.run()
         dialog.destroy()
         if response == gtk.RESPONSE_YES:
+            while True:
+                store, paths = self.tree.get_selection().get_selected_rows()
+                if not paths:
+                    break
+                it = store.get_iter(paths.pop())
+                filename = store.get_value(it, 1)
+                store.remove(it)
+            if False: # TODO check if there are pattern files without patterns
+                preferences.prefs["pattern_files"].remove(filename)
+                try:
+                    del self.patterns[filename]
+                except KeyError:
+                    pass
+            self.tree.columns_autosize()
             patterns = self._gather_selected_patterns()
             self.remove_from_files(patterns)
         
