@@ -256,6 +256,9 @@ class PatternFileEditor(gtk.Dialog):
                         info.append("".join(["Letters: ", str(stats["char_count"]), "\n"]))
                         info.append("".join(["Words: ", str(stats["word_count"]), "\n"]))
                         info.append("".join(["Voids: ", str(stats["void_count"]), "\n"]))
+                    else:
+                        info.append("".join(["Location: ", g, "\n"]))
+                        info.append("".join(["Total: ", str(len(self.patterns[g]["data"].keys())), "\n"]))
                     self.info.get_buffer().set_text("".join(info))
                     break
                     
