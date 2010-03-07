@@ -68,29 +68,30 @@ color_schemes["cyan"] = {"title": "Cyan"
 prefs = {}
 
 defaults = {}
-defaults["backup_copy_before_save"] = (False, lambda s: "True" in s)
-defaults["new_initial_height"] = (15, int)
-defaults["new_initial_width"] = (15, int)
-defaults["undo_stack_size"] = (50, int)
-defaults["undo_use_finite_stack"] = (True, lambda s: "True" in s)
-defaults["color_primary_selection_red"] = (color_schemes["yellow"]["primary_selection"][0], int)
-defaults["color_primary_selection_green"] = (color_schemes["yellow"]["primary_selection"][1], int)
-defaults["color_primary_selection_blue"] = (color_schemes["yellow"]["primary_selection"][2], int)
+defaults["backup_copy_before_save"] = (False, lambda s: "True" in s, "bool")
+defaults["new_initial_height"] = (15, int, "int")
+defaults["new_initial_width"] = (15, int, "int")
+defaults["undo_stack_size"] = (50, int, "int")
+defaults["undo_use_finite_stack"] = (True, lambda s: "True" in s, "bool")
+defaults["color_primary_selection_red"] = (color_schemes["yellow"]["primary_selection"][0], int, "int")
+defaults["color_primary_selection_green"] = (color_schemes["yellow"]["primary_selection"][1], int, "int")
+defaults["color_primary_selection_blue"] = (color_schemes["yellow"]["primary_selection"][2], int, "int")
 #defaults["color_secondary_selection_red"] = (65535, int)
 #defaults["color_secondary_selection_green"] = (65535, int)
 #defaults["color_secondary_selection_blue"] = (49152, int)
-defaults["color_primary_active_red"] = (color_schemes["yellow"]["primary_active"][0], int)
-defaults["color_primary_active_green"] = (color_schemes["yellow"]["primary_active"][1], int)
-defaults["color_primary_active_blue"] = (color_schemes["yellow"]["primary_active"][2], int)
-defaults["color_secondary_active_red"] = (color_schemes["yellow"]["secondary_active"][0], int)
-defaults["color_secondary_active_green"] = (color_schemes["yellow"]["secondary_active"][1], int)
-defaults["color_secondary_active_blue"] = (color_schemes["yellow"]["secondary_active"][2], int)
-defaults["color_current_word_red"] = (color_schemes["yellow"]["current_word"][0], int)
-defaults["color_current_word_green"] = (color_schemes["yellow"]["current_word"][1], int)
-defaults["color_current_word_blue"] = (color_schemes["yellow"]["current_word"][2], int)
-defaults["color_warning_red"] = (65535, int)
-defaults["color_warning_green"] = (49152, int)
-defaults["color_warning_blue"] = (49152, int)
+defaults["color_primary_active_red"] = (color_schemes["yellow"]["primary_active"][0], int, "int")
+defaults["color_primary_active_green"] = (color_schemes["yellow"]["primary_active"][1], int, "int")
+defaults["color_primary_active_blue"] = (color_schemes["yellow"]["primary_active"][2], int, "int")
+defaults["color_secondary_active_red"] = (color_schemes["yellow"]["secondary_active"][0], int, "int")
+defaults["color_secondary_active_green"] = (color_schemes["yellow"]["secondary_active"][1], int, "int")
+defaults["color_secondary_active_blue"] = (color_schemes["yellow"]["secondary_active"][2], int, "int")
+defaults["color_current_word_red"] = (color_schemes["yellow"]["current_word"][0], int, "int")
+defaults["color_current_word_green"] = (color_schemes["yellow"]["current_word"][1], int, "int")
+defaults["color_current_word_blue"] = (color_schemes["yellow"]["current_word"][2], int, "int")
+defaults["color_warning_red"] = (65535, int, "int")
+defaults["color_warning_green"] = (49152, int, "int")
+defaults["color_warning_blue"] = (49152, int, "int")
+defaults["pattern_files"] = (["xml/patterns.xml", "xml/patterns2.xml"], list, "list")
 
 def read_config_file():
     props = {}
@@ -99,7 +100,12 @@ def read_config_file():
         root = doc.getroot()
         version = root.get("version")
         for p in root:
-            props[p.get("name")] = p.text
+            t = p.get("type")
+            name = p.get("name")
+            if t in ["int", "bool"]:
+                props[name] = p.text
+            elif t == "list":
+                props[name] = [child.text for child in p]
     except (etree.XMLSyntaxError, IOError):
         print "Warning: No configuration file found, using defaults instead."
     for key, value in defaults.items():
@@ -112,9 +118,21 @@ def write_config_file():
     keys = defaults.keys()
     keys.sort()
     for key in keys:
-        e = etree.SubElement(root, "property")
+        e = etree.SubElement(root, "preference")
+        
+        t = defaults[key][2]
+        e.set("type", t)
         e.set("name", key)
-        e.text = str(prefs[key]) if key in prefs else str(defaults[key][0])
+        
+        data = prefs[key] if key in prefs else defaults[key][0]
+        if t in ["int", "bool"]:
+            e.text = str(data)
+        elif t == "list":
+            for v in data:
+                f = etree.SubElement(e, "item")
+                # TODO other types?
+                f.set("type", "str")
+                f.text = str(v)
     
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
         os.mkdir(constants.APPLICATION_DIRECTORY)

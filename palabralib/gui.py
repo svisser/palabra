@@ -79,7 +79,7 @@ class PalabraWindow(gtk.Window):
         
         self.connect("destroy", lambda widget: quit())
         
-        self.pattern_files = ["xml/patterns.xml", "xml/patterns2.xml"]
+        self.pattern_files = preferences.prefs["pattern_files"]
         
         self.wordlists = {}
         
