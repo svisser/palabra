@@ -141,7 +141,6 @@ class PatternFileEditor(gtk.Dialog):
         hbox.pack_start(options_vbox, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
-        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
                 
     def _append_file(self, path, patterns):
@@ -164,12 +163,11 @@ class PatternFileEditor(gtk.Dialog):
             , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.show_all()
         response = dialog.run()
+        path = dialog.get_filename()
+        dialog.destroy()
         if response == gtk.RESPONSE_OK:
-            path = dialog.get_filename()
             for g, pattern in self.patterns.items():
                 if g == path:
-                    dialog.destroy()
-                    
                     mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
                         , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, u"This file is already in the list.")
                     mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
@@ -178,10 +176,7 @@ class PatternFileEditor(gtk.Dialog):
                     mdialog.destroy()
                     break
             else:
-                dialog.destroy()
-                
                 preferences.prefs["pattern_files"].append(path)
-                
                 g, meta, data = read_pattern_file(path)
                 self.patterns[path] = {"metadata": meta, "data": data}
                 self._append_file(path, self.patterns[path])
