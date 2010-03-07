@@ -28,10 +28,10 @@ class PatternFileEditor(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Pattern file manager"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
-        self.set_size_request(640, 640)
+        self.set_size_request(640, 512)
         
         self.preview = GridPreview()
-        self.preview.set_size_request(200, 250)
+        self.preview.set_size_request(200, 256)
         
         self.patterns = {}
         for f in preferences.prefs["pattern_files"]:
@@ -120,25 +120,25 @@ class PatternFileEditor(gtk.Dialog):
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(self.tree)
         
-        hbox1 = gtk.HBox(True, 12)
-        hbox1.pack_start(scrolled_window, True, True, 0)
-        hbox1.pack_start(right_vbox, True, True, 0)
+        vbox1 = gtk.VBox(False, 12)
+        vbox1.pack_start(scrolled_window, True, True, 0)
+        vbox1.pack_start(self.preview, False, False, 0)
         
         self.info = gtk.TextView()
         self.info.set_buffer(gtk.TextBuffer())
         
-        hbox2 = gtk.HBox(True, 12)
-        hbox2.pack_start(self.preview, True, True, 0)
-        hbox2.pack_start(self.info, True, True, 0)
+        vbox2 = gtk.VBox(False, 12)
+        vbox2.pack_start(right_vbox, False, False, 0)
+        vbox2.pack_start(self.info, True, True, 0)
         
-        options_vbox = gtk.VBox(False, 12)
-        options_vbox.pack_start(hbox1, True, True, 0)
-        options_vbox.pack_start(hbox2, False, False, 0)
+        options_hbox = gtk.HBox(True, 12)
+        options_hbox.pack_start(vbox1, True, True, 0)
+        options_hbox.pack_start(vbox2, True, True, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        hbox.pack_start(options_vbox, True, True, 0)
+        hbox.pack_start(options_hbox, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
