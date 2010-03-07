@@ -82,11 +82,11 @@ class PatternFileEditor(gtk.Dialog):
         
         self.copy_pattern_button = gtk.Button(u"Copy pattern(s) to file...")
         self.copy_pattern_button.set_sensitive(False)
-        self.copy_pattern_button.connect("clicked", self.on_copy_pattern)
+        self.copy_pattern_button.connect("clicked", self.on_copy_patterns)
         right_vbox.pack_start(self.copy_pattern_button, False, False, 0)
         self.move_pattern_button = gtk.Button(u"Move pattern(s) to file...")
         self.move_pattern_button.set_sensitive(False)
-        self.move_pattern_button.connect("clicked", self.on_move_pattern)
+        self.move_pattern_button.connect("clicked", self.on_move_patterns)
         right_vbox.pack_start(self.move_pattern_button, False, False, 0)
         
         self.add_pattern_button = gtk.Button(stock=gtk.STOCK_ADD);
@@ -308,18 +308,20 @@ class PatternFileEditor(gtk.Dialog):
                     ndata[k] = v
             write_pattern_file(g, meta, ndata)
     
-    def on_copy_pattern(self, button):
+    def on_copy_patterns(self, button):
         """Copy the currently selected patterns to a specified file."""
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
-        self.append_to_file(path, patterns)
+        if path:
+            self.append_to_file(path, patterns)
         
-    def on_move_pattern(self, button):
+    def on_move_patterns(self, button):
         """Move the currently selected patterns to a specified file."""
         patterns = self._gather_selected_patterns()        
         path = self._get_pattern_file()
-        self.append_to_file(path, patterns)
-        self.remove_from_files(patterns)
+        if path:
+            self.append_to_file(path, patterns)
+            self.remove_from_files(patterns)
         
     def on_add_pattern(self, button):
         """Add the pattern of the current puzzle to a specified file."""
