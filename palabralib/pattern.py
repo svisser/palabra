@@ -126,10 +126,13 @@ class PatternFileEditor(gtk.Dialog):
         
         self.info = gtk.TextView()
         self.info.set_buffer(gtk.TextBuffer())
+        scrolled_window = gtk.ScrolledWindow(None, None)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add_with_viewport(self.info)
         
         vbox2 = gtk.VBox(False, 12)
         vbox2.pack_start(right_vbox, False, False, 0)
-        vbox2.pack_start(self.info, True, True, 0)
+        vbox2.pack_start(scrolled_window, True, True, 0)
         
         options_hbox = gtk.HBox(True, 12)
         options_hbox.pack_start(vbox1, True, True, 0)
