@@ -273,12 +273,13 @@ class NewWindow(gtk.Dialog):
             files = preferences.prefs["pattern_files"]
         else:
             files = preferences.prefs["pattern_files"][index - 1:index]
-        data = [d for (f, _, d) in self.patterns if f in files]
-        grids = reduce(operator.add, data)
-        stats = [(g.count_words(), g.count_blocks(), g) for g in grids]
-        stats.sort()
-        self.current_patterns = [grid for (_, _, grid) in stats]
-        self.load_empty_grid(*self.size_component.get_size())
+        if files:
+            data = [d for (f, _, d) in self.patterns if f in files]
+            grids = reduce(operator.add, data)
+            stats = [(g.count_words(), g.count_blocks(), g) for g in grids]
+            stats.sort()
+            self.current_patterns = [grid for (_, _, grid) in stats]
+            self.load_empty_grid(*self.size_component.get_size())
         
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
