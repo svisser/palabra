@@ -91,7 +91,7 @@ defaults["color_current_word_blue"] = (color_schemes["yellow"]["current_word"][2
 defaults["color_warning_red"] = (65535, int, "int")
 defaults["color_warning_green"] = (49152, int, "int")
 defaults["color_warning_blue"] = (49152, int, "int")
-defaults["pattern_files"] = (["xml/patterns.xml", "xml/patterns2.xml"], list, "list")
+defaults["pattern_files"] = (["xml/patterns.xml", "xml/patterns2.xml"], list, "list", "str")
 
 def read_config_file():
     props = {}
@@ -129,9 +129,8 @@ def write_config_file():
             e.text = str(data)
         elif t == "list":
             for v in data:
-                f = etree.SubElement(e, "item")
-                # TODO other types?
-                f.set("type", "str")
+                f = etree.SubElement(e, "preference-item")
+                f.set("type", defaults[key][3])
                 f.text = str(v)
     
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
