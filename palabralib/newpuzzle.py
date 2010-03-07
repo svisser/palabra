@@ -187,8 +187,7 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
-        self.files = preferences.prefs["pattern_files"]
-        self.patterns = read_containers(self.files)
+        self.patterns = read_containers(preferences.prefs["pattern_files"])
         
         self.current_patterns = self.patterns
         
@@ -270,7 +269,10 @@ class NewWindow(gtk.Dialog):
         
     def on_file_changed(self, combo):
         index = combo.get_active()
-        files = self.files if index == 0 else self.files[index - 1:index]
+        if index == 0:
+            files = preferences.prefs["pattern_files"]
+        else:
+            files = preferences.prefs["pattern_files"][index - 1:index]
         data = [d for (f, _, d) in self.patterns if f in files]
         grids = reduce(operator.add, data)
         stats = [(g.count_words(), g.count_blocks(), g) for g in grids]

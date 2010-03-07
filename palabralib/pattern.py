@@ -21,6 +21,7 @@ import gtk
 from files import InvalidFileError, read_pattern_file, write_pattern_file
 from grid import Grid
 from newpuzzle import GridPreview
+import preferences
 
 class PatternFileEditor(gtk.Dialog):
     def __init__(self, palabra_window):
@@ -97,7 +98,7 @@ class PatternFileEditor(gtk.Dialog):
         try:
             grid = self.palabra_window.puzzle_manager.current_puzzle.grid
         except AttributeError:
-            print "TODO"
+            # TODO
             self.add_pattern_button.set_sensitive(False)
         self.add_pattern_button.connect("clicked", self.on_add_pattern)
         align = self.add_pattern_button.get_children()[0]
