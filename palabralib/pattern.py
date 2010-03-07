@@ -230,7 +230,7 @@ class PatternFileEditor(gtk.Dialog):
         self.remove_button.set_sensitive(False)
         self.preview.clear()
         
-        if all([is_file(store, p) for p in paths]):
+        if paths and all([is_file(store, p) for p in paths]):
             self.remove_button.set_sensitive(True)
         
         if len(paths) == 1:
