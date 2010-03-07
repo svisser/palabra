@@ -233,13 +233,8 @@ class PatternFileEditor(gtk.Dialog):
                     self.tree.columns_autosize()
                 except KeyError:
                     pass
-                    
+
     def on_selection_changed(self, selection):
-        def get_file(store, path):
-            return store.get_value(store.get_iter(path), 1)
-        def is_file(store, path):
-            return store.iter_parent(store.get_iter(path)) is None
-        
         grid = None
         store, paths = selection.get_selected_rows()
         self.copy_pattern_button.set_sensitive(False)
@@ -250,24 +245,24 @@ class PatternFileEditor(gtk.Dialog):
         self.preview.clear()
         if not paths:
             return
-        
-        if all([is_file(store, p) for p in paths]):
+            
+        if all([self.is_file(store, p) for p in paths]):
             self.remove_button.set_sensitive(True)
         
         if len(paths) == 1:
-            if not is_file(store, paths[0]):
+            if not self.is_file(store, paths[0]):
                 it = store.get_iter(paths[0])
                 filepath = store.get_value(it, 1)
                 id = store.get_value(it, 2)
                 grid = self.patterns[filepath]["data"][id]
                 self.preview.display(grid)
             
-        only_patterns = not any([is_file(store, p) for p in paths])
+        only_patterns = not any([self.is_file(store, p) for p in paths])
         self.copy_pattern_button.set_sensitive(only_patterns)
         self.move_pattern_button.set_sensitive(only_patterns)
         self.remove_pattern_button.set_sensitive(only_patterns)
         
-        files = list(set([get_file(store, p) for p in paths]))
+        files = list(set([self.get_file(store, p) for p in paths]))
         self.info.get_buffer().set_text("")
         if len(files) == 1:
             for g, pattern in self.patterns.items():
@@ -375,12 +370,18 @@ class PatternFileEditor(gtk.Dialog):
                 it = store.get_iter(paths.pop())
                 filename = store.get_value(it, 1)
                 store.remove(it)
-            if False: # TODO check if there are pattern files without patterns
-                preferences.prefs["pattern_files"].remove(filename)
-                try:
-                    del self.patterns[filename]
-                except KeyError:
-                    pass
+            # currently disabled, don't automatically remove file without patterns
+            if False:
+                for row in self.store:
+                    if not self.is_file_with_patterns(self.store, row.path):
+                        filename = row[1]
+                        it = store.get_iter(row.path)
+                        self.store.remove(it)
+                        preferences.prefs["pattern_files"].remove(filename)
+                        try:
+                            del self.patterns[filename]
+                        except KeyError:
+                            pass
             self.tree.columns_autosize()
             patterns = self._gather_selected_patterns()
             self.remove_from_files(patterns)
@@ -414,6 +415,17 @@ class PatternFileEditor(gtk.Dialog):
             except KeyError:
                 patterns[store.get_value(parent, 1)] = [id]
         return patterns
+
+    # TODO staticmethod ?
+
+    def get_file(self, store, path):
+        return store.get_value(store.get_iter(path), 1)
+
+    def is_file(self, store, path):
+        return store.iter_parent(store.get_iter(path)) is None
+        
+    def is_file_with_patterns(self, store, path):
+        return self.is_file(store, path) and store.iter_has_child(store.get_iter(path))
 
 class Pattern:
     def __init__(self):
