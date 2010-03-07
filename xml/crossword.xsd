@@ -111,7 +111,7 @@
 <xs:complexType name="container_type">
     <xs:sequence>
         <xs:element name="metadata" type="dc:elementContainer" />
-        <xs:choice minOccurs="1" maxOccurs="unbounded">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
             <xs:element name="crossword" type="crossword_type" />
             <xs:element name="grid" type="container_grid_type" />
         </xs:choice>
