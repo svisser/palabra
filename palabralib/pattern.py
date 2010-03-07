@@ -33,7 +33,7 @@ class PatternFileEditor(gtk.Dialog):
         self.preview.set_size_request(200, 250)
         
         self.patterns = {}
-        for f in self.palabra_window.pattern_files:
+        for f in preferences.prefs["pattern_files"]:
             g, meta, data = read_pattern_file(f)
             self.patterns[f] = {"metadata": meta, "data": data}
         
@@ -179,7 +179,7 @@ class PatternFileEditor(gtk.Dialog):
             else:
                 dialog.destroy()
                 
-                self.palabra_window.pattern_files.append(path)
+                preferences.prefs["pattern_files"].append(path)
                 
                 g, meta, data = read_pattern_file(path)
                 self.patterns[path] = {"metadata": meta, "data": data}
@@ -193,7 +193,7 @@ class PatternFileEditor(gtk.Dialog):
         it = store.get_iter(paths[0])
         filename = store.get_value(it, 1)
         store.remove(it)
-        self.palabra_window.pattern_files.remove(filename)
+        preferences.prefs["pattern_files"].remove(filename)
         try:
             del self.patterns[filename]
             self.tree.columns_autosize()

@@ -79,8 +79,6 @@ class PalabraWindow(gtk.Window):
         
         self.connect("destroy", lambda widget: quit())
         
-        self.pattern_files = preferences.prefs["pattern_files"]
-        
         self.wordlists = {}
         
         self.blacklist = None
