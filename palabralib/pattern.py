@@ -292,8 +292,30 @@ class PatternFileEditor(gtk.Dialog):
     
     def on_remove_patterns(self, button):
         """Remove the currently selected patterns from their respective files."""
-        patterns = self._gather_selected_patterns()
-        self.remove_from_files(patterns)
+        image = gtk.Image()
+        image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
+        dialog = gtk.Dialog(u"Remove patterns"
+            , self
+            , gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_MODAL
+            , (gtk.STOCK_NO, gtk.RESPONSE_NO
+            , gtk.STOCK_YES, gtk.RESPONSE_YES))
+        dialog.set_default_response(gtk.RESPONSE_CLOSE)
+        dialog.set_title(u"Remove patterns")
+
+        label = gtk.Label(u"Are you sure you want to remove the selected pattern(s)?")
+        hbox = gtk.HBox(False, 0)
+        hbox.pack_start(image, False, False, 0)
+        hbox.pack_start(label, True, False, 10)
+        dialog.vbox.pack_start(hbox, False, False, 10)
+        dialog.set_resizable(False)
+        dialog.set_modal(True)
+        dialog.show_all()
+        
+        response = dialog.run()
+        dialog.destroy()
+        if response == gtk.RESPONSE_YES:
+            patterns = self._gather_selected_patterns()
+            self.remove_from_files(patterns)
         
     def _get_pattern_file(self):
         """Request a filepath from the user."""
