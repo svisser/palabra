@@ -75,7 +75,7 @@ class PatternFileEditor(gtk.Dialog):
         align = self.remove_button.get_children()[0]
         hbox = align.get_children()[0]
         image, label = hbox.get_children()
-        label.set_text(u"Remove pattern file");
+        label.set_text(u"Remove pattern file(s)");
         right_vbox.pack_start(self.remove_button, False, False, 0)
 
         label = gtk.Label()
@@ -188,18 +188,41 @@ class PatternFileEditor(gtk.Dialog):
                 self.tree.columns_autosize()
         
     def remove_file(self):
-        store, paths = self.tree.get_selection().get_selected_rows()
-        if len(paths) != 1:
-            return
-        it = store.get_iter(paths[0])
-        filename = store.get_value(it, 1)
-        store.remove(it)
-        preferences.prefs["pattern_files"].remove(filename)
-        try:
-            del self.patterns[filename]
-            self.tree.columns_autosize()
-        except KeyError:
-            pass
+        image = gtk.Image()
+        image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
+        dialog = gtk.Dialog(u"Remove pattern files"
+            , self
+            , gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_MODAL
+            , (gtk.STOCK_NO, gtk.RESPONSE_NO
+            , gtk.STOCK_YES, gtk.RESPONSE_YES))
+        dialog.set_default_response(gtk.RESPONSE_CLOSE)
+        dialog.set_title(u"Remove pattern files")
+
+        label = gtk.Label(u"Are you sure you want to remove the selected pattern file(s)?")
+        hbox = gtk.HBox(False, 0)
+        hbox.pack_start(image, False, False, 0)
+        hbox.pack_start(label, True, False, 10)
+        dialog.vbox.pack_start(hbox, False, False, 10)
+        dialog.set_resizable(False)
+        dialog.set_modal(True)
+        dialog.show_all()
+        
+        response = dialog.run()
+        dialog.destroy()
+        if response == gtk.RESPONSE_YES:
+            while True:
+                store, paths = self.tree.get_selection().get_selected_rows()
+                if not paths:
+                    break
+                it = store.get_iter(paths.pop())
+                filename = store.get_value(it, 1)
+                store.remove(it)
+                preferences.prefs["pattern_files"].remove(filename)
+                try:
+                    del self.patterns[filename]
+                    self.tree.columns_autosize()
+                except KeyError:
+                    pass
         
     def on_selection_changed(self, selection):
         def get_file(store, path):
@@ -211,10 +234,12 @@ class PatternFileEditor(gtk.Dialog):
         store, paths = selection.get_selected_rows()
         self.remove_button.set_sensitive(False)
         self.preview.clear()
+        
+        if all([is_file(store, p) for p in paths]):
+            self.remove_button.set_sensitive(True)
+        
         if len(paths) == 1:
-            file_selected = is_file(store, paths[0])
-            self.remove_button.set_sensitive(file_selected)
-            if not file_selected:
+            if not is_file(store, paths[0]):
                 it = store.get_iter(paths[0])
                 grid = self.patterns[store.get_value(it, 1)]["data"][store.get_value(it, 2)]
                 self.preview.display(grid)
