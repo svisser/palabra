@@ -363,6 +363,8 @@ class PatternFileEditor(gtk.Dialog):
         response = dialog.run()
         dialog.destroy()
         if response == gtk.RESPONSE_YES:
+            patterns = self._gather_selected_patterns()
+            self.remove_from_files(patterns)
             while True:
                 store, paths = self.tree.get_selection().get_selected_rows()
                 if not paths:
@@ -383,8 +385,6 @@ class PatternFileEditor(gtk.Dialog):
                         except KeyError:
                             pass
             self.tree.columns_autosize()
-            patterns = self._gather_selected_patterns()
-            self.remove_from_files(patterns)
         
     def _get_pattern_file(self):
         """Request a filepath from the user."""
