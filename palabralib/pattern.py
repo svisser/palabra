@@ -34,21 +34,17 @@ class PatternFileEditor(gtk.Dialog):
         self.preview.set_size_request(200, 256)
         
         self.patterns = {}
-        for f in preferences.prefs["pattern_files"]:
-            g, meta, data = read_pattern_file(f)
-            self.patterns[f] = {"metadata": meta, "data": data}
-        
         # display_string filename id_of_grid
         self.store = gtk.TreeStore(str, str, str)
-        for item in self.patterns.items():
-            self._append_file(*item)
+        self.reset_pattern_list()
         
         self.tree = gtk.TreeView(self.store)
+        self.tree.set_headers_visible(False)
         self.tree.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
         
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Pattern files")
+        column = gtk.TreeViewColumn()
         column.pack_start(cell, True)
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)
@@ -56,7 +52,7 @@ class PatternFileEditor(gtk.Dialog):
         right_vbox = gtk.VBox(False, 6)
         
         label = gtk.Label()
-        label.set_markup(u"<b>Pattern files</b>")
+        label.set_markup(u"<b>Options for pattern files</b>")
         align = gtk.Alignment(0, 0.5)
         align.add(label)
         right_vbox.pack_start(align, False, False, 0)
@@ -79,7 +75,7 @@ class PatternFileEditor(gtk.Dialog):
         right_vbox.pack_start(self.remove_button, False, False, 0)
 
         label = gtk.Label()
-        label.set_markup(u"<b>Patterns</b>")
+        label.set_markup(u"<b>Options for patterns</b>")
         align = gtk.Alignment(0, 0.5)
         align.add(label)
         right_vbox.pack_start(align, False, False, 0)
@@ -120,6 +116,11 @@ class PatternFileEditor(gtk.Dialog):
         scrolled_window.add_with_viewport(self.tree)
         
         vbox1 = gtk.VBox(False, 12)
+        label = gtk.Label()
+        label.set_markup(u"<b>Pattern files</b>")
+        align = gtk.Alignment(0, 0.5)
+        align.add(label)
+        vbox1.pack_start(align, False, False, 0)
         vbox1.pack_start(scrolled_window, True, True, 0)
         vbox1.pack_start(self.preview, False, False, 0)
         
@@ -149,6 +150,14 @@ class PatternFileEditor(gtk.Dialog):
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+    def reset_pattern_list(self):
+        self.store.clear()
+        for f in preferences.prefs["pattern_files"]:
+            g, meta, data = read_pattern_file(f)
+            self.patterns[f] = {"metadata": meta, "data": data}
+        for item in self.patterns.items():
+            self._append_file(*item)
                 
     def _append_file(self, path, patterns):
         meta = patterns["metadata"]
