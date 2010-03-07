@@ -87,11 +87,10 @@ class PatternFileEditor(gtk.Dialog):
         self.copy_pattern_button = gtk.Button(u"Copy pattern(s) to file...")
         self.copy_pattern_button.set_sensitive(False)
         self.copy_pattern_button.connect("clicked", self.on_copy_pattern)
+        right_vbox.pack_start(self.copy_pattern_button, False, False, 0)
         self.move_pattern_button = gtk.Button(u"Move pattern(s) to file...")
         self.move_pattern_button.set_sensitive(False)
         self.move_pattern_button.connect("clicked", self.on_move_pattern)
-        
-        right_vbox.pack_start(self.copy_pattern_button, False, False, 0)
         right_vbox.pack_start(self.move_pattern_button, False, False, 0)
         
         self.add_pattern_button = gtk.Button(stock=gtk.STOCK_ADD);
@@ -132,6 +131,11 @@ class PatternFileEditor(gtk.Dialog):
         
         vbox2 = gtk.VBox(False, 12)
         vbox2.pack_start(right_vbox, False, False, 0)
+        label = gtk.Label()
+        label.set_markup(u"<b>Information</b>")
+        align = gtk.Alignment(0, 0.5)
+        align.add(label)
+        vbox2.pack_start(align, False, False, 0)
         vbox2.pack_start(scrolled_window, True, True, 0)
         
         options_hbox = gtk.HBox(True, 12)
@@ -147,15 +151,14 @@ class PatternFileEditor(gtk.Dialog):
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
                 
     def _append_file(self, path, patterns):
-        metadata = patterns["metadata"]
+        meta = patterns["metadata"]
         data = patterns["data"]
-        s = ("".join([metadata["title"], " (", path, ")"])
-            if "title" in metadata else path)
+        s = meta["title"] if "title" in meta else path
         parent = self.store.append(None, [s, path, "0"])
         for id, grid in data.items():
-            blocks = grid.count_blocks()
-            words = grid.count_words()
-            s = "".join([str(words), " words, ", str(blocks), " blocks"])
+            blocks = str(grid.count_blocks())
+            words = str(grid.count_words())
+            s = "".join([words, " words, ", blocks, " blocks"])
             self.store.append(parent, [s, path, id])
         
     def add_file(self):
@@ -232,37 +235,43 @@ class PatternFileEditor(gtk.Dialog):
         store, paths = selection.get_selected_rows()
         self.remove_button.set_sensitive(False)
         self.preview.clear()
+        if not paths:
+            return
         
-        if paths and all([is_file(store, p) for p in paths]):
+        if all([is_file(store, p) for p in paths]):
             self.remove_button.set_sensitive(True)
         
         if len(paths) == 1:
             if not is_file(store, paths[0]):
                 it = store.get_iter(paths[0])
-                grid = self.patterns[store.get_value(it, 1)]["data"][store.get_value(it, 2)]
+                filepath = store.get_value(it, 1)
+                id = store.get_value(it, 2)
+                grid = self.patterns[filepath]["data"][id]
                 self.preview.display(grid)
             
-        only_patterns = bool(paths) and True not in [is_file(store, path) for path in paths]
+        only_patterns = True not in [is_file(store, p) for p in paths]
         self.copy_pattern_button.set_sensitive(only_patterns)
         self.move_pattern_button.set_sensitive(only_patterns)
         self.remove_pattern_button.set_sensitive(only_patterns)
         
-        files = list(set([get_file(store, path) for path in paths]))
+        files = list(set([get_file(store, p) for p in paths]))
         self.info.get_buffer().set_text("")
         if len(files) == 1:
             for g, pattern in self.patterns.items():
                 if g == files[0]:
-                    info = []
+                    info = ""
                     if grid:
                         stats = grid.determine_status()
-                        info.append("".join(["Blocks: ", str(stats["block_count"]), "\n"]))
-                        info.append("".join(["Letters: ", str(stats["char_count"]), "\n"]))
-                        info.append("".join(["Words: ", str(stats["word_count"]), "\n"]))
-                        info.append("".join(["Voids: ", str(stats["void_count"]), "\n"]))
+                        info = "".join(["Blocks: ", str(stats["block_count"])
+                            , " (%.2f" % stats["block_percentage"], "%)\n"
+                            , "Letters: ", str(stats["char_count"]), "\n"
+                            , "Words: ", str(stats["word_count"]), "\n"
+                            , "Voids: ", str(stats["void_count"]), "\n"])
                     else:
-                        info.append("".join(["Location: ", g, "\n"]))
-                        info.append("".join(["Total: ", str(len(self.patterns[g]["data"].keys())), "\n"]))
-                    self.info.get_buffer().set_text("".join(info))
+                        total = str(len(self.patterns[g]["data"].keys()))
+                        info = "".join(["Location: ", g, "\n"
+                            , "Number of patterns: ", total, "\n"])
+                    self.info.get_buffer().set_text(info)
                     break
                     
     def append_to_file(self, path, patterns):
@@ -279,7 +288,8 @@ class PatternFileEditor(gtk.Dialog):
                 max_id += 1
         write_pattern_file(g, meta, data)
         
-    def remove_from_files(self, patterns):
+    @staticmethod
+    def remove_from_files(patterns):
         """Remove the patterns from their respective files."""
         for f, keys in patterns.items():
             g, meta, data = read_pattern_file(f)
