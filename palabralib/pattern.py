@@ -262,7 +262,7 @@ class PatternFileEditor(gtk.Dialog):
                 grid = self.patterns[filepath]["data"][id]
                 self.preview.display(grid)
             
-        only_patterns = True not in [is_file(store, p) for p in paths]
+        only_patterns = not any([is_file(store, p) for p in paths])
         self.copy_pattern_button.set_sensitive(only_patterns)
         self.move_pattern_button.set_sensitive(only_patterns)
         self.remove_pattern_button.set_sensitive(only_patterns)
@@ -272,7 +272,6 @@ class PatternFileEditor(gtk.Dialog):
         if len(files) == 1:
             for g, pattern in self.patterns.items():
                 if g == files[0]:
-                    info = ""
                     if grid:
                         stats = grid.determine_status()
                         info = "".join(["Blocks: ", str(stats["block_count"])
