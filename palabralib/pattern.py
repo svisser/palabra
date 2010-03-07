@@ -242,7 +242,11 @@ class PatternFileEditor(gtk.Dialog):
         
         grid = None
         store, paths = selection.get_selected_rows()
+        self.copy_pattern_button.set_sensitive(False)
+        self.move_pattern_button.set_sensitive(False)
+        self.remove_pattern_button.set_sensitive(False)
         self.remove_button.set_sensitive(False)
+        self.info.get_buffer().set_text("")
         self.preview.clear()
         if not paths:
             return
