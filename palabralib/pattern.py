@@ -154,8 +154,12 @@ class PatternFileEditor(gtk.Dialog):
     def reset_pattern_list(self):
         self.store.clear()
         for f in preferences.prefs["pattern_files"]:
-            g, meta, data = read_pattern_file(f)
-            self.patterns[f] = {"metadata": meta, "data": data}
+            try:
+                g, meta, data = read_pattern_file(f)
+                self.patterns[f] = {"metadata": meta, "data": data}
+            except InvalidFileError:
+                # TODO
+                pass
         for item in self.patterns.items():
             self._append_file(*item)
                 
@@ -195,11 +199,15 @@ class PatternFileEditor(gtk.Dialog):
                     mdialog.destroy()
                     break
             else:
-                preferences.prefs["pattern_files"].append(path)
-                g, meta, data = read_pattern_file(path)
-                self.patterns[path] = {"metadata": meta, "data": data}
-                self._append_file(path, self.patterns[path])
-                self.tree.columns_autosize()
+                try:
+                    preferences.prefs["pattern_files"].append(path)
+                    g, meta, data = read_pattern_file(path)
+                    self.patterns[path] = {"metadata": meta, "data": data}
+                    self._append_file(path, self.patterns[path])
+                    self.tree.columns_autosize()
+                except InvalidFileError:
+                    # TODO
+                    pass
         
     def remove_file(self):
         image = gtk.Image()
@@ -289,8 +297,8 @@ class PatternFileEditor(gtk.Dialog):
         """Append all patterns to the specified file."""
         try:
             g, meta, data = read_pattern_file(path)
-        except InvalidFileError, e:
-            print "TODO", e.message
+        except InvalidFileError:
+            # TODO
             return
         max_id = int(max(data.keys())) + 1
         for f, keys in patterns.items():
@@ -303,12 +311,16 @@ class PatternFileEditor(gtk.Dialog):
     def remove_from_files(patterns):
         """Remove the patterns from their respective files."""
         for f, keys in patterns.items():
-            g, meta, data = read_pattern_file(f)
-            ndata = {}
-            for k, v in data.items():
-                if k not in keys:
-                    ndata[k] = v
-            write_pattern_file(g, meta, ndata)
+            try:
+                g, meta, data = read_pattern_file(f)
+                ndata = {}
+                for k, v in data.items():
+                    if k not in keys:
+                        ndata[k] = v
+                write_pattern_file(g, meta, ndata)
+            except InvalidFileError:
+                # TODO
+                pass
     
     def on_copy_patterns(self, button):
         """Copy the currently selected patterns to a specified file."""
@@ -336,12 +348,12 @@ class PatternFileEditor(gtk.Dialog):
         try:
             grid = self.palabra_window.puzzle_manager.current_puzzle.grid
         except AttributeError:
-            print "TODO"
+            # TODO
             return
         try:
             g, meta, data = read_pattern_file(path)
-        except InvalidFileError, e:
-            print "TODO", e.message
+        except InvalidFileError:
+            # TODO
             return
         max_id = int(max(data.keys())) + 1
         data[str(max_id)] = grid
