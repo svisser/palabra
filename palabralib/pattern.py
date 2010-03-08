@@ -200,8 +200,8 @@ class PatternFileEditor(gtk.Dialog):
                     break
             else:
                 try:
-                    preferences.prefs["pattern_files"].append(path)
                     g, meta, data = read_pattern_file(path)
+                    preferences.prefs["pattern_files"].append(path)
                     self.patterns[path] = {"metadata": meta, "data": data}
                     self._append_file(path, self.patterns[path])
                     self.tree.columns_autosize()
