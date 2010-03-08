@@ -92,6 +92,7 @@ defaults["color_warning_red"] = (65535, int, "int")
 defaults["color_warning_green"] = (49152, int, "int")
 defaults["color_warning_blue"] = (49152, int, "int")
 defaults["pattern_files"] = ([], list, "list", "str")
+defaults["word_files"] = (["/usr/share/dict/words"], list, "list", "str")
 
 def read_config_file():
     props = {}

@@ -27,6 +27,7 @@ except (ImportError, AssertionError):
 import gobject
 
 from palabralib.gui import PalabraWindow
+import palabralib.preferences as preferences
 from palabralib.preferences import read_config_file
 from palabralib.word import read_wordlists
 
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         gobject.threads_init()
         
         print "Loading wordlists..."
-        data = read_wordlists(["/usr/share/dict/words"])
+        data = read_wordlists(preferences.prefs["word_files"])
         
         palabra = PalabraWindow()
         palabra.wordlists.update(data)
