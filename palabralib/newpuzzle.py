@@ -187,10 +187,6 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
-        self.patterns = read_containers(preferences.prefs["pattern_files"])
-        
-        self.current_patterns = self.patterns
-        
         self.set_size_request(640, 480)
         
         self.preview = GridPreview()
@@ -235,14 +231,18 @@ class NewWindow(gtk.Dialog):
         self.clear_button = gtk.Button("Clear pattern")
         self.clear_button.connect("clicked", clear_pattern)
         
+        self.files = ["xml/patterns.xml", "xml/patterns2.xml"] + preferences.prefs["pattern_files"]
+        self.patterns = read_containers(self.files)
+        self._load_pattern_list(self.files)
+        
         file_combo = gtk.combo_box_new_text()
-        file_combo.connect("changed", self.on_file_changed)
         file_combo.append_text("All files")
+        file_combo.set_active(0)
         for path, metadata, data in self.patterns:
             filename = path[path.rfind(os.sep) + 1:]
             caption = metadata["title"] if "title" in metadata else filename
             file_combo.append_text(caption)
-        file_combo.set_active(0)
+        file_combo.connect("changed", self.on_file_changed)
         
         patterns_vbox = gtk.VBox(False, 0)
         patterns_vbox.pack_start(window, True, True, 0)
@@ -264,28 +264,27 @@ class NewWindow(gtk.Dialog):
         
         options_vbox.pack_start(align, True, True, 0)
 
-        self.load_empty_grid(*self.size_component.get_size())
         self.clear_button.set_sensitive(False)
         
     def on_file_changed(self, combo):
         index = combo.get_active()
-        if index == 0:
-            files = preferences.prefs["pattern_files"]
-        else:
-            files = preferences.prefs["pattern_files"][index - 1:index]
+        files = self.files if index == 0 else self.files[index - 1:index]
         if files:
-            data = [d for (f, _, d) in self.patterns if f in files]
-            grids = reduce(operator.add, data)
-            stats = [(g.count_words(), g.count_blocks(), g) for g in grids]
-            stats.sort()
-            self.current_patterns = [grid for (_, _, grid) in stats]
-            self.load_empty_grid(*self.size_component.get_size())
+            self._load_pattern_list(files)    
+            
+    def _load_pattern_list(self, files):
+        data = [d for (f, _, d) in self.patterns if f in files]
+        grids = reduce(operator.add, data)
+        stats = [(g.count_words(), g.count_blocks(), g) for g in grids]
+        stats.sort()
+        self.grids = [grid for (_, _, grid) in stats]
+        self.load_empty_grid(*self.size_component.get_size())
         
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
         self.clear_button.set_sensitive(it is not None)
         if it is not None:
-            self.grid = self.current_patterns[store.get_path(it)[0]]
+            self.grid = self.grids[store.get_path(it)[0]]
             self.preview.display(self.grid)
             
     def load_empty_grid(self, width, height):
@@ -295,7 +294,7 @@ class NewWindow(gtk.Dialog):
         
     def display_patterns(self, width, height):
         self.store.clear()
-        for grid in self.current_patterns:
+        for grid in self.grids:
             if grid.size == (width, height):
                 blocks = grid.count_blocks()
                 words = grid.count_words()

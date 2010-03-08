@@ -91,7 +91,7 @@ defaults["color_current_word_blue"] = (color_schemes["yellow"]["current_word"][2
 defaults["color_warning_red"] = (65535, int, "int")
 defaults["color_warning_green"] = (49152, int, "int")
 defaults["color_warning_blue"] = (49152, int, "int")
-defaults["pattern_files"] = (["xml/patterns.xml", "xml/patterns2.xml"], list, "list", "str")
+defaults["pattern_files"] = ([], list, "list", "str")
 
 def read_config_file():
     props = {}
