@@ -231,7 +231,7 @@ class NewWindow(gtk.Dialog):
         self.clear_button = gtk.Button("Clear pattern")
         self.clear_button.connect("clicked", clear_pattern)
         
-        self.files = ["xml/patterns.xml", "xml/patterns2.xml"] + preferences.prefs["pattern_files"]
+        self.files = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
         self.patterns = read_containers(self.files)
         self._load_pattern_list(self.files)
         
