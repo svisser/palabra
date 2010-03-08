@@ -176,6 +176,10 @@ class PatternFileEditor(gtk.Dialog):
             , gtk.FILE_CHOOSER_ACTION_OPEN
             , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
             , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        filter = gtk.FileFilter()
+        filter.set_name(u"Palabra pattern files (*.xml)")
+        filter.add_pattern("*.xml")
+        dialog.add_filter(filter)
         dialog.show_all()
         response = dialog.run()
         path = dialog.get_filename()
@@ -397,6 +401,10 @@ class PatternFileEditor(gtk.Dialog):
             , gtk.FILE_CHOOSER_ACTION_OPEN
             , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
             , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        filter = gtk.FileFilter()
+        filter.set_name(u"Palabra pattern files (*.xml)")
+        filter.add_pattern("*.xml")
+        dialog.add_filter(filter)
         dialog.show_all()
         
         path = None
