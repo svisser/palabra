@@ -24,6 +24,8 @@ VERSION = "0.1.2"
 APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
 CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config.xml")
 
+STANDARD_PATTERN_FILES = ["xml/patterns.xml", "xml/patterns2.xml"]
+
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
 STATUS_GRID = "STATUS_GRID"
