@@ -1,4 +1,4 @@
-* Implement read/write operations on pattern files, such as moving/copying grids.
 * Finish functionality of pattern window
+** Pattern list should refresh after grids have been copied/moved.
 * Finish functionality of wordlists winow
 * Make loading and displaying of words smooth
