@@ -126,6 +126,7 @@ class PatternFileEditor(gtk.Dialog):
         
         self.info = gtk.TextView()
         self.info.set_buffer(gtk.TextBuffer())
+        self.info.set_editable(False)
         scrolled_window = gtk.ScrolledWindow(None, None)
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(self.info)
