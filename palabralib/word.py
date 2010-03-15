@@ -272,8 +272,12 @@ class SQLWordList:
             word = row[1]
             if all([word[i] == c for i, c in constraints]):
                 if more_constraints is not None:
-                    # TODO
-                    yield word, True
+                    for j, (i, l, cs) in enumerate(more_constraints):
+                        if not self.has_matches(l, cs + [(i, word[j])]):
+                            yield word, False
+                            break
+                    else:
+                        yield word, True
                 else:
                     yield word, True
         con.close()
