@@ -355,7 +355,7 @@ class Editor(gtk.HBox):
                 # if this is the case, don't search and clear the words list
                 pass
             elif len(constraints) != length:
-                more = self._gather_all_constraints(x, y, self.selection.direction)
+                more = self.puzzle.grid.gather_all_constraints(x, y, self.selection.direction)
                 wordlists = self.palabra_window.wordlists
                 
                 args = (wordlists, length, constraints, more, self, show_intersections)
@@ -440,35 +440,6 @@ class Editor(gtk.HBox):
         length = self.puzzle.grid.word_length(p, q, direction)
         constraints = self.puzzle.grid.gather_constraints(p, q, direction)
         return (length, constraints)
-        
-    def _gather_all_constraints(self, x, y, direction):
-        """
-        Gather constraints of all intersecting words of the word at (x, y).
-        
-        This function returns a list with tuples that contain the
-        letters and positions of intersecting words. The item at place i of
-        the list corresponds to the intersecting word at position i.
-        
-        Each tuple contains the position at which the word at
-        (x, y, direction) intersects the intersecting word, the length
-        of the intersecting word and the constraints.
-        """
-        result = []
-        other = {"across": "down", "down": "across"}[direction]
-        sx, sy = self.puzzle.grid.get_start_word(x, y, direction)
-        for s, t in self.puzzle.grid.in_direction(direction, sx, sy):
-            p, q = self.puzzle.grid.get_start_word(s, t, other)
-            length = self.puzzle.grid.word_length(p, q, other)
-            
-            if other == "across":
-                index = x - p
-            elif other == "down":
-                index = y - q
-            
-            constraints = self.puzzle.grid.gather_constraints(p, q, other)
-            item = (index, length, constraints)
-            result.append(item)
-        return result
     
     def _insert_word(self, chars):
         """Insert a word by storing the list of (x, y, c) items in the grid."""

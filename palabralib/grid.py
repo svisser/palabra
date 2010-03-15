@@ -287,6 +287,34 @@ class Grid:
         """Create a list of all chars by position of the specified word."""
         word = self.gather_word(x, y, direction, "?")
         return [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
+    
+    def gather_all_constraints(self, x, y, direction):
+        """
+        Gather constraints of all intersecting words of the word at (x, y).
+        
+        This function returns a list with tuples that contain the
+        letters and positions of intersecting words. The item at place i of
+        the list corresponds to the intersecting word at position i.
+        
+        Each tuple contains the position at which the word at
+        (x, y, direction) intersects the intersecting word, the length
+        of the intersecting word and the constraints.
+        """
+        result = []
+        other = {"across": "down", "down": "across"}[direction]
+        sx, sy = self.get_start_word(x, y, direction)
+        for s, t in self.in_direction(direction, sx, sy):
+            p, q = self.get_start_word(s, t, other)
+            length = self.word_length(p, q, other)
+            
+            if other == "across":
+                index = x - p
+            elif other == "down":
+                index = y - q
+            
+            constraints = self.gather_constraints(p, q, other)
+            result.append((index, length, constraints))
+        return result
                 
     def gather_words(self, direction):
         """Iterate over the word data in the given direction."""
