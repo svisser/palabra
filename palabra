@@ -37,7 +37,7 @@ import gobject
 from palabralib.gui import PalabraWindow
 import palabralib.preferences as preferences
 from palabralib.preferences import read_config_file
-from palabralib.word import SQLWordList, read_wordlists, create_tables
+from palabralib.word import SQLWordList, read_wordlists, create_tables, create_wordlists
 
 if __name__ == "__main__":
     try:
@@ -45,15 +45,15 @@ if __name__ == "__main__":
         gobject.threads_init()
         
         print "Loading wordlists..."
-        data = read_wordlists(preferences.prefs["word_files"])
-        
         create_tables(preferences.prefs["word_files"])
-        
-        wl = SQLWordList('main.pdb')
-        words = wl.search(15, [(0, "p"), (4, "n")], [(0, 3, [(0, "p")]), (0, 3, [(0, "a")])  ])
+        data = create_wordlists([('main.pdb', "/usr/share/dict/words")]) # TODO
+        print data
+
+        #wl = SQLWordList('main.pdb')
+        #words = wl.search(15, [(0, "p"), (4, "n")], [(0, 3, [(0, "p")]), (0, 3, [(0, "a")])  ])
         # (index, length, constraints)
-        for w in words:
-            print w
+        #for w in words:
+        #    print w
         
         palabra = PalabraWindow()
         palabra.wordlists.update(data)

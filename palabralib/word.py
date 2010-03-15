@@ -281,3 +281,13 @@ class SQLWordList:
                 else:
                     yield word, True
         con.close()
+        
+def create_wordlists(paths):
+    wordlists = {}
+    for dbpath, wordpath in paths:
+        wordlist = SQLWordList(dbpath)
+        wordlists[wordpath] = {"list": wordlist}
+        words = wordlist.search(15, [(0, "p"), (4, "n")])
+        for w in words:
+            print w
+    return wordlists
