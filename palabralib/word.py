@@ -21,6 +21,14 @@ import gtk
 import os
 import time
 
+try:
+    import sqlite3 as sqlite
+except ImportError:
+    try:
+        from pysqlite2 import dbapi2 as sqlite
+    except ImportError:
+        pass # should not occur, see main palabra file
+
 class WordListEditor(gtk.Dialog):
     def __init__(self, palabra_window):
         gtk.Dialog.__init__(self, u"Word list manager"
@@ -154,6 +162,7 @@ class WordList:
         words = [self.combinations[length][i][c] for i, c in constraints]
         return len(reduce(set.intersection, words)) > 0
     
+    # yields word and whether all positions of the word have a matching word
     def search(self, length, constraints, more_constraints=None):
         if length in self.lengths.keys():
             for word in self.lengths[length]:
@@ -225,3 +234,46 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
             result += wordlist.search(length, constraints, more_constraints)
     result.sort()
     return result
+    
+#####
+
+def create_tables(paths):
+    con = sqlite.connect('main.pdb')
+    cur = con.cursor()
+    cur.execute('PRAGMA table_info(words)')
+    if not cur.fetchall():
+        cur.execute('CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(64), length INTEGER)')
+        for path in paths:
+            for word in read_wordlist(path):
+                cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word, len(word)))
+        con.commit()
+    con.close()
+    
+class SQLWordList:
+    def __init__(self, path):
+        self.path = path
+        
+    def has_matches(self, length, constraints):
+        con = sqlite.connect(self.path)
+        cur = con.cursor()
+        cur.execute('SELECT * FROM words WHERE length=?', [length])
+        for row in cur:
+            if all([row[1][i] == c for i, c in constraints]):
+                con.close()
+                return True
+        con.close()
+        return False
+        
+    def search(self, length, constraints, more_constraints=None):
+        con = sqlite.connect(self.path)
+        cur = con.cursor()
+        cur.execute('SELECT * FROM words WHERE length=?', [length])
+        for row in cur:
+            word = row[1]
+            if all([word[i] == c for i, c in constraints]):
+                if more_constraints is not None:
+                    # TODO
+                    yield word, True
+                else:
+                    yield word, True
+        con.close()
