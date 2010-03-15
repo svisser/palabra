@@ -301,7 +301,10 @@ class PatternFileEditor(gtk.Dialog):
         except InvalidFileError:
             # TODO
             return
-        max_id = int(max(data.keys())) + 1
+        try:
+            max_id = int(max(data.keys())) + 1
+        except ValueError: # max() arg is an empty sequence
+            max_id = 1
         for f, keys in patterns.items():
             for k in keys:
                 data[str(max_id)] = self.patterns[f]["data"][k]
