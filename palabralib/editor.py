@@ -359,6 +359,7 @@ class Editor(gtk.HBox):
                 wordlists = self.palabra_window.wordlists
                 
                 args = (wordlists, length, constraints, more, self, show_intersections)
+                self.tools["word"].display([], show_intersections)
                 t = Thread(target=load_words, args=args)
                 t.start()
                 return
