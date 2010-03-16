@@ -254,6 +254,7 @@ class SQLWordList:
         self.path = path
         
     def has_matches(self, length, constraints):
+        print "has_matches"
         con = sqlite.connect(self.path)
         cur = con.cursor()
         cur.execute('SELECT * FROM words WHERE length=?', [length])
@@ -265,19 +266,46 @@ class SQLWordList:
         return False
         
     def search(self, length, constraints, more_constraints=None):
+        print "search"
         con = sqlite.connect(self.path)
-        cur = con.cursor()
-        cur.execute('SELECT * FROM words WHERE length=?', [length])
-        for row in cur:
-            word = row[1]
-            if all([word[i] == c for i, c in constraints]):
-                if more_constraints is not None:
-                    for j, (i, l, cs) in enumerate(more_constraints):
-                        if not self.has_matches(l, cs + [(i, word[j])]):
-                            yield word, False
+        
+        def check_constraints(cursor, length, constraints):
+            for row in cursor:
+                word = row[0]
+                if all([word[i] == c for i, c in constraints]):
+                    yield word
+        
+        if not more_constraints:
+            cursor = con.cursor()
+            cursor.execute('SELECT word FROM words WHERE length=?', [length])
+            for word in check_constraints(cursor, length, constraints):
+                yield word, True
+        else:
+            lengths = {}
+            for j, (i, l, cs) in enumerate(more_constraints):
+                if j not in lengths:
+                    cursorx = con.cursor()
+                    cursorx.execute('SELECT word FROM words WHERE length=?', [length])
+                    lengths[j] = cursorx.fetchall()
+            
+            words = []
+            cursor = con.cursor()
+            cursor.execute('SELECT word FROM words WHERE length=?', [length])
+            words = [word for word in check_constraints(cursor, length, constraints)]
+            for word in words:
+                yield word, True
+                continue
+                # TODO
+                for j, (i, l, cs) in enumerate(more_constraints):
+                    result = False
+                    cons = cs + [(i, word[j])]
+                    for word2 in lengths[j]:
+                        if all([word2[k] == d for k, d in cons]):
+                            result = True
                             break
-                    else:
-                        yield word, True
+                    if not result:
+                        yield word, False
+                        break
                 else:
                     yield word, True
         con.close()
@@ -287,7 +315,4 @@ def create_wordlists(paths):
     for dbpath, wordpath in paths:
         wordlist = SQLWordList(dbpath)
         wordlists[wordpath] = {"list": wordlist}
-        words = wordlist.search(15, [(0, "p"), (4, "n")])
-        for w in words:
-            print w
     return wordlists
