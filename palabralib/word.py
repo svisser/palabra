@@ -245,7 +245,7 @@ def create_tables(paths):
         cur.execute('CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(64), length INTEGER)')
         for path in paths:
             for word in read_wordlist(path):
-                cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word, len(word)))
+                cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word.lower(), len(word)))
         con.commit()
     con.close()
     
