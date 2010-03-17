@@ -117,7 +117,6 @@ def read_config_file():
                     else:
                         value = child.text
                     values.append(value)
-                    print values
                 props[name] = values
     except (etree.XMLSyntaxError, IOError):
         print "Warning: No configuration file found, using defaults instead."
@@ -147,7 +146,6 @@ def write_config_file():
                 if defaults[key][3] == "str":
                     f.text = str(v)
                 elif defaults[key][3] == "file":
-                    print v
                     for key, value in v.items():
                         g = etree.SubElement(f, "preference-item")
                         g.set("type", value["type"])
