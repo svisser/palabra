@@ -92,7 +92,8 @@ defaults["color_warning_red"] = (65535, int, "int")
 defaults["color_warning_green"] = (49152, int, "int")
 defaults["color_warning_blue"] = (49152, int, "int")
 defaults["pattern_files"] = ([], list, "list", "str")
-defaults["word_files"] = (["/usr/share/dict/words"], list, "list", "str")
+defaults["word_files"] = ([{"name": {"type": "str", "value": "default"}
+    , "path": {"type": "str", "value": "/usr/share/dict/words"}}], list, "list", "file")
 
 def read_config_file():
     props = {}
@@ -106,7 +107,18 @@ def read_config_file():
             if t in ["int", "bool"]:
                 props[name] = p.text
             elif t == "list":
-                props[name] = [child.text for child in p]
+                values = []
+                for child in p:
+                    ts = child.get("type")
+                    if ts == "file":
+                        value = {}
+                        for child2 in child:
+                            value[child2.get("name")] = {"type": child2.get("type"), "value": child2.text}
+                    else:
+                        value = child.text
+                    values.append(value)
+                    print values
+                props[name] = values
     except (etree.XMLSyntaxError, IOError):
         print "Warning: No configuration file found, using defaults instead."
     for key, value in defaults.items():
@@ -132,7 +144,15 @@ def write_config_file():
             for v in data:
                 f = etree.SubElement(e, "preference-item")
                 f.set("type", defaults[key][3])
-                f.text = str(v)
+                if defaults[key][3] == "str":
+                    f.text = str(v)
+                elif defaults[key][3] == "file":
+                    print v
+                    for key, value in v.items():
+                        g = etree.SubElement(f, "preference-item")
+                        g.set("type", value["type"])
+                        g.set("name", key)
+                        g.text = value["value"]
     
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
         os.mkdir(constants.APPLICATION_DIRECTORY)

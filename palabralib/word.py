@@ -237,17 +237,29 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     
 #####
 
-def create_tables(paths):
-    con = sqlite.connect('main.pdb')
-    cur = con.cursor()
-    cur.execute('PRAGMA table_info(words)')
-    if not cur.fetchall():
-        cur.execute('CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(64), length INTEGER)')
-        for path in paths:
+def create_tables(word_files):
+    for data in word_files:
+        name = data["name"]["value"]
+        path = data["path"]["value"]
+
+        con = sqlite.connect(''.join([name, '.pdb']))
+        cur = con.cursor()
+        cur.execute('PRAGMA table_info(words)')
+        if not cur.fetchall():
+            cur.execute('CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(64), length INTEGER)')
             for word in read_wordlist(path):
                 cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word.lower(), len(word)))
-        con.commit()
-    con.close()
+            con.commit()
+        con.close()
+
+def create_wordlists(word_files):
+    wordlists = {}
+    for data in word_files:
+        name = data["name"]["value"]
+        path = data["path"]["value"]
+        wordlist = SQLWordList(''.join([name, '.pdb']))
+        wordlists[path] = {"list": wordlist}
+    return wordlists
     
 class SQLWordList:
     def __init__(self, path):
@@ -309,10 +321,3 @@ class SQLWordList:
                 else:
                     yield word, True
         con.close()
-        
-def create_wordlists(paths):
-    wordlists = {}
-    for dbpath, wordpath in paths:
-        wordlist = SQLWordList(dbpath)
-        wordlists[wordpath] = {"list": wordlist}
-    return wordlists
