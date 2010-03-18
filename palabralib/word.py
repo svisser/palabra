@@ -77,7 +77,6 @@ class WordListEditor(gtk.Dialog):
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         
-        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.vbox.add(hbox)
         

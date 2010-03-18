@@ -1055,15 +1055,13 @@ class PalabraWindow(gtk.Window):
     def manage_wordlists(self):
         editor = WordListEditor(self)
         editor.show_all()
-        response = editor.run()
+        editor.run()
         editor.destroy()
-        if response == gtk.RESPONSE_OK:
-            print "TODO"
                 
     def manage_patterns(self):
         editor = PatternFileEditor(self)
         editor.show_all()
-        response = editor.run()
+        editor.run()
         editor.destroy()
 
     def create_help_menu(self):
