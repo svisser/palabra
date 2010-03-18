@@ -38,15 +38,21 @@ class WordListEditor(gtk.Dialog):
         self.palabra_window = palabra_window
         self.set_size_request(640, 480)
         
-        self.store = gtk.ListStore(str)
-        self._display_wordlists()
+        # name path
+        self.store = gtk.ListStore(str, str)
+        self._load_wordlists()
         
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Word lists")
+        column = gtk.TreeViewColumn(u"Identifier")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=0)
+        self.tree.append_column(column)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Word lists")
+        column.pack_start(cell, True)
+        column.set_attributes(cell, text=1)
         self.tree.append_column(column)
         
         buttonbox = gtk.HButtonBox()
@@ -102,7 +108,7 @@ class WordListEditor(gtk.Dialog):
             value = {"name": {"type": "str", "value": "TODO"}, "path": {"type": "str", "value": path}}
             preferences.prefs["word_files"].append(value)
             
-            self._display_wordlists()
+            self._load_wordlists()
         dialog.destroy()
         
     def on_selection_changed(self, selection):
@@ -112,14 +118,16 @@ class WordListEditor(gtk.Dialog):
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store.get_value(it, 0)
-        nextprefs = [p for p in preferences.prefs["word_files"] if p["path"]["value"] != path]
+        nextprefs = [p for p in preferences.prefs["word_files"] if p["name"]["value"] != path]
         preferences.prefs["word_files"] = nextprefs
-        self._display_wordlists()
+        self._load_wordlists()
         
-    def _display_wordlists(self):
+    def _load_wordlists(self):
         self.store.clear()
-        for path in [p["path"]["value"] for p in preferences.prefs["word_files"]]:
-            self.store.append([path])
+        for p in preferences.prefs["word_files"]:
+            name = p["name"]["value"]
+            path = p["path"]["value"]
+            self.store.append([name, path])
 
 class WordList:
     def __init__(self):
