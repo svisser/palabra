@@ -116,9 +116,12 @@ class WordListEditor(gtk.Dialog):
         
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
-        path = self.store.get_value(it, 0)
-        nextprefs = [p for p in preferences.prefs["word_files"] if p["name"]["value"] != path]
+        name = self.store.get_value(it, 0)
+        nextprefs = [p for p in preferences.prefs["word_files"] if p["name"]["value"] != name]
         preferences.prefs["word_files"] = nextprefs
+        
+        self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"])
+        self.palabra_window.editor.refresh_words(True)
         self._load_wordlists()
         
     def _load_wordlists(self):
