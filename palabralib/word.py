@@ -133,7 +133,10 @@ class WordListEditor(gtk.Dialog):
         preferences.prefs["word_files"] = nextprefs
         
         self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"])
-        self.palabra_window.editor.refresh_words(True)
+        try:
+            self.palabra_window.editor.refresh_words(True)
+        except AttributeError:
+            pass
         self._load_wordlists()
         
     def _load_wordlists(self):
