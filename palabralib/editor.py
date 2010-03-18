@@ -415,18 +415,18 @@ class Editor(gtk.HBox):
             """
             Display the word in the selected slot without storing it the grid.
             """
-            if word is not None:
-                x = self.selection.x
-                y = self.selection.y
-                direction = self.selection.direction
-                p, q = self.puzzle.grid.get_start_word(x, y, direction)
-                result = self.puzzle.grid.decompose_word(word, p, q, direction)
-                
-                result = [(x, y, c.upper()) for x, y, c in result
-                    if self.puzzle.grid.get_char(x, y) != c.upper()]
-                self._display_overlay(result)
-            else:
+            if word is None:
                 self._display_overlay([])
+                return
+            x = self.selection.x
+            y = self.selection.y
+            direction = self.selection.direction
+            p, q = self.puzzle.grid.get_start_word(x, y, direction)
+            result = self.puzzle.grid.decompose_word(word, p, q, direction)
+            
+            overlay = [(x, y, c.upper()) for x, y, c in result
+                if self.puzzle.grid.get_char(x, y) == ""]
+            self._display_overlay(overlay)
         return {"insert": insert, "toggle": toggle, "overlay": overlay}
         
     def _display_overlay(self, new):
