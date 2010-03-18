@@ -146,11 +146,11 @@ def write_config_file():
                 if defaults[key][3] == "str":
                     f.text = str(v)
                 elif defaults[key][3] == "file":
-                    for key, value in v.items():
+                    for k0, v0 in v.items():
                         g = etree.SubElement(f, "preference-item")
-                        g.set("type", value["type"])
-                        g.set("name", key)
-                        g.text = value["value"]
+                        g.set("name", k0)
+                        g.set("type", v0["type"])
+                        g.text = v0["value"]
     
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
         os.mkdir(constants.APPLICATION_DIRECTORY)

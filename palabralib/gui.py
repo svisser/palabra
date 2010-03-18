@@ -1058,17 +1058,7 @@ class PalabraWindow(gtk.Window):
         response = editor.run()
         editor.destroy()
         if response == gtk.RESPONSE_OK:
-            adds = [p for p, a in editor.modifications.items() if a == "add"]
-            removes = [p for p, a in editor.modifications.items() if a == "remove"]
-            
             print "TODO"
-            #gobject.idle_add(read_wordlists(self, adds).next)
-            #for path in removes:
-            #    del self.wordlists[path]
-            #try:
-            #    self.editor.refresh_words(True)
-            #except AttributeError:
-            #    pass
                 
     def manage_patterns(self):
         editor = PatternFileEditor(self)

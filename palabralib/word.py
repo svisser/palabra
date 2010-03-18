@@ -21,6 +21,8 @@ import gtk
 import os
 import time
 
+import preferences
+
 try:
     import sqlite3 as sqlite
 except ImportError:
@@ -35,9 +37,6 @@ class WordListEditor(gtk.Dialog):
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(640, 480)
-        
-        self.data = self.palabra_window.wordlists.keys()
-        self.modifications = {}
         
         self.store = gtk.ListStore(str)
         self._display_wordlists()
@@ -86,7 +85,7 @@ class WordListEditor(gtk.Dialog):
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
             path = dialog.get_filename()
-            if path in self.data:
+            if path in [p["path"]["value"] for p in preferences.prefs["word_files"]]:
                 dialog.destroy()
                 
                 title = u"Duplicate found"
@@ -98,8 +97,11 @@ class WordListEditor(gtk.Dialog):
                 mdialog.run()
                 mdialog.destroy()
                 return
-            self.data.append(path)
-            self.modifications[path] = "add"
+            
+            # TODO
+            value = {"name": {"type": "str", "value": "TODO"}, "path": {"type": "str", "value": path}}
+            preferences.prefs["word_files"].append(value)
+            
             self._display_wordlists()
         dialog.destroy()
         
@@ -110,13 +112,13 @@ class WordListEditor(gtk.Dialog):
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store.get_value(it, 0)
-        self.data.remove(path)
-        self.modifications[path] = "remove"
+        nextprefs = [p for p in preferences.prefs["word_files"] if p["path"]["value"] != path]
+        preferences.prefs["word_files"] = nextprefs
         self._display_wordlists()
         
     def _display_wordlists(self):
         self.store.clear()
-        for path in self.data:
+        for path in [p["path"]["value"] for p in preferences.prefs["word_files"]]:
             self.store.append([path])
 
 class WordList:
