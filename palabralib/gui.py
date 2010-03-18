@@ -1,4 +1,5 @@
 # This file is part of Palabra
+# coding: utf-8
 #
 # Copyright (C) 2009 Simeon Visser
 #
@@ -1086,7 +1087,7 @@ class PalabraWindow(gtk.Window):
         dialog.set_comments(u"Crossword creation software")
         dialog.set_version(constants.VERSION)
         dialog.set_authors([u"Simeon Visser"])
-        dialog.set_copyright(u"Copyright 2009 Simeon Visser")
+        dialog.set_copyright(u"Copyright © 2009 - 2010 Simeon Visser")
         gtk.about_dialog_set_url_hook(self.on_click_website)
         dialog.set_website(u"http://bitbucket.org/svisser/palabra/wiki/Home")
         dialog.set_license(u"""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
