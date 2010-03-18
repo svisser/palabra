@@ -31,6 +31,13 @@ except ImportError:
     except ImportError:
         pass # should not occur, see main palabra file
 
+class NewWordListDialog(gtk.Dialog):
+    def __init__(self, parent):
+        gtk.Dialog.__init__(self, u"New word list", parent, gtk.DIALOG_MODAL)
+        self.set_size_request(320, 240)
+        
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+
 class WordListEditor(gtk.Dialog):
     def __init__(self, palabra_window):
         gtk.Dialog.__init__(self, u"Word list manager"
@@ -102,6 +109,11 @@ class WordListEditor(gtk.Dialog):
                 mdialog.run()
                 mdialog.destroy()
                 return
+            
+            d = NewWordListDialog(self)
+            d.show_all()
+            d.run()
+            d.destroy()
             
             # TODO
             value = {"name": {"type": "str", "value": "TODO"}, "path": {"type": "str", "value": path}}
