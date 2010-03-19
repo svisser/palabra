@@ -125,6 +125,22 @@ class Selection:
         self.y = y
         self.direction = direction
 
+def search(wordlists, grid, selection, force_refresh):
+    x = selection.x
+    y = selection.y
+    dir = selection.direction
+    if not grid.is_available(x, y) and not force_refresh:
+        return []
+    p, q = grid.get_start_word(x, y, dir)
+    length = grid.word_length(p, q, dir)
+    if length <= 1 and not force_refresh:
+        return []
+    constraints = grid.gather_constraints(p, q, dir)
+    if len(constraints) == length and not force_refresh:
+        return []
+    more = grid.gather_all_constraints(x, y, dir)
+    return search_wordlists(wordlists, length, constraints, more)
+
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area, puzzle):
         gtk.HBox.__init__(self)
@@ -344,33 +360,11 @@ class Editor(gtk.HBox):
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        show_intersections = self.settings["show_intersecting_words"]
-        x = self.selection.x
-        y = self.selection.y
-        result = None
-        if self.puzzle.grid.is_available(x, y):
-            parameters = self._get_search_parameters(x, y, self.selection.direction)
-            length, constraints = parameters
-            if length <= 1:
-                # if this is the case, don't search and clear the words list
-                pass
-            elif len(constraints) != length:
-                more = self.puzzle.grid.gather_all_constraints(x, y, self.selection.direction)
-                wordlists = self.palabra_window.wordlists
-                
-                args = (wordlists, length, constraints, more, self, show_intersections)
-                self.tools["word"].display([], show_intersections)
-                
-                result = search_wordlists(wordlists, length, constraints, more)
-                #gobject.idle_add(editor.tools["word"].display, result, show_intersections)
-                
-                #t = Thread(target=load_words, args=args)
-                #t.start()
-                #return
-        if result is not None:
-            self.tools["word"].display(result, show_intersections)
-        else:
-            self.tools["word"].display([], show_intersections)
+        show = self.settings["show_intersecting_words"]
+        self.tools["word"].display([], show)
+        result = search(self.palabra_window.wordlists, self.puzzle.grid
+            , self.selection, force_refresh)
+        self.tools["word"].display(result, show)
             
     def get_clue_tool_callbacks(self):
         def select(x, y, direction):
