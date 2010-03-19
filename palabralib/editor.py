@@ -202,9 +202,6 @@ class Editor(gtk.HBox):
             context.set_source(self.editor_pattern)
             context.paint()
         
-    def _render_cell(self, x, y):
-        self._render_cells([(x, y)])
-        
     def _clear_selection(self, x, y, direction):
         p = self.puzzle.grid.in_direction(x, y, direction)
         q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
@@ -541,7 +538,7 @@ class Editor(gtk.HBox):
                 , y=y
                 , next_char="")
             self._check_blacklist_for_cell(x, y)
-            self._render_cell(x, y)
+            self._render_cells([(x, y)])
         else:
             # remove character in previous cell if needed and move selection
             x += (-1 if direction == "across" else 0)
@@ -583,7 +580,7 @@ class Editor(gtk.HBox):
                 , y=y
                 , next_char="")
             self._check_blacklist_for_cell(x, y)
-            self._render_cell(x, y)
+            self._render_cells([(x, y)])
         
     def on_typing(self, keyval):
         """Place an alphabetical character in the grid and move the selection."""
