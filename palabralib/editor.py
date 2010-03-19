@@ -206,13 +206,13 @@ class Editor(gtk.HBox):
         self._render_cells([(x, y)])
         
     def _clear_selection(self, x, y, direction):
-        p = self.puzzle.grid.in_direction(direction, x, y)
-        q = self.puzzle.grid.in_direction(direction, x, y, reverse=True)
+        p = self.puzzle.grid.in_direction(x, y, direction)
+        q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
         self._render_cells(chain(p, q), editor=False)
         
     def _render_selection(self, x, y, direction):
-        p = self.puzzle.grid.in_direction(direction, x, y)
-        q = self.puzzle.grid.in_direction(direction, x, y, reverse=True)
+        p = self.puzzle.grid.in_direction(x, y, direction)
+        q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
         self._render_cells(chain(p, q))
     
     def _render_editor_of_cell(self, context, x, y):
@@ -241,8 +241,8 @@ class Editor(gtk.HBox):
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
                 
-                p = self.puzzle.grid.in_direction(sdir, sx, sy)
-                q = self.puzzle.grid.in_direction(sdir, sx, sy, reverse=True)
+                p = self.puzzle.grid.in_direction(sx, sy, sdir)
+                q = self.puzzle.grid.in_direction(sx, sy, sdir, reverse=True)
                 for cell in chain(p, q):
                     if (x, y) == cell:
                         self.puzzle.view.render_location(context, x, y, r, g, b)
@@ -614,13 +614,13 @@ class Editor(gtk.HBox):
         def get_segment(direction, x, y, dx, dy):
             """Gather the content of the cells touching and including (x, y)."""
             segment = []
-            for p, q in self.puzzle.grid.in_direction(direction, x + dx, y + dy):
+            for p, q in self.puzzle.grid.in_direction(x + dx, y + dy, direction):
                 c = self.puzzle.grid.get_char(p, q)
                 if not c:
                     break
                 segment.append((p, q, c))
             segment.insert(0, (x, y, self.puzzle.grid.get_char(x, y)))
-            for p, q in self.puzzle.grid.in_direction(direction, x - dx, y - dy, reverse=True):
+            for p, q in self.puzzle.grid.in_direction(x - dx, y - dy, direction, reverse=True):
                 c = self.puzzle.grid.get_char(p, q)
                 if not c:
                     break

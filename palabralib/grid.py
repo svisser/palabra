@@ -68,13 +68,13 @@ class Grid:
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
         if not self.is_available(x, y):
             return x, y
-        return [(x, y) for x, y in self.in_direction(direction, x, y, reverse=True)][-1]
+        return [(x, y) for x, y in self.in_direction(x, y, direction, reverse=True)][-1]
             
     def get_end_word(self, x, y, direction):
         """Return the last cell of a word in the given direction that contains the cell (x, y)."""
         if not self.is_available(x, y):
             return x, y
-        return [(x, y) for x, y in self.in_direction(direction, x, y)][-1]
+        return [(x, y) for x, y in self.in_direction(x, y, direction)][-1]
         
     def get_check_count(self, x, y):
         """
@@ -267,7 +267,7 @@ class Grid:
     def gather_word(self, x, y, direction, empty_char="?"):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
-        for p, q in self.in_direction(direction, x, y):
+        for p, q in self.in_direction(x, y, direction):
             c = self.get_char(p, q)
             if c == "":
                 word += empty_char
@@ -303,7 +303,7 @@ class Grid:
         result = []
         other = {"across": "down", "down": "across"}[direction]
         sx, sy = self.get_start_word(x, y, direction)
-        for s, t in self.in_direction(direction, sx, sy):
+        for s, t in self.in_direction(sx, sy, direction):
             p, q = self.get_start_word(s, t, other)
             length = self.word_length(p, q, other)
             
@@ -333,9 +333,9 @@ class Grid:
         
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""
-        return sum([1 for x, y in self.in_direction(direction, x, y)])
+        return sum([1 for x, y in self.in_direction(x, y, direction)])
         
-    def in_direction(self, direction, x, y, reverse=False):
+    def in_direction(self, x, y, direction, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
         dx = 1 if direction == "across" else 0
         dy = 1 if direction == "down" else 0

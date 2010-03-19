@@ -291,10 +291,10 @@ class GridTestCase(unittest.TestCase):
     def testInDirectionNormal(self):
         """Direction iterator returns all cells in the given direction."""
         cells = [(x, 0) for x in xrange(self.grid.width)]
-        indir = [(x, y) for x, y in self.grid.in_direction("across", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "across")]
         self.assertEqual(cells, indir)
         cells = [(0, y) for y in xrange(self.grid.height)]
-        indir = [(x, y) for x, y in self.grid.in_direction("down", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "down")]
         self.assertEqual(cells, indir)
         
     def testInDirectionReverse(self):
@@ -303,77 +303,77 @@ class GridTestCase(unittest.TestCase):
         """
         cells = [(x, 0) for x in xrange(self.grid.width - 1, -1, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("across", self.grid.width - 1, 0, True)]
+            in self.grid.in_direction(self.grid.width - 1, 0, "across", True)]
         self.assertEqual(cells, indir)
         cells = [(0, y) for y in xrange(self.grid.height - 1, -1, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("down", 0, self.grid.height - 1, True)]
+            in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
         self.assertEqual(cells, indir)
         
     def testInDirectionBlocks(self):
         self.grid.set_block(5, 0, True)
         cells = [(x, 0) for x in xrange(5)]
-        indir = [(x, y) for x, y in self.grid.in_direction("across", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "across")]
         self.assertEqual(cells, indir)
         self.grid.set_block(0, 5, True)
         cells = [(0, x) for x in xrange(5)]
-        indir = [(x, y) for x, y in self.grid.in_direction("down", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "down")]
         self.assertEqual(cells, indir)
         
     def testInDirectionBlocksReverse(self):
         self.grid.set_block(5, 0, True)
         cells = [(x, 0) for x in xrange(self.grid.width - 1, 5, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("across", self.grid.width - 1, 0, True)]
+            in self.grid.in_direction(self.grid.width - 1, 0, "across", True)]
         self.assertEqual(cells, indir)
         self.grid.set_block(0, 5, True)
         cells = [(0, x) for x in xrange(self.grid.height - 1, 5, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("down", 0, self.grid.height - 1, True)]
+            in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
         self.assertEqual(cells, indir)
         
     def testInDirectionBars(self):
         self.grid.set_bar(5, 0, "left", True)
         cells = [(x, 0) for x in xrange(5)]
-        indir = [(x, y) for x, y in self.grid.in_direction("across", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "across")]
         self.assertEqual(cells, indir)
         self.grid.set_bar(0, 5, "top", True)
         cells = [(0, x) for x in xrange(5)]
-        indir = [(x, y) for x, y in self.grid.in_direction("down", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "down")]
         self.assertEqual(cells, indir)
         
     def testInDirectionBarsReverse(self):
         self.grid.set_bar(5, 0, "left", True)
         cells = [(x, 0) for x in xrange(self.grid.width - 1, 4, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("across", self.grid.width - 1, 0, True)]
+            in self.grid.in_direction(self.grid.width - 1, 0, "across", True)]
         self.assertEqual(cells, indir)
         self.grid.set_bar(0, 5, "top", True)
         cells = [(0, x) for x in xrange(self.grid.height - 1, 4, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("down", 0, self.grid.height - 1, True)]
+            in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
         self.assertEqual(cells, indir)
         
     def testInDirectionVoids(self):
         self.grid.set_void(5, 0, True)
         cells = [(x, 0) for x in xrange(5)]
-        indir = [(x, y) for x, y in self.grid.in_direction("across", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "across")]
         self.assertEqual(cells, indir)
         self.grid.set_void(0, 5, True)
         cells = [(0, x) for x in xrange(5)]
-        indir = [(x, y) for x, y in self.grid.in_direction("down", 0, 0)]
+        indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "down")]
         self.assertEqual(cells, indir)
         
     def testInDirectionBlocksReverse(self):
         self.grid.set_void(5, 0, True)
         cells = [(x, 0) for x in xrange(self.grid.width - 1, 5, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("across", self.grid.width - 1, 0, True)]
+            in self.grid.in_direction(self.grid.width - 1, 0, "across", True)]
         self.assertEqual(cells, indir)
         self.grid.set_void(0, 5, True)
         cells = [(0, x) for x in xrange(self.grid.height - 1, 5, -1)]
         indir = [(x, y) for x, y
-            in self.grid.in_direction("down", 0, self.grid.height - 1, True)]
+            in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
         self.assertEqual(cells, indir)
     
     def testGatherWordOne(self):
@@ -627,7 +627,7 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(self.grid.height, height + 1)
         bs = [self.grid.is_block(x, y) for x, y in [(0, 0), (0, 1), (0, 2)]]
         self.assertEquals(bs, [False, True, True])
-        for x, y in self.grid.in_direction("across", 0, 0):
+        for x, y in self.grid.in_direction(0, 0, "across"):
             self.assertEquals(self.grid.is_block(x, y), False)
             self.assertEquals(self.grid.get_char(x, y), "")
 
@@ -653,7 +653,7 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(self.grid.height, height)
         bs = [self.grid.is_block(x, y) for x, y in [(0, 0), (1, 0), (2, 0)]]
         self.assertEquals(bs, [False, True, True])
-        for x, y in self.grid.in_direction("down", 0, 0):
+        for x, y in self.grid.in_direction(0, 0, "down"):
             self.assertEquals(self.grid.is_block(x, y), False)
             self.assertEquals(self.grid.get_char(x, y), "")
 
