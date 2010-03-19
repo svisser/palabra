@@ -431,13 +431,6 @@ class Editor(gtk.HBox):
             
     def clear_overlay(self):
         self._display_overlay([])
-        
-    def _get_search_parameters(self, x, y, direction):
-        """Determine the length and the constraints of the word at (x, y, direction)."""
-        p, q = self.puzzle.grid.get_start_word(x, y, direction)
-        length = self.puzzle.grid.word_length(p, q, direction)
-        constraints = self.puzzle.grid.gather_constraints(p, q, direction)
-        return (length, constraints)
     
     def _insert_word(self, chars):
         """Insert a word by storing the list of (x, y, c) items in the grid."""
