@@ -264,6 +264,8 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     
 #####
 
+MAX_WORD_LENGTH = 64
+
 def create_tables(word_files):
     for data in word_files:
         name = data["name"]["value"]
@@ -273,9 +275,31 @@ def create_tables(word_files):
         cur = con.cursor()
         cur.execute('PRAGMA table_info(words)')
         if not cur.fetchall():
+            print "Creating words table for", path
             cur.execute('CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(64), length INTEGER)')
             for word in read_wordlist(path):
                 cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word.lower(), len(word)))
+            con.commit()
+            
+            print "Creating search table for", path
+            query = ''.join(['c' + str(i) + ' VARCHAR(1)' + (', ' if i < MAX_WORD_LENGTH - 1 else '') for i in xrange(MAX_WORD_LENGTH)])
+            query = 'CREATE TABLE search (id INTEGER PRIMARY KEY, length INTEGER, ' + query + ')'
+            cur.execute(query)
+            con.commit()
+            
+            cur2 = con.cursor()
+            cur.execute('SELECT id, word FROM words')
+            for id, word in cur:
+                v = ' (' + str(id) + ', ' + str(len(word)) + ', '
+                for i in xrange(MAX_WORD_LENGTH):
+                    try:
+                        v += "'" + word[i] + "'"
+                    except IndexError:
+                        v += 'null'
+                    if i < MAX_WORD_LENGTH - 1:
+                        v += ', '
+                v += ')'
+                cur2.execute('INSERT INTO search VALUES' + v)
             con.commit()
         con.close()
 
@@ -290,61 +314,66 @@ def create_wordlists(word_files):
     
 class SQLWordList:
     def __init__(self, path):
+        print "Loading", path
         self.path = path
+        self.combinations = {}
         
-    def has_matches(self, length, constraints):
-        print "has_matches"
         con = sqlite.connect(self.path)
         cur = con.cursor()
-        cur.execute('SELECT * FROM words WHERE length=?', [length])
+        cur.execute('SELECT * FROM search')
         for row in cur:
-            if all([row[1][i] == c for i, c in constraints]):
-                con.close()
-                return True
+            id = row[0]
+            length = row[1]
+            if length not in self.combinations:
+                self.combinations[length] = {}
+            for x in xrange(length):
+                if x not in self.combinations[length]:
+                    self.combinations[length][x] = {}
+            for i, c in enumerate(row[2:]):
+                if c:
+                    try:
+                        self.combinations[length][i][c].add(id)
+                    except KeyError:
+                        self.combinations[length][i][c] = set([id])
         con.close()
-        return False
+        
+    def has_matches(self, length, constraints):
+        """
+        Return True when a word exists that matches the constraints and the length.
+        """
+        # check whether for each constraint at least one word exists
+        for i, c in constraints:
+            try:
+                if not self.combinations[length][i][c]:
+                    return False
+            except KeyError:
+                return False
+                
+        # check whether all constraints are satisfied for at least one word
+        words = [self.combinations[length][i][c] for i, c in constraints]
+        return len(reduce(set.intersection, words)) > 0
         
     def search(self, length, constraints, more_constraints=None):
-        print "search"
+        """
+        Search for words that match the given criteria.
+        
+        This function yields the word and whether all positions of the word
+        have a matching word, when the more_constraints argument is specified.
+        If more_constraints is not specified, it yields the word and the
+        value True.
+        """
         con = sqlite.connect(self.path)
-        
-        def check_constraints(cursor, length, constraints):
-            for row in cursor:
-                word = row[0]
-                if all([word[i] == c for i, c in constraints]):
-                    yield word
-        
-        if not more_constraints:
-            cursor = con.cursor()
-            cursor.execute('SELECT word FROM words WHERE length=?', [length])
-            for word in check_constraints(cursor, length, constraints):
-                yield word, True
-        else:
-            lengths = {}
-            for j, (i, l, cs) in enumerate(more_constraints):
-                if j not in lengths:
-                    cursorx = con.cursor()
-                    cursorx.execute('SELECT word FROM words WHERE length=?', [length])
-                    lengths[j] = cursorx.fetchall()
-            
-            words = []
-            cursor = con.cursor()
-            cursor.execute('SELECT word FROM words WHERE length=?', [length])
-            words = [word for word in check_constraints(cursor, length, constraints)]
-            for word in words:
-                yield word, True
+        cursor = con.cursor()
+        cursor.execute('SELECT word FROM words WHERE length=?', [length])
+        for row in cursor:
+            word = row[0]
+            if not all([word[i] == c for i, c in constraints]):
                 continue
-                # TODO
+            intersecting = True
+            if more_constraints:
                 for j, (i, l, cs) in enumerate(more_constraints):
-                    result = False
-                    cons = cs + [(i, word[j])]
-                    for word2 in lengths[j]:
-                        if all([word2[k] == d for k, d in cons]):
-                            result = True
-                            break
-                    if not result:
-                        yield word, False
+                    if not self.has_matches(l, cs + [(i, word[j])]):
+                        intersecting = False
                         break
-                else:
-                    yield word, True
+            yield word, intersecting
         con.close()
