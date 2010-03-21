@@ -19,6 +19,7 @@ import copy
 import gobject
 import gtk
 import os
+import cPickle as pickle
 import time
 
 import constants
@@ -324,10 +325,15 @@ def create_wordlists(word_files):
     
 class SQLWordList:
     def __init__(self, name):
-        print "Building search index for", (name + '.pdb')
         self.path = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb'])
         self.combinations = {}
         
+        index = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, ".pdbs"])
+        if os.path.isfile(index):
+            print "Loading search index for", (name + '.pdb')
+            self.combinations = pickle.load(open(index, "rb"))
+            return
+        print "Building search index for", (name + '.pdb')
         con = sqlite.connect(self.path)
         cur = con.cursor()
         cur.execute('SELECT * FROM search')
@@ -347,6 +353,9 @@ class SQLWordList:
                 else:
                     self.combinations[length][i][c] = set([id])
         con.close()
+        output = open(index, "wb")
+        pickle.dump(self.combinations, output)
+        output.close()
         
     def has_matches(self, length, constraints):
         """
