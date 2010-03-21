@@ -24,10 +24,12 @@ VERSION = "0.1.2"
 APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
 CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config.xml")
 
+# patterns
 STANDARD_PATTERN_FILES = ["xml/patterns.xml"]
 
-# word lists
+# words
 WORDLIST_DIRECTORY = os.path.expanduser("~/.palabra/words")
+MAX_WORD_LENGTH = 64
 
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"

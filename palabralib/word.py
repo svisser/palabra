@@ -265,8 +265,6 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     
 #####
 
-MAX_WORD_LENGTH = 64
-
 def create_tables(word_files):
     if not os.path.isdir(constants.WORDLIST_DIRECTORY):
         os.mkdir(constants.WORDLIST_DIRECTORY)
@@ -288,24 +286,30 @@ def create_tables(word_files):
         cur.execute('PRAGMA table_info(search)')
         if not cur.fetchall():
             print "Creating search table for", path
-            query = ''.join(['c' + str(i) + ' VARCHAR(1)' + (', ' if i < MAX_WORD_LENGTH - 1 else '') for i in xrange(MAX_WORD_LENGTH)])
-            query = 'CREATE TABLE search (id INTEGER PRIMARY KEY, length INTEGER, ' + query + ')'
-            cur.execute(query)
+            
+            query = ['CREATE TABLE search (id INTEGER PRIMARY KEY, length INTEGER, ']
+            cols = ['c' + str(i) + ' VARCHAR(1)' for i in xrange(constants.MAX_WORD_LENGTH)]
+            for i, c in enumerate(cols):
+                query.append(c)
+                if i < constants.MAX_WORD_LENGTH - 1:
+                    query.append(', ')
+            query.append(')')
+            cur.execute(''.join(query))
             con.commit()
             
             cur2 = con.cursor()
             cur.execute('SELECT id, word FROM words')
             for id, word in cur:
-                v = ' (' + str(id) + ', ' + str(len(word)) + ', '
-                for i in xrange(MAX_WORD_LENGTH):
+                v = ['INSERT INTO search VALUES (', str(id), ', ', str(len(word)), ', ']
+                for i in xrange(constants.MAX_WORD_LENGTH):
                     try:
-                        v += "'" + word[i] + "'"
+                        v.extend(["'", word[i], "'"])
                     except IndexError:
-                        v += 'null'
-                    if i < MAX_WORD_LENGTH - 1:
-                        v += ', '
-                v += ')'
-                cur2.execute('INSERT INTO search VALUES' + v)
+                        v.append('null')
+                    if i < constants.MAX_WORD_LENGTH - 1:
+                        v.append(', ')
+                v.append(')')
+                cur2.execute(''.join(v))
             con.commit()
         con.close()
 
@@ -320,7 +324,7 @@ def create_wordlists(word_files):
     
 class SQLWordList:
     def __init__(self, name):
-        print "Loading", name
+        print "Loading", (name + '.pdb')
         self.path = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb'])
         self.combinations = {}
         
