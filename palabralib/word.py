@@ -21,6 +21,7 @@ import gtk
 import os
 import time
 
+import constants
 import preferences
 
 try:
@@ -267,11 +268,14 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
 MAX_WORD_LENGTH = 64
 
 def create_tables(word_files):
+    if not os.path.isdir(constants.WORDLIST_DIRECTORY):
+        os.mkdir(constants.WORDLIST_DIRECTORY)
+
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
 
-        con = sqlite.connect(''.join([name, '.pdb']))
+        con = sqlite.connect(''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb']))
         cur = con.cursor()
         cur.execute('PRAGMA table_info(words)')
         if not cur.fetchall():
@@ -308,14 +312,14 @@ def create_wordlists(word_files):
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlist = SQLWordList(''.join([name, '.pdb']))
+        wordlist = SQLWordList(name)
         wordlists[path] = {"list": wordlist}
     return wordlists
     
 class SQLWordList:
-    def __init__(self, path):
-        print "Loading", path
-        self.path = path
+    def __init__(self, name):
+        print "Loading", name
+        self.path = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb'])
         self.combinations = {}
         
         con = sqlite.connect(self.path)

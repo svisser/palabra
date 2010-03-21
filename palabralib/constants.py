@@ -26,6 +26,9 @@ CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config.xml")
 
 STANDARD_PATTERN_FILES = ["xml/patterns.xml"]
 
+# word lists
+WORDLIST_DIRECTORY = os.path.expanduser("~/.palabra/words")
+
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
 STATUS_GRID = "STATUS_GRID"
