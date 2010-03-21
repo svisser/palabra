@@ -324,27 +324,28 @@ def create_wordlists(word_files):
     
 class SQLWordList:
     def __init__(self, name):
-        print "Loading", (name + '.pdb')
+        print "Building search index for", (name + '.pdb')
         self.path = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb'])
         self.combinations = {}
         
         con = sqlite.connect(self.path)
         cur = con.cursor()
         cur.execute('SELECT * FROM search')
+        for n in xrange(1, constants.MAX_WORD_LENGTH):
+            self.combinations[n] = {}
+            for i in xrange(n):
+                self.combinations[n][i] = {}
         for row in cur:
             id = row[0]
             length = row[1]
-            if length not in self.combinations:
-                self.combinations[length] = {}
-            for x in xrange(length):
-                if x not in self.combinations[length]:
-                    self.combinations[length][x] = {}
-            for i, c in enumerate(row[2:]):
-                if c:
-                    try:
-                        self.combinations[length][i][c].add(id)
-                    except KeyError:
-                        self.combinations[length][i][c] = set([id])
+            for i in xrange(constants.MAX_WORD_LENGTH):
+                c = row[2 + i]
+                if not c:
+                    continue
+                if c in self.combinations[length][i]:
+                    self.combinations[length][i][c].add(id)
+                else:
+                    self.combinations[length][i][c] = set([id])
         con.close()
         
     def has_matches(self, length, constraints):
