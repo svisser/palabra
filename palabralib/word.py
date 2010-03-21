@@ -285,6 +285,8 @@ def create_tables(word_files):
                 cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word.lower(), len(word)))
             con.commit()
             
+        cur.execute('PRAGMA table_info(search)')
+        if not cur.fetchall():
             print "Creating search table for", path
             query = ''.join(['c' + str(i) + ' VARCHAR(1)' + (', ' if i < MAX_WORD_LENGTH - 1 else '') for i in xrange(MAX_WORD_LENGTH)])
             query = 'CREATE TABLE search (id INTEGER PRIMARY KEY, length INTEGER, ' + query + ')'
