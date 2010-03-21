@@ -394,9 +394,6 @@ class SQLWordList:
         cursor.execute(''.join(query))
         for row in cursor:
             word = row[0]
-            print word
-            if not all([word[i] == c for i, c in constraints]):
-                continue
             intersecting = True
             if more_constraints:
                 for j, (i, l, cs) in enumerate(more_constraints):
