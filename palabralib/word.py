@@ -334,20 +334,20 @@ class SQLWordList:
             self.combinations = pickle.load(open(index, "rb"))
             return
         print "Building search index for", (name + '.pdb')
-        con = sqlite.connect(self.path)
-        cur = con.cursor()
-        cur.execute('SELECT * FROM search')
         for n in xrange(1, constants.MAX_WORD_LENGTH):
             self.combinations[n] = {}
             for i in xrange(n):
                 self.combinations[n][i] = {}
+        con = sqlite.connect(self.path)
+        cur = con.cursor()
+        cur.execute('SELECT * FROM search')
         for row in cur:
             id = row[0]
             length = row[1]
             for i in xrange(constants.MAX_WORD_LENGTH):
                 c = row[2 + i]
                 if not c:
-                    continue
+                    break
                 if c in self.combinations[length][i]:
                     self.combinations[length][i][c].add(id)
                 else:
@@ -384,9 +384,17 @@ class SQLWordList:
         """
         con = sqlite.connect(self.path)
         cursor = con.cursor()
-        cursor.execute('SELECT word FROM words WHERE length=?', [length])
+        
+        query = ['SELECT word FROM words WHERE id IN ('
+            , 'SELECT id FROM search WHERE length=', str(length)]
+        for i, c in constraints:
+            query += [' AND c', str(i), " = '", c, "'"]
+        query.append(')')
+        
+        cursor.execute(''.join(query))
         for row in cursor:
             word = row[0]
+            print word
             if not all([word[i] == c for i, c in constraints]):
                 continue
             intersecting = True
