@@ -37,9 +37,12 @@ class WordTool:
         self.callbacks = callbacks
     
     def create(self):
-        # word displayed_string
-        self.store = gtk.ListStore(str, str)
+        # word has_intersecting displayed_string
+        # TODO 2 models?
+        self.data = []
+        self.store = gtk.ListStore(str, bool, str)
         self.tree = gtk.TreeView(self.store)
+        
         self.tree.connect("row-activated", self.on_row_activated)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
         self.tree.connect("button_press_event", self.on_tree_clicked)
@@ -48,7 +51,7 @@ class WordTool:
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
-        column.set_attributes(cell, markup=1)
+        column.set_attributes(cell, markup=2)
         self.tree.append_column(column)
         
         tree_window = gtk.ScrolledWindow(None, None)
@@ -101,15 +104,24 @@ class WordTool:
         # unset and set model for speed when adding many rows
         store = self.tree.get_model()
         self.tree.set_model(None)
-        store.clear()
+        self.data = []
         for word, has_intersections in strings:
-            if show_intersections and not has_intersections:
-                continue
             color = "black" if has_intersections else "gray"
             display = "".join(["<span color=\"", color,"\">", word, "</span>"])
-            store.append([word, display])
+            self.data.append([word, has_intersections, display])
+        self._display_data(store, show_intersections)
         self.tree.set_model(store)
         self.tree.queue_draw()
+        
+    def _display_data(self, store, show_intersections):
+        store.clear()
+        for row in self.data:
+            if show_intersections and not row[1]:
+                continue
+            store.append(row)
+        
+    def refresh_intersecting(self, show_intersections):
+        self._display_data(self.store, show_intersections)
         
     def display_overlay(self):
         store, it = self.tree.get_selection().get_selected()
@@ -405,7 +417,7 @@ class Editor(gtk.HBox):
         def toggle(status):
             """Toggle the status of the intersecting words option."""
             self.settings["show_intersecting_words"] = status
-            self.refresh_words(True)
+            self.tools["word"].refresh_intersecting(status)
         def overlay(word):
             """
             Display the word in the selected slot without storing it the grid.
