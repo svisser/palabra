@@ -98,13 +98,17 @@ class WordTool:
         self.callbacks["overlay"](word)
         
     def display(self, strings, show_intersections):
-        self.store.clear()
+        # unset and set model for speed when adding many rows
+        store = self.tree.get_model()
+        self.tree.set_model(None)
+        store.clear()
         for word, has_intersections in strings:
             if show_intersections and not has_intersections:
                 continue
             color = "black" if has_intersections else "gray"
             display = "".join(["<span color=\"", color,"\">", word, "</span>"])
-            self.store.append([word, display])
+            store.append([word, display])
+        self.tree.set_model(store)
         self.tree.queue_draw()
         
     def display_overlay(self):
