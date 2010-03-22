@@ -101,7 +101,7 @@ class WordTool:
         self.callbacks["overlay"](word)
         
     def display(self, strings, show_intersections):
-        # unset and set model for speed when adding many rows
+        # unset and set model for speed
         store = self.tree.get_model()
         self.tree.set_model(None)
         self.data = []
@@ -121,7 +121,12 @@ class WordTool:
             store.append(row)
         
     def refresh_intersecting(self, show_intersections):
+        # unset and set model for speed
+        store = self.tree.get_model()
+        self.tree.set_model(None)
         self._display_data(self.store, show_intersections)
+        self.tree.set_model(store)
+        self.tree.queue_draw()
         
     def display_overlay(self):
         store, it = self.tree.get_selection().get_selected()
