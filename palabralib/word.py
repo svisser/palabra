@@ -405,8 +405,10 @@ class SQLWordList:
         except KeyError:
             return False
         if ids:
-            result = ids.intersection(self.combinations[length][i][c])
-            return len(result) > 0
+            for k in ids:
+                if k in self.combinations[length][i][c]:
+                    return True
+            return False
         return len(self.combinations[length][i][c]) > 0
         
     def search(self, length, constraints, more_constraints=None):
@@ -435,12 +437,14 @@ class SQLWordList:
             for j, (i, l, cs) in enumerate(more_constraints):
                 matches = self.determine_word_ids(l, cs)
                 if len(cs) > 0 and len(matches) == 0:
+                    # constraints were specified but no word ids were found
                     no_matches = True
                     break
                 ids.append(matches)
         
         # for each word that could be placed, determine whether each
         # intersecting slot has a possible word
+        cache = {}
         cursor.execute(''.join(query))
         for row in cursor:
             word = row[0]
@@ -449,7 +453,10 @@ class SQLWordList:
                 intersecting = False
             if more_constraints and not no_matches:
                 for j, (i, l, cs) in enumerate(more_constraints):
-                    if not self.search_with_word_ids(ids[j], l, (i, word[j])):
+                    unique = (j, i, word[j])
+                    if unique not in cache:
+                        cache[unique] = self.search_with_word_ids(ids[j], l, (i, word[j]))
+                    if not cache[unique]:
                         intersecting = False
                         break
             yield word, intersecting
