@@ -436,9 +436,10 @@ class SQLWordList:
         if more_constraints:
             for j, (i, l, cs) in enumerate(more_constraints):
                 matches = self.determine_word_ids(l, cs)
-                if len(cs) > 0 and len(matches) == 0:
+                if len(cs) > 0 and len(matches) == 0 and len(cs) != l:
                     # constraints were specified but no word ids were found
                     no_matches = True
+                    print j
                     break
                 ids.append(matches)
         
