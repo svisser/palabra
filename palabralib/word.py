@@ -373,6 +373,42 @@ class SQLWordList:
         words = [self.combinations[length][i][c] for i, c in constraints]
         return len(reduce(set.intersection, words)) > 0
         
+    def determine_word_ids(self, length, constraints):
+        """
+        Return a set of word ids that have the specified length
+        and satisfy the given constraints.
+        
+        An empty set will be returned if, for whatever reason,
+        no such word ids could be determined.
+        """
+        if not constraints:
+            return set([])
+        for i, c in constraints:
+            try:
+                if not self.combinations[length][i][c]:
+                    return set([])
+            except KeyError:
+                return set([])
+        ids = [self.combinations[length][i][c] for i, c in constraints]
+        return reduce(set.intersection, ids)
+        
+    def search_with_word_ids(self, ids, length, (i, c)):
+        """
+        Return whether at least one word exists such that:
+        - its id is in the argument ids
+        - the word has the specified length
+        - the character at position i is equal to c
+        """
+        try:
+            if not self.combinations[length][i][c]:
+                return False
+        except KeyError:
+            return False
+        if ids:
+            result = ids.intersection(self.combinations[length][i][c])
+            return len(result) > 0
+        return len(self.combinations[length][i][c]) > 0
+        
     def search(self, length, constraints, more_constraints=None):
         """
         Search for words that match the given criteria.
@@ -391,13 +427,18 @@ class SQLWordList:
             query += [' AND c', str(i), " = '", c, "'"]
         query.append(')')
         
+        ids = []
+        if more_constraints:
+            for j, (i, l, cs) in enumerate(more_constraints):
+                ids.append(self.determine_word_ids(l, cs))
+        
         cursor.execute(''.join(query))
         for row in cursor:
             word = row[0]
             intersecting = True
             if more_constraints:
                 for j, (i, l, cs) in enumerate(more_constraints):
-                    if not self.has_matches(l, cs + [(i, word[j])]):
+                    if not self.search_with_word_ids(ids[j], l, (i, word[j])):
                         intersecting = False
                         break
             yield word, intersecting
