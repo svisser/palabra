@@ -378,7 +378,7 @@ class SQLWordList:
         Return a set of word ids that have the specified length
         and satisfy the given constraints.
         
-        An empty set will be returned if, for whatever reason,
+        None will be returned if, for whatever reason,
         no such word ids could be determined.
         """
         if not constraints:
@@ -386,9 +386,9 @@ class SQLWordList:
         for i, c in constraints:
             try:
                 if not self.combinations[length][i][c]:
-                    return set([])
+                    return None
             except KeyError:
-                return set([])
+                return None
         ids = [self.combinations[length][i][c] for i, c in constraints]
         return reduce(set.intersection, ids)
         
@@ -421,22 +421,33 @@ class SQLWordList:
         con = sqlite.connect(self.path)
         cursor = con.cursor()
         
+        # find all words that satisfy the given length and constraints
         query = ['SELECT word FROM words WHERE id IN ('
             , 'SELECT id FROM search WHERE length=', str(length)]
         for i, c in constraints:
             query += [' AND c', str(i), " = '", c, "'"]
         query.append(')')
         
+        # find all word ids of possible intersecting words
         ids = []
+        no_matches = False
         if more_constraints:
             for j, (i, l, cs) in enumerate(more_constraints):
-                ids.append(self.determine_word_ids(l, cs))
+                matches = self.determine_word_ids(l, cs)
+                if len(cs) > 0 and len(matches) == 0:
+                    no_matches = True
+                    break
+                ids.append(matches)
         
+        # for each word that could be placed, determine whether each
+        # intersecting slot has a possible word
         cursor.execute(''.join(query))
         for row in cursor:
             word = row[0]
             intersecting = True
-            if more_constraints:
+            if no_matches:
+                intersecting = False
+            if more_constraints and not no_matches:
                 for j, (i, l, cs) in enumerate(more_constraints):
                     if not self.search_with_word_ids(ids[j], l, (i, word[j])):
                         intersecting = False
