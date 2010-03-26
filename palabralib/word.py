@@ -439,7 +439,6 @@ class SQLWordList:
                 if len(cs) > 0 and len(matches) == 0 and len(cs) != l:
                     # constraints were specified but no word ids were found
                     no_matches = True
-                    print j
                     break
                 ids.append(matches)
         
