@@ -292,7 +292,7 @@ class TreeWordList:
         c = word[offset]
         if c not in node.children:
             node.children[c] = Node()
-        self.add_word(node.children[c], word, offset + 1)
+        self._add_word(node.children[c], word, offset + 1)
         
     def has_matches(self, length, constraints):
         node = self.data[length]
