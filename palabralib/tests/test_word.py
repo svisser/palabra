@@ -124,7 +124,11 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'b')]), False)
         
     def testBasicSearch(self):
-        self.assertEquals([w for w, i in self.basic.search(5, [], None)], ["koala"])
-        self.assertEquals([w for w, i in self.basic.search(5, [], [(0, 8, [])])], ["koala"])
-        self.assertEquals([w for w, i in self.basic.search(5, [(4, 'a')], [(0, 8, [])])], ["koala"])
-        self.assertEquals([w for w, i in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'o')])])], ["koala"])
+        self.assertEquals([w for w in self.basic.search(5, [], None)], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(6, [], None)], [])
+        self.assertEquals([w for w in self.basic.search(5, [], [(0, 8, [])])], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(5, [], [(0, 7, [])])], [("koala", False)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [])])], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 7, [])])], [("koala", False)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'o')])])], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'p')])])], [("koala", False)])
