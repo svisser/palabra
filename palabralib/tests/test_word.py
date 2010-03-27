@@ -61,13 +61,17 @@ class WordTestCase(unittest.TestCase):
     
     def testSearchBasic(self):
         self.wordlist.add_word(self.word)
-        self.assertEquals(self.wordlist.search(self.length, [])[0][0], self.word)
-        self.assertEquals(self.wordlist.search(self.length, self.constraints)[0][0], self.word)
+        for w in self.wordlist.search(self.length, []):
+            self.assertEquals(w[0], self.word)
+        for w in self.wordlist.search(self.length, self.constraints):
+            self.assertEquals(w[0], self.word)
         
         cs = [(0, "p"), (1, "a")]
         self.wordlist.add_word(self.word2)
-        self.assertEquals(self.wordlist.search(self.length, cs)[0][0], self.word)
-        self.assertEquals(self.wordlist.search(self.length2, cs)[0][0], self.word2)
+        for w in self.wordlist.search(self.length, cs):
+            self.assertEquals(w[0], self.word)
+        for w in self.wordlist.search(self.length2, cs):
+            self.assertEquals(w[0], self.word2)
         
     def testSearchMore(self):
         self.wordlist.add_word(self.word)
@@ -79,18 +83,23 @@ class WordTestCase(unittest.TestCase):
         self.wordlist.add_word("oasis")
         self.wordlist.add_word("trunk")
         
-        self.assertEquals(self.wordlist.search(5, [(0, "p")])[0][0], "peach")
-        self.assertEquals(self.wordlist.search(5, [(0, "a")])[0][0], "azure")
+        for w in self.wordlist.search(5, [(0, "p")]):
+            self.assertEquals(w[0], "peach")
+        for w in self.wordlist.search(5, [(0, "a")]):
+            self.assertEquals(w[0], "azure")
         rs = self.wordlist.search(5, [(0, "r")])
         rss = [w for w, x in rs]
         self.assertEquals("reach" in rss, True)
         self.assertEquals("roast" in rss, True)
-        self.assertEquals(self.wordlist.search(5, [(0, "o")])[0][0], "oasis")
-        self.assertEquals(self.wordlist.search(5, [(0, "t")])[0][0], "trunk")
+        for w in self.wordlist.search(5, [(0, "o")]):
+            self.assertEquals(w[0], "oasis")
+        for w in self.wordlist.search(5, [(0, "t")]):
+            self.assertEquals(w[0], "trunk")
         
         # all first characters
         css = [(0, 5, [(0, c)]) for c in "parrot"]
-        self.assertEquals(self.wordlist.search(self.length2, [], css)[0][0], self.word2)
+        for w in self.wordlist.search(self.length2, [], css):
+            self.assertEquals(w[0], self.word2)
         
         # diagonal
         self.wordlist.add_word("cabin")
@@ -100,4 +109,6 @@ class WordTestCase(unittest.TestCase):
         self.wordlist.add_word("adrift")
         
         css = [(i, 5, [(i, self.word2[i])]) for i in xrange(5)] + [(5, 6, [(5, "t")])]
-        self.assertEquals(self.wordlist.search(self.length2, [], css)[0][0], self.word2)
+        for i, w in enumerate(self.wordlist.search(self.length2, [], css)):
+            if i ==  0:
+                self.assertEquals(w[0], self.word2)

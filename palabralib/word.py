@@ -179,6 +179,9 @@ class WordList:
         return result
             
     def has_matches(self, length, constraints):
+        if length not in self.lengths:
+            return False
+
         # check whether for each constraint at least one word exists
         for i, c in constraints:
             try:
@@ -186,6 +189,9 @@ class WordList:
                     return False
             except KeyError:
                 return False
+        
+        if not constraints:
+            return True
                 
         # check whether all constraints are satisfied for at least one word
         words = [self.combinations[length][i][c] for i, c in constraints]
