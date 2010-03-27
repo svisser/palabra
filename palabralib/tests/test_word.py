@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from palabralib.word import WordList
+from palabralib.word import BasicWordList, WordList
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
@@ -29,6 +29,8 @@ class WordTestCase(unittest.TestCase):
         self.word2 = "parrot"
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
+        
+        self.basic = BasicWordList(["koala", "kangaroo"])
         
     def testHasMatchesEmpty(self):
         for x in xrange(35):
@@ -112,3 +114,17 @@ class WordTestCase(unittest.TestCase):
         for i, w in enumerate(self.wordlist.search(self.length2, [], css)):
             if i ==  0:
                 self.assertEquals(w[0], self.word2)
+                
+    #####
+    
+    def testBasicHasMatches(self):
+        for l in xrange(64):
+            self.assertEquals(self.basic.has_matches(l, []), l in [5, 8])
+        self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'a')]), True)
+        self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'b')]), False)
+        
+    def testBasicSearch(self):
+        self.assertEquals([w for w, i in self.basic.search(5, [], None)], ["koala"])
+        self.assertEquals([w for w, i in self.basic.search(5, [], [(0, 8, [])])], ["koala"])
+        self.assertEquals([w for w, i in self.basic.search(5, [(4, 'a')], [(0, 8, [])])], ["koala"])
+        self.assertEquals([w for w, i in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'o')])])], ["koala"])

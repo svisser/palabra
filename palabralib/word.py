@@ -269,7 +269,36 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
             result += wordlist.search(length, constraints, more_constraints)
     result.sort()
     return result
-    
+
+#####
+
+class BasicWordList:
+    def __init__(self, source):
+        self.words = [w for w in source]
+        
+    def has_matches(self, length, constraints):
+        for word in self.words:
+            if len(word) != length:
+                continue
+            if not constraints:
+                return True
+            if all([word[i] == c for i, c in constraints]):
+                return True
+        return False
+        
+    def search(self, length, constraints, more_constraints=None):
+        for word in self.words:
+            if len(word) != length:
+                continue
+            if all([word[i] == c for i, c in constraints]):
+                intersecting = True
+                if more_constraints:
+                    for j, (i, l, cs) in enumerate(more_constraints):
+                        if not self.has_matches(l, cs + [(i, word[j])]):
+                            intersecting = False
+                            break
+                yield word, intersecting
+
 #####
 
 def create_tables(word_files):
