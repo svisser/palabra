@@ -270,6 +270,39 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result.sort()
     return result
 
+####
+
+class Node:
+    def __init__(self):
+        self.words = []
+        self.children = {}
+
+class TreeWordList:
+    def __init__(self, words):
+        self.data = {}
+        for i in xrange(constants.MAX_WORD_LENGTH):
+            self.data[i] = Node()
+        for word in words:
+            self._add_word(self.data[len(word)], word, 0)
+            
+    def _add_word(self, node, word, offset):
+        if offset >= len(word):
+            node.words.append(word)
+            return
+        c = word[offset]
+        if c not in node.children:
+            node.children[c] = Node()
+        self.add_word(node.children[c], word, offset + 1)
+        
+    def has_matches(self, length, constraints):
+        node = self.data[length]
+        for i, c in constraints:
+            if c in node.children:
+                node = node.children[c]
+            else:
+                return False
+        return True
+
 #####
 
 class BasicWordList:
