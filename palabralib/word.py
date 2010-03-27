@@ -274,11 +274,11 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
 
 class BasicWordList:
     def __init__(self, source):
-        self.words = [w for w in source]
+        self.words = [(w.lower(), len(w)) for w in source]
         
     def has_matches(self, length, constraints):
-        for word in self.words:
-            if len(word) != length:
+        for word, wordlen in self.words:
+            if wordlen != length:
                 continue
             if not constraints:
                 return True
@@ -287,14 +287,34 @@ class BasicWordList:
         return False
         
     def search(self, length, constraints, more_constraints=None):
-        for word in self.words:
-            if len(word) != length:
+        checks = []
+        no_matches = False
+        if more_constraints:
+            for j, (i, l, cs) in enumerate(more_constraints):
+                check = [w for w, i in self.search(l, cs)]
+                if not check:
+                    no_matches = True
+                    break
+                checks.append(check)
+                
+        cache = {}    
+        for word, wordlen in self.words:
+            if wordlen != length:
                 continue
             if all([word[i] == c for i, c in constraints]):
                 intersecting = True
-                if more_constraints:
+                if no_matches:
+                    intersecting = False
+                if more_constraints and not no_matches:
                     for j, (i, l, cs) in enumerate(more_constraints):
-                        if not self.has_matches(l, cs + [(i, word[j])]):
+                        unique = (j, i, word[j])
+                        if unique not in cache:
+                            cache[unique] = False
+                            for w in checks[j]:
+                                if w[i] == word[j]:
+                                    cache[unique] = True
+                                    break
+                        if not cache[unique]:
                             intersecting = False
                             break
                 yield word, intersecting
@@ -343,7 +363,7 @@ def create_wordlists(word_files):
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlist = SQLWordList(name)
+        wordlist = BasicWordList(read_wordlist(path))
         wordlists[path] = {"list": wordlist}
     return wordlists
     
