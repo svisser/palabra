@@ -285,16 +285,8 @@ def create_tables(word_files):
         cur.execute('PRAGMA table_info(words)')
         if not cur.fetchall():
             print "Creating words table for", path
-            cur.execute('CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(64), length INTEGER)')
-            for word in read_wordlist(path):
-                cur.execute('INSERT INTO words VALUES (null, ?, ?)', (word.lower(), len(word)))
-            con.commit()
-            
-        cur.execute('PRAGMA table_info(search)')
-        if not cur.fetchall():
-            print "Creating search table for", path
-            
-            query = ['CREATE TABLE search (id INTEGER PRIMARY KEY, length INTEGER, ']
+
+            query = ['CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(', str(constants.MAX_WORD_LENGTH), '), length INTEGER, ']
             cols = ['c' + str(i) + ' VARCHAR(1)' for i in xrange(constants.MAX_WORD_LENGTH)]
             for i, c in enumerate(cols):
                 query.append(c)
@@ -302,12 +294,9 @@ def create_tables(word_files):
                     query.append(', ')
             query.append(')')
             cur.execute(''.join(query))
-            con.commit()
             
-            cur2 = con.cursor()
-            cur.execute('SELECT id, word FROM words')
-            for id, word in cur:
-                v = ['INSERT INTO search VALUES (', str(id), ', ', str(len(word)), ', ']
+            for word in read_wordlist(path):
+                v = ["INSERT INTO words VALUES (null, '", word.lower(), "', ", str(len(word)), ', ']
                 for i in xrange(constants.MAX_WORD_LENGTH):
                     try:
                         v.extend(["'", word[i], "'"])
@@ -316,7 +305,7 @@ def create_tables(word_files):
                     if i < constants.MAX_WORD_LENGTH - 1:
                         v.append(', ')
                 v.append(')')
-                cur2.execute(''.join(v))
+                cur.execute(''.join(v))
             con.commit()
         con.close()
 
@@ -346,12 +335,13 @@ class SQLWordList:
                 self.combinations[n][i] = {}
         con = sqlite.connect(self.path)
         cur = con.cursor()
-        cur.execute('SELECT * FROM search')
+        cur.execute('SELECT * FROM words')
         for row in cur:
             id = row[0]
-            length = row[1]
+            word = row[1]
+            length = row[2]
             for i in xrange(constants.MAX_WORD_LENGTH):
-                c = row[2 + i]
+                c = row[3 + i]
                 if not c:
                     break
                 if c in self.combinations[length][i]:
@@ -430,11 +420,9 @@ class SQLWordList:
         cursor = con.cursor()
         
         # find all words that satisfy the given length and constraints
-        query = ['SELECT word FROM words WHERE id IN ('
-            , 'SELECT id FROM search WHERE length=', str(length)]
+        query = ['SELECT word FROM words WHERE length=', str(length)]
         for i, c in constraints:
             query += [' AND c', str(i), " = '", c, "'"]
-        query.append(')')
         
         # find all word ids of possible intersecting words
         ids = []
