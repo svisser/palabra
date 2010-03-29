@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from palabralib.word import BasicWordList, WordList
+from palabralib.word import BasicWordList, WordList, TreeWordList, CWordList
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
@@ -30,7 +30,7 @@ class WordTestCase(unittest.TestCase):
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
         
-        self.basic = BasicWordList(["koala", "kangaroo"])
+        self.basic = CWordList(["koala", "kangaroo"])
         
     def testHasMatchesEmpty(self):
         for x in xrange(35):

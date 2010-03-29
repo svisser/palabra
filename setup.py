@@ -4,7 +4,9 @@ import sys
 if sys.version_info < (2, 4):
     sys.exit("ERROR: Python 2.4 is required to run Palabra.")
 
-from distutils.core import setup
+from distutils.core import setup, Extension
+
+module1 = Extension('cWord', sources = ['clib/cwordmodule.c'])
 
 setup(name="palabra"
     , version="0.1"
@@ -25,4 +27,5 @@ setup(name="palabra"
         , "Programming Language :: Python"
         , "Topic :: Games/Entertainment :: Puzzle Games"
         ]
+    , ext_modules = [module1]
     )

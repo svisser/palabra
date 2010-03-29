@@ -22,6 +22,8 @@ import os
 import cPickle as pickle
 import time
 
+import cWord
+
 import constants
 import preferences
 
@@ -270,20 +272,50 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result.sort()
     return result
 
+class CWordList:
+    def __init__(self, words):
+        self.words = [(w, len(w)) for w in words]
+        
+    def has_matches(self, length, constraints, words=None):
+        ws = [w for w, l in self.words] if words is None else words
+        return cWord.has_matches(ws, length, constraints)
+        
+    def search(self, length, constraints, more_constraints=None):
+        cache = {}
+        if more_constraints:
+            for j, (i, l, cs) in enumerate(more_constraints):
+                cache[j] = [w for w, b_i in self.search(l, cs)]
+        for word, wordlen in self.words:
+            if wordlen != length:
+                continue
+            if all([word[i] == c for i, c in constraints]):
+                intersecting = True
+                if more_constraints:
+                    for j, (i, l, cs) in enumerate(more_constraints):
+                        if not self.has_matches(l, [(i, word[j])], cache[j]):
+                            intersecting = False
+                            break
+                yield word, intersecting
 ####
 
 class Node:
     def __init__(self):
         self.words = []
         self.children = {}
+        self.union = None
 
 class TreeWordList:
     def __init__(self, words):
         self.data = {}
         for i in xrange(constants.MAX_WORD_LENGTH):
             self.data[i] = Node()
+        self.count = 0
         for word in words:
             self._add_word(self.data[len(word)], word, 0)
+            self.count += 1
+            print self.count
+            if self.count == 300:
+                break
             
     def _add_word(self, node, word, offset):
         if offset >= len(word):
@@ -292,16 +324,39 @@ class TreeWordList:
         c = word[offset]
         if c not in node.children:
             node.children[c] = Node()
+        if not node.union:
+            node.union = Node()
         self._add_word(node.children[c], word, offset + 1)
-        
-    def has_matches(self, length, constraints):
-        node = self.data[length]
+        self._add_word(node.union, word, offset + 1)
+    
+    def _gather_words(self, length, constraints):
+        cs = {}
         for i, c in constraints:
-            if c in node.children:
+            cs[i] = c
+        node = self.data[length]
+        for i in xrange(length):
+            c = cs[i] if i in cs else None
+            if not c and node.union:
+                node = node.union
+            elif c in node.children:
                 node = node.children[c]
             else:
-                return False
-        return True
+                return []
+        return node.words
+        
+    def has_matches(self, length, constraints):
+        return bool(self._gather_words(length, constraints))
+        
+    def search(self, length, constraints, more_constraints=None):
+        words = self._gather_words(length, constraints)
+        for word in words:
+            intersecting = True
+            if more_constraints:
+                for j, (i, l, cs) in enumerate(more_constraints):
+                    if not self.has_matches(l, cs + [(i, word[j])]):
+                        intersecting = False
+                        break
+            yield word, intersecting
 
 #####
 
@@ -396,7 +451,7 @@ def create_wordlists(word_files):
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlist = BasicWordList(read_wordlist(path))
+        wordlist = CWordList([w.lower() for w in read_wordlist(path)])
         wordlists[path] = {"list": wordlist}
     return wordlists
     

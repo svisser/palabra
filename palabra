@@ -46,6 +46,14 @@ if __name__ == "__main__":
         
         print "Loading wordlists..."
         create_tables(preferences.prefs["word_files"])
+        
+        #import pstats
+        #import cProfile
+        #cProfile.runctx('create_wordlists(preferences.prefs["word_files"])', globals(), locals(), filename='fooprof')
+        #p = pstats.Stats('fooprof')
+        #p.sort_stats('time').print_stats(20)
+        #p.print_callers()
+        
         data = create_wordlists(preferences.prefs["word_files"])
         
         palabra = PalabraWindow()
