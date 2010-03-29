@@ -274,13 +274,15 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
 
 class CWordList:
     def __init__(self, words):
-        self.words = [(w, len(w)) for w in words]
+        self.words = words
         
     def has_matches(self, length, constraints, words=None):
-        ws = [w for w, l in self.words] if words is None else words
+        ws = self.words if words is None else words
         return cWord.has_matches(ws, length, constraints)
         
     def search(self, length, constraints, more_constraints=None):
+        #print cWord.search(self.words, length, constraints, more_constraints)
+    
         intersect_failure = False
         cache = {}
         if more_constraints:
@@ -291,8 +293,8 @@ class CWordList:
                     break
                 
         cache2 = {}
-        for word, wordlen in self.words:
-            if wordlen != length:
+        for word in self.words:
+            if len(word) != length:
                 continue
             ok = True
             for i, c in constraints:
