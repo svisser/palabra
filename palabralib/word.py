@@ -281,21 +281,38 @@ class CWordList:
         return cWord.has_matches(ws, length, constraints)
         
     def search(self, length, constraints, more_constraints=None):
+        intersect_failure = False
         cache = {}
         if more_constraints:
             for j, (i, l, cs) in enumerate(more_constraints):
                 cache[j] = [w for w, b_i in self.search(l, cs)]
+                if not cache[j]:
+                    intersect_failure = True
+                    break
+                
+        cache2 = {}
         for word, wordlen in self.words:
             if wordlen != length:
                 continue
-            if all([word[i] == c for i, c in constraints]):
-                intersecting = True
-                if more_constraints:
-                    for j, (i, l, cs) in enumerate(more_constraints):
-                        if not self.has_matches(l, [(i, word[j])], cache[j]):
-                            intersecting = False
-                            break
-                yield word, intersecting
+            ok = True
+            for i, c in constraints:
+                if not word[i] == c:
+                    ok = False
+                    break
+            if not ok:
+                continue
+            intersecting = True
+            if intersect_failure:
+                intersecting = False
+            if more_constraints and not intersect_failure:
+                for j, (i, l, cs) in enumerate(more_constraints):
+                    unique = (j, i, word[j])
+                    if unique not in cache2:
+                        cache2[unique] = self.has_matches(l, [(i, word[j])], cache[j])
+                    if not cache2[unique]:
+                        intersecting = False
+                        break
+            yield word, intersecting
 ####
 
 class Node:
