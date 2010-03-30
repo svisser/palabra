@@ -2,54 +2,42 @@
 
 static int
 cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
-    Py_ssize_t numCs = PyList_GET_SIZE(constraints);
-    if (numCs == 0) {
-        Py_ssize_t w;
-        Py_ssize_t size;
-        for (w = 0; w < PyList_Size(words); w++) {
-            PyObject *item = PyList_GetItem(words, w);
-            size = PyString_Size(item);
-            if (length == size)
-                return 1;
-        }
-    } else {
-        const int MAX_WORD_LENGTH = 64;
-        char cs[MAX_WORD_LENGTH];
-        int k;
-        for (k = 0; k < MAX_WORD_LENGTH; k++) {
-            cs[k] = ' ';
-        }
-        
-        Py_ssize_t i;
-        for (i = 0; i < PyList_GET_SIZE(constraints); i++) {
-            int j;
-            const char *c;
-            PyObject *item = PyList_GET_ITEM(constraints, i);
-            if (!PyArg_ParseTuple(item, "is", &j, &c))
-                return 2;
-            cs[j] = *c;
-        }
-        
-        Py_ssize_t w;
-        Py_ssize_t size;
-        for (w = 0; w < PyList_Size(words); w++) {
-            PyObject *item = PyList_GetItem(words, w);
-            size = PyString_Size(item);
-            if (length == size) {
-                char *word = PyString_AsString(item);
-                int check = 1;
-                int i = 0;                
-                while (*word != '\0') {
-                    if (cs[i] != ' ' && *word != cs[i]) {
-                        check = 0;
-                        break;
-                    }
-                    word++;
-                    i++;
+    const int MAX_WORD_LENGTH = 64;
+    char cs[MAX_WORD_LENGTH];
+    int k;
+    for (k = 0; k < MAX_WORD_LENGTH; k++) {
+        cs[k] = ' ';
+    }
+    
+    Py_ssize_t i;
+    for (i = 0; i < PyList_GET_SIZE(constraints); i++) {
+        int j;
+        const char *c;
+        PyObject *item = PyList_GET_ITEM(constraints, i);
+        if (!PyArg_ParseTuple(item, "is", &j, &c))
+            return 2;
+        cs[j] = *c;
+    }
+    
+    Py_ssize_t w;
+    Py_ssize_t size;
+    for (w = 0; w < PyList_Size(words); w++) {
+        PyObject *item = PyList_GetItem(words, w);
+        size = PyString_Size(item);
+        if (length == size) {
+            char *word = PyString_AsString(item);
+            int check = 1;
+            int i = 0;                
+            while (*word != '\0') {
+                if (cs[i] != ' ' && *word != cs[i]) {
+                    check = 0;
+                    break;
                 }
-                if (check == 1)
-                    return 1;
+                word++;
+                i++;
             }
+            if (check == 1)
+                return 1;
         }
     }
     return 0;
