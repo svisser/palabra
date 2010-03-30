@@ -281,7 +281,8 @@ class CWordList:
         return cWord.has_matches(ws, length, constraints)
         
     def search(self, length, constraints, more_constraints=None):
-        #print cWord.search(self.words, length, constraints, more_constraints)
+        if more_constraints:
+            print cWord.search(self.words, length, constraints, more_constraints)
     
         intersect_failure = False
         cache = {}

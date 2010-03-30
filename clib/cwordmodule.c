@@ -1,22 +1,7 @@
 #include <Python.h>
 
-static PyObject *
-cWord_has_matches(PyObject *self, PyObject *args)
-{
-    PyObject *words;
-    const int length;
-    PyObject *constraints;
-    if (!PyArg_ParseTuple(args, "OiO", &words, &length, &constraints))
-        return NULL;
-    if (!PyList_Check(words)) {
-        PyErr_SetString(PyExc_TypeError, "cWord.has_matches expects a list as first argument.");
-        return NULL;
-    }
-    if (!PyList_Check(constraints)) {
-        PyErr_SetString(PyExc_TypeError, "cWord.has_matches expects a list as third argument");
-        return NULL;
-    }
-    
+static int
+cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
     Py_ssize_t numCs = PyList_GET_SIZE(constraints);
     if (numCs == 0) {
         Py_ssize_t w;
@@ -25,7 +10,7 @@ cWord_has_matches(PyObject *self, PyObject *args)
             PyObject *item = PyList_GetItem(words, w);
             size = PyString_Size(item);
             if (length == size)
-                Py_RETURN_TRUE;
+                return 1;
         }
     } else {
         const int MAX_WORD_LENGTH = 64;
@@ -41,7 +26,7 @@ cWord_has_matches(PyObject *self, PyObject *args)
             const char *c;
             PyObject *item = PyList_GET_ITEM(constraints, i);
             if (!PyArg_ParseTuple(item, "is", &j, &c))
-                return NULL;
+                return 2;
             cs[j] = *c;
         }
         
@@ -63,10 +48,35 @@ cWord_has_matches(PyObject *self, PyObject *args)
                     i++;
                 }
                 if (check == 1)
-                    Py_RETURN_TRUE;
+                    return 1;
             }
         }
     }
+    return 0;
+}
+
+static PyObject *
+cWord_has_matches(PyObject *self, PyObject *args)
+{
+    PyObject *words;
+    const int length;
+    PyObject *constraints;
+    if (!PyArg_ParseTuple(args, "OiO", &words, &length, &constraints))
+        return NULL;
+    if (!PyList_Check(words)) {
+        PyErr_SetString(PyExc_TypeError, "cWord.has_matches expects a list as first argument.");
+        return NULL;
+    }
+    if (!PyList_Check(constraints)) {
+        PyErr_SetString(PyExc_TypeError, "cWord.has_matches expects a list as third argument");
+        return NULL;
+    }
+    
+    int has_matches = cWord_calc_has_matches(words, length, constraints);
+    if (has_matches == 2)
+        return NULL;
+    if (has_matches == 1)
+        Py_RETURN_TRUE;
     Py_RETURN_FALSE;
 }
 
@@ -147,7 +157,7 @@ cWord_search(PyObject *self, PyObject *args) {
     
     Py_ssize_t total = 0;
     PyObject *result = PyList_New(0);
-        
+
     Py_ssize_t size;
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
@@ -155,21 +165,73 @@ cWord_search(PyObject *self, PyObject *args) {
         size = PyString_Size(item);
         if (length == size) {
             char *word = PyString_AsString(item);
+            //printf("%s", word);
+            char *it_word = PyString_AsString(item);
             int check = 1;
             int i = 0;                
-            while (*word != '\0') {
-                if (cs[i] != ' ' && *word != cs[i]) {
+            while (*it_word != '\0') {
+                if (cs[i] != ' ' && *it_word != cs[i]) {
                     check = 0;
                     break;
                 }
-                word++;
+                it_word++;
                 i++;
             }
             if (check == 1) {
-                PyObject* new;
-                new = Py_BuildValue("s", word);
-                PyList_SetItem(result, total, new);
-                total++;
+                //PyObject* rword;
+                //rword = Py_BuildValue("s", word);
+                int has_intersecting = 1;
+                if (more_constraints != Py_None) {
+                    Py_ssize_t m;
+                    for (m = 0; m < PyList_Size(more_constraints); m++) {
+                        PyObject* cons = PyList_GetItem(more_constraints, m);
+                        
+                        const int cons_i;
+                        const int cons_l;
+                        PyObject *cons_cs;
+                        
+                        if (!PyArg_ParseTuple(cons, "iiO", &cons_i, &cons_l, &cons_cs))
+                            return NULL;
+                            
+                        PyObject *cons_cs_e = PyList_New(PyList_Size(cons_cs) + 1);
+                        Py_ssize_t e;
+                        for (e = 0; e < PyList_Size(cons_cs); e++) {
+                            PyList_SetItem(cons_cs_e, e, PyList_GetItem(cons_cs, e));
+                        }
+                        PyObject* tuple;
+                        char *it_word = PyString_AsString(item);
+                        it_word += m;
+                        char *cons_c = it_word;
+                        tuple = Py_BuildValue("(is)", cons_i, cons_c);
+                        PyList_SetItem(cons_cs_e, e, tuple);
+                        
+                        int has_matches = cWord_calc_has_matches(words, cons_l, cons_cs_e);
+                        if (has_matches == 2)
+                            return NULL;
+                        if (has_matches == 0) {
+                            has_intersecting = 0;
+                            break;
+                        }
+                    }
+                }
+                
+                PyObject* res_tuple;
+                res_tuple = Py_BuildValue("(si)",  word, has_intersecting);
+                
+                PyList_Append(result, res_tuple);
+                /*
+                if more_constraints is not None:
+                        filled_constraints = [(l, cs + [(i, word[j])]) for j, (i, l, cs) in enumerate(more_constraints)]
+                        
+                        for args in filled_constraints:
+                            if not self.has_matches(*args):
+                                yield word, False
+                                break
+                        else:
+                            yield word, True
+                    else:
+                        yield word, True
+                */
             }
         }
     }
