@@ -143,8 +143,35 @@ cWord_search(PyObject *self, PyObject *args) {
         cs[j] = *c;
     }
     
-    Py_ssize_t total = 0;
+    Py_ssize_t total = more_constraints != Py_None ? PyList_Size(more_constraints) : 0;
     PyObject *result = PyList_New(0);
+    
+    int precons_i[total];
+    int precons_l[total];
+    PyObject *precons[total];
+    if (more_constraints != Py_None) {
+        Py_ssize_t m;
+        for (m = 0; m < total; m++) {
+            PyObject* cons = PyList_GetItem(more_constraints, m);
+            const int cons_i;
+            const int cons_l;
+            PyObject *cons_cs;
+            if (!PyArg_ParseTuple(cons, "iiO", &cons_i, &cons_l, &cons_cs))
+                return NULL;
+            if (!PyList_Check(cons_cs)) {
+                PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as third part of intersecting constraints: (i, l, cs).");
+                return NULL;
+            }
+            PyObject *cons_cs_e = PyList_New(PyList_Size(cons_cs) + 1);
+            Py_ssize_t e;
+            for (e = 0; e < PyList_Size(cons_cs); e++) {
+                PyList_SetItem(cons_cs_e, e, PyList_GetItem(cons_cs, e));
+            }
+            precons_i[m] = cons_i;
+            precons_l[m] = cons_l;
+            precons[m] = cons_cs_e;
+        }
+    }
 
     Py_ssize_t size;
     Py_ssize_t w;
@@ -153,7 +180,6 @@ cWord_search(PyObject *self, PyObject *args) {
         size = PyString_Size(item);
         if (length == size) {
             char *word = PyString_AsString(item);
-            //printf("%s", word);
             char *it_word = PyString_AsString(item);
             int check = 1;
             int i = 0;                
@@ -166,34 +192,18 @@ cWord_search(PyObject *self, PyObject *args) {
                 i++;
             }
             if (check == 1) {
-                //PyObject* rword;
-                //rword = Py_BuildValue("s", word);
                 int has_intersecting = 1;
                 if (more_constraints != Py_None) {
                     Py_ssize_t m;
                     for (m = 0; m < PyList_Size(more_constraints); m++) {
-                        PyObject* cons = PyList_GetItem(more_constraints, m);
-                        
-                        const int cons_i;
-                        const int cons_l;
-                        PyObject *cons_cs;
-                        
-                        if (!PyArg_ParseTuple(cons, "iiO", &cons_i, &cons_l, &cons_cs))
-                            return NULL;
-                            
-                        PyObject *cons_cs_e = PyList_New(PyList_Size(cons_cs) + 1);
-                        Py_ssize_t e;
-                        for (e = 0; e < PyList_Size(cons_cs); e++) {
-                            PyList_SetItem(cons_cs_e, e, PyList_GetItem(cons_cs, e));
-                        }
                         PyObject* tuple;
                         char *it_word = PyString_AsString(item);
                         it_word += m;
                         char *cons_c = it_word;
-                        tuple = Py_BuildValue("(is)", cons_i, cons_c);
-                        PyList_SetItem(cons_cs_e, e, tuple);
-                        
-                        int has_matches = cWord_calc_has_matches(words, cons_l, cons_cs_e);
+                        tuple = Py_BuildValue("(is)", precons_i[m], cons_c);
+                        PyList_SetItem(precons[m], PyList_Size(precons[m]) - 1, tuple);
+
+                        int has_matches = cWord_calc_has_matches(words, precons_l[m], precons[m]);
                         if (has_matches == 2)
                             return NULL;
                         if (has_matches == 0) {
