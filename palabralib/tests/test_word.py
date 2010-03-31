@@ -132,3 +132,27 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 7, [])])], [("koala", False)])
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'o')])])], [("koala", True)])
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'p')])])], [("koala", False)])
+        
+    def testBasicIntersecting(self):
+        clist = CWordList(["aaaa", "bbbb", "abbb"])
+        
+        # 4 chars, starts with 'a', 4 chars at intersection 0
+        self.assertEquals([w for w in clist.search(4, [(0, 'a')], [(0, 4, [])])], [("aaaa", True), ("abbb", True)])
+        
+        # 4 chars, starts with 'a', 4 chars at intersection 0 that ends with 'b'
+        self.assertEquals([w for w in clist.search(4, [(0, 'a')], [(0, 4, [(3, 'b')])])], [("aaaa", True), ("abbb", True)])
+        
+        # 4 chars, starts with 'b', 4 chars at intersection 0
+        self.assertEquals([w for w in clist.search(4, [(0, 'b')], [(0, 4, [])])], [("bbbb", True)])
+        
+        # 4 chars, starts with 'a', 4 chars at intersection 0 that starts with 'ab'
+        self.assertEquals([w for w in clist.search(4, [(0, 'a')], [(0, 4, [(0, 'a'), (1, 'b')])])], [("aaaa", True), ("abbb", True)])
+        
+        # 4 chars, starts with 'b', 4 chars at intersection 0 that starts with 'aba'
+        self.assertEquals([w for w in clist.search(4, [(0, 'b')], [(0, 4, [(0, 'a'), (1, 'b'), (2, 'a')])])], [("bbbb", False)])
+        
+        # 4 chars, starts with 'b', 4 chars at intersection 0 that ends with 'a'
+        self.assertEquals([w for w in clist.search(4, [(0, 'b')], [(0, 4, [(3, 'a')])])], [("bbbb", False)])
+        
+        # 4 chars, ends with 'b', 4 chars at intersection 0 that ends with 'a'
+        self.assertEquals([w for w in clist.search(4, [(3, 'b')], [(0, 4, [(3, 'a')])])], [("bbbb", False), ("abbb", True)])
