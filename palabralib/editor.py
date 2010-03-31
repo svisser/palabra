@@ -161,12 +161,12 @@ def search(wordlists, grid, selection, force_refresh):
         return []
     more = grid.gather_all_constraints(x, y, dir)
     
-    import pstats
-    import cProfile
-    cProfile.runctx('search_wordlists(wordlists, length, constraints, more)', globals(), locals(), filename='fooprof')
-    p = pstats.Stats('fooprof')
-    p.sort_stats('time').print_stats(20)
-    p.print_callers()
+    #import pstats
+    #import cProfile
+    #cProfile.runctx('search_wordlists(wordlists, length, constraints, more)', globals(), locals(), filename='fooprof')
+    #p = pstats.Stats('fooprof')
+    #p.sort_stats('time').print_stats(20)
+    #p.print_callers()
     
     return search_wordlists(wordlists, length, constraints, more)
 
