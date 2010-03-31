@@ -687,9 +687,19 @@ class PalabraWindow(gtk.Window):
     def transform_clues(self, transform, **args):
         a = transform(self.puzzle_manager.current_puzzle, **args)
         action.stack.push_action(a)
-        self.update_window(False, refresh_words=False)
+        self.update_undo_redo()
+        try:
+            self.editor.refresh_clues()
+        except AttributeError:
+            pass
+    
+    def update_undo_redo(self):
+        self.undo_menu_item.set_sensitive(len(action.stack.undo_stack) > 0)
+        self.redo_menu_item.set_sensitive(len(action.stack.redo_stack) > 0)
+        self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
+        self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
         
-    def update_window(self, content_changed=False, refresh_words=True):
+    def update_window(self, content_changed=False):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:
             self.set_title(u"Palabra")
@@ -713,10 +723,7 @@ class PalabraWindow(gtk.Window):
         for item in self.puzzle_toggle_items:
             item.set_sensitive(puzzle is not None)
                 
-        self.undo_menu_item.set_sensitive(len(action.stack.undo_stack) > 0)
-        self.redo_menu_item.set_sensitive(len(action.stack.redo_stack) > 0)
-        self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
-        self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
+        self.update_undo_redo()
         
         # TODO needed to make app feels responsive (refreshing words
         # takes a long time)
@@ -729,8 +736,7 @@ class PalabraWindow(gtk.Window):
                 
                 self.editor.refresh_clues()
             self.editor.force_redraw = True
-            if refresh_words:
-                self.editor.refresh_words()
+            self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
             pass
