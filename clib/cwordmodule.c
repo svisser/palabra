@@ -151,7 +151,8 @@ cWord_search(PyObject *self, PyObject *args) {
     
     int precons_i[total];
     int precons_l[total];
-    PyObject *precons[total];
+    PyObject *precons_cs[total];
+    PyObject *precons_words[total];
     if (more_constraints != Py_None) {
         Py_ssize_t m;
         for (m = 0; m < total; m++) {
@@ -172,7 +173,57 @@ cWord_search(PyObject *self, PyObject *args) {
             }
             precons_i[m] = cons_i;
             precons_l[m] = cons_l;
-            precons[m] = cons_cs_e;
+            precons_cs[m] = cons_cs_e;
+        }
+        printf("------------------------");
+        for (m = 0; m < total; m++) {
+            precons_words[m] = PyList_New(0);
+            
+            const int MAX_WORD_LENGTH = 64;
+            char csm[MAX_WORD_LENGTH];
+            int k;
+            for (k = 0; k < MAX_WORD_LENGTH; k++) {
+                csm[k] = ' ';
+            }
+            
+            Py_ssize_t i;
+            for (i = 0; i < PyList_GET_SIZE(precons_cs[m]) - 1; i++) {
+                int j;
+                const char *c;
+                PyObject *item = PyList_GET_ITEM(precons_cs[m], i);
+                if (!PyArg_ParseTuple(item, "is", &j, &c))
+                    return NULL;
+                csm[j] = *c;
+            }
+        
+            Py_ssize_t size;
+            Py_ssize_t w;
+            printf("building list for %i", (int) m);
+            for (w = 0; w < PyList_Size(words); w++) {
+                PyObject *item = PyList_GetItem(words, w);
+                size = PyString_Size(item);
+                if (precons_l[m] == size) {
+                    char *word = PyString_AsString(item);
+                    char *it_word = PyString_AsString(item);
+                    int check = 1;
+                    int i = 0;                
+                    while (*it_word != '\0') {
+                        if (csm[i] != ' ' && *it_word != csm[i]) {
+                            check = 0;
+                            break;
+                        }
+                        it_word++;
+                        i++;
+                    }
+                    if (check == 1) {
+                        printf("appending (%i) %s\n", (int) m, word);
+                        PyList_Append(precons_words[m], item);
+                    }
+                }
+            }
+        }
+        for (m = 0; m < total; m++) {
+            printf("%i %i\n", (int) m, (int) PyList_Size(precons_words[m]));
         }
     }
     
@@ -220,10 +271,13 @@ cWord_search(PyObject *self, PyObject *args) {
                         if (!PyDict_Contains(cache, key)) {
                             PyObject* tuple;
                             tuple = Py_BuildValue("(is)", precons_i[m], cons_cc);
-                            PyList_SetItem(precons[m], PyList_Size(precons[m]) - 1, tuple);
-                            int has_matches = cWord_calc_has_matches(words, precons_l[m], precons[m]);
+                            PyList_SetItem(precons_cs[m], PyList_Size(precons_cs[m]) - 1, tuple);
+                            int has_matches = cWord_calc_has_matches(precons_words[m], precons_l[m], precons_cs[m]);
                             if (has_matches == 2)
                                 return NULL;
+                            if (has_matches == 0) {
+                                printf("no matches for (%i %i %s) in %i words\n", (int) m, (int) precons_i[m], cons_cc, (int) PyList_Size(precons_words[m]));
+                            }
                             
                             //if (has_matches == 0) {
                             //    has_intersecting = 0;
