@@ -19,21 +19,12 @@ import copy
 import gobject
 import gtk
 import os
-import cPickle as pickle
 import time
 
 import cWord
 
 import constants
 import preferences
-
-try:
-    import sqlite3 as sqlite
-except ImportError:
-    try:
-        from pysqlite2 import dbapi2 as sqlite
-    except ImportError:
-        pass # should not occur, see main palabra file
 
 class NewWordListDialog(gtk.Dialog):
     def __init__(self, parent):
@@ -223,27 +214,28 @@ class WordList:
                 return False
         return True
 
-def _process_word(word):
-    word = word.strip("\n")
-    if not word:
-        return None
-    ord_A = ord("A")
-    ord_Z = ord("Z")
-    ord_a = ord("a")
-    ord_z = ord("z")
-    for c in word:
-        if not (ord_A <= ord(c) <= ord_Z or ord_a <= ord(c) <= ord_z):
-            return None
-    return word
-
 def read_wordlist(path):
+    """Yield all words found in the specified file."""
     if not os.path.exists(path):
         print "Error: The file", path, "does not exist."
         return
+    def process_word(line):
+        """Return a word that is ready for a word list or None."""
+        line = line.strip("\n")
+        if not line:
+            return None
+        ord_A = ord("A")
+        ord_Z = ord("Z")
+        ord_a = ord("a")
+        ord_z = ord("z")
+        for c in line:
+            if not (ord_A <= ord(c) <= ord_Z or ord_a <= ord(c) <= ord_z):
+                return None
+        return line.lower()
     f = open(path, "r")
     for line in f:
-        word = _process_word(line)
-        if word is not None:
+        word = process_word(line)
+        if word:
             yield word
 
 def read_wordlist_from_iter(callback, words):
@@ -254,13 +246,13 @@ def read_wordlist_from_iter(callback, words):
     callback(wordlist)
     yield False
 
-def read_wordlists(paths):
+def create_wordlists(word_files):
     wordlists = {}
-    for path in paths:
-        wordlist = WordList()
-        for word in read_wordlist(path):
-            wordlist.add_word(word.lower())
-        wordlists[path] = {"list": wordlist, "status": "ready"}
+    for data in word_files:
+        name = data["name"]["value"]
+        path = data["path"]["value"]
+        wordlist = CWordList([w for w in read_wordlist(path)])
+        wordlists[path] = {"list": wordlist}
     return wordlists
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
@@ -277,305 +269,22 @@ class CWordList:
         self.words = words
         
     def has_matches(self, length, constraints, words=None):
-        ws = self.words if words is None else words
-        return cWord.has_matches(ws, length, constraints)
-        
-    def search(self, length, constraints, more_constraints=None):
-        return cWord.search(self.words, length, constraints, more_constraints)
-
-####
-
-class Node:
-    def __init__(self):
-        self.words = []
-        self.children = {}
-        self.union = None
-
-class TreeWordList:
-    def __init__(self, words):
-        self.data = {}
-        for i in xrange(constants.MAX_WORD_LENGTH):
-            self.data[i] = Node()
-        self.count = 0
-        for word in words:
-            self._add_word(self.data[len(word)], word, 0)
-            self.count += 1
-            print self.count
-            if self.count == 300:
-                break
-            
-    def _add_word(self, node, word, offset):
-        if offset >= len(word):
-            node.words.append(word)
-            return
-        c = word[offset]
-        if c not in node.children:
-            node.children[c] = Node()
-        if not node.union:
-            node.union = Node()
-        self._add_word(node.children[c], word, offset + 1)
-        self._add_word(node.union, word, offset + 1)
-    
-    def _gather_words(self, length, constraints):
-        cs = {}
-        for i, c in constraints:
-            cs[i] = c
-        node = self.data[length]
-        for i in xrange(length):
-            c = cs[i] if i in cs else None
-            if not c and node.union:
-                node = node.union
-            elif c in node.children:
-                node = node.children[c]
-            else:
-                return []
-        return node.words
-        
-    def has_matches(self, length, constraints):
-        return bool(self._gather_words(length, constraints))
-        
-    def search(self, length, constraints, more_constraints=None):
-        words = self._gather_words(length, constraints)
-        for word in words:
-            intersecting = True
-            if more_constraints:
-                for j, (i, l, cs) in enumerate(more_constraints):
-                    if not self.has_matches(l, cs + [(i, word[j])]):
-                        intersecting = False
-                        break
-            yield word, intersecting
-
-#####
-
-class BasicWordList:
-    def __init__(self, source):
-        self.words = [(w.lower(), len(w)) for w in source]
-        
-    def has_matches(self, length, constraints):
-        for word, wordlen in self.words:
-            if wordlen != length:
-                continue
-            if not constraints:
-                return True
-            if all([word[i] == c for i, c in constraints]):
-                return True
-        return False
-        
-    def search(self, length, constraints, more_constraints=None):
-        checks = []
-        no_matches = False
-        if more_constraints:
-            for j, (i, l, cs) in enumerate(more_constraints):
-                check = [w for w, i in self.search(l, cs)]
-                if not check:
-                    no_matches = True
-                    break
-                checks.append(check)
-                
-        cache = {}    
-        for word, wordlen in self.words:
-            if wordlen != length:
-                continue
-            if all([word[i] == c for i, c in constraints]):
-                intersecting = True
-                if no_matches:
-                    intersecting = False
-                if more_constraints and not no_matches:
-                    for j, (i, l, cs) in enumerate(more_constraints):
-                        unique = (j, i, word[j])
-                        if unique not in cache:
-                            cache[unique] = False
-                            for w in checks[j]:
-                                if w[i] == word[j]:
-                                    cache[unique] = True
-                                    break
-                        if not cache[unique]:
-                            intersecting = False
-                            break
-                yield word, intersecting
-
-#####
-
-def create_tables(word_files):
-    if not os.path.isdir(constants.WORDLIST_DIRECTORY):
-        os.mkdir(constants.WORDLIST_DIRECTORY)
-
-    for data in word_files:
-        name = data["name"]["value"]
-        path = data["path"]["value"]
-
-        con = sqlite.connect(''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb']))
-        cur = con.cursor()
-        cur.execute('PRAGMA table_info(words)')
-        if not cur.fetchall():
-            print "Creating words table for", path
-
-            query = ['CREATE TABLE words (id INTEGER PRIMARY KEY, word VARCHAR(', str(constants.MAX_WORD_LENGTH), '), length INTEGER, ']
-            cols = ['c' + str(i) + ' VARCHAR(1)' for i in xrange(constants.MAX_WORD_LENGTH)]
-            for i, c in enumerate(cols):
-                query.append(c)
-                if i < constants.MAX_WORD_LENGTH - 1:
-                    query.append(', ')
-            query.append(')')
-            cur.execute(''.join(query))
-            
-            for word in read_wordlist(path):
-                v = ["INSERT INTO words VALUES (null, '", word.lower(), "', ", str(len(word)), ', ']
-                for i in xrange(constants.MAX_WORD_LENGTH):
-                    try:
-                        v.extend(["'", word[i], "'"])
-                    except IndexError:
-                        v.append('null')
-                    if i < constants.MAX_WORD_LENGTH - 1:
-                        v.append(', ')
-                v.append(')')
-                cur.execute(''.join(v))
-            con.commit()
-        con.close()
-
-def create_wordlists(word_files):
-    wordlists = {}
-    for data in word_files:
-        name = data["name"]["value"]
-        path = data["path"]["value"]
-        wordlist = CWordList([w.lower() for w in read_wordlist(path)])
-        wordlists[path] = {"list": wordlist}
-    return wordlists
-    
-class SQLWordList:
-    def __init__(self, name):
-        self.path = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, '.pdb'])
-        self.combinations = {}
-        
-        index = ''.join([constants.WORDLIST_DIRECTORY, os.sep, name, ".pdbs"])
-        if os.path.isfile(index):
-            print "Loading search index for", (name + '.pdb')
-            self.combinations = pickle.load(open(index, "rb"))
-            return
-        print "Building search index for", (name + '.pdb')
-        for n in xrange(1, constants.MAX_WORD_LENGTH):
-            self.combinations[n] = {}
-            for i in xrange(n):
-                self.combinations[n][i] = {}
-        con = sqlite.connect(self.path)
-        cur = con.cursor()
-        cur.execute('SELECT * FROM words')
-        for row in cur:
-            id = row[0]
-            word = row[1]
-            length = row[2]
-            for i in xrange(constants.MAX_WORD_LENGTH):
-                c = row[3 + i]
-                if not c:
-                    break
-                if c in self.combinations[length][i]:
-                    self.combinations[length][i][c].add(id)
-                else:
-                    self.combinations[length][i][c] = set([id])
-        con.close()
-        output = open(index, "wb")
-        pickle.dump(self.combinations, output)
-        output.close()
-        
-    def has_matches(self, length, constraints):
         """
         Return True when a word exists that matches the constraints and the length.
         """
-        # check whether for each constraint at least one word exists
-        for i, c in constraints:
-            try:
-                if not self.combinations[length][i][c]:
-                    return False
-            except KeyError:
-                return False
-                
-        # check whether all constraints are satisfied for at least one word
-        words = [self.combinations[length][i][c] for i, c in constraints]
-        return len(reduce(set.intersection, words)) > 0
-        
-    def determine_word_ids(self, length, constraints):
-        """
-        Return a set of word ids that have the specified length
-        and satisfy the given constraints.
-        
-        None will be returned if, for whatever reason,
-        no such word ids could be determined.
-        """
-        if not constraints:
-            return set([])
-        for i, c in constraints:
-            try:
-                if not self.combinations[length][i][c]:
-                    return None
-            except KeyError:
-                return None
-        ids = [self.combinations[length][i][c] for i, c in constraints]
-        return reduce(set.intersection, ids)
-        
-    def search_with_word_ids(self, ids, length, (i, c)):
-        """
-        Return whether at least one word exists such that:
-        - its id is in the argument ids
-        - the word has the specified length
-        - the character at position i is equal to c
-        """
-        try:
-            if not self.combinations[length][i][c]:
-                return False
-        except KeyError:
-            return False
-        if ids:
-            for k in ids:
-                if k in self.combinations[length][i][c]:
-                    return True
-            return False
-        return len(self.combinations[length][i][c]) > 0
+        ws = self.words if words is None else words
+        return cWord.has_matches(ws, length, constraints)
         
     def search(self, length, constraints, more_constraints=None):
         """
         Search for words that match the given criteria.
         
-        This function yields the word and whether all positions of the word
-        have a matching word, when the more_constraints argument is specified.
-        If more_constraints is not specified, it yields the word and the
-        value True.
+        This function returns a list with tuples, (str, bool).
+        The first value is the word, the second value is whether all
+        positions of the word have a matching word, when the
+        more_constraints argument is specified.
+        If more_constraints is not specified, the second value
+        in a tuple is True.
         """
-        con = sqlite.connect(self.path)
-        cursor = con.cursor()
-        
-        # find all words that satisfy the given length and constraints
-        query = ['SELECT word FROM words WHERE length=', str(length)]
-        for i, c in constraints:
-            query += [' AND c', str(i), " = '", c, "'"]
-        
-        # find all word ids of possible intersecting words
-        ids = []
-        no_matches = False
-        if more_constraints:
-            for j, (i, l, cs) in enumerate(more_constraints):
-                matches = self.determine_word_ids(l, cs)
-                if len(cs) > 0 and len(matches) == 0 and len(cs) != l:
-                    # constraints were specified but no word ids were found
-                    no_matches = True
-                    break
-                ids.append(matches)
-        
-        # for each word that could be placed, determine whether each
-        # intersecting slot has a possible word
-        cache = {}
-        cursor.execute(''.join(query))
-        for row in cursor:
-            word = row[0]
-            intersecting = True
-            if no_matches:
-                intersecting = False
-            if more_constraints and not no_matches:
-                for j, (i, l, cs) in enumerate(more_constraints):
-                    unique = (j, i, word[j])
-                    if unique not in cache:
-                        cache[unique] = self.search_with_word_ids(ids[j], l, (i, word[j]))
-                    if not cache[unique]:
-                        intersecting = False
-                        break
-            yield word, intersecting
-        con.close()
+        return cWord.search(self.words, length, constraints, more_constraints)
+

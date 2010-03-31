@@ -23,21 +23,13 @@ try:
 except (ImportError, AssertionError):
     print "PyGTK 2.8 or higher is required for this application."
     raise SystemExit
-try:
-    import sqlitecreate_tables3 as sqlite
-except ImportError:
-    try:
-        from pysqlite2 import dbapi2 as sqlite
-    except ImportError:
-        print "sqlite3 or pysqlite2 not found; please install either of these packages to run this application"
-        raise SystemExit
 
 import gobject
 
 from palabralib.gui import PalabraWindow
 import palabralib.preferences as preferences
 from palabralib.preferences import read_config_file
-from palabralib.word import SQLWordList, read_wordlists, create_tables, create_wordlists
+from palabralib.word import create_wordlists
 
 if __name__ == "__main__":
     try:
@@ -45,7 +37,6 @@ if __name__ == "__main__":
         gobject.threads_init()
         
         print "Loading wordlists..."
-        create_tables(preferences.prefs["word_files"])
         
         #import pstats
         #import cProfile
