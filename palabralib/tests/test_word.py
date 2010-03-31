@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-from palabralib.word import BasicWordList, WordList, TreeWordList, CWordList
+from palabralib.word import WordList, CWordList
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
