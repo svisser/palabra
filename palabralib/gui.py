@@ -687,9 +687,9 @@ class PalabraWindow(gtk.Window):
     def transform_clues(self, transform, **args):
         a = transform(self.puzzle_manager.current_puzzle, **args)
         action.stack.push_action(a)
-        self.update_window(False)
+        self.update_window(False, refresh_words=False)
         
-    def update_window(self, content_changed=False):
+    def update_window(self, content_changed=False, refresh_words=True):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:
             self.set_title(u"Palabra")
@@ -729,7 +729,8 @@ class PalabraWindow(gtk.Window):
                 
                 self.editor.refresh_clues()
             self.editor.force_redraw = True
-            self.editor.refresh_words()
+            if refresh_words:
+                self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
             pass
