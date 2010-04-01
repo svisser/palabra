@@ -1,20 +1,20 @@
 /* This file is part of Palabra
- *
- * Copyright (C) 2009 - 2010 Simeon Visser
- *
- * Palabra is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+
+   Copyright (C) 2009 - 2010 Simeon Visser
+
+   Palabra is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+  
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <Python.h>
 
@@ -22,6 +22,7 @@
 
 #define DEBUG 1
 
+// return 1 in case of error, 0 otherwise
 int process_constraints(PyObject* constraints, char *cs) {
     int k;
     for (k = 0; k < MAX_WORD_LENGTH; k++) {
@@ -39,6 +40,7 @@ int process_constraints(PyObject* constraints, char *cs) {
     return 0;
 }
 
+// return 0 if constraints don't matches, 1 if they do
 int check_constraints(PyObject* string, char *cs) {
     char *word = PyString_AsString(string);
     int i = 0;                
@@ -52,6 +54,7 @@ int check_constraints(PyObject* string, char *cs) {
     return 1;
 }
 
+// return 1 if a word exists that matches the constraints, 0 otherwise
 static int
 cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
     char cs[MAX_WORD_LENGTH];
@@ -117,12 +120,14 @@ cWord_search(PyObject *self, PyObject *args) {
     Py_ssize_t total = more_constraints != Py_None ? PyList_Size(more_constraints) : 0;
     PyObject *result = PyList_New(0);
     
+    // process more_constraints
     int intersecting_zero_slot = 0;
     int precons_i[total];
     int precons_l[total];
     PyObject *precons_cs[total];
     PyObject *precons_words[total];
     if (more_constraints != Py_None) {
+        // read more_constraints
         Py_ssize_t m;
         for (m = 0; m < total; m++) {
             PyObject* cons = PyList_GetItem(more_constraints, m);
@@ -144,6 +149,9 @@ cWord_search(PyObject *self, PyObject *args) {
             precons_l[m] = cons_l;
             precons_cs[m] = cons_cs_e;
         }
+        // deterine which of them are exactly equal
+        // equalities contains per slot the value -1 for a unique slot
+        // or an integer that refers to an earlier slot that is equal to it
         int equalities[total];
         for (m = 0; m < total; m++) {
             equalities[m] = -1;
@@ -176,6 +184,7 @@ cWord_search(PyObject *self, PyObject *args) {
                         }
                     }
                 }
+                // equal? then point the slot at mm to the one at m
                 if (equal == 1) {
                     equalities[mm] = m;
                 }
@@ -187,8 +196,11 @@ cWord_search(PyObject *self, PyObject *args) {
                 printf("%i %i\n", (int) m, equalities[m]);
             }
         }
+        // build the wordlists per intersecting slot
         for (m = 0; m < total; m++) {
             if (equalities[m] >= 0) {
+                // skip building a wordlist if the slot is equal to
+                // an earlier slot
                 precons_words[m] = precons_words[equalities[m]];
                 continue;
             }
@@ -231,6 +243,8 @@ cWord_search(PyObject *self, PyObject *args) {
                 printf("list size %i\n", (int) PyList_Size(precons_words[m]));
             }
             if (PyList_Size(precons_words[m]) == 0) {
+                // no words? then stop building wordlists because
+                // has_intersecting will be False for all words anyway
                 if (DEBUG) {
                     printf("no words\n");
                 }
@@ -245,13 +259,11 @@ cWord_search(PyObject *self, PyObject *args) {
         return NULL;
     
     PyObject* cache = PyDict_New();
-    
-    PyObject* key;
-    key = Py_BuildValue("i", length);
-    
-    PyObject* words_main = PyDict_GetItem(words, key);
 
+    // process words    
     Py_ssize_t w;
+    PyObject* key = Py_BuildValue("i", length);
+    PyObject* words_main = PyDict_GetItem(words, key);
     for (w = 0; w < PyList_Size(words_main); w++) {
         PyObject *item = PyList_GetItem(words_main, w);
         if (check_constraints(item, cs)) {
@@ -271,6 +283,10 @@ cWord_search(PyObject *self, PyObject *args) {
                     strncpy(cons_cc, cons_c, 1);
                     cons_cc[1] = '\0';
                     
+                    // use a cache to lookup/store earlier searches
+                    // the key is:
+                    // (index of intersecting slot in word
+                    // , index of intersection in intersecting word, char)
                     PyObject* key;
                     key = Py_BuildValue("(iis)", m, precons_i[m], cons_cc);
                     if (!PyDict_Contains(cache, key)) {
