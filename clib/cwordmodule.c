@@ -7,7 +7,6 @@ int process_constraints(PyObject* constraints, char *cs) {
     for (k = 0; k < MAX_WORD_LENGTH; k++) {
         cs[k] = ' ';
     }
-    
     Py_ssize_t i;
     for (i = 0; i < PyList_Size(constraints); i++) {
         int j;
@@ -22,17 +21,15 @@ int process_constraints(PyObject* constraints, char *cs) {
 
 int check_constraints(PyObject* string, char *cs) {
     char *word = PyString_AsString(string);
-    int check = 1;
     int i = 0;                
     while (*word != '\0') {
         if (cs[i] != ' ' && *word != cs[i]) {
-            check = 0;
-            break;
+            return 0;
         }
         word++;
         i++;
     }
-    return check;
+    return 1;
 }
 
 static int
@@ -40,12 +37,10 @@ cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints)
     char cs[MAX_WORD_LENGTH];
     if (process_constraints(constraints, cs) == 1)
         return 2;
-    
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
         PyObject *word = PyList_GetItem(words, w);
-        Py_ssize_t size = PyString_Size(word);
-        if (length == size && check_constraints(word, cs)) {
+        if (length == PyString_Size(word) && check_constraints(word, cs)) {
             return 1;
         }
     }
@@ -68,7 +63,6 @@ cWord_has_matches(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "cWord.has_matches expects a list as third argument");
         return NULL;
     }
-    
     int has_matches = cWord_calc_has_matches(words, length, constraints);
     if (has_matches == 2)
         return NULL;
@@ -105,6 +99,7 @@ cWord_search(PyObject *self, PyObject *args) {
     Py_ssize_t total = more_constraints != Py_None ? PyList_Size(more_constraints) : 0;
     PyObject *result = PyList_New(0);
     
+    int intersecting_zero_slot = 0;
     int precons_i[total];
     int precons_l[total];
     PyObject *precons_cs[total];
@@ -204,10 +199,17 @@ cWord_search(PyObject *self, PyObject *args) {
                     PyList_Append(precons_words[m], word);
                 }
             }
+            printf("list size %i\n", (int) PyList_Size(precons_words[m]));
+            if (PyList_Size(precons_words[m]) == 0) {
+                intersecting_zero_slot = 1;
+                break;
+            }
         }
-        for (m = 0; m < total; m++) {
-            printf("%i %i\n", (int) m, (int) PyList_Size(precons_words[m]));
-        }
+        /*for (m = 0; m < total; m++) {
+            if (precons_words[m] != NULL) {
+                printf("%i %i\n", (int) m, (int) PyList_Size(precons_words[m]));
+            }
+        }*/
     }
     
     char cs[MAX_WORD_LENGTH];
@@ -216,15 +218,17 @@ cWord_search(PyObject *self, PyObject *args) {
     
     PyObject* cache = PyDict_New();
 
-    Py_ssize_t size;
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
         PyObject *item = PyList_GetItem(words, w);
-        size = PyString_Size(item);
+        Py_ssize_t size = PyString_Size(item);
         if (length == size && check_constraints(item, cs)) {
             char *word = PyString_AsString(item);
             int has_intersecting = 1;
-            if (more_constraints != Py_None) {
+            if (intersecting_zero_slot) {
+                has_intersecting = 0;
+            }
+            if (more_constraints != Py_None && !intersecting_zero_slot) {
                 Py_ssize_t m;
                 for (m = 0; m < PyList_Size(more_constraints); m++) {
                     char *it_word = PyString_AsString(item);
