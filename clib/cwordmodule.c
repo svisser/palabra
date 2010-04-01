@@ -22,6 +22,8 @@
 
 #define DEBUG 1
 
+int debug_checked = 0;
+
 // return 1 in case of error, 0 otherwise
 int process_constraints(PyObject* constraints, char *cs) {
     int k;
@@ -62,6 +64,7 @@ cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints)
         return 2;
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
+        debug_checked++;
         PyObject *word = PyList_GetItem(words, w);
         if (length == PyString_Size(word) && check_constraints(word, cs)) {
             return 1;
@@ -316,7 +319,9 @@ cWord_search(PyObject *self, PyObject *args) {
     }
     if (DEBUG) {
         printf("cache size %i\n", (int) PyDict_Size(cache));
+        printf("total words checked %i\n", debug_checked);
     }
+    debug_checked = 0;
     return result;
 }
 
