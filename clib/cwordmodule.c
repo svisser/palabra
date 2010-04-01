@@ -2,6 +2,8 @@
 
 #define MAX_WORD_LENGTH 64
 
+#define DEBUG 0
+
 int process_constraints(PyObject* constraints, char *cs) {
     int k;
     for (k = 0; k < MAX_WORD_LENGTH; k++) {
@@ -163,8 +165,11 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
         }
-        for (m = 0; m < total; m++) {
-            printf("%i %i\n", (int) m, equalities[m]);
+        if (DEBUG) {
+            printf("equalities");
+            for (m = 0; m < total; m++) {
+                printf("%i %i\n", (int) m, equalities[m]);
+            }
         }
         for (m = 0; m < total; m++) {
             if (equalities[m] >= 0) {
@@ -190,8 +195,10 @@ cWord_search(PyObject *self, PyObject *args) {
                 csm[j] = *c;
             }
         
+            if (DEBUG) {
+                printf("building list for %i\n", (int) m);
+            }
             Py_ssize_t w;
-            printf("building list for %i\n", (int) m);
             for (w = 0; w < PyList_Size(words); w++) {
                 PyObject *word = PyList_GetItem(words, w);
                 Py_ssize_t size = PyString_Size(word);
@@ -199,8 +206,13 @@ cWord_search(PyObject *self, PyObject *args) {
                     PyList_Append(precons_words[m], word);
                 }
             }
-            printf("list size %i\n", (int) PyList_Size(precons_words[m]));
+            if (DEBUG) {
+                printf("list size %i\n", (int) PyList_Size(precons_words[m]));
+            }
             if (PyList_Size(precons_words[m]) == 0) {
+                if (DEBUG) {
+                    printf("no words\n");
+                }
                 intersecting_zero_slot = 1;
                 break;
             }
@@ -248,7 +260,7 @@ cWord_search(PyObject *self, PyObject *args) {
                         int has_matches = cWord_calc_has_matches(precons_words[m], precons_l[m], precons_cs[m]);
                         if (has_matches == 2)
                             return NULL;
-                        if (has_matches == 0) {
+                        if (has_matches == 0 && DEBUG) {
                             printf("no matches for (%i %i %s) in %i words\n", (int) m, (int) precons_i[m], cons_cc, (int) PyList_Size(precons_words[m]));
                         }
                         PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
@@ -266,7 +278,9 @@ cWord_search(PyObject *self, PyObject *args) {
             PyList_Append(result, res_tuple);
         }
     }
-    printf("cache size %i\n", (int) PyDict_Size(cache));
+    if (DEBUG) {
+        printf("cache size %i\n", (int) PyDict_Size(cache));
+    }
     return result;
 }
 
