@@ -2,7 +2,7 @@
 
 #define MAX_WORD_LENGTH 64
 
-#define DEBUG 0
+#define DEBUG 1
 
 int process_constraints(PyObject* constraints, char *cs) {
     int k;
@@ -166,7 +166,7 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         if (DEBUG) {
-            printf("equalities");
+            printf("equalities\n");
             for (m = 0; m < total; m++) {
                 printf("%i %i\n", (int) m, equalities[m]);
             }
