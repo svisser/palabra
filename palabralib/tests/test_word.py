@@ -117,13 +117,13 @@ class WordTestCase(unittest.TestCase):
                 
     #####
     
-    def testBasicHasMatches(self):
+    def testHasMatches(self):
         for l in xrange(64):
             self.assertEquals(self.basic.has_matches(l, []), l in [5, 8])
         self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'a')]), True)
         self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'b')]), False)
         
-    def testBasicSearch(self):
+    def testSearch(self):
         self.assertEquals([w for w in self.basic.search(5, [], None)], [("koala", True)])
         self.assertEquals([w for w in self.basic.search(6, [], None)], [])
         self.assertEquals([w for w in self.basic.search(5, [], [(0, 8, [])])], [("koala", True)])
@@ -133,7 +133,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'o')])])], [("koala", True)])
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'p')])])], [("koala", False)])
         
-    def testBasicIntersecting(self):
+    def testIntersecting(self):
         clist = CWordList(["aaaa", "bbbb", "abbb"])
         
         # 4 chars, starts with 'a', 4 chars at intersection 0
@@ -156,3 +156,12 @@ class WordTestCase(unittest.TestCase):
         
         # 4 chars, ends with 'b', 4 chars at intersection 0 that ends with 'a'
         self.assertEquals([w for w in clist.search(4, [(3, 'b')], [(0, 4, [(3, 'a')])])], [("bbbb", False), ("abbb", True)])
+        
+        # 4 chars, 5 chars at intersection 0
+        self.assertEquals([w for w in clist.search(4, [], [(0, 5, [])])], [("aaaa", False), ("bbbb", False), ("abbb", False)])
+        
+        # 4 chars, 4 chars at intersection 0 that ends with 'c'
+        self.assertEquals([w for w in clist.search(4, [], [(0, 4, [(3, 'c')])])], [("aaaa", False), ("bbbb", False), ("abbb", False)])
+        
+        # 3 chars, no further constraints
+        self.assertEquals([w for w in clist.search(3, [], [])], [])
