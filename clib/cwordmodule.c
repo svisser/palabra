@@ -2,9 +2,6 @@
 
 static int
 cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
-    static int calls = 0;
-    calls++;
-    //printf("%i\n", calls);
     const int MAX_WORD_LENGTH = 64;
     char cs[MAX_WORD_LENGTH];
     int k;
@@ -13,7 +10,7 @@ cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints)
     }
     
     Py_ssize_t i;
-    for (i = 0; i < PyList_GET_SIZE(constraints); i++) {
+    for (i = 0; i < PyList_Size(constraints); i++) {
         int j;
         const char *c;
         PyObject *item = PyList_GetItem(constraints, i);
@@ -95,40 +92,7 @@ cWord_search(PyObject *self, PyObject *args) {
             return NULL;
         }
     }
-    /*
-    intersect_failure = False
-        cache = {}
-        if more_constraints:
-            for j, (i, l, cs) in enumerate(more_constraints):
-                cache[j] = [w for w, b_i in self.search(l, cs)]
-                if not cache[j]:
-                    intersect_failure = True
-                    break
-                
-        cache2 = {}
-        for word in self.words:
-            if len(word) != length:
-                continue
-            ok = True
-            for i, c in constraints:
-                if not word[i] == c:
-                    ok = False
-                    break
-            if not ok:
-                continue
-            intersecting = True
-            if intersect_failure:
-                intersecting = False
-            if more_constraints and not intersect_failure:
-                for j, (i, l, cs) in enumerate(more_constraints):
-                    unique = (j, i, word[j])
-                    if unique not in cache2:
-                        cache2[unique] = self.has_matches(l, [(i, word[j])], cache[j])
-                    if not cache2[unique]:
-                        intersecting = False
-                        break
-            yield word, intersecting
-            */
+
     const int MAX_WORD_LENGTH = 64;
     char cs[MAX_WORD_LENGTH];
     int k;
@@ -137,10 +101,10 @@ cWord_search(PyObject *self, PyObject *args) {
     }
     
     Py_ssize_t i;
-    for (i = 0; i < PyList_GET_SIZE(constraints); i++) {
+    for (i = 0; i < PyList_Size(constraints); i++) {
         int j;
         const char *c;
-        PyObject *item = PyList_GET_ITEM(constraints, i);
+        PyObject *item = PyList_GetItem(constraints, i);
         if (!PyArg_ParseTuple(item, "is", &j, &c))
             return NULL;
         cs[j] = *c;
@@ -296,12 +260,6 @@ cWord_search(PyObject *self, PyObject *args) {
                 if (more_constraints != Py_None) {
                     Py_ssize_t m;
                     for (m = 0; m < PyList_Size(more_constraints); m++) {
-                        /*unique = (j, i, word[j])
-                        if unique not in cache2:
-                            cache2[unique] = self.has_matches(l, [(i, word[j])], cache[j])
-                        if not cache2[unique]:
-                            intersecting = False
-                            break*/
                         char *it_word = PyString_AsString(item);
                         it_word += m;
                         char *cons_c = it_word;
@@ -322,15 +280,7 @@ cWord_search(PyObject *self, PyObject *args) {
                             if (has_matches == 0) {
                                 printf("no matches for (%i %i %s) in %i words\n", (int) m, (int) precons_i[m], cons_cc, (int) PyList_Size(precons_words[m]));
                             }
-                            
-                            //if (has_matches == 0) {
-                            //    has_intersecting = 0;
-                            //    break;
-                            //}
-                            
                             PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
-                        } else {
-                            //printf("cache hit %i %i %c\n", (int) m, (int) precons_i[m], *cons_c);
                         }
                         PyObject* value;
                         value = PyDict_GetItem(cache, key);
@@ -338,15 +288,6 @@ cWord_search(PyObject *self, PyObject *args) {
                             has_intersecting = 0;
                             break;
                         }
-                        
-                        
-
-                        
-                        
-                        //if (0){ //has_matches == 0) {
-                        //    has_intersecting = 0;
-                        //   break;
-                        //}
                     }
                 }
                 
@@ -354,37 +295,10 @@ cWord_search(PyObject *self, PyObject *args) {
                 res_tuple = Py_BuildValue("(sO)",  word, PyBool_FromLong(has_intersecting));
                 
                 PyList_Append(result, res_tuple);
-                /*
-                if more_constraints is not None:
-                        filled_constraints = [(l, cs + [(i, word[j])]) for j, (i, l, cs) in enumerate(more_constraints)]
-                        
-                        for args in filled_constraints:
-                            if not self.has_matches(*args):
-                                yield word, False
-                                break
-                        else:
-                            yield word, True
-                    else:
-                        yield word, True
-                */
             }
         }
     }
     printf("cache size %i\n", (int) PyDict_Size(cache));
-    PyObject* keys = PyDict_Keys(cache);
-    Py_ssize_t kv;
-    for (kv = 0; kv < PyList_Size(keys); kv++) {
-        PyObject* key = PyList_GetItem(keys, kv);
-        //key = Py_BuildValue("(iis)", m, precons_i[m], cons_c);
-        const int kv_i;
-        const int kv_l;
-        const char* kv_c;
-        if (!PyArg_ParseTuple(key, "iis", &kv_i, &kv_l, &kv_c))
-            return NULL;
-        
-        //PyObject* value = PyDict_GetItem(keys, key);
-        //printf("(%i, %i, %s) -\n", kv_i, kv_l, kv_c); //, PyString_AsString(value));
-    }
     return result;
 }
 
