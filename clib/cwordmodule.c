@@ -49,7 +49,7 @@ cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints)
     return 0;
 }
 
-static PyObject *
+static PyObject*
 cWord_has_matches(PyObject *self, PyObject *args)
 {
     PyObject *words;
@@ -73,9 +73,7 @@ cWord_has_matches(PyObject *self, PyObject *args)
     Py_RETURN_FALSE;
 }
 
-// TODO refactor
-
-static PyObject *
+static PyObject*
 cWord_search(PyObject *self, PyObject *args) {
     PyObject *words;
     const int length;
@@ -207,8 +205,7 @@ cWord_search(PyObject *self, PyObject *args) {
             Py_ssize_t w;
             for (w = 0; w < PyList_Size(words_m); w++) {
                 PyObject *word = PyList_GetItem(words_m, w);
-                //Py_ssize_t size = PyString_Size(word);
-                if (/*precons_l[m] == size &&*/ check_constraints(word, csm)) {
+                if (check_constraints(word, csm)) {
                     PyList_Append(precons_words[m], word);
                 }
             }
@@ -223,11 +220,6 @@ cWord_search(PyObject *self, PyObject *args) {
                 break;
             }
         }
-        /*for (m = 0; m < total; m++) {
-            if (precons_words[m] != NULL) {
-                printf("%i %i\n", (int) m, (int) PyList_Size(precons_words[m]));
-            }
-        }*/
     }
     
     char cs[MAX_WORD_LENGTH];
@@ -244,8 +236,7 @@ cWord_search(PyObject *self, PyObject *args) {
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words_main); w++) {
         PyObject *item = PyList_GetItem(words_main, w);
-        //Py_ssize_t size = PyString_Size(item);
-        if (/*length == size && */check_constraints(item, cs)) {
+        if (check_constraints(item, cs)) {
             char *word = PyString_AsString(item);
             int has_intersecting = 1;
             if (intersecting_zero_slot) {
@@ -295,9 +286,31 @@ cWord_search(PyObject *self, PyObject *args) {
     return result;
 }
 
+static PyObject*
+cWord_preprocess(PyObject *self, PyObject *args) {
+    PyObject *words;
+    if (!PyArg_ParseTuple(args, "O", &words))
+        return NULL;
+    PyObject* dict = PyDict_New();
+    PyObject* keys[MAX_WORD_LENGTH];
+    int l;
+    for (l = 0; l < MAX_WORD_LENGTH; l++) {
+        keys[l] = Py_BuildValue("i", l);
+        PyDict_SetItem(dict, keys[l], PyList_New(0));
+    }
+    Py_ssize_t w;
+    for (w = 0; w < PyList_Size(words); w++) {
+        PyObject* word = PyList_GetItem(words, w);
+        PyObject* key = keys[(int) PyString_Size(word)];
+        PyList_Append(PyDict_GetItem(dict, key), word);
+    }
+    return dict;
+}
+
 static PyMethodDef methods[] = {
     {"has_matches",  cWord_has_matches, METH_VARARGS, "has_matches"},
     {"search", cWord_search, METH_VARARGS, "search"},
+    {"preprocess", cWord_preprocess, METH_VARARGS, "preprocess"},
     {NULL, NULL, 0, NULL}
 };
 

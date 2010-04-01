@@ -266,12 +266,7 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
 
 class CWordList:
     def __init__(self, words):
-        self.words = {}
-        for l in xrange(constants.MAX_WORD_LENGTH):
-            self.words[l] = []
-        for w in words:
-            self.words[len(w)].append(w)
-        #self.words = words
+        self.words = cWord.preprocess(words)
         
     def has_matches(self, length, constraints, words=None):
         """
