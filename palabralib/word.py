@@ -266,13 +266,18 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
 
 class CWordList:
     def __init__(self, words):
-        self.words = words
+        self.words = {}
+        for l in xrange(constants.MAX_WORD_LENGTH):
+            self.words[l] = []
+        for w in words:
+            self.words[len(w)].append(w)
+        #self.words = words
         
     def has_matches(self, length, constraints, words=None):
         """
         Return True when a word exists that matches the constraints and the length.
         """
-        ws = self.words if words is None else words
+        ws = self.words[length] if words is None else words
         return cWord.has_matches(ws, length, constraints)
         
     def search(self, length, constraints, more_constraints=None):

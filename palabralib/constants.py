@@ -29,7 +29,7 @@ STANDARD_PATTERN_FILES = ["xml/patterns.xml"]
 
 # words
 WORDLIST_DIRECTORY = os.path.expanduser("~/.palabra/words")
-MAX_WORD_LENGTH = 64
+MAX_WORD_LENGTH = 64 # also in .c
 
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"

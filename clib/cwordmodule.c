@@ -83,8 +83,8 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject *more_constraints;
     if (!PyArg_ParseTuple(args, "OiOO", &words, &length, &constraints, &more_constraints))
         return NULL;
-    if (!PyList_Check(words)) {
-        PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as first argument.");
+    if (!PyDict_Check(words)) {
+        PyErr_SetString(PyExc_TypeError, "cWord.search expects a dict as first argument.");
         return NULL;
     }
     if (!PyList_Check(constraints)) {
@@ -198,11 +198,17 @@ cWord_search(PyObject *self, PyObject *args) {
             if (DEBUG) {
                 printf("building list for %i\n", (int) m);
             }
+            
+            PyObject* key;
+            key = Py_BuildValue("i", precons_l[m]);
+            
+            PyObject* words_m = PyDict_GetItem(words, key);
+            
             Py_ssize_t w;
-            for (w = 0; w < PyList_Size(words); w++) {
-                PyObject *word = PyList_GetItem(words, w);
-                Py_ssize_t size = PyString_Size(word);
-                if (precons_l[m] == size && check_constraints(word, csm)) {
+            for (w = 0; w < PyList_Size(words_m); w++) {
+                PyObject *word = PyList_GetItem(words_m, w);
+                //Py_ssize_t size = PyString_Size(word);
+                if (/*precons_l[m] == size &&*/ check_constraints(word, csm)) {
                     PyList_Append(precons_words[m], word);
                 }
             }
@@ -229,12 +235,17 @@ cWord_search(PyObject *self, PyObject *args) {
         return NULL;
     
     PyObject* cache = PyDict_New();
+    
+    PyObject* key;
+    key = Py_BuildValue("i", length);
+    
+    PyObject* words_main = PyDict_GetItem(words, key);
 
     Py_ssize_t w;
-    for (w = 0; w < PyList_Size(words); w++) {
-        PyObject *item = PyList_GetItem(words, w);
-        Py_ssize_t size = PyString_Size(item);
-        if (length == size && check_constraints(item, cs)) {
+    for (w = 0; w < PyList_Size(words_main); w++) {
+        PyObject *item = PyList_GetItem(words_main, w);
+        //Py_ssize_t size = PyString_Size(item);
+        if (/*length == size && */check_constraints(item, cs)) {
             char *word = PyString_AsString(item);
             int has_intersecting = 1;
             if (intersecting_zero_slot) {
