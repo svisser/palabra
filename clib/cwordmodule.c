@@ -289,7 +289,7 @@ cWord_search(PyObject *self, PyObject *args) {
         if (check_constraints(item, cs)) {
             char *word = PyString_AsString(item);
             int has_intersecting = intersecting_zero_slot ? 0 : 1;
-            if (0 && more_constraints != Py_None && !intersecting_zero_slot) {
+            if (more_constraints != Py_None && !intersecting_zero_slot) {
                 Py_ssize_t m;
                 for (m = 0; m < PyList_Size(more_constraints); m++) {
                     char *it_word = PyString_AsString(item);
