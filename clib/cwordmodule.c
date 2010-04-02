@@ -20,7 +20,10 @@
 
 #define MAX_WORD_LENGTH 64
 
-#define DEBUG 1
+// TODO
+#define MAX_ALPHABET_SIZE 50
+
+#define DEBUG 0
 
 int debug_checked = 0;
 
@@ -44,6 +47,7 @@ int process_constraints(PyObject* constraints, char *cs) {
 
 // return 0 if constraints don't matches, 1 if they do
 int check_constraints(PyObject* string, char *cs) {
+    debug_checked++;
     char *word = PyString_AsString(string);
     int i = 0;                
     while (*word != '\0') {
@@ -64,7 +68,6 @@ cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints)
         return 2;
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
-        debug_checked++;
         PyObject *word = PyList_GetItem(words, w);
         if (length == PyString_Size(word) && check_constraints(word, cs)) {
             return 1;
@@ -124,11 +127,11 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject *result = PyList_New(0);
     
     // process more_constraints
+    int **arr = NULL;
     int intersecting_zero_slot = 0;
     int precons_i[total];
     int precons_l[total];
     PyObject *precons_cs[total];
-    PyObject *precons_words[total];
     if (more_constraints != Py_None) {
         // read more_constraints
         Py_ssize_t m;
@@ -199,17 +202,18 @@ cWord_search(PyObject *self, PyObject *args) {
                 printf("%i %i\n", (int) m, equalities[m]);
             }
         }
-        // build the wordlists per intersecting slot
-        for (m = 0; m < total; m++) {
-            if (equalities[m] >= 0) {
-                // skip building a wordlist if the slot is equal to
-                // an earlier slot
-                precons_words[m] = precons_words[equalities[m]];
-                continue;
-            }
         
-            precons_words[m] = PyList_New(0);
-            
+        arr = malloc((int) total * sizeof(int*));
+        int a;
+        int b;
+        for (a = 0; a < total; a++) {
+            arr[a] = malloc(MAX_ALPHABET_SIZE * sizeof(int));
+            for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
+                arr[a][b] = 0;
+            }
+        }
+        
+        for (m = 0; m < total; m++) {
             char csm[MAX_WORD_LENGTH];
             int k;
             for (k = 0; k < MAX_WORD_LENGTH; k++) {
@@ -225,10 +229,6 @@ cWord_search(PyObject *self, PyObject *args) {
                     return NULL;
                 csm[j] = *c;
             }
-        
-            if (DEBUG) {
-                printf("building list for %i\n", (int) m);
-            }
             
             PyObject* key;
             key = Py_BuildValue("i", precons_l[m]);
@@ -239,20 +239,37 @@ cWord_search(PyObject *self, PyObject *args) {
             for (w = 0; w < PyList_Size(words_m); w++) {
                 PyObject *word = PyList_GetItem(words_m, w);
                 if (check_constraints(word, csm)) {
-                    PyList_Append(precons_words[m], word);
+                    char *it_word = PyString_AsString(word);
+                    it_word += precons_i[m];
+                    char *cons_c = it_word;
+                    
+                    int j;
+                    for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
+                        int ivalue = (int) *cons_c;
+                        if (arr[m][j] == ivalue) {
+                            break;
+                        }
+                        if (arr[m][j] == 0) {
+                            arr[m][j] = ivalue;
+                            break;
+                        }
+                    }
                 }
             }
-            if (DEBUG) {
-                printf("list size %i\n", (int) PyList_Size(precons_words[m]));
-            }
-            if (PyList_Size(precons_words[m]) == 0) {
-                // no words? then stop building wordlists because
-                // has_intersecting will be False for all words anyway
+            if (arr[m][0] == 0) {
                 if (DEBUG) {
-                    printf("no words\n");
+                    printf("intersecting_zero_slot\n");
                 }
                 intersecting_zero_slot = 1;
                 break;
+            }
+        }
+        
+        if (DEBUG) {
+            for (a = 0; a < total; a++) {
+                for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
+                    printf("arr[%i][%i] = %i\n", a, b, arr[a][b]);
+                }
             }
         }
     }
@@ -271,11 +288,8 @@ cWord_search(PyObject *self, PyObject *args) {
         PyObject *item = PyList_GetItem(words_main, w);
         if (check_constraints(item, cs)) {
             char *word = PyString_AsString(item);
-            int has_intersecting = 1;
-            if (intersecting_zero_slot) {
-                has_intersecting = 0;
-            }
-            if (more_constraints != Py_None && !intersecting_zero_slot) {
+            int has_intersecting = intersecting_zero_slot ? 0 : 1;
+            if (0 && more_constraints != Py_None && !intersecting_zero_slot) {
                 Py_ssize_t m;
                 for (m = 0; m < PyList_Size(more_constraints); m++) {
                     char *it_word = PyString_AsString(item);
@@ -293,28 +307,34 @@ cWord_search(PyObject *self, PyObject *args) {
                     PyObject* key;
                     key = Py_BuildValue("(iis)", m, precons_i[m], cons_cc);
                     if (!PyDict_Contains(cache, key)) {
-                        PyObject* tuple;
-                        tuple = Py_BuildValue("(is)", precons_i[m], cons_cc);
-                        PyList_SetItem(precons_cs[m], PyList_Size(precons_cs[m]) - 1, tuple);
-                        int has_matches = cWord_calc_has_matches(precons_words[m], precons_l[m], precons_cs[m]);
+                        int has_matches = 0;
+                        int b;
+                        for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
+                            if (arr[m][b] == 0) {
+                                break;
+                            }
+                            if (arr[m][b] == ((int) *cons_c)) {
+                                has_matches = 1;
+                                break;
+                            }
+                        }
+                        
                         if (has_matches == 2)
                             return NULL;
                         if (has_matches == 0 && DEBUG) {
-                            printf("no matches for (%i %i %s) in %i words\n", (int) m, (int) precons_i[m], cons_cc, (int) PyList_Size(precons_words[m]));
+                            printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_cc);
                         }
                         PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
                     }
-                    PyObject* value;
-                    value = PyDict_GetItem(cache, key);
+                    PyObject* value = PyDict_GetItem(cache, key);
                     if (!PyInt_AsLong(value)) {
                         has_intersecting = 0;
                         break;
                     }
                 }
             }
-            PyObject* res_tuple;
-            res_tuple = Py_BuildValue("(sO)",  word, PyBool_FromLong(has_intersecting));
-            PyList_Append(result, res_tuple);
+            PyObject* r = Py_BuildValue("(sO)",  word, PyBool_FromLong(has_intersecting));
+            PyList_Append(result, r);
         }
     }
     if (DEBUG) {
@@ -322,6 +342,15 @@ cWord_search(PyObject *self, PyObject *args) {
         printf("total words checked %i\n", debug_checked);
     }
     debug_checked = 0;
+    
+    if (more_constraints != Py_None) {
+        int a;
+        for (a = 0; a < total; a++) {
+            free(arr[a]);
+        }
+        free(arr);
+    }
+    
     return result;
 }
 
