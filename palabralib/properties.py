@@ -84,6 +84,7 @@ class PropertiesWindow(gtk.Dialog):
     def __init__(self, palabra_window, puzzle):
         gtk.Dialog.__init__(self, u"Puzzle properties", palabra_window
             , gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
         self.puzzle = puzzle
         self.set_size_request(512, 384)
 
@@ -252,6 +253,7 @@ class PropertiesWindow(gtk.Dialog):
     def create_words_tab(self, message, status, puzzle):
         store = gtk.ListStore(int, int)
         tree = gtk.TreeView(store)
+        tree.get_selection().connect("changed", self.on_selection_changed)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Length", cell, text=0)
@@ -301,6 +303,11 @@ class PropertiesWindow(gtk.Dialog):
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         return hbox
+    
+    def on_selection_changed(self, selection):
+        store, it = selection.get_selected()
+        length = store.get_value(it, 0)
+        self.palabra_window.editor.highlight_words(length)
         
     @staticmethod
     def determine_words_message(status, puzzle):

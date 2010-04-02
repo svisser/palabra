@@ -370,6 +370,23 @@ class Editor(gtk.HBox):
                 self.transform_blocks(cx, cy, False)
         return True
         
+    def highlight_words(self, length):
+        """Highlight the words with the specified length."""
+        new = []
+        for d in ["across", "down"]:
+            for n, x, y in self.puzzle.grid.words_by_direction(d):
+                if self.puzzle.grid.word_length(x, y, d) == length:
+                    new.append((x, y, d, length))
+        old = self.puzzle.view.highlights
+        self.puzzle.view.highlights = new
+        cells = []
+        for x, y, d, l in (old + new):
+            if d == "across":
+                cells += [(x, y) for x in xrange(x, x + l)]
+            elif d == "down":
+                cells += [(x, y) for y in xrange(y, y + l)]
+        self._render_cells(cells)
+        
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
         x = self.selection.x

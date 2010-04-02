@@ -217,6 +217,7 @@ class GridView:
         self.select_mode(constants.VIEW_MODE_EDITOR)
         
         self.overlay = []
+        self.highlights = []
         
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
@@ -275,6 +276,51 @@ class GridView:
         color = map(lambda x: x / 65535.0, (65535.0 / 2, 65535.0 / 2, 65535.0 / 2))
         if self.settings["render_overlays"]:
             self._render(context, render, color=color)
+        
+        # highlights
+        def render(context, grid, props):
+            # TODO don't use border values
+            def render_highlights_of_cell(context, p, q, top, bottom, left, right):
+                sx = props.grid_to_screen_x(p, False)
+                sy = props.grid_to_screen_y(q, False)
+                lines = []
+                if top:
+                    ry = sy + 0.5 * props.border["width"]
+                    rdx = props.cell["size"]
+                    lines.append((sx, ry, rdx, 0))
+                if bottom:
+                    ry = sy + props.cell["size"] - 0.5 * props.border["width"]
+                    rdx = props.cell["size"]
+                    lines.append((sx, ry, rdx, 0))
+                if left:
+                    rx = sx + 0.5 * props.border["width"]
+                    rdy = props.cell["size"]
+                    lines.append((rx, sy, 0, rdy))
+                if right:
+                    rx = sx + props.cell["size"] - 0.5 * props.border["width"]
+                    rdy = props.cell["size"]
+                    lines.append((rx, sy, 0, rdy))
+                
+                context.set_line_width(props.border["width"])
+                for rx, ry, rdx, rdy in lines:
+                    context.move_to(rx, ry)
+                    context.rel_line_to(rdx, rdy)
+                    context.stroke()
+                context.set_line_width(props.line["width"])
+                
+            for p, q, direction, length in self.highlights:
+                if direction == "across" and p <= x < p + length and q == y:
+                    top = bottom = True
+                    right = x == (p + length - 1)
+                    left = x == p
+                    render_highlights_of_cell(context, x, y, top, bottom, left, right)
+                elif direction == "down" and q <= y < q + length and p == x:
+                    left = right = True
+                    top = y == q
+                    bottom = y == (q + length - 1)
+                    render_highlights_of_cell(context, x, y, top, bottom, left, right)
+        color = map(lambda x: x / 65535.0, (65535.0, 0.0, 0.0))
+        self._render(context, render, color=color)
         
         # block
         def render(context, grid, props):
