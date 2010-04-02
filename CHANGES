@@ -7,7 +7,7 @@ Version 0.1.2 (unreleased)
 * Patterns can be selected for new puzzles.
 * Added option to create a backup file before saving.
 * Simple Dublin Core standard is used for metadata.
-* Speed improvements for word lists.
+* Speed improvements for word lists (rewritten in C).
 * Speed improvements for rendering the editor.
 
 Version 0.1.1 (September 15, 2009)
