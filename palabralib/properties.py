@@ -87,6 +87,7 @@ class PropertiesWindow(gtk.Dialog):
         self.palabra_window = palabra_window
         self.puzzle = puzzle
         self.set_size_request(512, 384)
+        self.connect("destroy", lambda widget: self.palabra_window.editor.clear_highlighted_words())
 
         status = puzzle.grid.determine_status(True)
         message = self.determine_words_message(status, puzzle)
@@ -96,6 +97,7 @@ class PropertiesWindow(gtk.Dialog):
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
         tabs.append_page(self.create_words_tab(message, status, puzzle), gtk.Label(u"Words"))
         tabs.append_page(self.create_metadata_tab(puzzle), gtk.Label(u"Metadata"))
+        tabs.connect("switch-page", self.on_switch_page)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -108,6 +110,9 @@ class PropertiesWindow(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
+        
+    def on_switch_page(self, tabs, page, pagenum):
+        self.words_tab_sel.unselect_all()
     
     def create_general_tab(self, status, puzzle):
         table = gtk.Table(9, 4, False)
@@ -253,7 +258,8 @@ class PropertiesWindow(gtk.Dialog):
     def create_words_tab(self, message, status, puzzle):
         store = gtk.ListStore(int, int)
         tree = gtk.TreeView(store)
-        tree.get_selection().connect("changed", self.on_selection_changed)
+        self.words_tab_sel = tree.get_selection()
+        self.words_tab_sel.connect("changed", self.on_selection_changed)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Length", cell, text=0)
@@ -306,8 +312,12 @@ class PropertiesWindow(gtk.Dialog):
     
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
-        length = store.get_value(it, 0)
-        self.palabra_window.editor.highlight_words(length)
+        if it:
+            length = store.get_value(it, 0)
+            self.palabra_window.editor.highlight_words(length)
+        else:
+            self.palabra_window.editor.clear_highlighted_words()
+        
         
     @staticmethod
     def determine_words_message(status, puzzle):

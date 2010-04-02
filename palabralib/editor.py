@@ -377,6 +377,14 @@ class Editor(gtk.HBox):
             for n, x, y in self.puzzle.grid.words_by_direction(d):
                 if self.puzzle.grid.word_length(x, y, d) == length:
                     new.append((x, y, d, length))
+        self._render_highlighted_words(new)
+        
+    def clear_highlighted_words(self): 
+        """Clear all highlighted words, if there are any."""
+        self._render_highlighted_words([])
+        
+    def _render_highlighted_words(self, new):
+        """Render the cells of the highlighted words and the previous cells."""
         old = self.puzzle.view.highlights
         self.puzzle.view.highlights = new
         cells = []
