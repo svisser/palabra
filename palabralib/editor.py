@@ -104,7 +104,7 @@ class WordTool:
         self.callbacks["overlay"](word)
         
     def display(self, strings, show_intersections):
-        # unset and set model for speed
+        self.tree.freeze_child_notify()
         store = self.tree.get_model()
         self.tree.set_model(None)
         self.data = []
@@ -114,6 +114,7 @@ class WordTool:
             self.data.append((word, has_intersections, display))
         self._display_data(store, show_intersections)
         self.tree.set_model(store)
+        self.tree.thaw_child_notify()
         self.tree.queue_draw()
         
     def _display_data(self, store, show_intersections):
