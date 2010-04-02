@@ -143,6 +143,8 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Down words", str(status["down_word_count"]), 2, 4)
         message = u"%.2f" % status["mean_word_length"]
         create_statistic(table, u"Mean word length", message, 2, 5)
+        score = self.determine_scrabble_score(puzzle)
+        create_statistic(table, u"Scrabble score", str(score), 2, 6)
         
         letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
         letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
@@ -317,7 +319,16 @@ class PropertiesWindow(gtk.Dialog):
             self.palabra_window.editor.highlight_words(length)
         else:
             self.palabra_window.editor.clear_highlighted_words()
-        
+            
+    @staticmethod
+    def determine_scrabble_score(puzzle):
+        # http://en.wikipedia.org/wiki/Scrabble_letter_distributions#English
+        scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
+            , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
+            , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
+            , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, ' ': 0, '': 0}
+        chars = [puzzle.grid.get_char(x, y) for x, y in puzzle.grid.cells()]
+        return sum(map(lambda c: scores[c], chars))
         
     @staticmethod
     def determine_words_message(status, puzzle):
