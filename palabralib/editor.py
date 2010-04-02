@@ -42,6 +42,8 @@ class WordTool:
         self.data = []
         self.store = gtk.ListStore(str, bool, str)
         self.tree = gtk.TreeView(self.store)
+        # use fixed size cells for speed
+        self.tree.set_fixed_height_mode(True)
         
         self.tree.connect("row-activated", self.on_row_activated)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
@@ -52,6 +54,7 @@ class WordTool:
         column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
         column.set_attributes(cell, markup=2)
+        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
         self.tree.append_column(column)
         
         tree_window = gtk.ScrolledWindow(None, None)
@@ -108,7 +111,7 @@ class WordTool:
         colors = {True: '<span color="black">', False: '<span color="gray">'}
         for word, has_intersections in strings:
             display = "".join([colors[has_intersections], word, "</span>"])
-            self.data.append([word, has_intersections, display])
+            self.data.append((word, has_intersections, display))
         self._display_data(store, show_intersections)
         self.tree.set_model(store)
         self.tree.queue_draw()
