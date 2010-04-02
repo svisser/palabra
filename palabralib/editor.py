@@ -105,9 +105,9 @@ class WordTool:
         store = self.tree.get_model()
         self.tree.set_model(None)
         self.data = []
+        colors = {True: '<span color="black">', False: '<span color="gray">'}
         for word, has_intersections in strings:
-            color = "black" if has_intersections else "gray"
-            display = "".join(["<span color=\"", color,"\">", word, "</span>"])
+            display = "".join([colors[has_intersections], word, "</span>"])
             self.data.append([word, has_intersections, display])
         self._display_data(store, show_intersections)
         self.tree.set_model(store)
@@ -161,13 +161,6 @@ def search(wordlists, grid, selection, force_refresh):
         return []
     more = grid.gather_all_constraints(x, y, dir)
     
-    #import pstats
-    #import cProfile
-    #cProfile.runctx('search_wordlists(wordlists, length, constraints, more)', globals(), locals(), filename='fooprof')
-    #p = pstats.Stats('fooprof')
-    #p.sort_stats('time').print_stats(20)
-    #p.print_callers()
-    
     return search_wordlists(wordlists, length, constraints, more)
 
 class Editor(gtk.HBox):
@@ -218,6 +211,8 @@ class Editor(gtk.HBox):
         self.drawing_area.disconnect(self.id_key_release)
     
     def _render_cells(self, cells, editor=True):
+        if not cells:
+            return
         self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
         if self.editor_surface:
             context = cairo.Context(self.editor_surface)
