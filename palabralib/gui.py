@@ -134,7 +134,7 @@ class PalabraWindow(gtk.Window):
         
         tabs = gtk.Notebook()
         tabs.set_border_width(8)
-        tabs.set_size_request(288, -1)
+        tabs.set_size_request(300, -1)
         tabs.set_show_border(False)
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
@@ -147,10 +147,12 @@ class PalabraWindow(gtk.Window):
                 word_tool.clear_overlay()
         tabs.connect("switch-page", on_switch_page)
         
-        all_hbox = gtk.HBox(False, 0)
-        all_hbox.pack_start(main, True, True, 0)
-        all_hbox.pack_start(tabs, False, False, 0)
-        self.panel.pack_start(all_hbox, True, True, 0)
+        paned = gtk.HPaned()
+        paned.pack1(main, True, False)
+        paned.pack2(tabs, True, False)
+        w, h = self.get_size()
+        paned.set_position(w - 300)
+        self.panel.pack_start(paned, True, True, 0)
         self.panel.show_all()
         
     def get_selection(self):
