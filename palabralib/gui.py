@@ -557,7 +557,12 @@ class PalabraWindow(gtk.Window):
         
     def undo_action(self):
         action.stack.undo_action(self.puzzle_manager.current_puzzle)
-        self.update_window(True)
+        import pstats
+        import cProfile
+        cProfile.runctx('self.update_window(True)', globals(), locals(), filename='fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('time').print_stats(20)
+        #p.print_callers()
         
     def redo_action(self):
         action.stack.redo_action(self.puzzle_manager.current_puzzle)
@@ -713,10 +718,8 @@ class PalabraWindow(gtk.Window):
             if selection is not None:
                 sel_x, sel_y = selection
                 valid = puzzle.grid.is_valid(sel_x, sel_y)
-                
                 for item, predicate in self.selection_toggle_items:
                     item.set_sensitive(valid and predicate(puzzle))
-                    
                 if valid and not puzzle.grid.is_available(sel_x, sel_y):
                     self.set_selection(-1, -1)
                 
@@ -725,10 +728,6 @@ class PalabraWindow(gtk.Window):
                 
         self.update_undo_redo()
         
-        # TODO needed to make app feels responsive (refreshing words
-        # takes a long time)
-        self.panel.queue_draw()
-        
         try:
             if content_changed:
                 # TODO modify when arbitrary number schemes are implemented
@@ -736,13 +735,6 @@ class PalabraWindow(gtk.Window):
                 
                 self.editor.refresh_clues()
             self.editor.force_redraw = True
-            
-            #import pstats
-            #import cProfile
-            #cProfile.runctx('search_wordlists(wordlists, length, constraints, more)', globals(), locals(), filename='fooprof')
-            #p = pstats.Stats('fooprof')
-            #p.sort_stats('time').print_stats(20)
-            #p.print_callers()
             
             self.editor.refresh_words()
             self.editor.refresh_visual_size()
@@ -866,7 +858,12 @@ class PalabraWindow(gtk.Window):
         editor.show_all()
         if editor.run() == gtk.RESPONSE_OK:
             puzzle.view.properties.apply_appearance(editor.gather_appearance())
-            self.update_window()
+            try:
+                self.editor.force_redraw = True
+                self.editor.refresh_visual_size()
+            except AttributeError:
+                pass
+            self.panel.queue_draw()
         editor.destroy()
 
     def toggle_toolbar(self, widget):
