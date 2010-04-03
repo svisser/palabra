@@ -319,7 +319,8 @@ class GridView:
                     top = y == q
                     bottom = y == (q + length - 1)
                     render_highlights_of_cell(context, x, y, top, bottom, left, right)
-        color = map(lambda x: x / 65535.0, (65535.0, 0.0, 0.0))
+        # TODO custom color
+        color = map(lambda x: x / 65535.0, (65535.0, 65535.0, 65535.0 / 2))
         self._render(context, render, color=color)
         
         # block
