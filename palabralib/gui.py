@@ -45,6 +45,20 @@ import transform
 import view
 from word import WordListEditor, read_wordlist_from_iter
 
+def create_splash():
+    window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+    window.set_type_hint(gtk.gdk.WINDOW_TYPE_HINT_SPLASHSCREEN)
+    window.set_decorated(False)
+    window.set_position(gtk.WIN_POS_CENTER)
+    hbox = gtk.HBox()
+    window.add(hbox)
+    image = gtk.Image()
+    image.set_from_file(os.path.join('resources', 'splash.png'))
+    hbox.pack_start(image)
+    image.show()
+    hbox.show()
+    return window
+
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()

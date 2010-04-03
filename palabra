@@ -24,7 +24,7 @@ except (ImportError, AssertionError):
     print "PyGTK 2.8 or higher is required for this application."
     raise SystemExit
 
-from palabralib.gui import PalabraWindow
+from palabralib.gui import PalabraWindow, create_splash
 import palabralib.preferences as preferences
 from palabralib.preferences import read_config_file
 from palabralib.word import create_wordlists
@@ -38,6 +38,10 @@ from palabralib.word import create_wordlists
 
 if __name__ == "__main__":
     try:
+        #splash = create_splash()
+        #splash.show()
+        #while gtk.events_pending():
+        #    gtk.main_iteration()
         print "Reading configuration file..."
         read_config_file()
         print "Loading wordlists..."
@@ -45,6 +49,7 @@ if __name__ == "__main__":
         palabra = PalabraWindow()
         palabra.wordlists.update(data)
         palabra.show_all()
+        #splash.destroy()
         gtk.main()
     except KeyboardInterrupt:
         import sys
