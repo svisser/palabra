@@ -139,8 +139,8 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Checked cells", str(status["checked_count"]), 2, 0)
         create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 2, 1)
         create_statistic(table, u"Total words", str(status["word_count"]), 2, 2)
-        create_statistic(table, u"Across words", str(status["across_word_count"]), 2, 3)
-        create_statistic(table, u"Down words", str(status["down_word_count"]), 2, 4)
+        create_statistic(table, u"Across words", str(status["word_counts"]["across"]), 2, 3)
+        create_statistic(table, u"Down words", str(status["word_counts"]["down"]), 2, 4)
         message = u"%.2f" % status["mean_word_length"]
         create_statistic(table, u"Mean word length", message, 2, 5)
         score = self.determine_scrabble_score(puzzle)

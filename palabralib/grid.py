@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import string
+
 class Grid:
     def __init__(self, width, height):
         """Construct a grid with the given dimensions."""
@@ -109,7 +111,7 @@ class Grid:
         status = {}
         status["block_count"] = self.count_blocks()
         status["void_count"] = self.count_voids()
-        status["char_count"] = self.count_chars()
+        status["char_count"] = self.count_chars(True)
         status["word_count"] = self.count_words()
         percentage = (float(status["block_count"]) / float(self.width * self.height)) * 100
         status["block_percentage"] = percentage
@@ -117,28 +119,18 @@ class Grid:
             status["mean_word_length"] = self.mean_word_length()
             status["actual_char_count"] = self.count_chars(False)
             status["blank_count"] = status["char_count"] - status["actual_char_count"]
-            status["word_counts"] = {}
-            status["across_word_count"] = 0
-            status["down_word_count"] = 0
-            for n, x, y in self.words_by_direction("across"):
-                length = self.word_length(x, y, "across")
-                
-                status["across_word_count"] += 1
-                
-                try:
-                    status["word_counts"][length] += 1
-                except KeyError:
-                    status["word_counts"][length] = 1
-                    
-            for n, x, y in self.words_by_direction("down"):
-                length = self.word_length(x, y, "down")
-                
-                status["down_word_count"] += 1
-                
-                try:
-                    status["word_counts"][length] += 1
-                except KeyError:
-                    status["word_counts"][length] = 1
+            
+            def determine_word_counts(direction):
+                for n, x, y in self.words_by_direction(direction):
+                    status["word_counts"][direction] += 1
+                    length = self.word_length(x, y, direction)
+                    try:
+                        status["word_counts"][length] += 1
+                    except KeyError:
+                        status["word_counts"][length] = 1
+            status["word_counts"] = {"across": 0, "down": 0}
+            determine_word_counts("across")
+            determine_word_counts("down")
                     
             status["word_counts_total"] = []
             for length in range(2, max(self.width, self.height) + 1):
@@ -151,14 +143,14 @@ class Grid:
             status["char_counts"] = {}
             for x, y in self.cells():
                 c = self.get_char(x, y)
-                if c != "":
+                if c:
                     try:
                         status["char_counts"][c] += 1
                     except KeyError:
                         status["char_counts"][c] = 1
                             
             status["char_counts_total"] = []
-            for c in map(chr, range(ord('A'), ord('Z') + 1)):
+            for c in string.ascii_uppercase:
                 try:
                     count = status["char_counts"][c]
                 except KeyError:
