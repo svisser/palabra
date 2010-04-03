@@ -18,19 +18,14 @@
 import cairo
 import gobject
 import gtk
-from threading import Thread
 
 import action
 from action import ClueTransformAction
 import constants
-from itertools import *
+from itertools import chain
 import preferences
 import transform
 from word import search_wordlists
-
-def load_words(wordlists, length, constraints, more, editor, show_intersections):
-    result = search_wordlists(wordlists, length, constraints, more)
-    gobject.idle_add(editor.tools["word"].display, result, show_intersections)
 
 class WordTool:
     def __init__(self, callbacks):
@@ -125,11 +120,12 @@ class WordTool:
             store.append(row)
         
     def refresh_intersecting(self, show_intersections):
-        # unset and set model for speed
+        self.tree.freeze_child_notify()
         store = self.tree.get_model()
         self.tree.set_model(None)
         self._display_data(self.store, show_intersections)
         self.tree.set_model(store)
+        self.tree.thaw_child_notify()
         self.tree.queue_draw()
         
     def display_overlay(self):
@@ -164,7 +160,6 @@ def search(wordlists, grid, selection, force_refresh):
     if len(constraints) == length and not force_refresh:
         return []
     more = grid.gather_all_constraints(x, y, dir)
-    
     return search_wordlists(wordlists, length, constraints, more)
 
 class Editor(gtk.HBox):
@@ -414,7 +409,8 @@ class Editor(gtk.HBox):
         self.tools["word"].display([], show)
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        self.tools["word"].display(result, show)
+        if result:
+            self.tools["word"].display(result, show)
             
     def get_clue_tool_callbacks(self):
         def select(x, y, direction):

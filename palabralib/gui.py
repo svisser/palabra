@@ -563,12 +563,7 @@ class PalabraWindow(gtk.Window):
         
     def undo_action(self):
         action.stack.undo_action(self.puzzle_manager.current_puzzle)
-        import pstats
-        import cProfile
-        cProfile.runctx('self.update_window(True)', globals(), locals(), filename='fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('time').print_stats(20)
-        #p.print_callers()
+        self.update_window(True)
         
     def redo_action(self):
         action.stack.redo_action(self.puzzle_manager.current_puzzle)

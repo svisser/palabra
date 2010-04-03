@@ -24,46 +24,28 @@ except (ImportError, AssertionError):
     print "PyGTK 2.8 or higher is required for this application."
     raise SystemExit
 
-import gobject
-
 from palabralib.gui import PalabraWindow
 import palabralib.preferences as preferences
 from palabralib.preferences import read_config_file
 from palabralib.word import create_wordlists
 
+#import pstats
+#import cProfile
+#cProfile.runctx('self.update_window(True)', globals(), locals(), filename='fooprof')
+#p = pstats.Stats('fooprof')
+#p.sort_stats('time').print_stats(20)
+#p.print_callers()
+
 if __name__ == "__main__":
     try:
+        print "Reading configuration file..."
         read_config_file()
-        gobject.threads_init()
-        
         print "Loading wordlists..."
-        
-        #import pstats
-        #import cProfile
-        #cProfile.runctx('create_wordlists(preferences.prefs["word_files"])', globals(), locals(), filename='fooprof')
-        #p = pstats.Stats('fooprof')
-        #p.sort_stats('time').print_stats(20)
-        #p.print_callers()
-        
         data = create_wordlists(preferences.prefs["word_files"])
-        
         palabra = PalabraWindow()
         palabra.wordlists.update(data)
-        
         palabra.show_all()
         gtk.main()
-        #import pstats
-        #import cProfile
-        #cProfile.run('gtk.main()', 'fooprof')
-        #p = pstats.Stats('fooprof')
-        #p.sort_stats('time').print_stats()#20)
-        
-        # from editor.py
-        #import pstats
-        #import cProfile
-        #cProfile.runctx('search_wordlists(wordlists, length, constraints, more)', globals(), locals(), filename='fooprof')
-        #p = pstats.Stats('fooprof')
-        #p.sort_stats('time').print_stats(20)
     except KeyboardInterrupt:
         import sys
         sys.exit("ERROR: Interrupted by user")
