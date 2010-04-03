@@ -115,7 +115,7 @@ class PropertiesWindow(gtk.Dialog):
         self.words_tab_sel.unselect_all()
     
     def create_general_tab(self, status, puzzle):
-        table = gtk.Table(9, 4, False)
+        table = gtk.Table(10, 4, False)
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
@@ -146,6 +146,8 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Mean word length", message, 2, 5)
         score = self.determine_scrabble_score(puzzle)
         create_statistic(table, u"Scrabble score", str(score), 2, 6)
+        avg_score = float(score) / status["char_count"]
+        create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 7)
         
         letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
         letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
@@ -159,17 +161,17 @@ class PropertiesWindow(gtk.Dialog):
         
         label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 7, 8)
+        table.attach(label, 0, 2, 8, 9)
         label = gtk.Label(''.join(letters_in_use_strings))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 7, 8)
+        table.attach(label, 2, 4, 8, 9)
         
         label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 8, 9)
+        table.attach(label, 0, 2, 9, 10)
         label = gtk.Label(''.join(letters_not_in_use_strings))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 8, 9)
+        table.attach(label, 2, 4, 9, 10)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
