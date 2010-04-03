@@ -106,21 +106,17 @@ class Grid:
 
     def determine_status(self, full=False):
         """Return a dictionary with the grid's properties."""
-        size = self.width * self.height
-        
         status = {}
         status["block_count"] = self.count_blocks()
         status["void_count"] = self.count_voids()
-        
         status["char_count"] = self.count_chars()
         status["word_count"] = self.count_words()
-        
-        block_percentage = (float(status["block_count"]) / float(size)) * 100
-        status["block_percentage"] = block_percentage
-        
+        percentage = (float(status["block_count"]) / float(self.width * self.height)) * 100
+        status["block_percentage"] = percentage
         if full:
             status["mean_word_length"] = self.mean_word_length()
-            
+            status["actual_char_count"] = self.count_chars(False)
+            status["blank_count"] = status["char_count"] - status["actual_char_count"]
             status["word_counts"] = {}
             status["across_word_count"] = 0
             status["down_word_count"] = 0

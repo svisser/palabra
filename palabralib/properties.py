@@ -129,10 +129,10 @@ class PropertiesWindow(gtk.Dialog):
             
         create_statistic(table, u"Columns", str(puzzle.grid.width), 0, 0)
         create_statistic(table, u"Rows", str(puzzle.grid.height), 0, 1)
-        create_statistic(table, u"Blocks", str(status["block_count"]), 0, 2)
-        message = ''.join([u"%.2f" % status["block_percentage"], u"%"])
-        create_statistic(table, u"Block percentage", message, 0, 3)
-        create_statistic(table, u"Letters", str(status["char_count"]), 0, 4)
+        msg = ''.join([str(status["block_count"]), u" (%.2f" % status["block_percentage"], u"%)"])
+        create_statistic(table, u"Blocks", msg, 0, 2)
+        create_statistic(table, u"Letters", str(status["actual_char_count"]), 0, 3)
+        create_statistic(table, u"Blanks", str(status["blank_count"]), 0, 4)
         create_statistic(table, u"Clues", str(status["clue_count"]), 0, 5)
         create_statistic(table, u"Voids", str(status["void_count"]), 0, 6)
         
