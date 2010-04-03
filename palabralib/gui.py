@@ -245,6 +245,10 @@ class PalabraWindow(gtk.Window):
     
     def save_puzzle(self, save_as=False):
         puzzle = self.puzzle_manager.current_puzzle
+        if puzzle.type == 'xpf':
+            # TODO
+            print "Warning: saving XPF not yet supported."
+            return
         backup = preferences.prefs["backup_copy_before_save"]
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
             title = u"Save puzzle"

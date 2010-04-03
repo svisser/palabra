@@ -27,6 +27,7 @@ class Puzzle:
         self.view = GridView(grid)
         self.filename = None
         self.metadata = {}
+        self.type = 'palabra'
 
 class PuzzleManager:
     def __init__(self):

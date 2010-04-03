@@ -46,14 +46,34 @@ def export_puzzle(puzzle, filename, options):
         export_to_png(puzzle, filename, outputs[0], settings)
 
 def read_crossword(filename):
-    doc = _read_palabra_file(filename)
-    main = doc.getroot()[0]
-    
-    if main.tag == "container":
-        raise InvalidFileError(u"This is a container file instead of a puzzle file.")
-    elif main.tag != "crossword":
-        raise InvalidFileError(u"This file does not contain a crossword puzzle.")
-    return _read_crossword(main)
+    t = determine_file_type(filename)
+    if t == "palabra":
+        doc = _read_palabra_file(filename)
+        main = doc.getroot()[0]
+
+        if main.tag == "container":
+            raise InvalidFileError(u"This is a container file instead of a puzzle file.")
+        elif main.tag != "crossword":
+            raise InvalidFileError(u"This file does not contain a crossword puzzle.")
+        return _read_crossword(main)
+    elif t == "xpf":
+        results = read_xpf(filename)
+        if len(results) > 1:
+            raise InvalidFileError(u"This is a container file instead of a puzzle file.")
+        else:
+            return results[0]
+
+def determine_file_type(filename):
+    try:
+        doc = etree.parse(filename)
+    except etree.XMLSyntaxError:
+        raise InvalidFileError(u"This is not an XML file.")
+    root = doc.getroot()
+    if root.tag == "palabra":
+        return "palabra"
+    elif root.tag == "Puzzles":
+        return 'xpf'
+    return None
     
 def write_crossword_to_xml(puzzle, backup=True):
     root = etree.Element("palabra")
@@ -433,3 +453,100 @@ def export_to_png(puzzle, filename, output, settings):
     
     surface.write_to_png(filename)
     surface.finish()
+    
+#####
+
+class XPFParserError(ParserError):
+    def __init__(self, message=""):
+        self.message = "XPFParserError: " + message
+
+# http://www.xwordinfo.com/XPF/
+def read_xpf(filename):
+    results = []
+    try:
+        doc = etree.parse(filename)
+    except etree.XMLSyntaxError:
+        raise XPFParserError(u"No valid XML syntax.")
+    puzzles = doc.getroot()
+    if puzzles.tag != "Puzzles":
+        raise XPFParserError(u"No root element called Puzzles found.")
+    for puzzle in puzzles:
+        if puzzle.tag != "Puzzle":
+            print "Warning: skipping a child of Puzzles that is not a Puzzle."
+            continue
+        r_meta = {}
+        r_width = None
+        r_height = None
+        r_grid = None
+        for child in puzzle:
+            if child.tag == "Title":
+                r_meta["title"] = child.text
+            elif child.tag == "Author":
+                r_meta["creator"] = child.text
+            elif child.tag == "Editor":
+                r_meta["contributor"] = child.text
+            elif child.tag == "Copyright":
+                r_meta["rights"] = child.text
+            elif child.tag == "Publisher":
+                r_meta["publisher"] = child.text
+            elif child.tag == "Date":
+                r_meta["date"] = child.text
+            elif child.tag == "Size":
+                for d in child:
+                    if d.tag == "Rows":
+                        r_height = int(d.text)
+                    elif d.tag == "Cols":
+                        r_width = int(d.text)
+            elif child.tag == "Grid":
+                if r_width is None:
+                    raise XPFParserError(u"The number of columns was not specified.")
+                if r_height is None:
+                    raise XPFParserError(u"The number of rows was not specified.")
+                assert r_width == r_height
+                r_grid = Grid(r_width, r_height)
+                x, y = 0, 0
+                for row in child:
+                    if row.tag != "Row":
+                        print "Warning: skipping a child of Grid that is not a Row."
+                        continue
+                    content = row.text
+                    for i, c in enumerate(content):
+                        if c == '.':
+                            r_grid.set_block(x + i, y, True)
+                        else:
+                            r_grid.set_char(x + i, y, c)
+                    y += 1
+            elif child.tag == "Circles":
+                pass # TODO
+            elif child.tag == "RebusEntries":
+                pass # TODO
+            elif child.tag == "Shades":
+                pass # TODO
+            elif child.tag == "Clues":
+                for clue in child:
+                    if clue.tag != "Clue":
+                        print "Warning: skipping a child of Clues that is not a Clue."
+                        continue
+                    a_row = clue.get("Row")
+                    a_col = clue.get("Col")
+                    a_num = clue.get("Num")
+                    a_dir = clue.get("Dir")
+                    a_ans = clue.get("Ans")
+                    if a_row is not None and a_col is not None and a_dir is not None:
+                        x = int(a_col) - 1
+                        y = int(a_row) - 1
+                        if a_dir == "Across":
+                            direction = "across"
+                        elif a_dir == "Down":
+                            direction = "down"
+                        else:
+                            print "Warning: skipping a clue with a direction that is not across or down."
+                            continue
+                        r_grid.store_clue(x, y, direction, "text", clue.text)
+            elif child.tag == "Notepad":
+                pass # TODO
+        p = Puzzle(r_grid)
+        p.metadata = r_meta
+        p.type = 'xpf'
+        results.append(p)
+    return results
