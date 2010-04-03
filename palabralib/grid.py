@@ -347,6 +347,21 @@ class Grid:
         """Return the number of blocks in the grid."""
         return sum([1 for x, y in self.cells() if self.is_block(x, y)])
         
+    # TODO incorrect
+    def count_cheaters(self):
+        """Return the number of cheating blocks in the grid."""
+        def is_cheater(x, y):
+            if not self.is_block(x, y):
+                return False
+            if self.is_start_word(x + 1, y, "across") and self.is_part_of_word(x - 1, y, "across"):
+                return False
+            if self.is_start_word(x, y + 1, "down") and self.is_part_of_word(x, y - 1, "down"):
+                return False
+            return True
+        cells = [(x, y) for x, y in self.cells() if is_cheater(x, y)]
+        print cells
+        return len(cells)
+        
     def count_voids(self):
         """Return the number of voids in the grid."""
         return sum([1 for x, y in self.cells() if self.is_void(x, y)])
