@@ -502,7 +502,8 @@ def read_xpf(filename):
                     raise XPFParserError(u"The number of columns was not specified.")
                 if r_height is None:
                     raise XPFParserError(u"The number of rows was not specified.")
-                assert r_width == r_height
+                assert r_width >= 0
+                assert r_height >= 0
                 r_grid = Grid(r_width, r_height)
                 x, y = 0, 0
                 for row in child:
