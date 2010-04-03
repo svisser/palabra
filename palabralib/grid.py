@@ -112,12 +112,12 @@ class Grid:
         status["block_count"] = self.count_blocks()
         status["void_count"] = self.count_voids()
         status["char_count"] = self.count_chars(True)
+        status["actual_char_count"] = self.count_chars(False)
         status["word_count"] = self.count_words()
         percentage = (float(status["block_count"]) / float(self.width * self.height)) * 100
         status["block_percentage"] = percentage
         if full:
             status["mean_word_length"] = self.mean_word_length()
-            status["actual_char_count"] = self.count_chars(False)
             status["blank_count"] = status["char_count"] - status["actual_char_count"]
             
             def determine_word_counts(direction):
