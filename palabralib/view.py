@@ -279,29 +279,29 @@ class GridView:
         
         # highlights
         def render(context, grid, props):
-            # TODO don't use border values
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
                 sx = props.grid_to_screen_x(p, False)
                 sy = props.grid_to_screen_y(q, False)
+                hwidth = int(props.cell["size"] / 8)
                 lines = []
                 if top:
-                    ry = sy + 0.5 * props.border["width"]
+                    ry = sy + 0.5 * hwidth
                     rdx = props.cell["size"]
                     lines.append((sx, ry, rdx, 0))
                 if bottom:
-                    ry = sy + props.cell["size"] - 0.5 * props.border["width"]
+                    ry = sy + props.cell["size"] - 0.5 * hwidth
                     rdx = props.cell["size"]
                     lines.append((sx, ry, rdx, 0))
                 if left:
-                    rx = sx + 0.5 * props.border["width"]
+                    rx = sx + 0.5 * hwidth
                     rdy = props.cell["size"]
                     lines.append((rx, sy, 0, rdy))
                 if right:
-                    rx = sx + props.cell["size"] - 0.5 * props.border["width"]
+                    rx = sx + props.cell["size"] - 0.5 * hwidth
                     rdy = props.cell["size"]
                     lines.append((rx, sy, 0, rdy))
                 
-                context.set_line_width(props.border["width"])
+                context.set_line_width(hwidth)
                 for rx, ry, rdx, rdy in lines:
                     context.move_to(rx, ry)
                     context.rel_line_to(rdx, rdy)
