@@ -372,10 +372,14 @@ class Grid:
                     total += 1
         return total
         
-    def count_chars(self):
+    def count_chars(self, include_blanks=True):
         """Return the number of chars in the grid."""
-        nots = len([(x, y) for x, y in self.cells() if not self.is_available(x, y)])
-        return (self.width * self.height) - nots
+        count = 0
+        for x, y in self.cells():
+            if self.is_available(x, y):
+                if include_blanks or self.get_char(x, y) != '':
+                    count += 1
+        return count
             
     def mean_word_length(self):
         """Return the mean length of the words in the grid."""
