@@ -18,7 +18,7 @@
 import gobject
 import gtk
 
-from files import InvalidFileError, read_pattern_file, write_pattern_file
+from files import PalabraParserError, read_pattern_file, write_pattern_file
 from grid import Grid
 from newpuzzle import GridPreview
 import preferences
@@ -158,7 +158,7 @@ class PatternFileEditor(gtk.Dialog):
             try:
                 g, meta, data = read_pattern_file(f)
                 self.patterns[f] = {"metadata": meta, "data": data}
-            except InvalidFileError:
+            except PalabraParserError:
                 # TODO
                 pass
         for item in self.patterns.items():
@@ -206,7 +206,7 @@ class PatternFileEditor(gtk.Dialog):
                     self.patterns[path] = {"metadata": meta, "data": data}
                     self._append_file(path, self.patterns[path])
                     self.tree.columns_autosize()
-                except InvalidFileError:
+                except PalabraParserError:
                     # TODO
                     pass
         
@@ -298,7 +298,7 @@ class PatternFileEditor(gtk.Dialog):
         """Append all patterns to the specified file."""
         try:
             g, meta, data = read_pattern_file(path)
-        except InvalidFileError:
+        except PalabraParserError:
             # TODO
             return
         try:
@@ -322,7 +322,7 @@ class PatternFileEditor(gtk.Dialog):
                     if k not in keys:
                         ndata[k] = v
                 write_pattern_file(g, meta, ndata)
-            except InvalidFileError:
+            except PalabraParserError:
                 # TODO
                 pass
     
@@ -356,7 +356,7 @@ class PatternFileEditor(gtk.Dialog):
             return
         try:
             g, meta, data = read_pattern_file(path)
-        except InvalidFileError:
+        except PalabraParserError:
             # TODO
             return
         max_id = int(max(data.keys())) + 1

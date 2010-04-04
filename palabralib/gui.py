@@ -28,7 +28,7 @@ import constants
 from export import ExportWindow, verify_output_options
 from editor import Editor, WordTool
 from files import (
-    InvalidFileError,
+    PalabraParserError,
     read_crossword,
     write_crossword_to_xml,
     export_puzzle,
@@ -240,7 +240,7 @@ class PalabraWindow(gtk.Window):
                 filename = dialog.get_filename()
                 try:
                     puzzle = read_crossword(filename)
-                except InvalidFileError, e:
+                except PalabraParserError, e:
                     title = u"Error when opening file"
                     show_error(title, e.message)
                 else:

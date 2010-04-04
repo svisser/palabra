@@ -27,15 +27,31 @@ from puzzle import Puzzle
 from view import GridView
 
 DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
+DC_SIMPLE_TERMS = ["title"
+    , "creator"
+    , "subject"
+    , "description"
+    , "publisher"
+    , "contributor"
+    , "date"
+    , "type"
+    , "format"
+    , "identifier"
+    , "source"
+    , "language"
+    , "relation"
+    , "coverage"
+    , "rights"]
 
 XML_SCHEMA_CROSSWORD = "xml/crossword.xsd"
 
 class ParserError(Exception):
-    pass
-    
-class InvalidFileError(ParserError):
-    def __init__(self, message=None):
-        self.message = message
+    def __init__(self, prefix, message):
+        self.message = ''.join([prefix, ": ", message])
+
+class PalabraParserError(ParserError):
+    def __init__(self, message):
+        ParserError.__init__(self, "PalabraParserError", message)
 
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])
@@ -48,18 +64,17 @@ def export_puzzle(puzzle, filename, options):
 def read_crossword(filename):
     t = determine_file_type(filename)
     if t == "palabra":
-        doc = _read_palabra_file(filename)
-        main = doc.getroot()[0]
-
-        if main.tag == "container":
-            raise InvalidFileError(u"This is a container file instead of a puzzle file.")
-        elif main.tag != "crossword":
-            raise InvalidFileError(u"This file does not contain a crossword puzzle.")
-        return _read_crossword(main)
+        results = read_palabra(filename)
+        print results
+        if not results:
+            raise PalabraParserError(u"No puzzle was found in this file.")
+        if len(results) > 1:
+            raise PalabraParserError(u"This is a container file instead of a puzzle file.")
+        return results[0]
     elif t == "xpf":
         results = read_xpf(filename)
         if len(results) > 1:
-            raise InvalidFileError(u"This is a container file instead of a puzzle file.")
+            raise PalabraParserError(u"This is a container file instead of a puzzle file.")
         else:
             return results[0]
 
@@ -67,7 +82,7 @@ def determine_file_type(filename):
     try:
         doc = etree.parse(filename)
     except etree.XMLSyntaxError:
-        raise InvalidFileError(u"This is not an XML file.")
+        raise PalabraParserError(u"This is not an XML file.")
     root = doc.getroot()
     if root.tag == "palabra":
         return "palabra"
@@ -101,7 +116,7 @@ def read_pattern_file(filename):
     doc = _read_palabra_file(filename)
     main = doc.getroot()[0]
     if main.tag != "container":
-        raise InvalidFileError(u"This file is not a container file.")
+        raise PalabraParserError(u"This file is not a container file.")
     content = main.get("content")
     metadata = {}
     contents = {}
@@ -133,7 +148,7 @@ def read_container(filename):
     main = doc.getroot()[0]
     
     if main.tag != "container":
-        raise InvalidFileError(u"This file is not a container file.")
+        raise PalabraParserError(u"This file is not a container file.")
     content = main.get("content")
     contents = []
     if content in ["crossword", "grid"]:
@@ -174,7 +189,8 @@ def _read_palabra_file(filename):
     try:
         doc = etree.parse(filename)
     except etree.XMLSyntaxError:
-        raise InvalidFileError(u"This file does not appear to be a valid Palabra crossword file.")
+        raise PalabraParserError(u"This file does not appear to be a valid Palabra crossword file.")
+    return doc
     xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
     try:
         xmlschema.assertValid(doc)
@@ -192,9 +208,9 @@ def _read_palabra_file(filename):
                 , str(constants.VERSION)
                 , u".\nPlease upgrade your version of Palabra to open this file."
                 ]
-            raise InvalidFileError(u"".join(contents))
+            raise PalabraParserError(u"".join(contents))
         else:
-            raise InvalidFileError(u"Palabra was unable to open this file.")
+            raise PalabraParserError(u"Palabra was unable to open this file.")
     return doc
     
 def _read_crossword(crossword):
@@ -214,7 +230,8 @@ def _read_crossword(crossword):
     return puzzle
 
 def _write_crossword(parent, puzzle):
-    crossword = etree.SubElement(parent, "crossword")
+    crossword = etree.SubElement(parent, "puzzle")
+    crossword.set("type", "crossword")
     _write_metadata(crossword, puzzle.metadata)
     _write_grid(crossword, puzzle.grid)
     for d in ["across", "down"]:
@@ -228,22 +245,7 @@ def _read_metadata(metadata):
     
 def _write_metadata(parent, metadata):
     e = etree.SubElement(parent, "metadata", nsmap={"dc": DC_NAMESPACE})
-    keys = ["title"
-        , "creator"
-        , "subject"
-        , "description"
-        , "publisher"
-        , "contributor"
-        , "date"
-        , "type"
-        , "format"
-        , "identifier"
-        , "source"
-        , "language"
-        , "relation"
-        , "coverage"
-        , "rights"]
-    for m in keys:
+    for m in DC_SIMPLE_TERMS:
         if m in metadata:
             prop = etree.SubElement(e, "".join(["{%s}" % DC_NAMESPACE, m]))
             prop.text = metadata[m]
@@ -456,9 +458,141 @@ def export_to_png(puzzle, filename, output, settings):
     
 #####
 
+def read_palabra(filename):
+    results = []
+    try:
+        doc = etree.parse(filename)
+    except etree.XMLSyntaxError:
+        raise PalabraParserError(u"No valid XML syntax.")
+    palabra = doc.getroot()
+    if palabra.tag != "palabra":
+        raise PalabraParserError(u"No root element called palabra found.")
+    version = palabra.get("version")
+    if not version:
+        raise PalabraParserError(u"Palabra version number not specified.")
+    # TODO version checks
+    def parse_metadata(element):
+        meta = {}
+        for m in element:
+            term = m.tag[len("{%s}" % DC_NAMESPACE):]
+            if term not in DC_SIMPLE_TERMS:
+                print "Warning: skipping a non-DC metadata term: ", term
+                continue
+            meta[term] = m.text
+        return meta
+    def parse_cell_coordinate(cell, skip, attr, name):
+        coord = cell.get(attr)
+        if not coord:
+            print "".join([u"Warning: skipping ", skip, " with no ", name, "-coordinate."])
+            return None
+        if not coord.isdigit():
+            print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
+            return None
+        if int(coord) - 1 < 0:
+            print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
+            return None
+        return int(coord) - 1
+    def parse_grid(element):
+        def parse_grid_size(attr, name):
+            width = element.get(attr)
+            if not width:
+                msg = "".join([name, u" attribute of grid not specified."])
+                raise PalabraParserError(msg)
+            if not width.isdigit():
+                msg = "".join([name, u" attribute of grid is not a number."])
+                raise PalabraParserError(msg)
+            if int(width) < 1:
+                msg = "".join([name, u" of grid must be at least one cell."])
+                raise PalabraParserError(msg)
+            return int(width)
+        width = parse_grid_size("width", u"Width")
+        height = parse_grid_size("height", u"Height")
+        grid = Grid(width, height)
+        for cell in element:
+            if cell.tag not in ["block", "letter", "void"]:
+                print u"Warning: skipping cell with invalid type."
+                continue
+            x = parse_cell_coordinate(cell, "cell", "x", "x")
+            if x is None:
+                continue
+            y = parse_cell_coordinate(cell, "cell", "y", "y")
+            if y is None:
+                continue
+            if not grid.is_valid(x, y):
+                print "Warning: skipping cell with invalid coordinates."
+                continue
+            data = {}
+            data["block"] = cell.tag == "block"
+            if cell.tag == "letter" and cell.text is not None:
+                data["char"] = cell.text
+            else:
+                data["char"] = ""
+            data["clues"] = {}
+            data["bar"] = {}
+            data["bar"]["top"] = cell.get("top-bar") == "true"
+            data["bar"]["left"] = cell.get("left-bar") == "true"
+            data["number"] = 0
+            data["void"] = cell.tag == "void"
+            grid.set_cell(x, y, data)
+        return grid
+    def parse_clues(element, grid):
+        dir = element.get("direction")
+        if not dir:
+            print u"Warning: skipping clues element with no direction specified."
+            return
+        if dir not in ["across", "down"]:
+            print u"Warning: skipping clues element with invalid direction."
+            return
+        for clue in element:
+            if clue.tag != "clue":
+                print "Warning: skipping child of clues that is not a clue."
+                continue
+            x = parse_cell_coordinate(clue, "clue", "x", "x")
+            if x is None:
+                continue
+            y = parse_cell_coordinate(clue, "clue", "y", "y")
+            if y is None:
+                continue
+            if not grid.is_valid(x, y):
+                print "Warning: skipping clue with invalid coordinates."
+                continue
+            data = {}
+            for prop in clue:
+                if prop.tag not in ["text", "explanation"]:
+                    print "Warning: skipping child of clue that is not text or explanation."
+                    continue
+                if prop.text is not None:
+                    data[prop.tag] = prop.text
+            grid.cell(x, y)["clues"][dir] = data
+    for puzzle in palabra:
+        if puzzle.tag != "puzzle":
+            print "Warning: skipping a child of palabra that is not a puzzle."
+            continue
+        type = puzzle.get("type")
+        if not type:
+            raise PalabraParserError(u"Type of puzzle not specified.")
+        if type != "crossword":
+            raise PalabraParserError("".join([u"This type of puzzle (", type, ") not supported."]))
+        r_meta = {}
+        r_grid = None
+        for child in puzzle:
+            if child.tag == "metadata":
+                r_meta = parse_metadata(child)
+            elif child.tag == "grid":
+                r_grid = parse_grid(child)
+            elif child.tag == "clues":
+                if r_grid is None:
+                    raise PalabraParserError(u"Unable to process clues: grid does not exist.")
+                parse_clues(child, r_grid)
+        p = Puzzle(r_grid)
+        p.metadata = r_meta
+        p.type = 'palabra'
+        results.append(p)
+    return results
+
 class XPFParserError(ParserError):
     def __init__(self, message=""):
-        self.message = "XPFParserError: " + message
+        ParserError.__init__(self, "XPFParserError", message)
 
 # http://www.xwordinfo.com/XPF/
 def read_xpf(filename):
