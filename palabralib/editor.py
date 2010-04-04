@@ -103,10 +103,10 @@ class WordTool:
         store = self.tree.get_model()
         self.tree.set_model(None)
         self.data = []
-        colors = {True: '<span color="black">', False: '<span color="gray">'}
+        colors = {True: "black", False: "gray"}
         for word, has_intersections in strings:
-            display = "".join([colors[has_intersections], word, "</span>"])
-            self.data.append((word, has_intersections, display))
+            msg = ['<span color="', colors[has_intersections], '">', word, "</span>"]
+            self.data.append((word, has_intersections, ''.join(msg)))
         self._display_data(store, show_intersections)
         self.tree.set_model(store)
         self.tree.thaw_child_notify()
@@ -226,16 +226,21 @@ class Editor(gtk.HBox):
             context.paint()
         
     def _clear_selection(self, x, y, direction):
-        p = self.puzzle.grid.in_direction(x, y, direction)
-        q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
-        self._render_cells(chain(p, q), editor=False)
+        """
+        Clear the selection containing (x, y) in the specified direction.
+        """
+        self._render_selection(x, y, direction, editor=False)
         
-    def _render_selection(self, x, y, direction):
+    def _render_selection(self, x, y, direction, editor=True):
+        """
+        Render the selected cells containing (x, y) in the specified direction.
+        """
         p = self.puzzle.grid.in_direction(x, y, direction)
         q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
-        self._render_cells(chain(p, q))
+        self._render_cells(chain(p, q), editor=editor)
     
     def _render_editor_of_cell(self, context, x, y):
+        """Render everything editor related colors for the cell at (x, y)."""
         # warnings for undesired cells
         r = preferences.prefs["color_warning_red"] / 65535.0
         g = preferences.prefs["color_warning_green"] / 65535.0
@@ -292,6 +297,7 @@ class Editor(gtk.HBox):
                 self.puzzle.view.render_location(context, x, y, r, g, b)
         
     def on_expose_event(self, drawing_area, event):
+        """Render the main editing component."""
         if not self.editor_surface or self.force_redraw:
             width = self.puzzle.view.properties.visual_width(True)
             height = self.puzzle.view.properties.visual_height(True)
@@ -476,6 +482,7 @@ class Editor(gtk.HBox):
         self._render_cells([(x, y) for x, y, c in (old + new)])
             
     def clear_overlay(self):
+        """Clear all characters in the grid' overlay."""
         self._display_overlay([])
     
     def _insert_word(self, chars):
@@ -488,6 +495,7 @@ class Editor(gtk.HBox):
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
         
     def set_symmetry(self, options):
+        """Set the editor symmetry to the specified options."""
         symmetries = ["keep_horizontal_symmetry"
             ,"keep_vertical_symmetry"
             ,"keep_point_symmetry"]
@@ -706,9 +714,6 @@ class Editor(gtk.HBox):
     def refresh_visual_size(self):
         self.puzzle.view.refresh_visual_size(self.drawing_area)
        
-    def get_selection(self):
-        return (self.selection.x, self.selection.y)
-    
     def _set_full_selection(self, x=None, y=None, direction=None):
         """Select (x, y), the direction or both."""
         prev_x = self.selection.x
@@ -748,3 +753,7 @@ class Editor(gtk.HBox):
     def set_selection(self, x, y):
         """Select the specified cell (x, y)."""
         self._set_full_selection(x=x, y=y)
+        
+    def get_selection(self):
+        """Return the (x, y) of the selected cell."""
+        return (self.selection.x, self.selection.y)
