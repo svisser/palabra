@@ -112,19 +112,11 @@ def write_crossword_to_xml(puzzle, backup=True):
 # TODO refactor
 
 def read_pattern_file(filename):
-    doc = _read_palabra_file(filename)
-    main = doc.getroot()[0]
-    if main.tag != "container":
-        raise PalabraParserError(u"This file is not a container file.")
-    content = main.get("content")
-    metadata = {}
+    results = read_palabra(filename)
+    metadata = {} # TODO
     contents = {}
-    if content == "grid":
-        for e in main:
-            if e.tag == "metadata":
-                metadata = _read_metadata(e)
-            elif e.tag == "grid":
-                contents[e.get("id")] = _read_grid(e)
+    for i, p in enumerate(results):
+        contents[str(i)] = p.grid
     return (filename, metadata, contents)
     
 def write_pattern_file(filename, metadata, contents):
@@ -164,50 +156,6 @@ def write_container(filename, content, data):
     f = open(filename, "w")
     f.write(contents)
     f.close()
-
-def _read_palabra_file(filename):
-    try:
-        doc = etree.parse(filename)
-    except etree.XMLSyntaxError:
-        raise PalabraParserError(u"This file does not appear to be a valid Palabra crossword file.")
-    return doc
-    xmlschema = etree.XMLSchema(etree.parse(XML_SCHEMA_CROSSWORD))
-    try:
-        xmlschema.assertValid(doc)
-    except etree.DocumentInvalid:
-        root = doc.getroot()
-        version = root.get("version")
-        if (root.tag == "palabra" and
-            version is not None and
-            version > constants.VERSION):
-            contents = [
-                u"This file was created in a newer version of Palabra ("
-                , str(version)
-                , u")\n"
-                , "You are running Palabra "
-                , str(constants.VERSION)
-                , u".\nPlease upgrade your version of Palabra to open this file."
-                ]
-            raise PalabraParserError(u"".join(contents))
-        else:
-            raise PalabraParserError(u"Palabra was unable to open this file.")
-    return doc
-    
-def _read_crossword(crossword):
-    for e in crossword:
-        if e.tag == "metadata":
-            metadata = _read_metadata(e)
-        elif e.tag == "grid":
-            grid = _read_grid(e)
-        elif e.tag == "clues":
-            direction, clues = _read_clues(e)
-            for x, y, data in clues:
-                grid.cell(x, y)["clues"][direction] = data
-    # TODO modify when arbitrary number schemes are implemented
-    grid.assign_numbers()
-    puzzle = Puzzle(grid)
-    puzzle.metadata = metadata
-    return puzzle
 
 def _write_crossword(parent, puzzle):
     crossword = etree.SubElement(parent, "puzzle")
@@ -573,6 +521,8 @@ def read_palabra(filename):
                 if r_grid is None:
                     raise PalabraParserError(u"Unable to process clues: grid does not exist.")
                 parse_clues(child, r_grid)
+        # TODO modify when arbitrary number schemes are implemented
+        r_grid.assign_numbers()
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = 'palabra'
@@ -669,6 +619,8 @@ def read_xpf(filename):
                         r_grid.store_clue(x, y, direction, "text", clue.text)
             elif child.tag == "Notepad":
                 pass # TODO
+        # TODO modify when arbitrary number schemes are implemented
+        r_grid.assign_numbers()
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = 'xpf'
