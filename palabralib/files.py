@@ -43,8 +43,6 @@ DC_SIMPLE_TERMS = ["title"
     , "coverage"
     , "rights"]
 
-XML_SCHEMA_CROSSWORD = "xml/crossword.xsd"
-
 class ParserError(Exception):
     def __init__(self, prefix, message):
         self.message = ''.join([prefix, ": ", message])
