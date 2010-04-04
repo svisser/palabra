@@ -65,7 +65,6 @@ def read_crossword(filename):
     t = determine_file_type(filename)
     if t == "palabra":
         results = read_palabra(filename)
-        print results
         if not results:
             raise PalabraParserError(u"No puzzle was found in this file.")
         if len(results) > 1:
@@ -82,7 +81,7 @@ def determine_file_type(filename):
     try:
         doc = etree.parse(filename)
     except etree.XMLSyntaxError:
-        raise PalabraParserError(u"This is not an XML file.")
+        raise ParserError(u"ParserError", u"This is not an XML file.")
     root = doc.getroot()
     if root.tag == "palabra":
         return "palabra"
@@ -143,30 +142,11 @@ def write_pattern_file(filename, metadata, contents):
     f.write(contents)
     f.close()
     
-def read_container(filename):
-    doc = _read_palabra_file(filename)
-    main = doc.getroot()[0]
-    
-    if main.tag != "container":
-        raise PalabraParserError(u"This file is not a container file.")
-    content = main.get("content")
-    contents = []
-    if content in ["crossword", "grid"]:
-        for e in main:
-            if e.tag == "metadata":
-                metadata = _read_metadata(e)
-            if e.tag == "crossword":
-                contents.append(_read_crossword(e))
-            elif e.tag == "grid":
-                contents.append(_read_grid(e))
-    return (metadata, contents)
-
-def read_containers(filenames):
-    result = []
-    for f in filenames:
-        metadata, data = read_container(f)
-        result.append((f, metadata, data))
-    return result
+def read_containers(files):
+    def load_container(f):
+        metadata = {} # TODO
+        return f, metadata, read_palabra(f)
+    return [load_container(f) for f in files]
     
 def write_container(filename, content, data):
     root = etree.Element("palabra")

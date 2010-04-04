@@ -232,7 +232,12 @@ class NewWindow(gtk.Dialog):
         self.clear_button.connect("clicked", clear_pattern)
         
         self.files = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
-        self.patterns = read_containers(self.files)
+        
+        # TODO ?
+        loaded = read_containers(self.files)
+        self.patterns = []
+        for f, meta, data in loaded:
+            self.patterns.append((f, meta, [p.grid for p in data]))
         self._load_pattern_list(self.files)
         
         file_combo = gtk.combo_box_new_text()
