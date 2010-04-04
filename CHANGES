@@ -6,6 +6,7 @@ Version 0.1.3 (unreleased)
 * Added ability to select words by length in properties window.
 * Added Scrabble score to properties window.
 * Added partial support to read XPF 0.9.
+* Replaced XML Schema by strict parser.
 
 Version 0.1.2 (April 2, 2010)
 =============================
@@ -18,7 +19,7 @@ Version 0.1.2 (April 2, 2010)
 
 Version 0.1.1 (September 15, 2009)
 ==================================
-* XML files are validated against XML schema.
+* XML files are validated against XML Schema.
 * Word lists can be used to populate the grid.
 * Speed improvements in rendering code.
 * Partial support for bars.
