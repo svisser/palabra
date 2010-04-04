@@ -69,13 +69,13 @@ def read_crossword(filename):
             raise PalabraParserError(u"No puzzle was found in this file.")
         if len(results) > 1:
             raise PalabraParserError(u"This is a container file instead of a puzzle file.")
-        return results[0]
     elif t == "xpf":
         results = read_xpf(filename)
+        if not results:
+            raise XPFParserError(u"No puzzle was found in this file.")
         if len(results) > 1:
-            raise PalabraParserError(u"This is a container file instead of a puzzle file.")
-        else:
-            return results[0]
+            raise XPFParserError(u"This is a container file instead of a puzzle file.")
+    return results[0]
 
 def determine_file_type(filename):
     try:
@@ -450,7 +450,16 @@ def read_palabra(filename):
     version = palabra.get("version")
     if not version:
         raise PalabraParserError(u"Palabra version number not specified.")
-    # TODO version checks
+    if version > constants.VERSION:
+        contents = [
+            u"This file was created in a newer version of Palabra ("
+            , str(version)
+            , u")\n"
+            , "You are running Palabra "
+            , str(constants.VERSION)
+            , u".\nPlease upgrade your version of Palabra to open this file."
+            ]
+        raise PalabraParserError(u"".join(contents))
     def parse_metadata(element):
         meta = {}
         for m in element:
