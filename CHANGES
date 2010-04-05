@@ -8,6 +8,7 @@ Version 0.1.3 (unreleased)
 * Added partial support to read XPF 0.9.
 * Replaced XML Schema by strict parser.
 * Undo/redo rewritten to use states instead of functions.
+* Fixed bug in search when an intersecting word is filled in.
 
 Version 0.1.2 (April 2, 2010)
 =============================
