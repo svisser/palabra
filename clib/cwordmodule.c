@@ -23,7 +23,7 @@
 // TODO
 #define MAX_ALPHABET_SIZE 50
 
-#define DEBUG 1
+#define DEBUG 0
 
 int debug_checked = 0;
 
@@ -138,6 +138,7 @@ cWord_search(PyObject *self, PyObject *args) {
     
     // process more_constraints
     int **arr = NULL;
+    int equalities[total];
     int intersecting_zero_slot = 0;
     int precons_i[total];
     int precons_l[total];
@@ -169,13 +170,12 @@ cWord_search(PyObject *self, PyObject *args) {
         // deterine which of them are exactly equal
         // equalities contains per slot the value -1 for a unique slot
         // or an integer that refers to an earlier slot that is equal to it
-        int equalities[total];
         for (m = 0; m < total; m++) {
             equalities[m] = -1;
         }
-        for (m = 0; m < total; m++) {
+        for (m = 1; m < total; m++) {
             Py_ssize_t mm;
-            for (mm = m + 1; mm < total; mm++) {
+            for (mm = m - 1; mm >= 0; mm--) {
                 int equal = 0;
                 if (precons_i[m] == precons_i[mm] && precons_l[m] == precons_l[mm]) {
                     Py_ssize_t ml = PyList_Size(precons_cs[m]);
@@ -201,9 +201,9 @@ cWord_search(PyObject *self, PyObject *args) {
                         }
                     }
                 }
-                // equal? then point the slot at mm to the one at m
+                // equal? then point the slot at m to the one at mm
                 if (equal == 1) {
-                    equalities[mm] = m;
+                    equalities[m] = mm;
                 }
             }
         }
@@ -233,6 +233,9 @@ cWord_search(PyObject *self, PyObject *args) {
         
         for (m = 0; m < total; m++) {
             skip[m] = 0;
+            if (equalities[m] != -1) {
+                continue;
+            }
         
             int total_constraints = 0;
             char csm[MAX_WORD_LENGTH];
@@ -298,11 +301,11 @@ cWord_search(PyObject *self, PyObject *args) {
         }
         
         if (DEBUG) {
-            /*for (a = 0; a < total; a++) {
+            for (a = 0; a < total; a++) {
                 for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
                     printf("arr[%i][%i] = %i\n", a, b, arr[a][b]);
                 }
-            }*/
+            }
         }
     }
     
@@ -346,11 +349,12 @@ cWord_search(PyObject *self, PyObject *args) {
                     if (!PyDict_Contains(cache, key)) {
                         int has_matches = 0;
                         int b;
+                        int index = equalities[m] != -1 ? equalities[m] : (int) m;
                         for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
-                            if (arr[m][b] == 0) {
+                            if (arr[index][b] == 0) {
                                 break;
                             }
-                            if (arr[m][b] == ((int) *cons_c)) {
+                            if (arr[index][b] == ((int) *cons_c)) {
                                 has_matches = 1;
                                 break;
                             }
