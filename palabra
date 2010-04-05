@@ -37,11 +37,13 @@ from palabralib.word import create_wordlists
 #p.print_callers()
 
 if __name__ == "__main__":
+    has_splash = False
     try:
-        #splash = create_splash()
-        #splash.show()
-        #while gtk.events_pending():
-        #    gtk.main_iteration()
+        if has_splash:
+            splash = create_splash()
+            splash.show()
+            while gtk.events_pending():
+                gtk.main_iteration()
         print "Reading configuration file..."
         read_config_file()
         print "Loading wordlists..."
@@ -49,7 +51,8 @@ if __name__ == "__main__":
         palabra = PalabraWindow()
         palabra.wordlists.update(data)
         palabra.show_all()
-        #splash.destroy()
+        if has_splash:
+            splash.destroy()
         gtk.main()
     except KeyboardInterrupt:
         import sys
