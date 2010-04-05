@@ -20,7 +20,7 @@ import copy
 from grid import Grid
 import preferences
 
-class Action():
+class Action:
     """
     A general action performed by the user.
     
@@ -179,4 +179,49 @@ class ActionStack:
         # non-zero = puzzle has unsaved changes
         self.distance_from_saved_puzzle = 0
 
-stack = ActionStack()
+old_stack = ActionStack()
+
+#####
+
+class State:
+    def __init__(self, source):
+        self.grid = copy.deepcopy(source)
+        
+class StateStack():
+    def __init__(self):
+        self.clear()
+        
+    def clear(self):
+        self.undo_stack = []
+        self.redo_stack = []
+        
+        # non-zero = puzzle has unsaved changes
+        self.distance_from_saved = 0
+    
+    def push(self, state, initial=False):
+        self.undo_stack.append(state)
+        self.redo_stack = []
+        if not initial:
+            self.distance_from_saved += 1
+        
+    def undo(self, puzzle):
+        state = self.undo_stack.pop()
+        self.redo_stack.append(state)
+        prev = self.undo_stack.pop()
+        puzzle.grid = copy.deepcopy(prev.grid)
+        self.undo_stack.append(prev)
+        self.distance_from_saved -= 1
+        
+    def redo(self, puzzle):
+        state = self.redo_stack.pop()
+        self.undo_stack.append(state)
+        puzzle.grid = copy.deepcopy(state.grid)
+        self.distance_from_saved += 1
+        
+    def has_undo(self):
+        return len(self.undo_stack) > 1
+        
+    def has_redo(self):
+        return len(self.redo_stack) > 0
+
+stack = StateStack()

@@ -22,6 +22,7 @@ import os
 import webbrowser
 
 import action
+from action import State
 from appearance import AppearanceDialog
 from clue import ClueTool
 import constants
@@ -291,7 +292,7 @@ class PalabraWindow(gtk.Window):
             dialog.destroy()
         else:
             write_crossword_to_xml(puzzle, backup)
-        action.stack.distance_from_saved_puzzle = 0
+        action.stack.distance_from_saved = 0
         
     def export_puzzle(self):
         window = ExportWindow(self)
@@ -326,6 +327,7 @@ class PalabraWindow(gtk.Window):
         window.destroy()
     
     def load_puzzle(self):
+        action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)
         self.to_edit_panel()
         self.update_window(True)
     
@@ -347,7 +349,7 @@ class PalabraWindow(gtk.Window):
 
         need_to_close = True
         need_to_save = False
-        if action.stack.distance_from_saved_puzzle != 0:
+        if action.stack.distance_from_saved != 0:
             image = gtk.Image()
             image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
             dialog = gtk.Dialog(u"Close puzzle"
@@ -576,11 +578,11 @@ class PalabraWindow(gtk.Window):
         self.update_window()
         
     def undo_action(self):
-        action.stack.undo_action(self.puzzle_manager.current_puzzle)
+        action.stack.undo(self.puzzle_manager.current_puzzle)
         self.update_window(True)
         
     def redo_action(self):
-        action.stack.redo_action(self.puzzle_manager.current_puzzle)
+        action.stack.redo(self.puzzle_manager.current_puzzle)
         self.update_window(True)
         
     def create_edit_menu(self):
@@ -701,12 +703,12 @@ class PalabraWindow(gtk.Window):
         
     def transform_grid(self, transform, **args):
         a = transform(self.puzzle_manager.current_puzzle, **args)
-        action.stack.push_action(a)
+        action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
         self.update_window(True)
         
     def transform_clues(self, transform, **args):
         a = transform(self.puzzle_manager.current_puzzle, **args)
-        action.stack.push_action(a)
+        action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
         self.update_undo_redo()
         try:
             self.editor.refresh_clues()
@@ -714,10 +716,10 @@ class PalabraWindow(gtk.Window):
             pass
     
     def update_undo_redo(self):
-        self.undo_menu_item.set_sensitive(len(action.stack.undo_stack) > 0)
-        self.redo_menu_item.set_sensitive(len(action.stack.redo_stack) > 0)
-        self.undo_tool_item.set_sensitive(len(action.stack.undo_stack) > 0)
-        self.redo_tool_item.set_sensitive(len(action.stack.redo_stack) > 0)
+        self.undo_menu_item.set_sensitive(action.stack.has_undo())
+        self.redo_menu_item.set_sensitive(action.stack.has_redo())
+        self.undo_tool_item.set_sensitive(action.stack.has_undo())
+        self.redo_tool_item.set_sensitive(action.stack.has_redo())
         
     def update_window(self, content_changed=False):
         puzzle = self.puzzle_manager.current_puzzle

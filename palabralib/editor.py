@@ -167,7 +167,7 @@ class Editor(gtk.HBox):
         gtk.HBox.__init__(self)
         self.palabra_window = palabra_window
         self.drawing_area = drawing_area
-        self.puzzle = puzzle
+        #self.puzzle = puzzle
         
         self.tools = {}
         
@@ -199,6 +199,11 @@ class Editor(gtk.HBox):
         self.id_key_press = self.drawing_area.connect("key_press_event", self.on_key_press_event)
         self.id_key_release = self.drawing_area.connect("key_release_event", self.on_key_release_event)
         self.drawing_area.add_events(gtk.gdk.POINTER_MOTION_HINT_MASK)
+        
+    def get_puzzle(self):
+        return self.palabra_window.puzzle_manager.current_puzzle
+        
+    puzzle = property(get_puzzle)
                 
     def cleanup(self):
         self.drawing_area.unset_flags(gtk.CAN_FOCUS)
@@ -306,6 +311,8 @@ class Editor(gtk.HBox):
             self.editor_pattern = cairo.SurfacePattern(self.editor_surface)
             self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
             context = cairo.Context(self.editor_surface)
+            # TODO should not be needed
+            self.puzzle.view.grid = self.puzzle.grid
             for x, y in self.puzzle.grid.cells():
                 self.puzzle.view.render_bottom(context, x, y)
                 self._render_editor_of_cell(context, x, y)
@@ -428,18 +435,19 @@ class Editor(gtk.HBox):
             """
             Update the clue data by creating or updating the latest undo action.
             """
-            a = action.stack.peek_action()
-            if (isinstance(a, ClueTransformAction)
-                and a.matches(x, y, direction, key)):
-                self.puzzle.grid.store_clue(x, y, direction, key, value)
-                a.update(x, y, direction, key, value)
-            else:
-                self.palabra_window.transform_clues(transform.modify_clue
-                        , x=x
-                        , y=y
-                        , direction=direction
-                        , key=key
-                        , value=value)
+            print "TODO"
+            #a = action.stack.peek_action()
+            #if (isinstance(a, ClueTransformAction)
+            #    and a.matches(x, y, direction, key)):
+            #    self.puzzle.grid.store_clue(x, y, direction, key, value)
+            #    a.update(x, y, direction, key, value)
+            #else:
+            #    self.palabra_window.transform_clues(transform.modify_clue
+            #            , x=x
+            #            , y=y
+            #            , direction=direction
+            #            , key=key
+            #            , value=value)
         return {"select": select, "clue": clue}
         
     def get_word_tool_callbacks(self):
