@@ -127,11 +127,8 @@ class PalabraWindow(gtk.Window):
         drawing_area.queue_draw()
         
         self.editor = Editor(self, drawing_area, puzzle)
-            
-        clue_tool = ClueTool(self.editor.get_clue_tool_callbacks())
-        self.editor.tools["clue"] = clue_tool
-        word_tool = WordTool(self.editor.get_word_tool_callbacks())
-        self.editor.tools["word"] = word_tool
+        self.editor.tools["clue"] = ClueTool(self.editor)
+        self.editor.tools["word"] = WordTool(self.editor)
         
         options_hbox = gtk.HBox(False, 0)
         options_hbox.set_border_width(12)
@@ -153,13 +150,15 @@ class PalabraWindow(gtk.Window):
         tabs.set_show_border(False)
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
-        tabs.append_page(word_tool.create(), gtk.Label(u"Word"))
-        tabs.append_page(clue_tool.create(puzzle), gtk.Label(u"Clue"))
+        tool = self.editor.tools["word"].create()
+        tabs.append_page(tool, gtk.Label(u"Word"))
+        tool = self.editor.tools["clue"].create(puzzle)
+        tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
             if num == 0:
-                word_tool.display_overlay()
+                self.editor.tools["word"].display_overlay()
             else:
-                word_tool.clear_overlay()
+                self.editor.tools["word"].clear_overlay()
         tabs.connect("switch-page", on_switch_page)
         
         paned = gtk.HPaned()

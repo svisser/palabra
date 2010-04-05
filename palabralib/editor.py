@@ -27,8 +27,8 @@ import transform
 from word import search_wordlists
 
 class WordTool:
-    def __init__(self, callbacks):
-        self.callbacks = callbacks
+    def __init__(self, editor):
+        self.editor = editor
     
     def create(self):
         # word has_intersecting displayed_string
@@ -71,11 +71,11 @@ class WordTool:
         return hbox
         
     def on_button_toggled(self, button):
-        self.callbacks["toggle"](button.get_active())
+        self.editor.toggle(button.get_active())
         
     def on_row_activated(self, tree, path, column):
         store, it = self.tree.get_selection().get_selected()
-        self.callbacks["insert"](store.get_value(it, 0))
+        self.editor.insert(store.get_value(it, 0))
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
@@ -95,7 +95,7 @@ class WordTool:
                     
     def _perform_overlay_callback(self, it):
         word = self.store.get_value(it, 0) if it is not None else None
-        self.callbacks["overlay"](word)
+        self.editor.overlay(word)
         
     def display(self, strings, show_intersections):
         self.tree.freeze_child_notify()
@@ -424,63 +424,59 @@ class Editor(gtk.HBox):
         if result:
             self.tools["word"].display(result, show)
             
-    def get_clue_tool_callbacks(self):
-        def select(x, y, direction):
-            """Select the word at (x, y, direction) in the grid."""
-            self.tools["clue"].settings["use_scrolling"] = False
-            self._set_full_selection(x, y, direction)
-            self.tools["clue"].settings["use_scrolling"] = True
-        def clue(x, y, direction, key, value):
-            """
-            Update the clue data by creating or updating the latest undo action.
-            """
-            print "TODO"
-            #a = action.stack.peek_action()
-            #if (isinstance(a, ClueTransformAction)
-            #    and a.matches(x, y, direction, key)):
-            #    self.puzzle.grid.store_clue(x, y, direction, key, value)
-            #    a.update(x, y, direction, key, value)
-            #else:
-            #    self.palabra_window.transform_clues(transform.modify_clue
-            #            , x=x
-            #            , y=y
-            #            , direction=direction
-            #            , key=key
-            #            , value=value)
-        return {"select": select, "clue": clue}
+    def select(self, x, y, direction):
+        """Select the word at (x, y, direction) in the grid."""
+        self._set_full_selection(x, y, direction)
         
-    def get_word_tool_callbacks(self):
-        """Return the callback functions for the word tool in the main window."""
-        def insert(word):
-            """Insert a word in the selected slot."""
-            x = self.selection.x
-            y = self.selection.y
-            direction = self.selection.direction
-            if self.puzzle.grid.is_available(x, y):
-                p, q = self.puzzle.grid.get_start_word(x, y, direction)
-                w = self.puzzle.grid.decompose_word(word, p, q, direction)
-                self._insert_word(w)
-        def toggle(status):
-            """Toggle the status of the intersecting words option."""
-            self.settings["show_intersecting_words"] = status
-            self.tools["word"].refresh_intersecting(status)
-        def overlay(word):
-            """
-            Display the word in the selected slot without storing it the grid.
-            """
-            if word is None:
-                self._display_overlay([])
-                return
-            x = self.selection.x
-            y = self.selection.y
-            direction = self.selection.direction
+    def clue(self, x, y, direction, key, value):
+        """
+        Update the clue data by creating or updating the latest undo action.
+        """
+        print "TODO"
+        #a = action.stack.peek_action()
+        #if (isinstance(a, ClueTransformAction)
+        #    and a.matches(x, y, direction, key)):
+        #    self.puzzle.grid.store_clue(x, y, direction, key, value)
+        #    a.update(x, y, direction, key, value)
+        #else:
+        #    self.palabra_window.transform_clues(transform.modify_clue
+        #            , x=x
+        #            , y=y
+        #            , direction=direction
+        #            , key=key
+        #            , value=value)
+        
+    def insert(self, word):
+        """Insert a word in the selected slot."""
+        x = self.selection.x
+        y = self.selection.y
+        direction = self.selection.direction
+        if self.puzzle.grid.is_available(x, y):
             p, q = self.puzzle.grid.get_start_word(x, y, direction)
-            result = self.puzzle.grid.decompose_word(word, p, q, direction)
+            w = self.puzzle.grid.decompose_word(word, p, q, direction)
+            self._insert_word(w)
             
-            overlay = [(x, y, c.upper()) for x, y, c in result
-                if self.puzzle.grid.get_char(x, y) == ""]
-            self._display_overlay(overlay)
-        return {"insert": insert, "toggle": toggle, "overlay": overlay}
+    def toggle(self, status):
+        """Toggle the status of the intersecting words option."""
+        self.settings["show_intersecting_words"] = status
+        self.tools["word"].refresh_intersecting(status)
+        
+    def overlay(self, word):
+        """
+        Display the word in the selected slot without storing it the grid.
+        """
+        if word is None:
+            self._display_overlay([])
+            return
+        x = self.selection.x
+        y = self.selection.y
+        direction = self.selection.direction
+        p, q = self.puzzle.grid.get_start_word(x, y, direction)
+        result = self.puzzle.grid.decompose_word(word, p, q, direction)
+        
+        overlay = [(x, y, c.upper()) for x, y, c in result
+            if self.puzzle.grid.get_char(x, y) == ""]
+        self._display_overlay(overlay)
         
     def _display_overlay(self, new):
         """Display the (x, y, c) items in the grid's overlay."""

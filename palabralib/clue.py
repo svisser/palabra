@@ -20,8 +20,8 @@ import gtk
 import transform
 
 class ClueTool:
-    def __init__(self, callbacks):
-        self.callbacks = callbacks
+    def __init__(self, editor):
+        self.editor = editor
         self.last = None
         
         self.settings = {}
@@ -106,7 +106,7 @@ class ClueTool:
             display = self.create_display_string(n, direction, word, clue)
             store.set_value(it, 7, display)
             
-            self.callbacks["clue"](x, y, direction, key, value)
+            self.editor.clue(x, y, direction, key, value)
             
             self.tree.columns_autosize()
             self.tree.queue_draw()
@@ -164,7 +164,9 @@ class ClueTool:
         
         def locked():
             self.update_current_word(clue, explanation)
-            self.callbacks["select"](x, y, direction)
+            self.settings["use_scrolling"] = False
+            self.editor.select(x, y, direction)
+            self.settings["use_scrolling"] = True
         self.perform_while_locked(selection, locked)
         
     def select(self, x, y, direction):
