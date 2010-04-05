@@ -60,6 +60,16 @@ int check_constraints(PyObject* string, char *cs) {
     return 1;
 }
 
+void free_array(int **arr, int total) {
+    int a;
+    for (a = 0; a < total; a++) {
+        free(arr[a]);
+        arr[a] = NULL;
+    }
+    free(arr);
+    arr = NULL;
+}
+
 // return 1 if a word exists that matches the constraints, 0 otherwise
 static int
 cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
@@ -204,10 +214,17 @@ cWord_search(PyObject *self, PyObject *args) {
         }
         
         arr = malloc((int) total * sizeof(int*));
+        if (!arr) {
+            return NULL;
+        }
         int a;
         int b;
         for (a = 0; a < total; a++) {
             arr[a] = malloc(MAX_ALPHABET_SIZE * sizeof(int));
+            if (!arr[a]) {
+                free_array(arr, a);
+                return NULL;
+            }
             for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
                 arr[a][b] = 0;
             }
@@ -225,8 +242,10 @@ cWord_search(PyObject *self, PyObject *args) {
                 int j;
                 const char *c;
                 PyObject *item = PyList_GetItem(precons_cs[m], i);
-                if (!PyArg_ParseTuple(item, "is", &j, &c))
+                if (!PyArg_ParseTuple(item, "is", &j, &c)) {
+                    free_array(arr, total);
                     return NULL;
+                }
                 csm[j] = *c;
             }
             
@@ -275,8 +294,10 @@ cWord_search(PyObject *self, PyObject *args) {
     }
     
     char cs[MAX_WORD_LENGTH];
-    if (process_constraints(constraints, cs) == 1)
+    if (process_constraints(constraints, cs) == 1) {
+        free_array(arr, total);
         return NULL;
+    }
     
     PyObject* cache = PyDict_New();
 
@@ -319,8 +340,10 @@ cWord_search(PyObject *self, PyObject *args) {
                             }
                         }
                         
-                        if (has_matches == 2)
+                        if (has_matches == 2) {
+                            free_array(arr, total);
                             return NULL;
+                        }
                         if (has_matches == 0 && DEBUG) {
                             printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_cc);
                         }
@@ -344,11 +367,7 @@ cWord_search(PyObject *self, PyObject *args) {
     debug_checked = 0;
     
     if (more_constraints != Py_None) {
-        int a;
-        for (a = 0; a < total; a++) {
-            free(arr[a]);
-        }
-        free(arr);
+        free_array(arr, total);
     }
     
     return result;
