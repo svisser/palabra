@@ -23,7 +23,7 @@
 // TODO
 #define MAX_ALPHABET_SIZE 50
 
-#define DEBUG 0
+#define DEBUG 1
 
 int debug_checked = 0;
 
@@ -141,6 +141,7 @@ cWord_search(PyObject *self, PyObject *args) {
     int intersecting_zero_slot = 0;
     int precons_i[total];
     int precons_l[total];
+    int skip[total];
     PyObject *precons_cs[total];
     if (more_constraints != Py_None) {
         // read more_constraints
@@ -231,6 +232,9 @@ cWord_search(PyObject *self, PyObject *args) {
         }
         
         for (m = 0; m < total; m++) {
+            skip[m] = 0;
+        
+            int total_constraints = 0;
             char csm[MAX_WORD_LENGTH];
             int k;
             for (k = 0; k < MAX_WORD_LENGTH; k++) {
@@ -247,6 +251,7 @@ cWord_search(PyObject *self, PyObject *args) {
                     return NULL;
                 }
                 csm[j] = *c;
+                total_constraints++;
             }
             
             PyObject* key;
@@ -275,21 +280,29 @@ cWord_search(PyObject *self, PyObject *args) {
                     }
                 }
             }
-            if (arr[m][0] == 0) {
+            // if no matches were found and if the word has at least one missing character...
+            if (arr[m][0] == 0 && total_constraints != precons_l[m]) {
                 if (DEBUG) {
-                    printf("intersecting_zero_slot\n");
+                    printf("intersecting_zero_slot for: %i\n", (int) m);
                 }
                 intersecting_zero_slot = 1;
                 break;
             }
+            // if all characters are already filled in for this intersecting entry
+            if (total_constraints == precons_l[m]) {
+                if (DEBUG) {
+                    printf("entry at %i will be skipped because it's filled in\n", (int) m);
+                }
+                skip[m] = 1;
+            }
         }
         
         if (DEBUG) {
-            for (a = 0; a < total; a++) {
+            /*for (a = 0; a < total; a++) {
                 for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
                     printf("arr[%i][%i] = %i\n", a, b, arr[a][b]);
                 }
-            }
+            }*/
         }
     }
     
@@ -313,6 +326,9 @@ cWord_search(PyObject *self, PyObject *args) {
             if (more_constraints != Py_None && !intersecting_zero_slot) {
                 Py_ssize_t m;
                 for (m = 0; m < PyList_Size(more_constraints); m++) {
+                    if (skip[m]) {
+                        continue;
+                    }
                     char *it_word = PyString_AsString(item);
                     it_word += m;
                     char *cons_c = it_word;
