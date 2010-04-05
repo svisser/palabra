@@ -214,6 +214,7 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         
+        // allocate space for the list of characters (stored as ints)
         arr = malloc((int) total * sizeof(int*));
         if (!arr) {
             return NULL;
@@ -231,19 +232,21 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         
+        // gather possible characters that could be part of the
+        // main slot, at each intersecting slot
         for (m = 0; m < total; m++) {
             skip[m] = 0;
             if (equalities[m] != -1) {
                 continue;
             }
         
+            // convert the python list into an array
             int total_constraints = 0;
             char csm[MAX_WORD_LENGTH];
             int k;
             for (k = 0; k < MAX_WORD_LENGTH; k++) {
                 csm[k] = ' ';
             }
-            
             Py_ssize_t i;
             for (i = 0; i < PyList_Size(precons_cs[m]) - 1; i++) {
                 int j;
@@ -257,19 +260,19 @@ cWord_search(PyObject *self, PyObject *args) {
                 total_constraints++;
             }
             
-            PyObject* key;
-            key = Py_BuildValue("i", precons_l[m]);
-            
-            PyObject* words_m = PyDict_GetItem(words, key);
-            
+            // for all intersecting words of the desired length
+            // and that match the intersecting constraints,
+            // gather all characters that could be placed in the
+            // word of the main slot for which we are searching
             Py_ssize_t w;
+            PyObject* key = Py_BuildValue("i", precons_l[m]);
+            PyObject* words_m = PyDict_GetItem(words, key);
             for (w = 0; w < PyList_Size(words_m); w++) {
                 PyObject *word = PyList_GetItem(words_m, w);
                 if (check_constraints(word, csm)) {
                     char *it_word = PyString_AsString(word);
                     it_word += precons_i[m];
                     char *cons_c = it_word;
-                    
                     int j;
                     for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
                         int ivalue = (int) *cons_c;
@@ -309,6 +312,7 @@ cWord_search(PyObject *self, PyObject *args) {
         }
     }
     
+    // process the constraints of the main slot
     char cs[MAX_WORD_LENGTH];
     if (process_constraints(constraints, cs) == 1) {
         free_array(arr, total);
@@ -344,8 +348,7 @@ cWord_search(PyObject *self, PyObject *args) {
                     // the key is:
                     // (index of intersecting slot in word
                     // , index of intersection in intersecting word, char)
-                    PyObject* key;
-                    key = Py_BuildValue("(iis)", m, precons_i[m], cons_cc);
+                    PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_cc);
                     if (!PyDict_Contains(cache, key)) {
                         int has_matches = 0;
                         int b;
