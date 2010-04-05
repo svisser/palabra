@@ -20,7 +20,6 @@ import gobject
 import gtk
 
 import action
-from action import ClueTransformAction
 import constants
 from itertools import chain
 import preferences

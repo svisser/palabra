@@ -20,70 +20,6 @@ import copy
 from grid import Grid
 import preferences
 
-class Action:
-    """
-    A general action performed by the user.
-    
-    Each action is represented through undo/redo functions
-    that respectively undo and redo the modification of the puzzle.
-    """
-    def __init__(self, undo_functions=None, redo_functions=None):
-        if undo_functions is None:
-            undo_functions = []
-        self.undo_functions = undo_functions
-        if redo_functions is None:
-            redo_functions = []
-        self.redo_functions = redo_functions
-        
-    def perform_undo(self, puzzle):
-        """Undo this action."""
-        for f in self.undo_functions:
-            f(puzzle)
-            
-    def perform_redo(self, puzzle):
-        """Redo this action."""
-        for f in self.redo_functions:
-            f(puzzle)
-
-class FullTransformAction(Action):
-    """
-    An action that is stored by fully saving the grids (before and after).
-    """
-    def __init__(self, from_grid, to_grid):
-        Action.__init__(self)
-        self.from_grid = from_grid
-        self.to_grid = to_grid
-        
-    def perform_undo(self, puzzle):
-        """Undo this action."""
-        Action.perform_undo(self, puzzle)
-        self._perform_action(puzzle, self.from_grid)
-        
-    def perform_redo(self, puzzle):
-        """Redo this action."""
-        Action.perform_redo(self, puzzle)
-        self._perform_action(puzzle, self.to_grid)
-        
-    def _perform_action(self, puzzle, source_grid):
-        if self.from_grid.size != self.to_grid.size:
-            puzzle.grid.initialize(*source_grid.size)
-        for x, y in source_grid.cells():
-            puzzle.grid.set_cell(x, y, copy.deepcopy(source_grid.cell(x, y)))
-
-class ClueTransformAction(FullTransformAction):
-    def __init__(self, from_grid, to_grid, x, y, direction, key):
-        FullTransformAction.__init__(self, from_grid, to_grid)
-        self.x = x
-        self.y = y
-        self.direction = direction
-        self.key = key
-        
-    def matches(self, x, y, direction, key):
-        return (self.x, self.y, self.direction, self.key) == (x, y, direction, key)
-        
-    def update(self, x, y, direction, key, value):
-        self.to_grid.store_clue(x, y, direction, key, value)
-
 class ActionStack:
     """
     Contains two stacks with the actions that can be undone or redone.
@@ -192,6 +128,7 @@ class StateStack():
         self.clear()
         
     def clear(self):
+        """Remove all states from the stack."""
         self.undo_stack = []
         self.redo_stack = []
         
