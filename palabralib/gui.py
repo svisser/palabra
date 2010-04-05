@@ -484,7 +484,6 @@ class PalabraWindow(gtk.Window):
             if condition is None:
                 condition = lambda puzzle: True
             self.selection_toggle_items.append((item, condition))
-
         return item
     
     def create_file_menu(self):
@@ -770,7 +769,13 @@ class PalabraWindow(gtk.Window):
     def create_view_menu(self):
         menu = gtk.Menu()
         
-        activate = lambda item: self.toggle_toolbar(item)
+        def toggle_toolbar(widget):
+            if widget.active:
+                self.toolbar.show()
+            else:
+                self.toolbar.hide() 
+        
+        activate = lambda item: toggle_toolbar(item)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Show or hide the toolbar")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -781,7 +786,13 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        activate = lambda item: self.toggle_statusbar(item)
+        def toggle_statusbar(widget):
+            if widget.active:
+                self.statusbar.show()
+            else:
+                self.statusbar.hide()
+        
+        activate = lambda item: toggle_statusbar(item)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Show or hide the statusbar")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -882,18 +893,6 @@ class PalabraWindow(gtk.Window):
             self.panel.queue_draw()
         editor.destroy()
 
-    def toggle_toolbar(self, widget):
-        if widget.active:
-            self.toolbar.show()
-        else:
-            self.toolbar.hide()        
-        
-    def toggle_statusbar(self, widget):
-        if widget.active:
-            self.statusbar.show()
-        else:
-            self.statusbar.hide()
-            
     def create_grid_menu(self):
         menu = gtk.Menu()
         
@@ -1105,9 +1104,6 @@ class PalabraWindow(gtk.Window):
         help_menu.set_submenu(menu)
         return help_menu
         
-    def on_click_website(self, dialog, link, data=None):
-        webbrowser.open(link)
-        
     def on_help_about_activate(self, widget, data=None):
         dialog = gtk.AboutDialog()
         dialog.set_title(u"About Palabra")
@@ -1116,7 +1112,9 @@ class PalabraWindow(gtk.Window):
         dialog.set_version(constants.VERSION)
         dialog.set_authors([u"Simeon Visser"])
         dialog.set_copyright(u"Copyright © 2009 - 2010 Simeon Visser")
-        gtk.about_dialog_set_url_hook(self.on_click_website)
+        def on_click_website(dialog, link):
+            webbrowser.open(link)
+        gtk.about_dialog_set_url_hook(on_click_website)
         dialog.set_website(u"http://bitbucket.org/svisser/palabra/wiki/Home")
         dialog.set_license(u"""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
                 
