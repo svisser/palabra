@@ -646,18 +646,21 @@ class Editor(gtk.HBox):
         
     def on_typing(self, keyval):
         """Place an alphabetical character in the grid and move the selection."""
-        if gtk.keysyms.a <= keyval <= gtk.keysyms.z:
+        if gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period:
             x = self.selection.x
             y = self.selection.y
             direction = self.selection.direction
             if self.puzzle.grid.is_valid(x, y):
-                self.palabra_window.transform_grid(transform.modify_char
-                        , x=x
-                        , y=y
-                        , next_char=chr(keyval).capitalize())
+                if keyval == gtk.keysyms.period:
+                    self.transform_blocks(x, y, True)
+                else:
+                    self.palabra_window.transform_grid(transform.modify_char
+                            , x=x
+                            , y=y
+                            , next_char=chr(keyval).capitalize())
+                    self._check_blacklist_for_cell(x, y)
                 nx = x + (1 if direction == "across" else 0)
                 ny = y + (1 if direction == "down" else 0)
-                self._check_blacklist_for_cell(x, y)
                 if self.puzzle.grid.is_available(nx, ny):
                     self.selection.x = nx
                     self.selection.y = ny
