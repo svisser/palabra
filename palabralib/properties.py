@@ -113,6 +113,7 @@ class PropertiesWindow(gtk.Dialog):
         
     def on_switch_page(self, tabs, page, pagenum):
         self.words_tab_sel.unselect_all()
+        self.palabra_window.editor.clear_highlighted_words()
     
     def create_general_tab(self, status, puzzle):
         table = gtk.Table(12, 4, False)
@@ -202,13 +203,18 @@ class PropertiesWindow(gtk.Dialog):
         
         self.histogram = Histogram(status["char_counts_total"], 312, 90)
         
+        def on_char_click(widget, event, char):
+            self.palabra_window.editor.highlight_chars(char)
+        
         for y in xrange(0, 26, 6):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
                 if count == 0:
                     label = gtk.Label()
-                    label.set_markup(''.join([char, u": <b>", str(count), u"</b>"]))
+                    label.set_markup(''.join([char, u": <b>0</b>"]))
                 else:
-                    label = gtk.Label(''.join([char, u": ", str(count), u""]))
+                    label = gtk.EventBox()
+                    label.add(gtk.Label(''.join([char, u": ", str(count), u""])))
+                    label.connect("button-press-event", on_char_click, char)
                 table.attach(label, x, x + 1, y / 6, y / 6 + 1)
         
         main = gtk.VBox(False, 0)
@@ -336,8 +342,6 @@ class PropertiesWindow(gtk.Dialog):
         if it:
             length = store.get_value(it, 0)
             self.palabra_window.editor.highlight_words(length)
-        else:
-            self.palabra_window.editor.clear_highlighted_words()
             
     @staticmethod
     def determine_scrabble_score(puzzle):

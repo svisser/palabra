@@ -398,6 +398,14 @@ class Editor(gtk.HBox):
                     new.append((x, y, d, length))
         self._render_highlighted_words(new)
         
+    def highlight_chars(self, char):
+        """Highlight all occurrences of the specified character."""
+        new = []
+        for x, y in self.puzzle.grid.cells():
+            if self.puzzle.grid.get_char(x, y) == char:
+                new.append((x, y, "across", 1))
+        self._render_highlighted_words(new)
+        
     def clear_highlighted_words(self): 
         """Clear all highlighted words, if there are any."""
         self._render_highlighted_words([])
