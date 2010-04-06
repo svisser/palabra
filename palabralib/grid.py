@@ -212,6 +212,14 @@ class Grid:
             else:
                 if self.is_start_word(x, y):
                     yield n, x, y
+    
+    def entries(self):
+        """Return all entries in alphabetical order."""
+        a = [word for (n, x, y, word, clue, explanation) in self.gather_words("across")]
+        d = [word for (n, x, y, word, clue, explanation) in self.gather_words("down")]
+        entries = (a + d)
+        entries.sort()
+        return entries
                     
     def cells(self):
         """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""

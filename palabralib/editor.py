@@ -183,6 +183,7 @@ class Editor(gtk.HBox):
         self.settings["keep_point_symmetry"] = False
         self.settings["keep_point_symmetry"] = True
         self.settings["show_intersecting_words"] = False
+        self.settings["show_used_words"] = False
         self.settings["locked_grid"] = False
         
         self.current = Cell(-1, -1)
@@ -421,8 +422,13 @@ class Editor(gtk.HBox):
         self.tools["word"].display([], show)
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        if result:
-            self.tools["word"].display(result, show)
+        if not result:
+            return
+        if not self.settings["show_used_words"]:
+            # TODO
+            entries = [e.lower() for e in self.puzzle.grid.entries() if '?' not in e]
+            result = [(w, i) for w, i in result if w not in entries]
+        self.tools["word"].display(result, show)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""

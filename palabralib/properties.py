@@ -329,22 +329,15 @@ class PropertiesWindow(gtk.Dialog):
         scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
             , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
             , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
-            , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, ' ': 0, '': 0}
+            , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
         chars = [puzzle.grid.get_char(x, y) for x, y in puzzle.grid.cells()]
-        return sum(map(lambda c: scores[c], chars))
+        return sum([scores[c] for c in chars])
         
     @staticmethod
     def determine_words_message(status, puzzle):
-        word_count_to_str = lambda (length, count): ''.join([str(length), u": ", str(count), u"\n"])
-        
-        a = [word for (n, x, y, word, clue, explanation) in puzzle.grid.gather_words("across")]
-        d = [word for (n, x, y, word, clue, explanation) in puzzle.grid.gather_words("down")]
-        words = (a + d)
-        words.sort()
-        words.sort(key=len)
-        
-        r = reduce(operator.concat, map(lambda word: [word,  u"\n"], words))
-
+        entries = puzzle.grid.entries()
+        entries.sort(key=len)
+        r = reduce(operator.concat, map(lambda word: [word,  u"\n"], entries))
         return ''.join(r[:-1])
         
     def create_metadata_tab(self, puzzle):
