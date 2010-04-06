@@ -59,16 +59,22 @@ class WordTool:
         tree_window.add(self.tree)
         tree_window.set_size_request(192, -1)
         
-        check_button = gtk.ToggleButton("Show only words with\nintersecting words")
-        check_button.connect("toggled", self.on_button_toggled)
+        toggle_button = gtk.ToggleButton("I")
+        toggle_button.set_tooltip_text(u"Show only words with\nintersecting words")
+        toggle_button.connect("toggled", self.on_button_toggled)
         
-        check_button2 = gtk.ToggleButton("Show only unused words")
-        check_button2.connect("toggled", self.on_button2_toggled)
+        toggle_button2 = gtk.ToggleButton("U")
+        toggle_button2.set_tooltip_text(u"Show only unused words")
+        toggle_button2.connect("toggled", self.on_button2_toggled)
+        
+        buttons = gtk.HButtonBox()
+        buttons.set_layout(gtk.BUTTONBOX_START)
+        buttons.add(toggle_button)
+        buttons.add(toggle_button2)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(9)
-        main.pack_start(check_button, False, False, 0)
-        main.pack_start(check_button2, False, False, 0)
+        main.pack_start(buttons, False, False, 0)
         main.pack_start(tree_window, True, True, 0)
         
         hbox = gtk.HBox(False, 0)

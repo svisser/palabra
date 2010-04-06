@@ -10,7 +10,7 @@ Requirements
 ============
 
 - Python 2.4 (for lxml module)
-- PyGTK 2.8 (for pangocairo module)
+- PyGTK 2.12 (for gtk.Tooltip)
 
 Palabra should work with the above versions of the software packages but they
 may need to be refined further. In any case, Palabra is known to work with:
