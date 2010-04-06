@@ -80,12 +80,12 @@ class WordTool:
     def on_button_toggled(self, button):
         status = button.get_active()
         self.settings["show_intersecting_words"] = status
-        self.refresh_data()
+        self.display_data()
         
     def on_button2_toggled(self, button):
         status = not button.get_active()
         self.settings["show_used_words"] = status
-        self.refresh_data()
+        self.display_data()
         
     def on_row_activated(self, tree, path, column):
         store, it = self.tree.get_selection().get_selected()
@@ -97,10 +97,7 @@ class WordTool:
         
     def on_tree_clicked(self, tree, event):
         if event.button == 1:
-            x = int(event.x)
-            y = int(event.y)
-            
-            item = tree.get_path_at_pos(x, y)
+            item = tree.get_path_at_pos(int(event.x), int(event.y))
             if item is not None:
                 path, col, cellx, celly = item
                 if tree.get_selection().path_is_selected(path):
@@ -109,23 +106,21 @@ class WordTool:
                     
     def _perform_overlay_callback(self, it):
         word = self.store.get_value(it, 0) if it is not None else None
-        self.editor.overlay(word)
+        self.editor.set_overlay(word)
         
-    def display(self, strings):
-        self.tree.freeze_child_notify()
-        store = self.tree.get_model()
-        self.tree.set_model(None)
+    def store_words(self, strings):
         self.data = []
         colors = {True: "black", False: "gray"}
         for word, has_intersections in strings:
             msg = ['<span color="', colors[has_intersections], '">', word, "</span>"]
             self.data.append((word, has_intersections, ''.join(msg)))
-        self._display_data(store)
-        self.tree.set_model(store)
-        self.tree.thaw_child_notify()
-        self.tree.queue_draw()
+        self.display_data()
         
-    def _display_data(self, store):
+    def display_data(self):
+        self.tree.freeze_child_notify()
+        store = self.tree.get_model()
+        self.tree.set_model(None)
+        
         show_intersections = self.settings["show_intersecting_words"]
         show_used = self.settings["show_used_words"]
         entries = []
@@ -139,21 +134,18 @@ class WordTool:
                 continue
             store.append(row)
         
-    def refresh_data(self):
-        self.tree.freeze_child_notify()
-        store = self.tree.get_model()
-        self.tree.set_model(None)
-        self._display_data(self.store)
         self.tree.set_model(store)
         self.tree.thaw_child_notify()
         self.tree.queue_draw()
         
+    def get_selected_word(self):
+        store, it = self.tree.get_selection().get_selected()
+        word = self.store.get_value(it, 0) if it is not None else None
+        return word
+        
     def display_overlay(self):
         store, it = self.tree.get_selection().get_selected()
         self._perform_overlay_callback(it)
-        
-    def clear_overlay(self):
-        self._perform_overlay_callback(None)
 
 class Cell:
     def __init__(self, x=-1, y=-1):
@@ -437,12 +429,12 @@ class Editor(gtk.HBox):
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        self.tools["word"].display([])
+        self.tools["word"].store_words([])
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
         if not result:
             return
-        self.tools["word"].display(result)
+        self.tools["word"].store_words(result)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
@@ -476,33 +468,28 @@ class Editor(gtk.HBox):
             w = self.puzzle.grid.decompose_word(word, p, q, direction)
             self._insert_word(w)
             
-    def overlay(self, word):
+    def set_overlay(self, word):
         """
         Display the word in the selected slot without storing it the grid.
+        If the word is None, the overlay will be cleared.
         """
+        def render_overlay(new):
+            """Display the (x, y, c) items in the grid's overlay."""
+            old = self.puzzle.view.overlay
+            self.puzzle.view.overlay = new
+            self._render_cells([(x, y) for x, y, c in (old + new)])
         if word is None:
-            self._display_overlay([])
+            render_overlay([])
             return
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
         p, q = self.puzzle.grid.get_start_word(x, y, direction)
         result = self.puzzle.grid.decompose_word(word, p, q, direction)
-        
         overlay = [(x, y, c.upper()) for x, y, c in result
             if self.puzzle.grid.get_char(x, y) == ""]
-        self._display_overlay(overlay)
-        
-    def _display_overlay(self, new):
-        """Display the (x, y, c) items in the grid's overlay."""
-        old = self.puzzle.view.overlay
-        self.puzzle.view.overlay = new
-        self._render_cells([(x, y) for x, y, c in (old + new)])
+        render_overlay(overlay)
             
-    def clear_overlay(self):
-        """Clear all characters in the grid' overlay."""
-        self._display_overlay([])
-    
     def _insert_word(self, chars):
         """Insert a word by storing the list of (x, y, c) items in the grid."""
         if self.settings["locked_grid"]:
@@ -766,7 +753,7 @@ class Editor(gtk.HBox):
         self.selection.direction = ndir
         self._render_selection(nx, ny, ndir)
         self.palabra_window.update_window()
-        self.clear_overlay()
+        self.set_overlay(None)
         
     def set_selection(self, x, y):
         """Select the specified cell (x, y)."""

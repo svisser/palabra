@@ -155,10 +155,8 @@ class PalabraWindow(gtk.Window):
         tool = self.editor.tools["clue"].create(puzzle)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
-            if num == 0:
-                self.editor.tools["word"].display_overlay()
-            else:
-                self.editor.tools["word"].clear_overlay()
+            word = self.editor.tools["word"].get_selected_word() if num == 0 else None
+            self.editor.set_overlay(word)
         tabs.connect("switch-page", on_switch_page)
         
         paned = gtk.HPaned()
