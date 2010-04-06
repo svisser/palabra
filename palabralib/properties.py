@@ -166,11 +166,8 @@ class PropertiesWindow(gtk.Dialog):
         
         create_header(table, u"<b>Letters</b>", 0, 9)
         
-        letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
-        letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
-        
-        letters_not_in_use = filter(lambda (_, count): count == 0, status["char_counts_total"])
-        letters_not_in_use_strings = map(lambda (c, _): c, letters_not_in_use)
+        letters_in_use = [c for (c, count) in status["char_counts_total"] if count > 0]
+        letters_not_in_use = [c for (c, count) in status["char_counts_total"] if count == 0]
         
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
@@ -179,14 +176,14 @@ class PropertiesWindow(gtk.Dialog):
         label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
         table.attach(label, 0, 2, 10, 11)
-        label = gtk.Label(''.join(letters_in_use_strings))
+        label = gtk.Label(''.join(letters_in_use))
         label.set_alignment(0, 0)
         table.attach(label, 2, 4, 10, 11)
         
         label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
         table.attach(label, 0, 2, 11, 12)
-        label = gtk.Label(''.join(letters_not_in_use_strings))
+        label = gtk.Label(''.join(letters_not_in_use))
         label.set_alignment(0, 0)
         table.attach(label, 2, 4, 11, 12)
         
