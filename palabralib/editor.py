@@ -728,7 +728,12 @@ class Editor(gtk.HBox):
         self._set_full_selection(direction=d)
         
     def refresh_visual_size(self):
-        self.puzzle.view.refresh_visual_size(self.drawing_area)
+        # TODO fix design
+        self.puzzle.view.grid = self.puzzle.grid
+        self.puzzle.view.properties.grid = self.puzzle.grid
+        width = self.puzzle.view.properties.visual_width()
+        height = self.puzzle.view.properties.visual_height()
+        self.drawing_area.set_size_request(width, height)
        
     def _set_full_selection(self, x=None, y=None, direction=None):
         """Select (x, y), the direction or both."""
