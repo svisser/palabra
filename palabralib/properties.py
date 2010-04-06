@@ -97,6 +97,7 @@ class PropertiesWindow(gtk.Dialog):
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
         tabs.append_page(self.create_words_tab(message, status, puzzle), gtk.Label(u"Words"))
         tabs.append_page(self.create_metadata_tab(puzzle), gtk.Label(u"Metadata"))
+        tabs.append_page(self.create_notepad_tab(puzzle), gtk.Label(u"Notepad"))
         tabs.connect("switch-page", self.on_switch_page)
         
         main = gtk.VBox(False, 0)
@@ -397,6 +398,39 @@ class PropertiesWindow(gtk.Dialog):
         hhbox = gtk.HBox(False, 0)
         hhbox.set_spacing(18)
         hhbox.pack_start(align, True, True, 0)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(hhbox, True, True, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        return hbox
+        
+    def create_notepad_tab(self, puzzle):
+        label = gtk.Label(u"The text above will be stored with the puzzle.")
+        textview = gtk.TextView()
+        def on_notepad_changed(buffer):
+            start = buffer.get_start_iter()
+            end = buffer.get_end_iter()
+            puzzle.notepad = buffer.get_text(start, end)
+            print puzzle.notepad
+        textview.get_buffer().connect("changed", on_notepad_changed)
+        
+        text_window = gtk.ScrolledWindow(None, None)
+        text_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        text_window.add(textview)
+        
+        vbox = gtk.VBox(False, 0)
+        vbox.set_spacing(6)
+        vbox.pack_start(text_window, True, True, 0)
+        vbox.pack_start(label, False, False, 0)
+    
+        hhbox = gtk.HBox(False, 0)
+        hhbox.set_spacing(18)
+        hhbox.pack_start(vbox, True, True, 0)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)

@@ -28,6 +28,7 @@ class Puzzle:
         self.filename = None
         self.metadata = {}
         self.type = 'palabra'
+        self.notepad = ""
 
 class PuzzleManager:
     def __init__(self):
