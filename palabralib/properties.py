@@ -354,8 +354,10 @@ class PropertiesWindow(gtk.Dialog):
     def determine_words_message(status, puzzle):
         entries = puzzle.grid.entries()
         entries.sort(key=len)
-        r = reduce(operator.concat, map(lambda word: [word,  u"\n"], entries))
-        return ''.join(r[:-1])
+        result = []
+        for word in entries:
+            result += (word + u"\n")
+        return ''.join(result[:-1])
         
     def create_metadata_tab(self, puzzle):
         details = gtk.Table(1, 2, False)
