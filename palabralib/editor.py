@@ -29,6 +29,9 @@ from word import search_wordlists
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
+        self.settings = {}
+        self.settings["show_intersecting_words"] = False
+        self.settings["show_used_words"] = True
     
     def create(self):
         # word has_intersecting displayed_string
@@ -59,10 +62,14 @@ class WordTool:
         check_button = gtk.CheckButton("Show only words with\nintersecting words")
         check_button.connect("toggled", self.on_button_toggled)
         
+        check_button2 = gtk.CheckButton("Show only unused words")
+        check_button2.connect("toggled", self.on_button2_toggled)
+        
         main = gtk.VBox(False, 0)
         main.set_spacing(9)
         main.pack_start(tree_window, True, True, 0)
         main.pack_start(check_button, False, False, 0)
+        main.pack_start(check_button2, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
@@ -71,7 +78,14 @@ class WordTool:
         return hbox
         
     def on_button_toggled(self, button):
-        self.editor.toggle(button.get_active())
+        status = button.get_active()
+        self.settings["show_intersecting_words"] = status
+        self.refresh_data()
+        
+    def on_button2_toggled(self, button):
+        status = not button.get_active()
+        self.settings["show_used_words"] = status
+        self.refresh_data()
         
     def on_row_activated(self, tree, path, column):
         store, it = self.tree.get_selection().get_selected()
@@ -97,7 +111,7 @@ class WordTool:
         word = self.store.get_value(it, 0) if it is not None else None
         self.editor.overlay(word)
         
-    def display(self, strings, show_intersections):
+    def display(self, strings):
         self.tree.freeze_child_notify()
         store = self.tree.get_model()
         self.tree.set_model(None)
@@ -106,23 +120,30 @@ class WordTool:
         for word, has_intersections in strings:
             msg = ['<span color="', colors[has_intersections], '">', word, "</span>"]
             self.data.append((word, has_intersections, ''.join(msg)))
-        self._display_data(store, show_intersections)
+        self._display_data(store)
         self.tree.set_model(store)
         self.tree.thaw_child_notify()
         self.tree.queue_draw()
         
-    def _display_data(self, store, show_intersections):
+    def _display_data(self, store):
+        show_intersections = self.settings["show_intersecting_words"]
+        show_used = self.settings["show_used_words"]
+        entries = []
+        if not show_used:
+            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if '?' not in e]
         store.clear()
         for row in self.data:
             if show_intersections and not row[1]:
                 continue
+            if not show_used and row[0] in entries:
+                continue
             store.append(row)
         
-    def refresh_intersecting(self, show_intersections):
+    def refresh_data(self):
         self.tree.freeze_child_notify()
         store = self.tree.get_model()
         self.tree.set_model(None)
-        self._display_data(self.store, show_intersections)
+        self._display_data(self.store)
         self.tree.set_model(store)
         self.tree.thaw_child_notify()
         self.tree.queue_draw()
@@ -182,8 +203,6 @@ class Editor(gtk.HBox):
         self.settings["keep_vertical_symmetry"] = False
         self.settings["keep_point_symmetry"] = False
         self.settings["keep_point_symmetry"] = True
-        self.settings["show_intersecting_words"] = False
-        self.settings["show_used_words"] = False
         self.settings["locked_grid"] = False
         
         self.current = Cell(-1, -1)
@@ -418,17 +437,12 @@ class Editor(gtk.HBox):
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        show = self.settings["show_intersecting_words"]
-        self.tools["word"].display([], show)
+        self.tools["word"].display([])
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
         if not result:
             return
-        if not self.settings["show_used_words"]:
-            # TODO
-            entries = [e.lower() for e in self.puzzle.grid.entries() if '?' not in e]
-            result = [(w, i) for w, i in result if w not in entries]
-        self.tools["word"].display(result, show)
+        self.tools["word"].display(result)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
@@ -462,11 +476,6 @@ class Editor(gtk.HBox):
             w = self.puzzle.grid.decompose_word(word, p, q, direction)
             self._insert_word(w)
             
-    def toggle(self, status):
-        """Toggle the status of the intersecting words option."""
-        self.settings["show_intersecting_words"] = status
-        self.tools["word"].refresh_intersecting(status)
-        
     def overlay(self, word):
         """
         Display the word in the selected slot without storing it the grid.
