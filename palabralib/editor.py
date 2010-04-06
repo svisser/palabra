@@ -747,13 +747,13 @@ class Editor(gtk.HBox):
         else:
             self.tools["clue"].deselect()
             
+        self.set_overlay(None)
         self._clear_selection(prev_x, prev_y, prev_dir)
         self.selection.x = nx
         self.selection.y = ny
         self.selection.direction = ndir
         self._render_selection(nx, ny, ndir)
         self.palabra_window.update_window()
-        self.set_overlay(None)
         
     def set_selection(self, x, y):
         """Select the specified cell (x, y)."""
