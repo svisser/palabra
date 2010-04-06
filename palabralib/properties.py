@@ -115,10 +115,18 @@ class PropertiesWindow(gtk.Dialog):
         self.words_tab_sel.unselect_all()
     
     def create_general_tab(self, status, puzzle):
-        table = gtk.Table(10, 4, False)
+        table = gtk.Table(12, 4, False)
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
+        def create_header(table, title, x, y):
+            label = gtk.Label()
+            label.set_markup(title)
+            label.set_alignment(0, 0)
+            table.attach(label, x, x + 1, y, y + 1)
+            label = gtk.Label("")
+            label.set_alignment(1, 0)
+            table.attach(label, x + 1, x + 2, y, y + 1)
         def create_statistic(table, title, value, x, y):
             label = gtk.Label(title)
             label.set_alignment(0, 0)
@@ -127,27 +135,35 @@ class PropertiesWindow(gtk.Dialog):
             label.set_alignment(1, 0)
             table.attach(label, x + 1, x + 2, y, y + 1)
             
-        create_statistic(table, u"Columns", str(puzzle.grid.width), 0, 0)
-        create_statistic(table, u"Rows", str(puzzle.grid.height), 0, 1)
-        msg = ''.join([str(status["block_count"]), u" (%.2f" % status["block_percentage"], u"%)"])
-        create_statistic(table, u"Blocks", msg, 0, 2)
-        msg = ''.join([str(status["actual_char_count"]), " / ", str(status["char_count"])])
-        create_statistic(table, u"Letters", msg, 0, 3)
-        create_statistic(table, u"Blanks", str(status["blank_count"]), 0, 4)
-        create_statistic(table, u"Clues", str(status["clue_count"]), 0, 5)
-        create_statistic(table, u"Voids", str(status["void_count"]), 0, 6)
+        create_header(table, u"<b>Grid</b>", 0, 0)
+        create_statistic(table, u"Columns", str(puzzle.grid.width), 0, 1)
+        create_statistic(table, u"Rows", str(puzzle.grid.height), 0, 2)
         
-        create_statistic(table, u"Checked cells", str(status["checked_count"]), 2, 0)
-        create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 2, 1)
-        create_statistic(table, u"Total words", str(status["word_count"]), 2, 2)
-        create_statistic(table, u"Across words", str(status["word_counts"]["across"]), 2, 3)
-        create_statistic(table, u"Down words", str(status["word_counts"]["down"]), 2, 4)
+        create_header(table, u"<b>Cells</b>", 0, 3)
+        msg = ''.join([str(status["block_count"]), u" (%.2f" % status["block_percentage"], u"%)"])
+        create_statistic(table, u"Blocks", msg, 0, 4)
+        msg = ''.join([str(status["actual_char_count"]), " / ", str(status["char_count"])])
+        create_statistic(table, u"Letters", msg, 0, 5)
+        create_statistic(table, u"Voids", str(status["void_count"]), 0, 6)
+        create_statistic(table, u"Checked cells", str(status["checked_count"]), 0, 7)
+        create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 0, 8)
+        
+        create_header(table, u"<b>Words</b>", 2, 0)
+        create_statistic(table, u"Total words", str(status["word_count"]), 2, 1)
+        create_statistic(table, u"Across words", str(status["word_counts"]["across"]), 2, 2)
+        create_statistic(table, u"Down words", str(status["word_counts"]["down"]), 2, 3)
         message = u"%.2f" % status["mean_word_length"]
-        create_statistic(table, u"Mean word length", message, 2, 5)
+        create_statistic(table, u"Average word length", message, 2, 4)
+        msg = ''.join([str(status["clue_count"]), " / ", str(status["word_count"])])
+        create_statistic(table, u"Clues", msg, 2, 5)
+        
+        create_header(table, u"<b>Score</b>", 2, 6)
         score = self.determine_scrabble_score(puzzle)
-        create_statistic(table, u"Scrabble score", str(score), 2, 6)
+        create_statistic(table, u"Scrabble score", str(score), 2, 7)
         avg_score = float(score) / status["char_count"]
-        create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 7)
+        create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 8)
+        
+        create_header(table, u"<b>Letters</b>", 0, 9)
         
         letters_in_use = filter(lambda (_, count): count > 0, status["char_counts_total"])
         letters_in_use_strings = map(lambda (c, _): c, letters_in_use)
@@ -161,17 +177,17 @@ class PropertiesWindow(gtk.Dialog):
         
         label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 8, 9)
+        table.attach(label, 0, 2, 10, 11)
         label = gtk.Label(''.join(letters_in_use_strings))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 8, 9)
+        table.attach(label, 2, 4, 10, 11)
         
         label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 9, 10)
+        table.attach(label, 0, 2, 11, 12)
         label = gtk.Label(''.join(letters_not_in_use_strings))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 9, 10)
+        table.attach(label, 2, 4, 11, 12)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
