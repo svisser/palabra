@@ -708,7 +708,7 @@ class PalabraWindow(gtk.Window):
         ninety = ["keep_90_degree_symmetry"]
         activate = lambda item: set_symmetry(ninety)
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use 90 degree symmetry when modifying the grid")
+            , u"Use 90 degree rotational symmetry when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.RadioMenuItem(item, u"_90 degree rotational symmetry", True)
         item.connect("activate", activate)
@@ -719,7 +719,7 @@ class PalabraWindow(gtk.Window):
         point = ["keep_point_symmetry"]
         activate = lambda item: set_symmetry(point)
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use 180 degree symmetry when modifying the grid")
+            , u"Use 180 degree rotational symmetry when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.RadioMenuItem(item, u"_180 degree rotational symmetry", True)
         item.connect("activate", activate)
