@@ -218,6 +218,11 @@ class PalabraWindow(gtk.Window):
             dialog.add_filter(filter)
             
             filter = gtk.FileFilter()
+            filter.set_name(u"XPF puzzle files (*.xml)")
+            filter.add_pattern("*.xml")
+            dialog.add_filter(filter)
+            
+            filter = gtk.FileFilter()
             filter.set_name(u"All files")
             filter.add_pattern("*")
             dialog.add_filter(filter)
@@ -260,7 +265,6 @@ class PalabraWindow(gtk.Window):
     def save_puzzle(self, save_as=False):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle.type == 'xpf':
-            # TODO
             print "Warning: saving XPF not yet supported."
             return
         backup = preferences.prefs["backup_copy_before_save"]
@@ -279,13 +283,29 @@ class PalabraWindow(gtk.Window):
             filter.add_pattern("*.xml")
             dialog.add_filter(filter)
             
+            filter = gtk.FileFilter()
+            filter.set_name(u"XPF puzzle files (*.xml)")
+            filter.add_pattern("*.xml")
+            dialog.add_filter(filter)
+
             dialog.show_all()
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
-                filename = dialog.get_filename()
-                puzzle.filename = filename
-                write_crossword_to_xml(puzzle, backup)
-                self.update_title(filename)
+                def determine_type(name):
+                    if 'Palabra' in name:
+                        return 'palabra'
+                    if 'XPF' in name:
+                        return 'xpf'
+                    return 'palabra'
+                t = determine_type(dialog.get_filter().get_name())
+                
+                if t == 'xpf':
+                    print "Warning: saving XPF not yet supported."
+                else:
+                    filename = dialog.get_filename()
+                    puzzle.filename = filename
+                    write_crossword_to_xml(puzzle, backup)
+                    self.update_title(filename)
             dialog.destroy()
         else:
             write_crossword_to_xml(puzzle, backup)
