@@ -162,6 +162,8 @@ def _write_crossword(parent, puzzle):
     _write_grid(crossword, puzzle.grid)
     for d in ["across", "down"]:
         _write_clues(crossword, puzzle.grid, d)
+    e = etree.SubElement(crossword, "notepad")
+    e.text = etree.CDATA(puzzle.notepad)
 
 def _read_metadata(metadata):
     m = {}
@@ -510,6 +512,7 @@ def read_palabra(filename):
             raise PalabraParserError("".join([u"This type of puzzle (", type, ") not supported."]))
         r_meta = {}
         r_grid = None
+        r_notepad = ""
         for child in puzzle:
             if child.tag == "metadata":
                 r_meta = parse_metadata(child)
@@ -519,11 +522,14 @@ def read_palabra(filename):
                 if r_grid is None:
                     raise PalabraParserError(u"Unable to process clues: grid does not exist.")
                 parse_clues(child, r_grid)
+            elif child.tag == "notepad":
+                r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
         r_grid.assign_numbers()
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = 'palabra'
+        p.notepad = r_notepad
         results.append(p)
     return results
 
@@ -549,6 +555,7 @@ def read_xpf(filename):
         r_width = None
         r_height = None
         r_grid = None
+        r_notepad = ""
         for child in puzzle:
             if child.tag == "Title":
                 r_meta["title"] = child.text
@@ -616,11 +623,12 @@ def read_xpf(filename):
                             continue
                         r_grid.store_clue(x, y, direction, "text", clue.text)
             elif child.tag == "Notepad":
-                pass # TODO
+                r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
         r_grid.assign_numbers()
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = 'xpf'
+        p.notepad = r_notepad
         results.append(p)
     return results
