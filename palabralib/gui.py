@@ -72,6 +72,8 @@ class PalabraWindow(gtk.Window):
         
         self.puzzle_manager = PuzzleManager()
         
+        self.editor_settings = None
+        
         self.menubar = gtk.MenuBar()
         self.menubar.append(self.create_file_menu())
         self.menubar.append(self.create_edit_menu())

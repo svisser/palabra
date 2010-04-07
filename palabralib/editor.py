@@ -202,11 +202,14 @@ class Editor(gtk.HBox):
         
         self.force_redraw = True
         
-        self.settings = {}
-        for s in SYMMETRIES:
-            self.settings[s] = False
-        self.settings["keep_point_symmetry"] = True
-        self.settings["locked_grid"] = False
+        if not palabra_window.editor_settings:
+            sett = {}
+            for s in SYMMETRIES:
+                sett[s] = False
+            sett["keep_point_symmetry"] = True
+            sett["locked_grid"] = False
+            palabra_window.editor_settings = sett
+        self.settings = palabra_window.editor_settings
         
         self.current = Cell(-1, -1)
         self.selection = Selection(-1, -1, "across")
