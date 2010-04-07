@@ -13,6 +13,7 @@ Version 0.1.3 (unreleased)
 * Improved readability of properties window.
 * Added ability to highlight characters in the grid in properties window.
 * Added ability to store arbitrary text with a puzzle.
+* Fixed bug with rendering of lines near border.
 
 Version 0.1.2 (April 2, 2010)
 =============================

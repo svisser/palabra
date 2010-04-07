@@ -390,17 +390,17 @@ class GridView:
                 """
                 if ((x, y, "left", side_no_extend) in lines
                     or (x, y - 1, "left", side_no_extend) in lines):
-                    return props.line["width"]
+                    return False, props.line["width"]
                 elems = [(x, y, "left", "normal"), (x, y - 1, "left", "normal")]
-                if True in map(lambda e: e in lines, elems):
-                    return props.line["width"]
+                if True in [e in lines for e in elems]:
+                    return False, props.line["width"]
                 elems = [(x, y, "left", side_extend), (x, y - 1, "left", side_extend)]
-                if True in map(lambda e: e in lines, elems):
-                    return props.border["width"]
-                return 0
-            dx_left = get_delta(x, y, "innerborder", "outerborder")
-            dx_right = get_delta(x + 1, y, "outerborder", "innerborder")
-            return (dx_left, dx_right)
+                if True in [e in lines for e in elems]:
+                    return True, 0 #props.border["width"]
+                return False, 0
+            is_left_border, dx_left = get_delta(x, y, "innerborder", "outerborder")
+            is_right_border, dx_right = get_delta(x + 1, y, "outerborder", "innerborder")
+            return (dx_left, dx_right, is_left_border, is_right_border)
         
         def render(context, grid, props):
             context.set_line_width(props.line["width"])
@@ -427,14 +427,21 @@ class GridView:
                             if not grid.is_available(x, y + 1):
                                 ry -= props.line["width"]
                         rdx = props.cell["size"]
-                        
+                    
                     # adjust horizontal lines to fill empty spaces in corners
-                    dxl, dxr = get_adjustments(lines, props, x, y)
+                    dxl, dxr, is_lb, is_rb = get_adjustments(lines, props, x, y)
                     rx -= dxl
                     rdx += dxl
                     rdx += dxr
-                        
                     render_line(context, props, rx, ry, rdx, 0, bar, border)
+                    if is_lb:
+                        rx -= props.border["width"]
+                        rdx = props.border["width"]
+                        render_line(context, props, rx, ry, rdx, 0, False, True)
+                    if is_rb:
+                        rx += (props.cell["size"] + dxl)
+                        rdx = props.border["width"]
+                        render_line(context, props, rx, ry, rdx, 0, False, True)
                 elif ltype == "left":
                     if side == "normal":
                         context.set_line_width(props.line["width"])
