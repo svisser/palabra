@@ -26,6 +26,12 @@ import preferences
 import transform
 from word import search_wordlists
 
+SYMMETRIES = ["keep_horizontal_symmetry"
+    , "keep_vertical_symmetry"
+    , "keep_point_symmetry"
+    , "keep_90_degree_symmetry"
+    , "keep_diagonals_symmetry"]
+
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
@@ -197,9 +203,8 @@ class Editor(gtk.HBox):
         self.force_redraw = True
         
         self.settings = {}
-        self.settings["keep_horizontal_symmetry"] = False
-        self.settings["keep_vertical_symmetry"] = False
-        self.settings["keep_point_symmetry"] = False
+        for s in SYMMETRIES:
+            self.settings[s] = False
         self.settings["keep_point_symmetry"] = True
         self.settings["locked_grid"] = False
         
@@ -515,10 +520,7 @@ class Editor(gtk.HBox):
         
     def set_symmetry(self, options):
         """Set the editor symmetry to the specified options."""
-        symmetries = ["keep_horizontal_symmetry"
-            ,"keep_vertical_symmetry"
-            ,"keep_point_symmetry"]
-        for key in symmetries:
+        for key in SYMMETRIES:
             self.settings[key] = key in options
             
     def apply_symmetry(self, x, y):
@@ -532,10 +534,18 @@ class Editor(gtk.HBox):
             cells.append((self.puzzle.grid.width - 1 - x, y))
         if ((self.settings["keep_horizontal_symmetry"]
             and self.settings["keep_vertical_symmetry"])
-            or self.settings["keep_point_symmetry"]):
+            or self.settings["keep_point_symmetry"]
+            or self.settings["keep_90_degree_symmetry"]
+            or self.settings["keep_diagonals_symmetry"]):
             p = self.puzzle.grid.width - 1 - x
             q = self.puzzle.grid.height - 1 - y
             cells.append((p, q))
+        if self.settings["keep_90_degree_symmetry"]:
+            cells.append((self.puzzle.grid.width - 1 - y, x))
+            cells.append((y, self.puzzle.grid.height - 1 - x))
+        if self.settings["keep_diagonals_symmetry"]:
+            cells.append((y, x))
+            cells.append((self.puzzle.grid.height - 1 - y, self.puzzle.grid.width - 1 - x))
         return cells
 
     def transform_blocks(self, x, y, status):
