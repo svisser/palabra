@@ -416,7 +416,7 @@ class PropertiesWindow(gtk.Dialog):
             start = buffer.get_start_iter()
             end = buffer.get_end_iter()
             puzzle.notepad = buffer.get_text(start, end)
-            print puzzle.notepad
+        textview.get_buffer().set_text(puzzle.notepad)
         textview.get_buffer().connect("changed", on_notepad_changed)
         
         text_window = gtk.ScrolledWindow(None, None)
