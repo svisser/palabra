@@ -31,6 +31,10 @@ STANDARD_PATTERN_FILES = ["xml/patterns.xml"]
 WORDLIST_DIRECTORY = os.path.expanduser("~/.palabra/words")
 MAX_WORD_LENGTH = 64 # also in .c
 
+# puzzle types
+PUZZLE_PALABRA = 'palabra'
+PUZZLE_XPF = 'xpf'
+
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
 STATUS_GRID = "STATUS_GRID"

@@ -22,7 +22,7 @@ from lxml import etree
 
 from palabralib.files import (
     read_crossword, 
-    write_crossword_to_xml,
+    write_palabra,
     _read_metadata,
     _write_metadata,
     _read_grid,
@@ -56,7 +56,7 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.assign_numbers()
         self.puzzle.metadata = {"title": "A", "creator": "B"}
     
-        write_crossword_to_xml(self.puzzle)
+        write_palabra(self.puzzle)
         puzzle = read_crossword(self.LOCATION)
         for x, y in self.puzzle.grid.cells():
             self.assertEqual(puzzle.grid.cell(x, y), self.puzzle.grid.cell(x, y))

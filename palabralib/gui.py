@@ -31,7 +31,8 @@ from editor import Editor, WordTool
 from files import (
     PalabraParserError,
     read_crossword,
-    write_crossword_to_xml,
+    write_palabra,
+    write_xpf,
     export_puzzle,
 )
 import grid
@@ -263,10 +264,9 @@ class PalabraWindow(gtk.Window):
         self.set_title(title)
     
     def save_puzzle(self, save_as=False):
+        WRITERS = {constants.PUZZLE_PALABRA: write_palabra
+            , constants.PUZZLE_XPF: write_xpf}
         puzzle = self.puzzle_manager.current_puzzle
-        if puzzle.type == 'xpf':
-            print "Warning: saving XPF not yet supported."
-            return
         backup = preferences.prefs["backup_copy_before_save"]
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
             title = u"Save puzzle"
@@ -278,37 +278,32 @@ class PalabraWindow(gtk.Window):
                 , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
                 , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
             dialog.set_do_overwrite_confirmation(True)
-            filter = gtk.FileFilter()
-            filter.set_name(u"Palabra puzzle files (*.xml)")
-            filter.add_pattern("*.xml")
-            dialog.add_filter(filter)
             
-            filter = gtk.FileFilter()
-            filter.set_name(u"XPF puzzle files (*.xml)")
-            filter.add_pattern("*.xml")
-            dialog.add_filter(filter)
+            filters = {}
+            
+            f = gtk.FileFilter()
+            f.set_name(u"Palabra puzzle files (*.xml)")
+            f.add_pattern("*.xml")
+            dialog.add_filter(f)
+            filters[f] = constants.PUZZLE_PALABRA
+            
+            f = gtk.FileFilter()
+            f.set_name(u"XPF puzzle files (*.xml)")
+            f.add_pattern("*.xml")
+            dialog.add_filter(f)
+            filters[f] = constants.PUZZLE_XPF
 
             dialog.show_all()
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
-                def determine_type(name):
-                    if 'Palabra' in name:
-                        return 'palabra'
-                    if 'XPF' in name:
-                        return 'xpf'
-                    return 'palabra'
-                t = determine_type(dialog.get_filter().get_name())
-                
-                if t == 'xpf':
-                    print "Warning: saving XPF not yet supported."
-                else:
-                    filename = dialog.get_filename()
-                    puzzle.filename = filename
-                    write_crossword_to_xml(puzzle, backup)
-                    self.update_title(filename)
+                filename = dialog.get_filename()
+                puzzle.filename = filename
+                puzzle.type = filters[dialog.get_filter()]
+                WRITERS[puzzle.type](puzzle, backup)
+                self.update_title(filename)
             dialog.destroy()
         else:
-            write_crossword_to_xml(puzzle, backup)
+            WRITERS[puzzle.type](puzzle, backup)
         action.stack.distance_from_saved = 0
         
     def export_puzzle(self):

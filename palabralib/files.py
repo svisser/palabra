@@ -87,7 +87,7 @@ def determine_file_type(filename):
         return 'xpf'
     return None
     
-def write_crossword_to_xml(puzzle, backup=True):
+def write_palabra(puzzle, backup=True):
     root = etree.Element("palabra")
     root.set("version", constants.VERSION)
     
@@ -106,6 +106,9 @@ def write_crossword_to_xml(puzzle, backup=True):
     f = open(puzzle.filename, "w")
     f.write(contents)
     f.close()
+    
+def write_xpf(puzzle, backup=True):
+    print "Warning: saving XPF not yet supported."
 
 # TODO refactor
 
@@ -528,7 +531,7 @@ def read_palabra(filename):
         r_grid.assign_numbers()
         p = Puzzle(r_grid)
         p.metadata = r_meta
-        p.type = 'palabra'
+        p.type = constants.PUZZLE_PALABRA
         p.notepad = r_notepad
         results.append(p)
     return results
@@ -628,7 +631,7 @@ def read_xpf(filename):
         r_grid.assign_numbers()
         p = Puzzle(r_grid)
         p.metadata = r_meta
-        p.type = 'xpf'
+        p.type = constants.PUZZLE_XPF
         p.notepad = r_notepad
         results.append(p)
     return results

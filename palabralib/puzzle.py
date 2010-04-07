@@ -18,6 +18,7 @@
 import gtk
 
 import action
+import constants
 from grid import Grid
 from view import GridView
 
@@ -27,7 +28,7 @@ class Puzzle:
         self.view = GridView(grid)
         self.filename = None
         self.metadata = {}
-        self.type = 'palabra'
+        self.type = constants.PUZZLE_PALABRA
         self.notepad = ""
 
 class PuzzleManager:
