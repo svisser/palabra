@@ -110,42 +110,12 @@ class GridViewProperties:
         return self.default
     
     def apply_appearance(self, appearance):
-        cell_color = appearance["cell"]["color"]
-        cell_red = cell_color.red
-        cell_green = cell_color.green
-        cell_blue = cell_color.blue
-        
-        line_color = appearance["line"]["color"]
-        line_red = line_color.red
-        line_green = line_color.green
-        line_blue = line_color.blue
-        
-        border_color = appearance["border"]["color"]
-        border_red = border_color.red
-        border_green = border_color.green
-        border_blue = border_color.blue
-        
-        block_color = appearance["block"]["color"]
-        block_red = block_color.red
-        block_green = block_color.green
-        block_blue = block_color.blue
-        
-        char_color = appearance["char"]["color"]
-        char_red = char_color.red
-        char_green = char_color.green
-        char_blue = char_color.blue
-        
-        number_color = appearance["number"]["color"]
-        number_red = number_color.red
-        number_green = number_color.green
-        number_blue = number_color.blue
-        
-        self.default.block["color"] = (block_red, block_green, block_blue)
-        self.border["color"] = (border_red, border_green, border_blue)
-        self.default.char["color"] = (char_red, char_green, char_blue)
-        self.default.cell["color"] = (cell_red, cell_green, cell_blue)
-        self.line["color"] = (line_red, line_green, line_blue)
-        self.default.number["color"] = (number_red, number_green, number_blue)
+        self.default.block["color"] = appearance["block"]["color"]
+        self.border["color"] = appearance["border"]["color"]
+        self.default.char["color"] = appearance["char"]["color"]
+        self.default.cell["color"] = appearance["cell"]["color"]
+        self.line["color"] = appearance["line"]["color"]
+        self.default.number["color"] = appearance["number"]["color"]
         
         self.border["width"] = appearance["border"]["width"]
         self.line["width"] = appearance["line"]["width"]

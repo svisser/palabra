@@ -133,25 +133,27 @@ class AppearanceDialog(gtk.Dialog):
     def gather_appearance(self):
         appearance = {}
         appearance["block"] = {}
-        appearance["block"]["color"] = self.block_color_button.get_color()
         appearance["block"]["margin"] = self.block_margin_spinner.get_value_as_int()
-        
         appearance["border"] = {}
-        appearance["border"]["color"] = self.border_color_button.get_color()
         appearance["border"]["width"] = self.border_width_spinner.get_value_as_int()
-        
         appearance["char"] = {}
-        appearance["char"]["color"] = self.char_color_button.get_color()
-        
         appearance["cell"] = {}
-        appearance["cell"]["color"] = self.cell_color_button.get_color()
         appearance["cell"]["size"] = self.cell_size_spinner.get_value_as_int()
-        
         appearance["line"] = {}
-        appearance["line"]["color"] = self.line_color_button.get_color()
         appearance["line"]["width"] = self.line_width_spinner.get_value_as_int()
-        
         appearance["number"] = {}
-        appearance["number"]["color"] = self.number_color_button.get_color()
+        
+        color = self.cell_color_button.get_color()
+        appearance["cell"]["color"] = (color.red, color.green, color.blue)
+        color = self.line_color_button.get_color()
+        appearance["line"]["color"] = (color.red, color.green, color.blue)
+        color = self.border_color_button.get_color()
+        appearance["border"]["color"] = (color.red, color.green, color.blue)
+        color = self.block_color_button.get_color()
+        appearance["block"]["color"] = (color.red, color.green, color.blue)
+        color = self.char_color_button.get_color()
+        appearance["char"]["color"] = (color.red, color.green, color.blue)
+        color = self.number_color_button.get_color()
+        appearance["number"]["color"] = (color.red, color.green, color.blue)
         
         return appearance
