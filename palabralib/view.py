@@ -66,6 +66,20 @@ SETTINGS_SOLUTION = {
 }
 custom_settings = {}
 
+class CellStyle:
+    def __init__(self):
+        self.block = {}
+        self.block["color"] = (0, 0, 0)
+        self.block["margin"] = 0
+        self.cell = {}
+        self.cell["color"] = (65535, 65535, 65535)
+        self.char = {}
+        self.char["color"] = (0, 0, 0)
+        self.char["font"] = "Sans 12"
+        self.number = {}
+        self.number["color"] = (0, 0, 0)
+        self.number["font"] = "Sans 7"
+
 class GridViewProperties:
     def __init__(self, grid):
         self.grid = grid
@@ -76,32 +90,24 @@ class GridViewProperties:
         self.margin_x = 10
         self.margin_y = 10
         
+        self.default = CellStyle()
+        self.styles = {}
+        
         self.bar = {}
         self.bar["width"] = 5
-        
-        self.block = {}
-        self.block["color"] = (0, 0, 0)
-        self.block["margin"] = 0
-        
         self.border = {}
         self.border["width"] = 1
         self.border["color"] = (0, 0, 0)
-        
         self.cell = {}
-        self.cell["color"] = (65535, 65535, 65535)
         self.cell["size"] = 32
-        
-        self.char = {}
-        self.char["color"] = (0, 0, 0)
-        self.char["font"] = "Sans 12"
-        
         self.line = {}
         self.line["width"] = 1
         self.line["color"] = (0, 0, 0)
         
-        self.number = {}
-        self.number["color"] = (0, 0, 0)
-        self.number["font"] = "Sans 7"
+    def style(self, x, y):
+        if (x, y) in self.styles:
+            return self.styles[x, y]
+        return self.default
     
     def apply_appearance(self, appearance):
         cell_color = appearance["cell"]["color"]
@@ -134,16 +140,16 @@ class GridViewProperties:
         number_green = number_color.green
         number_blue = number_color.blue
         
-        self.block["color"] = (block_red, block_green, block_blue)
+        self.default.block["color"] = (block_red, block_green, block_blue)
         self.border["color"] = (border_red, border_green, border_blue)
-        self.char["color"] = (char_red, char_green, char_blue)
-        self.cell["color"] = (cell_red, cell_green, cell_blue)
+        self.default.char["color"] = (char_red, char_green, char_blue)
+        self.default.cell["color"] = (cell_red, cell_green, cell_blue)
         self.line["color"] = (line_red, line_green, line_blue)
-        self.number["color"] = (number_red, number_green, number_blue)
+        self.default.number["color"] = (number_red, number_green, number_blue)
         
         self.border["width"] = appearance["border"]["width"]
         self.line["width"] = appearance["line"]["width"]
-        self.block["margin"] = appearance["block"]["margin"]
+        self.default.block["margin"] = appearance["block"]["margin"]
         self.cell["size"] = appearance["cell"]["size"]
     
     def grid_to_screen_x(self, x, include_padding=True):
@@ -219,6 +225,9 @@ class GridView:
         self.overlay = []
         self.highlights = []
         
+    def style(self, x, y):
+        return self.properties.style(x, y)
+        
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
         self.settings = {}
@@ -256,8 +265,8 @@ class GridView:
             # are needed to render seamlessly in PDF
             context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
-        r, g, b = map(lambda x: x / 65535.0, self.properties.cell["color"])
-        self._render(context, render, color=(r, g, b))
+        color = map(lambda x: x / 65535.0, self.style(x, y).cell["color"])
+        self._render(context, render, color=color)
         
     def render_top(self, context, x, y):
         # char
@@ -265,7 +274,7 @@ class GridView:
             c = grid.get_char(x, y)
             if c != '':
                 self._render_char(context, props, x, y, c)
-        color = map(lambda x: x / 65535.0, self.properties.char["color"])
+        color = map(lambda x: x / 65535.0, self.style(x, y).char["color"])
         self._render(context, render, color=color)
         
         # overlay char
@@ -330,20 +339,20 @@ class GridView:
                 ry = props.grid_to_screen_y(y, False)
                 rsize = props.cell["size"]
                 
-                if props.block["margin"] != 0:
-                    offset = int((props.block["margin"] / 100.0) * props.cell["size"])
+                if props.style(x, y).block["margin"] != 0:
+                    offset = int((props.style(x, y).block["margin"] / 100.0) * props.cell["size"])
                     rx += offset
                     ry += offset
                     rsize -= (2 * offset)
                 
-                if props.block["margin"] == 0:
+                if props.style(x, y).block["margin"] == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
                     context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
                 else:                
                     context.rectangle(rx, ry, rsize, rsize)
             context.fill()
-        color = map(lambda x: x / 65535.0, self.properties.block["color"])
+        color = map(lambda x: x / 65535.0, self.style(x, y).block["color"])
         self._render(context, render, color=color)
         
         self.render_all_lines_of_cell(context, x, y)
@@ -353,7 +362,7 @@ class GridView:
             n = grid.cell(x, y)["number"]
             if n > 0:
                 self._render_number(context, props, x, y, n)
-        color = map(lambda x: x / 65535.0, self.properties.number["color"])
+        color = map(lambda x: x / 65535.0, self.style(x, y).number["color"])
         if self.settings["show_numbers"]:
             self._render(context, render, color=color)
     
@@ -517,13 +526,13 @@ class GridView:
         ry = (props.border["width"] +
             (y + 0.55) * (props.cell["size"] + props.line["width"]) -
             height - props.line["width"] / 2 - abs(ybearing) / 2)
-        self._render_pango(context, rx, ry, props.char["font"], c)
+        self._render_pango(context, rx, ry, props.style(x, y).char["font"], c)
         
     def _render_number(self, context, props, x, y, n):
         """Render a number n at the specified coordinates (x, y)."""
         rx = props.grid_to_screen_x(x, False) + 1
         ry = props.grid_to_screen_y(y, False)
-        self._render_pango(context, rx, ry, props.number["font"], str(n))
+        self._render_pango(context, rx, ry, props.style(x, y).number["font"], str(n))
             
     def _render(self, context, render, **args):
         """Perform the rendering function render with the given arguments."""

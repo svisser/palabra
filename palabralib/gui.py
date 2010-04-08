@@ -224,7 +224,7 @@ class PalabraWindow(gtk.Window):
                         puzzle = read_crossword(path)
                         view.grid = puzzle.grid
                         view.properties.cell["size"] = 12
-                        view.properties.char["font"] = "Sans 7"
+                        view.properties.default.char["font"] = "Sans 7"
                         view.refresh_visual_size(preview)
                         preview.queue_draw()
 
