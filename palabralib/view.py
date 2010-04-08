@@ -140,10 +140,9 @@ class GridViewProperties:
         """
         Return the x-coordinate of the cell based on the x-coordinate on screen.
         """
-        for x in range(self.grid.width):
-            left_x = self.grid_to_screen_x(x)
-            right_x = self.grid_to_screen_x(x) + self.cell["size"]
-            if screen_x >= left_x and screen_x < right_x:
+        for x in xrange(self.grid.width):
+            sx = self.grid_to_screen_x(x)
+            if sx <= screen_x < sx + self.cell["size"]:
                 return x
         return -1
         
@@ -151,25 +150,28 @@ class GridViewProperties:
         """
         Return the y-coordinate of the cell based on the y-coordinate on screen.
         """
-        for y in range(self.grid.height):
-            top_y = self.grid_to_screen_y(y)
-            bottom_y = self.grid_to_screen_y(y) + self.cell["size"]
-            if screen_y >= top_y and screen_y < bottom_y:
+        for y in xrange(self.grid.height):
+            sy = self.grid_to_screen_y(y)
+            if sy <= screen_y < sy + self.cell["size"]:
                 return y
         return -1
        
     def visual_width(self, include_padding=True):
-        width = (2 * self.border["width"] + self.grid.width * self.cell["size"]
-            + (self.grid.width - 1) * self.line["width"])
+        """
+        Return the visual width, possibly including padding, as shown on screen.
+        """
+        width = self.get_grid_width()
         if include_padding:
-            width += (self.margin_x * 2)
+            width += (2 * self.margin_x)
         return width
     
     def visual_height(self, include_padding=True):
-        height = (2 * self.border["width"] + self.grid.height * self.cell["size"]
-            + (self.grid.height - 1) * self.line["width"])
+        """
+        Return the visual height, possibly including padding, as shown on screen.
+        """
+        height = self.get_grid_height()
         if include_padding:
-            height += (self.margin_y * 2)
+            height += (2 * self.margin_y)
         return height
         
     def get_grid_width(self):
