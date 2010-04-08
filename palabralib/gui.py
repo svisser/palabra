@@ -210,11 +210,31 @@ class PalabraWindow(gtk.Window):
     def open_puzzle(self):
         self.close_puzzle()
         if not self.puzzle_manager.has_puzzle():
+            if False: # TODO
+                preview = gtk.DrawingArea()
+                from view import GridView
+                view = GridView(Grid(15, 15))
+                def on_expose_event(preview, event):
+                    context = preview.window.cairo_create()
+                    view.render(context, constants.VIEW_MODE_PREVIEW)
+                preview.connect("expose_event", on_expose_event)
+                def on_selection_changed(filechooser):
+                    path = filechooser.get_preview_filename() 
+                    if path and os.path.isfile(path):
+                        puzzle = read_crossword(path)
+                        view.grid = puzzle.grid
+                        view.properties.cell["size"] = 12
+                        view.properties.char["font"] = "Sans 7"
+                        view.refresh_visual_size(preview)
+                        preview.queue_draw()
+
             dialog = gtk.FileChooserDialog(u"Open puzzle"
                 , self
                 , gtk.FILE_CHOOSER_ACTION_OPEN
                 , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
                 , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+            #dialog.set_preview_widget(preview)
+            #dialog.connect("selection-changed", on_selection_changed)
             filter = gtk.FileFilter()
             filter.set_name(u"Palabra puzzle files (*.xml)")
             filter.add_pattern("*.xml")
