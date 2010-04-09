@@ -79,6 +79,7 @@ class CellStyle:
         self.number = {}
         self.number["color"] = (0, 0, 0)
         self.number["font"] = "Sans 7"
+        self.circle = False
 
 class GridViewProperties:
     def __init__(self, grid):
@@ -336,6 +337,18 @@ class GridView:
                 self._render_number(context, props, x, y, n)
         color = map(lambda x: x / 65535.0, self.style(x, y).number["color"])
         if self.settings["show_numbers"]:
+            self._render(context, render, color=color)
+            
+        # circle
+        def render(context, grid, props):
+            rx = props.grid_to_screen_x(x, False)
+            ry = props.grid_to_screen_y(y, False)
+            rsize = props.cell["size"]
+            context.new_sub_path()
+            context.arc(rx + rsize / 2, ry + rsize / 2, rsize / 2, 0, 2 * math.pi)
+            context.stroke()
+        color = map(lambda x: x / 65535.0, self.style(x, y).char["color"])
+        if self.style(x, y).circle:
             self._render(context, render, color=color)
     
     def render_all_lines_of_cell(self, context, x, y):
