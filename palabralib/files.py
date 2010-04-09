@@ -602,6 +602,9 @@ def read_xpf(filename):
                     y += 1
             elif child.tag == "Circles":
                 for circle in child:
+                    if circle.tag != "Circle":
+                        print "Warning: skipping a child of Circles that is not a Circle."
+                        continue
                     a_row = circle.get("Row")
                     a_col = circle.get("Col")
                     if a_row is None:
@@ -618,7 +621,23 @@ def read_xpf(filename):
             elif child.tag == "RebusEntries":
                 pass # TODO
             elif child.tag == "Shades":
-                pass # TODO
+                for shade in child:
+                    if shade.tag != "Shade":
+                        print "Warning: skipping a child of Shades that is not a Shade."
+                        continue
+                    a_row = shade.get("Row")
+                    a_col = shade.get("Col")
+                    if a_row is None:
+                        print "Warning: skipping a child of Shades without a Row."
+                        continue
+                    if a_col is None:
+                        print "Warning: skipping a child of Shades without a Col."
+                        continue
+                    x = int(a_col) - 1
+                    y = int(a_row) - 1
+                    if (x, y) not in r_styles:
+                        r_styles[x, y] = CellStyle()
+                    print "TODO", shade.text
             elif child.tag == "Clues":
                 for clue in child:
                     if clue.tag != "Clue":
