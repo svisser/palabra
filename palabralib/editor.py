@@ -26,12 +26,6 @@ import preferences
 import transform
 from word import search_wordlists
 
-SYMMETRIES = ["keep_horizontal_symmetry"
-    , "keep_vertical_symmetry"
-    , "keep_point_symmetry"
-    , "keep_90_degree_symmetry"
-    , "keep_diagonals_symmetry"]
-
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
@@ -204,9 +198,7 @@ class Editor(gtk.HBox):
         
         if not palabra_window.editor_settings:
             sett = {}
-            for s in SYMMETRIES:
-                sett[s] = False
-            sett["keep_point_symmetry"] = True
+            sett["symmetries"] = ["180_degree"]
             sett["locked_grid"] = False
             palabra_window.editor_settings = sett
         self.settings = palabra_window.editor_settings
@@ -520,35 +512,32 @@ class Editor(gtk.HBox):
             if self.puzzle.grid.get_char(x, y) != c.upper()]
         if len(actual) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
-        
-    def set_symmetry(self, options):
-        """Set the editor symmetry to the specified options."""
-        for key in SYMMETRIES:
-            self.settings[key] = key in options
             
     def apply_symmetry(self, x, y):
         """Apply one or more symmetrical transforms to (x, y)."""
         if not self.puzzle.grid.is_valid(x, y):
             return []
         cells = []
-        if self.settings["keep_horizontal_symmetry"]:
+        if "horizontal" in self.settings["symmetries"]:
             cells.append((x, self.puzzle.grid.height - 1 - y))
-        if self.settings["keep_vertical_symmetry"]:
+        if "vertical" in self.settings["symmetries"]:
             cells.append((self.puzzle.grid.width - 1 - x, y))
-        if ((self.settings["keep_horizontal_symmetry"]
-            and self.settings["keep_vertical_symmetry"])
-            or self.settings["keep_point_symmetry"]
-            or self.settings["keep_90_degree_symmetry"]
-            or self.settings["keep_diagonals_symmetry"]):
+        if (("horizontal" in self.settings["symmetries"]
+            and "vertical" in self.settings["symmetries"])
+            or "180_degree" in self.settings["symmetries"]
+            or "90_degree" in self.settings["symmetries"]
+            or "diagonals" in self.settings["symmetries"]):
             p = self.puzzle.grid.width - 1 - x
             q = self.puzzle.grid.height - 1 - y
             cells.append((p, q))
-        if self.settings["keep_90_degree_symmetry"]:
+        if "90_degree" in self.settings["symmetries"]:
             cells.append((self.puzzle.grid.width - 1 - y, x))
             cells.append((y, self.puzzle.grid.height - 1 - x))
-        if self.settings["keep_diagonals_symmetry"]:
+        if "diagonals" in self.settings["symmetries"]:
             cells.append((y, x))
-            cells.append((self.puzzle.grid.height - 1 - y, self.puzzle.grid.width - 1 - x))
+            p = self.puzzle.grid.height - 1 - y
+            q = self.puzzle.grid.width - 1 - x
+            cells.append((p, q))
         return cells
 
     def transform_blocks(self, x, y, status):

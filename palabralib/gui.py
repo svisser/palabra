@@ -664,10 +664,7 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def set_symmetry(options):
-            try:
-                self.editor.set_symmetry(options)
-            except AttributeError:
-                pass
+            self.editor.settings["symmetries"] = options
         
         activate = lambda item: set_symmetry([])
         select = lambda item: self.update_status(constants.STATUS_MENU
@@ -681,8 +678,7 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
-        horizontal = ["keep_horizontal_symmetry"]
-        activate = lambda item: set_symmetry(horizontal)
+        activate = lambda item: set_symmetry(["horizontal"])
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Use a horizontal symmetry axis when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -692,8 +688,7 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        vertical = ["keep_vertical_symmetry"]
-        activate = lambda item: set_symmetry(vertical)
+        activate = lambda item: set_symmetry(["vertical"])
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Use a vertical symmetry axis when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -703,8 +698,7 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        both = ["keep_horizontal_symmetry", "keep_vertical_symmetry"]
-        activate = lambda item: set_symmetry(both)
+        activate = lambda item: set_symmetry(["horizontal", "vertical"])
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Use horizontal and vertical symmetry axes when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -714,8 +708,7 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        diags = ["keep_diagonals_symmetry"]
-        activate = lambda item: set_symmetry(diags)
+        activate = lambda item: set_symmetry(["diagonals"])
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Use diagonal symmetry axes when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -727,8 +720,7 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
 
-        ninety = ["keep_90_degree_symmetry"]
-        activate = lambda item: set_symmetry(ninety)
+        activate = lambda item: set_symmetry(["90_degree"])
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Use 90 degree rotational symmetry when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -738,8 +730,7 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        point = ["keep_point_symmetry"]
-        activate = lambda item: set_symmetry(point)
+        activate = lambda item: set_symmetry(["180_degree"])
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Use 180 degree rotational symmetry when modifying the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
