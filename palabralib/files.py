@@ -655,9 +655,6 @@ def read_xpf(filename):
                             continue
                         if clue.text:
                             r_grid.store_clue(x, y, direction, "text", clue.text)
-                        else:
-                            print "Warning: skipping a clue that has no text."
-                            continue
             elif child.tag == "Notepad":
                 r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
