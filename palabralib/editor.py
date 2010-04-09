@@ -458,19 +458,19 @@ class Editor(gtk.HBox):
         """
         Update the clue data by creating or updating the latest undo action.
         """
-        print "TODO"
+        # TODO
         #a = action.stack.peek_action()
         #if (isinstance(a, ClueTransformAction)
         #    and a.matches(x, y, direction, key)):
         #    self.puzzle.grid.store_clue(x, y, direction, key, value)
         #    a.update(x, y, direction, key, value)
         #else:
-        #    self.palabra_window.transform_clues(transform.modify_clue
-        #            , x=x
-        #            , y=y
-        #            , direction=direction
-        #            , key=key
-        #            , value=value)
+        self.palabra_window.transform_clues(transform.modify_clue
+                , x=x
+                , y=y
+                , direction=direction
+                , key=key
+                , value=value)
         
     def insert(self, word):
         """Insert a word in the selected slot."""
