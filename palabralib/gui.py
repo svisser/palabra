@@ -664,7 +664,10 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def set_symmetry(options):
-            self.editor.settings["symmetries"] = options
+            try:
+                self.editor.settings["symmetries"] = options
+            except AttributeError:
+                pass
         
         activate = lambda item: set_symmetry([])
         select = lambda item: self.update_status(constants.STATUS_MENU
