@@ -583,7 +583,7 @@ def read_xpf(filename):
                         if c == '.':
                             r_grid.set_block(x + i, y, True)
                         else:
-                            r_grid.set_char(x + i, y, c)
+                            r_grid.set_char(x + i, y, c if c != ' ' else '')
                     y += 1
             elif child.tag == "Circles":
                 for circle in child:
@@ -653,7 +653,11 @@ def read_xpf(filename):
                         else:
                             print "Warning: skipping a clue with a direction that is not across or down."
                             continue
-                        r_grid.store_clue(x, y, direction, "text", clue.text)
+                        if clue.text:
+                            r_grid.store_clue(x, y, direction, "text", clue.text)
+                        else:
+                            print "Warning: skipping a clue that has no text."
+                            continue
             elif child.tag == "Notepad":
                 r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
