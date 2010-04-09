@@ -17,6 +17,7 @@
 
 import cairo
 import gtk
+from operator import itemgetter
 
 from lxml import etree
 
@@ -665,7 +666,6 @@ def read_xpf(filename):
     return results
     
 def write_xpf(puzzle, backup=True):
-    print "Warning: saving XPF not yet supported."
     root = etree.Element("Puzzles")
     main = etree.SubElement(root, "Puzzle")
     
@@ -696,6 +696,16 @@ def write_xpf(puzzle, backup=True):
         erow = etree.SubElement(egrid, "Row")
         chars = [calc_char(x, y) for x in xrange(puzzle.grid.width)]
         erow.text = ''.join(chars)
+        
+    styles = puzzle.view.properties.styles
+    circles = [cell for cell in styles if styles[cell].circle]
+    if circles:
+        circles.sort(key=itemgetter(0, 1))
+        ecircles = etree.SubElement(main, "Circles")
+        for x, y in circles:
+            ecircle = etree.SubElement(ecircles, "Circle")
+            ecircle.set("Row", str(y + 1))
+            ecircle.set("Col", str(x + 1))
         
     clues = etree.SubElement(main, "Clues")
     for d in ["across", "down"]:
