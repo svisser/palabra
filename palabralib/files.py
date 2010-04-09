@@ -635,9 +635,19 @@ def read_xpf(filename):
                         continue
                     x = int(a_col) - 1
                     y = int(a_row) - 1
-                    if (x, y) not in r_styles:
-                        r_styles[x, y] = CellStyle()
-                    print "TODO", shade.text
+                    if shade.text:
+                        if (x, y) not in r_styles:
+                            r_styles[x, y] = CellStyle()
+                        if shade.text[0] == '#':
+                            colorhex = shade.text[1:]
+                            split = (colorhex[0:2], colorhex[2:4], colorhex[4:6])
+                            rgb = [int((int(d, 16) / 255.0) * 65535) for d in split]
+                            r_styles[x, y].cell["color"] = tuple(rgb)
+                        else:
+                            print "TODO", shade.text
+                    else:
+                        print "Warning: Skipping a child of Shades with no content."
+                        continue
             elif child.tag == "Clues":
                 for clue in child:
                     if clue.tag != "Clue":
