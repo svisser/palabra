@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import gobject
 import gtk
 
 import transform
@@ -113,7 +114,7 @@ class ClueTool:
         
     def create_display_string(self, n, direction, word, clue):
         """Construct the displayed string for a word/clue item."""
-        c = clue if len(clue) > 0 else "<span foreground=\"red\">No clue yet.</span>"
+        c = gobject.markup_escape_text(clue) if len(clue) > 0 else "<span foreground=\"red\">No clue yet.</span>"
         d = {"across": "Across", "down": "Down"}[direction]
         return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
 
