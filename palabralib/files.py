@@ -24,7 +24,7 @@ import constants
 import grid
 from grid import Grid
 from puzzle import Puzzle
-from view import GridView
+from view import CellStyle, GridView
 
 DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
 DC_SIMPLE_TERMS = ["title"
@@ -542,6 +542,7 @@ class XPFParserError(ParserError):
 
 # http://www.xwordinfo.com/XPF/
 def read_xpf(filename):
+    # TODO check validity coordinates
     results = []
     try:
         doc = etree.parse(filename)
@@ -559,6 +560,7 @@ def read_xpf(filename):
         r_height = None
         r_grid = None
         r_notepad = ""
+        r_styles = {}
         for child in puzzle:
             if child.tag == "Title":
                 r_meta["title"] = child.text
@@ -599,7 +601,20 @@ def read_xpf(filename):
                             r_grid.set_char(x + i, y, c)
                     y += 1
             elif child.tag == "Circles":
-                pass # TODO
+                for circle in child:
+                    a_row = circle.get("Row")
+                    a_col = circle.get("Col")
+                    if a_row is None:
+                        print "Warning: skipping a child of Circles without a Row."
+                        continue
+                    if a_col is None:
+                        print "Warning: skipping a child of Circles without a Col."
+                        continue
+                    x = int(a_col) - 1
+                    y = int(a_row) - 1
+                    if (x, y) not in r_styles:
+                        r_styles[x, y] = CellStyle()
+                    r_styles[x, y].circle = True
             elif child.tag == "RebusEntries":
                 pass # TODO
             elif child.tag == "Shades":
@@ -629,7 +644,7 @@ def read_xpf(filename):
                 r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
         r_grid.assign_numbers()
-        p = Puzzle(r_grid)
+        p = Puzzle(r_grid, r_styles)
         p.metadata = r_meta
         p.type = constants.PUZZLE_XPF
         p.notepad = r_notepad

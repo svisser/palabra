@@ -23,13 +23,14 @@ from grid import Grid
 from view import GridView
 
 class Puzzle:
-    def __init__(self, grid):
+    def __init__(self, grid, styles=None):
         self.grid = grid
-        self.view = GridView(grid)
+        self.view = GridView(grid, styles)
         self.filename = None
         self.metadata = {}
         self.type = constants.PUZZLE_PALABRA
         self.notepad = ""
+        #self.styles = {}
 
 class PuzzleManager:
     def __init__(self):

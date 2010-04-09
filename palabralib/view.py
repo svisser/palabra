@@ -82,7 +82,7 @@ class CellStyle:
         self.circle = False
 
 class GridViewProperties:
-    def __init__(self, grid):
+    def __init__(self, grid, styles=None):
         self.grid = grid
         
         # 0.5 for sharp lines
@@ -92,7 +92,7 @@ class GridViewProperties:
         self.margin_y = 10
         
         self.default = CellStyle()
-        self.styles = {}
+        self.styles = styles if styles else {}
         
         self.bar = {}
         self.bar["width"] = 5
@@ -190,9 +190,9 @@ class GridViewProperties:
         return h
 
 class GridView:
-    def __init__(self, grid):
+    def __init__(self, grid, styles=None):
         self.grid = grid
-        self.properties = GridViewProperties(self.grid)
+        self.properties = GridViewProperties(grid, styles)
         self.select_mode(constants.VIEW_MODE_EDITOR)
         
         self.overlay = []
