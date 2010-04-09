@@ -732,10 +732,10 @@ def write_xpf(puzzle, backup=True):
             eclue.set("Row", str(y + 1))
             eclue.set("Col", str(x + 1))
             eclue.set("Num", str(n))
-            dshow = {"across": "Across", "down": "Down"}[d]
-            eclue.set("Dir", dshow)
+            eclue.set("Dir", {"across": "Across", "down": "Down"}[d])
             eclue.set("Ans", word)
-            eclue.text = clue
+            if clue:
+                eclue.text = clue
     
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     _write_puzzle(puzzle.filename, contents, backup)
