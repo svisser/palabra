@@ -696,9 +696,10 @@ def write_xpf(puzzle, backup=True):
         erow = etree.SubElement(egrid, "Row")
         chars = [calc_char(x, y) for x in xrange(puzzle.grid.width)]
         erow.text = ''.join(chars)
-        
+    
+    default = puzzle.view.properties.default    
     styles = puzzle.view.properties.styles
-    circles = [cell for cell in styles if styles[cell].circle]
+    circles = [cell for cell in styles if styles[cell].circle != default.circle]
     if circles:
         circles.sort(key=itemgetter(0, 1))
         ecircles = etree.SubElement(main, "Circles")
@@ -706,6 +707,22 @@ def write_xpf(puzzle, backup=True):
             ecircle = etree.SubElement(ecircles, "Circle")
             ecircle.set("Row", str(y + 1))
             ecircle.set("Col", str(x + 1))
+            
+    shades = [cell for cell in styles if styles[cell].cell["color"] != default.cell["color"]]
+    if shades:
+        shades.sort(key=itemgetter(0, 1))
+        eshades = etree.SubElement(main, "Shades")
+        for x, y in shades:
+            eshade = etree.SubElement(eshades, "Shade")
+            eshade.set("Row", str(y + 1))
+            eshade.set("Col", str(x + 1))
+            
+            def to_hex(value):
+                hv = hex(int(value / 65535.0 * 255))[2:]
+                return hv if len(hv) == 2 else '0' + hv
+            
+            text = '#' + ''.join([to_hex(v) for v in styles[x, y].cell["color"]])
+            eshade.text = text
         
     clues = etree.SubElement(main, "Clues")
     for d in ["across", "down"]:
