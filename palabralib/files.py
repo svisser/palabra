@@ -92,26 +92,10 @@ def write_palabra(puzzle, backup=True):
     root.set("version", constants.VERSION)
     
     _write_crossword(root, puzzle)
-
-    if backup:
-        try:
-            import os
-            if os.path.isfile(puzzle.filename):
-                import shutil
-                shutil.copy2(puzzle.filename, "".join([puzzle.filename, "~"]))
-        except IOError:
-            print "Warning: Failed to create a backup copy before saving."
     
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    f = open(puzzle.filename, "w")
-    f.write(contents)
-    f.close()
+    _write_puzzle(puzzle.filename, contents, backup)
     
-def write_xpf(puzzle, backup=True):
-    print "Warning: saving XPF not yet supported."
-
-# TODO refactor
-
 def read_pattern_file(filename):
     results = read_palabra(filename)
     metadata = {} # TODO
@@ -679,3 +663,68 @@ def read_xpf(filename):
         p.notepad = r_notepad
         results.append(p)
     return results
+    
+def write_xpf(puzzle, backup=True):
+    print "Warning: saving XPF not yet supported."
+    root = etree.Element("Puzzles")
+    main = etree.SubElement(root, "Puzzle")
+    
+    elems = [("title", "Title")
+        , ("creator", "Author")
+        , ("contributor", "Editor")
+        , ("publisher", "Publisher")
+        , ("date", "Date")]
+    for dc, e in elems:
+        if dc in puzzle.metadata and puzzle.metadata[dc]:
+            child = etree.SubElement(main, e)
+            child.text = puzzle.metadata[dc]
+    size = etree.SubElement(main, "Size")
+    rows = etree.SubElement(size, "Rows")
+    rows.text = str(puzzle.grid.height)
+    cols = etree.SubElement(size, "Cols")
+    cols.text = str(puzzle.grid.width)
+    
+    def calc_char(x, y):
+        cell = puzzle.grid.cell(x, y)
+        if cell["block"]:
+            return '.'
+        c = cell["char"]
+        return c if c else ' '
+
+    egrid = etree.SubElement(main, "Grid")
+    for y in xrange(puzzle.grid.height):
+        erow = etree.SubElement(egrid, "Row")
+        chars = [calc_char(x, y) for x in xrange(puzzle.grid.width)]
+        erow.text = ''.join(chars)
+        
+    clues = etree.SubElement(main, "Clues")
+    for d in ["across", "down"]:
+        for n, x, y, word, clue, explanation in puzzle.grid.gather_words(d):
+            eclue = etree.SubElement(clues, "Clue")
+            eclue.set("Row", str(y + 1))
+            eclue.set("Col", str(x + 1))
+            eclue.set("Num", str(n))
+            dshow = {"across": "Across", "down": "Down"}[d]
+            eclue.set("Dir", dshow)
+            eclue.set("Ans", word)
+            eclue.text = clue
+    
+    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
+    _write_puzzle(puzzle.filename, contents, backup)
+    
+def _write_puzzle(filename, contents, backup=True):
+    """
+    Store the contents in the specified file. If a file in that location
+    already exists and backup is True, a copy will be made before saving.
+    """
+    if backup:
+        try:
+            import os
+            if os.path.isfile(filename):
+                import shutil
+                shutil.copy2(filename, "".join([filename, "~"]))
+        except IOError:
+            print "Warning: Failed to create a backup copy before saving."
+    f = open(filename, "w")
+    f.write(contents)
+    f.close()
