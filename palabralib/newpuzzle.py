@@ -213,23 +213,22 @@ class NewWindow(gtk.Dialog):
         options_vbox.pack_start(label, False, False, 6)
         
         self.store = gtk.ListStore(str)
-        tree = gtk.TreeView(self.store)
-        tree.set_headers_visible(False)
-        tree.get_selection().connect("changed", self.on_pattern_changed)
+        self.tree = gtk.TreeView(self.store)
+        self.tree.set_headers_visible(False)
+        self.tree.get_selection().connect("changed", self.on_pattern_changed)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=0)
-        tree.append_column(column)
+        self.tree.append_column(column)
         
         window = gtk.ScrolledWindow(None, None)
         window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        window.add(tree)
+        window.add(self.tree)
         
-        clear_pattern = lambda button: self.load_empty_grid(*self.grid.size)
         self.clear_button = gtk.Button("Clear pattern")
-        self.clear_button.connect("clicked", clear_pattern)
+        self.clear_button.connect("clicked", self.clear_pattern)
         
         self.files = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
         
@@ -290,6 +289,12 @@ class NewWindow(gtk.Dialog):
         if it is not None:
             self.grid = self.grids[store.get_path(it)[0]]
             self.preview.display(self.grid)
+            
+    def clear_pattern(self, button):
+        """Display an empty grid without the currently selected pattern."""
+        self.grid = Grid(*self.grid.size)
+        self.preview.display(self.grid)
+        self.tree.get_selection().unselect_all()
             
     def load_empty_grid(self, width, height):
         self.grid = Grid(width, height)
