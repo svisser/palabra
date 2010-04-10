@@ -238,7 +238,7 @@ class GridView:
             # are needed to render seamlessly in PDF
             context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
-        color = map(lambda x: x / 65535.0, self.style(x, y).cell["color"])
+        color = [c / 65535.0 for c in self.style(x, y).cell["color"]]
         self._render(context, render, color=color)
         
     def render_top(self, context, x, y):
@@ -247,7 +247,7 @@ class GridView:
             c = grid.get_char(x, y)
             if c != '':
                 self._render_char(context, props, x, y, c)
-        color = map(lambda x: x / 65535.0, self.style(x, y).char["color"])
+        color = [c / 65535.0 for c in self.style(x, y).char["color"]]
         self._render(context, render, color=color)
         
         # overlay char
@@ -255,8 +255,9 @@ class GridView:
             for p, q, c in self.overlay:
                 if (x, y) == (p, q):
                     self._render_char(context, props, x, y, c)
-        color = map(lambda x: x / 65535.0, (65535.0 / 2, 65535.0 / 2, 65535.0 / 2))
+        # TODO custom color
         if self.settings["render_overlays"]:
+            color = [c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)]
             self._render(context, render, color=color)
         
         # highlights
@@ -302,7 +303,7 @@ class GridView:
                     bottom = y == (q + length - 1)
                     render_highlights_of_cell(context, x, y, top, bottom, left, right)
         # TODO custom color
-        color = map(lambda x: x / 65535.0, (65535.0, 65535.0, 65535.0 / 2))
+        color = [c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)]
         self._render(context, render, color=color)
         
         # block
@@ -325,7 +326,7 @@ class GridView:
                 else:                
                     context.rectangle(rx, ry, rsize, rsize)
             context.fill()
-        color = map(lambda x: x / 65535.0, self.style(x, y).block["color"])
+        color = [c / 65535.0 for c in self.style(x, y).block["color"]]
         self._render(context, render, color=color)
         
         self.render_all_lines_of_cell(context, x, y)
@@ -335,8 +336,8 @@ class GridView:
             n = grid.cell(x, y)["number"]
             if n > 0:
                 self._render_number(context, props, x, y, n)
-        color = map(lambda x: x / 65535.0, self.style(x, y).number["color"])
         if self.settings["show_numbers"]:
+            color = [c / 65535.0 for c in self.style(x, y).number["color"]]
             self._render(context, render, color=color)
             
         # circle
@@ -347,8 +348,8 @@ class GridView:
             context.new_sub_path()
             context.arc(rx + rsize / 2, ry + rsize / 2, rsize / 2, 0, 2 * math.pi)
             context.stroke()
-        color = map(lambda x: x / 65535.0, self.style(x, y).char["color"])
         if self.style(x, y).circle:
+            color = [c / 65535.0 for c in self.style(x, y).char["color"]]
             self._render(context, render, color=color)
     
     def render_all_lines_of_cell(self, context, x, y):
@@ -365,16 +366,16 @@ class GridView:
             if bar:
                 context.set_line_width(props.bar["width"])
             if border:
-                r, g, b = map(lambda x: x / 65535.0, props.border["color"])
-                context.set_source_rgb(r, g, b)
+                color = [c / 65535.0 for c in props.border["color"]]
+                context.set_source_rgb(*color)
             context.move_to(rx, ry)
             context.rel_line_to(rdx, rdy)
             context.stroke()
             if bar:
                 context.set_line_width(props.line["width"])
             if border:
-                r, g, b = map(lambda x: x / 65535.0, props.line["color"])
-                context.set_source_rgb(r, g, b)
+                color = [c / 65535.0 for c in props.line["color"]]
+                context.set_source_rgb(*color)
                 
         def get_adjustments(lines, props, x, y):
             def get_delta(x, y, side_no_extend, side_extend):
@@ -452,7 +453,7 @@ class GridView:
                                 rx -= props.line["width"]
                         rdy = props.cell["size"]
                     render_line(context, props, rx, sy, 0, rdy, bar, border)
-        color = map(lambda x: x / 65535.0, self.properties.line["color"])
+        color = [c / 65535.0 for c in self.properties.line["color"]]
         self._render(context, render, color=color)
             
     def render_warnings_of_cell(self, context, x, y, r, g, b):
@@ -521,8 +522,7 @@ class GridView:
             
     def _render(self, context, render, **args):
         """Perform the rendering function render with the given arguments."""
-        r, g, b = args["color"]
-        context.set_source_rgb(r, g, b)
+        context.set_source_rgb(*args["color"])
         
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
