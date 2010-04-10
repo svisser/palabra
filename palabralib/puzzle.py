@@ -24,13 +24,29 @@ from view import GridView
 
 class Puzzle:
     def __init__(self, grid, styles=None):
+        self.type = constants.PUZZLE_PALABRA
         self.grid = grid
         self.view = GridView(grid, styles)
         self.filename = None
         self.metadata = {}
-        self.type = constants.PUZZLE_PALABRA
         self.notepad = ""
-        #self.styles = {}
+        
+    def __eq__(self, other):
+        if self.type != other.type:
+            return False
+        if self.filename != other.filename:
+            return False
+        if self.metadata != other.metadata:
+            return False
+        if self.notepad != other.notepad:
+            return False
+        if self.grid != other.grid:
+            return False
+        # TODO view/styles
+        return True
+        
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class PuzzleManager:
     def __init__(self):
