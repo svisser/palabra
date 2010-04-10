@@ -479,3 +479,45 @@ def tile_from_cell(width, height, x, y):
 def example(grid):
     p = tile_from_cell(grid.width, grid.height, 1, 1)
     apply_pattern(grid, p)
+    
+class PatternEditor(gtk.Dialog):
+    def __init__(self, palabra_window):
+        gtk.Dialog.__init__(self, u"Pattern editor"
+            , palabra_window, gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
+        self.set_size_request(512, 384)
+        
+        controls = gtk.HBox(False, 0)
+        
+        self.tile_starts = [(p, q) for p in xrange(2) for q in xrange(2)]
+        tile_combo = gtk.combo_box_new_text()
+        for x, y in self.tile_starts:
+            content = str(''.join(["(", str(x + 1), ",", str(y + 1), ")" ]))
+            tile_combo.append_text(content)
+        tile_combo.connect("changed", self.on_tile_changed)
+        controls.pack_start(tile_combo, False, False, 0)
+        
+        self.preview = GridPreview()
+        self.preview.set_size_request(256, -1)
+        self.display_pattern(None)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(controls, True, True, 0)
+        hbox.pack_start(self.preview, False, False, 0)
+        self.vbox.pack_start(hbox, True, True, 0)
+        
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+    def display_pattern(self, pattern=None):
+        self.grid = Grid(15, 15)
+        if pattern:
+            apply_pattern(self.grid, pattern)
+        self.preview.display(self.grid)
+        
+    def on_tile_changed(self, combo):
+        x, y = self.tile_starts[combo.get_active()]
+        pattern = tile_from_cell(self.grid.width, self.grid.height, x, y)
+        self.display_pattern(pattern)

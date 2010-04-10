@@ -38,7 +38,7 @@ from files import (
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow
-from pattern import PatternFileEditor
+from pattern import PatternFileEditor, PatternEditor
 import preferences
 from preferences import PreferencesWindow, write_config_file
 from properties import PropertiesWindow
@@ -947,6 +947,12 @@ class PalabraWindow(gtk.Window):
                 pass
             self.panel.queue_draw()
         editor.destroy()
+        
+    def create_patterns(self):
+        editor = PatternEditor(self)
+        editor.show_all()
+        editor.run()
+        editor.destroy()
 
     def create_grid_menu(self):
         menu = gtk.Menu()
@@ -983,6 +989,12 @@ class PalabraWindow(gtk.Window):
             lambda item: self.manage_patterns()
             , u"Manage the pattern files available to the program"
             , title="_Manage pattern files..."))
+            
+        menu.append(self._create_menu_item(
+            lambda item: self.create_patterns()
+            , u"Generate a pattern using the pattern editor"
+            , title="_Create pattern..."
+            , is_puzzle_sensitive=True))
         
         grid_menu = gtk.MenuItem(u"_Grid", True)
         grid_menu.set_submenu(menu)
