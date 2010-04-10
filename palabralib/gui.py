@@ -952,7 +952,8 @@ class PalabraWindow(gtk.Window):
     def create_patterns(self):
         editor = PatternEditor(self)
         editor.show_all()
-        editor.run()
+        if editor.run() == gtk.RESPONSE_OK:
+            self.transform_grid(transform.replace_grid, grid=editor.grid)
         editor.destroy()
 
     def create_grid_menu(self):

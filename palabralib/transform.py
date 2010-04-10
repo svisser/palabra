@@ -19,6 +19,10 @@ from grid import Grid
 
 import copy
 
+def replace_grid(puzzle, grid):
+    """Completely replace the puzzle's grid by the specified grid."""
+    puzzle.grid = grid
+
 def modify_blocks(puzzle, blocks=[]):
     """Modify the blocks."""
     for x, y, status in blocks:
