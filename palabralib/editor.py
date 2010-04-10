@@ -131,7 +131,7 @@ class WordTool:
         show_used = self.settings["show_used_words"]
         entries = []
         if not show_used:
-            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if '?' not in e]
+            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
         store.clear()
         for row in self.data:
             if show_intersections and not row[1]:

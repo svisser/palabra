@@ -27,6 +27,9 @@ CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config.xml")
 # patterns
 STANDARD_PATTERN_FILES = ["xml/patterns.xml"]
 
+# used for displaying entries
+MISSING_CHAR = '?'
+
 # words
 WORDLIST_DIRECTORY = os.path.expanduser("~/.palabra/words")
 MAX_WORD_LENGTH = 64 # also in .c

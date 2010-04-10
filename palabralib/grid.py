@@ -17,6 +17,8 @@
 
 import string
 
+import constants
+
 class Grid:
     def __init__(self, width, height):
         """Construct a grid with the given dimensions."""
@@ -273,7 +275,7 @@ class Grid:
             lines.extend(self.lines_of_cell(x, y))
         return lines
                     
-    def gather_word(self, x, y, direction, empty_char="?"):
+    def gather_word(self, x, y, direction, empty_char=constants.MISSING_CHAR):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
         for p, q in self.in_direction(x, y, direction):
@@ -294,8 +296,8 @@ class Grid:
             
     def gather_constraints(self, x, y, direction):
         """Create a list of all chars by position of the specified word."""
-        word = self.gather_word(x, y, direction, "?")
-        return [(i, c.lower()) for i, c in enumerate(word) if c != "?"]
+        word = self.gather_word(x, y, direction, constants.MISSING_CHAR)
+        return [(i, c.lower()) for i, c in enumerate(word) if c != constants.MISSING_CHAR]
     
     def gather_all_constraints(self, x, y, direction):
         """
