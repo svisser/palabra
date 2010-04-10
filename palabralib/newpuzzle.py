@@ -49,9 +49,9 @@ class SizeComponent(gtk.VBox):
         
         spinners = gtk.HBox(False, 0)
         
-        spinners.pack_start(gtk.Label("Width:"), False, False, 6)
+        spinners.pack_start(gtk.Label("Columns:"), False, False, 6)
         spinners.pack_start(self.width_spinner, False, False, 6)
-        spinners.pack_start(gtk.Label("Height:"), False, False, 6)
+        spinners.pack_start(gtk.Label("Rows:"), False, False, 6)
         spinners.pack_start(self.height_spinner, False, False, 6)
         size_vbox.pack_start(spinners, True, True, 0)
         
@@ -203,7 +203,7 @@ class NewWindow(gtk.Dialog):
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.size_component = SizeComponent(
-            title=u"<b>Size</b>"
+            title=u"<b>Dimensions</b>"
             , callback=self.load_empty_grid)
         options_vbox.pack_start(self.size_component, False, False, 0)
         
