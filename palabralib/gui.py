@@ -99,6 +99,7 @@ class PalabraWindow(gtk.Window):
         self.connect("destroy", lambda widget: quit())
         
         self.wordlists = {}
+        self.patterns = None
         
         self.blacklist = None
         def callback(wordlist):

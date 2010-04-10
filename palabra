@@ -24,6 +24,8 @@ except (ImportError, AssertionError):
     print "PyGTK 2.8 or higher is required for this application."
     raise SystemExit
 
+import palabralib.constants as constants
+from palabralib.files import read_containers
 from palabralib.gui import PalabraWindow, create_splash
 import palabralib.preferences as preferences
 from palabralib.preferences import read_config_file
@@ -34,7 +36,6 @@ from palabralib.word import create_wordlists
 #cProfile.runctx('self.update_window(True)', globals(), locals(), filename='fooprof')
 #p = pstats.Stats('fooprof')
 #p.sort_stats('time').print_stats(20)
-#p.print_callers()
 
 if __name__ == "__main__":
     has_splash = False
@@ -47,9 +48,14 @@ if __name__ == "__main__":
         print "Reading configuration file..."
         read_config_file()
         print "Loading wordlists..."
-        data = create_wordlists(preferences.prefs["word_files"])
+        wordlists = create_wordlists(preferences.prefs["word_files"])
+        print "Loading pattern files..."
+        patternfiles = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
+        patterns = read_containers(patternfiles)
+        
         palabra = PalabraWindow()
-        palabra.wordlists.update(data)
+        palabra.wordlists.update(wordlists)
+        palabra.patterns = patterns
         palabra.show_all()
         if has_splash:
             splash.destroy()

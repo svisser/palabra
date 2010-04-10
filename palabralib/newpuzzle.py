@@ -234,9 +234,8 @@ class NewWindow(gtk.Dialog):
         self.files = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
         
         # TODO ?
-        loaded = read_containers(self.files)
         self.patterns = []
-        for f, meta, data in loaded:
+        for f, meta, data in palabra_window.patterns:
             self.patterns.append((f, meta, [p.grid for p in data]))
         self._load_pattern_list(self.files)
         
