@@ -32,6 +32,8 @@ class Puzzle:
         self.notepad = ""
         
     def __eq__(self, other):
+        if other is None:
+            return False
         if self.type != other.type:
             return False
         if self.filename != other.filename:

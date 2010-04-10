@@ -41,6 +41,8 @@ class Grid:
         return cell
         
     def __eq__(self, other):
+        if other is None:
+            return False
         if self.size != other.size:
             return False
         for x, y in self.cells():
