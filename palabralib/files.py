@@ -517,6 +517,7 @@ def read_palabra(filename):
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = constants.PUZZLE_PALABRA
+        p.filename = filename
         p.notepad = r_notepad
         results.append(p)
     return results
@@ -662,6 +663,7 @@ def read_xpf(filename):
         p = Puzzle(r_grid, r_styles)
         p.metadata = r_meta
         p.type = constants.PUZZLE_XPF
+        p.filename = filename
         p.notepad = r_notepad
         results.append(p)
     return results
