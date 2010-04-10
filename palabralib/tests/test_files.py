@@ -20,6 +20,7 @@ import unittest
 
 from lxml import etree
 
+import palabralib.constants as constants
 from palabralib.files import (
     read_crossword, 
     write_palabra,
@@ -29,6 +30,10 @@ from palabralib.files import (
     _write_grid,
     _read_clues,
     _write_clues,
+    read_palabra,
+    write_palabra,
+    read_xpf,
+    write_xpf,
 )
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
@@ -43,8 +48,8 @@ class FilesTestCase(unittest.TestCase):
     def tearDown(self):
         if os.path.exists(self.LOCATION):
             os.remove(self.LOCATION)
-        
-    def testReadWriteCrossword(self):
+            
+    def testPalabra(self):
         clues = {"text": "foo", "explanation": "bar"}
         self.puzzle.grid.set_block(0, 0, True)
         self.puzzle.grid.set_void(5, 5, True)
@@ -54,47 +59,27 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.cell(4, 4)["bar"]["left"] = True
         # TODO modify when arbitrary number schemes are implemented
         self.puzzle.grid.assign_numbers()
-        self.puzzle.metadata = {"title": "A", "creator": "B"}
-    
-        write_palabra(self.puzzle)
-        puzzle = read_crossword(self.LOCATION)
-        for x, y in self.puzzle.grid.cells():
-            self.assertEqual(puzzle.grid.cell(x, y), self.puzzle.grid.cell(x, y))
-        self.assertEqual(puzzle.metadata["title"], "A")
-        self.assertEqual(puzzle.metadata["creator"], "B")
-        
-    def testReadWriteMetadata(self):
-        metadata = {"title": "A"
+        self.puzzle.metadata = {"title": "A"
             , "creator": "B"
             , "description": "C"}
-        root = etree.Element("root")
-        _write_metadata(root, metadata)
-        result = _read_metadata(root[0])
-        self.assertEqual(result, metadata)
+        self.puzzle.type = constants.PUZZLE_PALABRA
+    
+        write_palabra(self.puzzle, False)
+        content = read_palabra(self.LOCATION)
+        self.assertEquals(len(content), 1)
+        self.assertEqual(content[0], self.puzzle)
         
-    def testReadWriteGrid(self):
-        clues = {"text": "C", "explanation": "D"}
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(6, 6, "A")
-        self.puzzle.grid.set_void(7, 7, True)
-        root = etree.Element("root")
-        _write_grid(root, self.puzzle.grid)
-        result = _read_grid(root[0])
-        self.assertEqual(result.is_block(5, 5), True)
-        self.assertEqual(result.get_char(6, 6), "A")
-        self.assertEqual(result.is_void(7, 7), True)
-        
-    def testReadWriteClues(self):
-        a = {"text": "foo", "explanation": "bar"}
-        self.puzzle.grid.cell(0, 0)["clues"]["across"] = a
-        d = {"text": "bar", "explanation": "foo"}
-        self.puzzle.grid.cell(0, 0)["clues"]["down"] = d
-        root = etree.Element("root")
-        _write_clues(root, self.puzzle.grid, "across")
-        _write_clues(root, self.puzzle.grid, "down")
-        dir_a, result_a = _read_clues(root[0])
-        dir_d, result_d = _read_clues(root[1])
-        self.assertEqual(dir_a, "across")
-        self.assertEqual(dir_d, "down")
-        self.assertEqual((0, 0, a) in result_a, True)
-        self.assertEqual((0, 0, d) in result_d, True)
+    def testXPF(self):
+        clues = {"text": "foo"}
+        self.puzzle.grid.set_block(0, 0, True)
+        self.puzzle.grid.set_char(1, 1, "A")
+        self.puzzle.grid.cell(1, 0)["clues"]["across"] = clues
+        # TODO modify when arbitrary number schemes are implemented
+        self.puzzle.grid.assign_numbers()
+        self.puzzle.metadata = {"title": "A", "creator": "B"}
+        self.puzzle.type = constants.PUZZLE_XPF
+    
+        write_xpf(self.puzzle, False)
+        content = read_xpf(self.LOCATION)
+        self.assertEquals(len(content), 1)
+        self.assertEqual(content[0], self.puzzle)
