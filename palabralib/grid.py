@@ -40,6 +40,17 @@ class Grid:
         cell["void"] = False
         return cell
         
+    def __eq__(self, other):
+        if self.size != other.size:
+            return False
+        for x, y in self.cells():
+            if self.cell(x, y) != other.cell(x, y):
+                return False
+        return True
+        
+    def __ne__(self, other):
+        return not self.__eq__(other)
+        
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
         n = 1
