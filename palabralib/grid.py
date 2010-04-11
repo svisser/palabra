@@ -135,25 +135,7 @@ class Grid:
             status["mean_word_length"] = self.mean_word_length()
             status["blank_count"] = status["char_count"] - status["actual_char_count"]
             
-            def determine_word_counts(direction):
-                for n, x, y in self.words_by_direction(direction):
-                    status["word_counts"][direction] += 1
-                    length = self.word_length(x, y, direction)
-                    try:
-                        status["word_counts"][length] += 1
-                    except KeyError:
-                        status["word_counts"][length] = 1
-            status["word_counts"] = {"across": 0, "down": 0}
-            determine_word_counts("across")
-            determine_word_counts("down")
-                    
-            status["word_counts"]["total"] = []
-            for length in range(2, max(self.width, self.height) + 1):
-                try:
-                    count = status["word_counts"][length]
-                except KeyError:
-                    count = 0
-                status["word_counts"]["total"].append((length, count))
+            status["word_counts"] = self.determine_word_counts()
                     
             status["char_counts"] = {}
             for x, y in self.cells():
@@ -185,6 +167,30 @@ class Grid:
             for x, y in self.cells():
                 status["clue_count"] += len(self.data[y][x]["clues"])
         
+        return status
+        
+    def determine_word_counts(self):
+        """Calculate the number of words by direction and by length."""
+        status = {}
+        def count_by_dir(direction):
+            for n, x, y in self.words_by_direction(direction):
+                status[direction] += 1
+                length = self.word_length(x, y, direction)
+                try:
+                    status[length] += 1
+                except KeyError:
+                    status[length] = 1
+        status = {"across": 0, "down": 0}
+        count_by_dir("across")
+        count_by_dir("down")
+                
+        status["total"] = []
+        for length in range(2, max(self.width, self.height) + 1):
+            try:
+                count = status[length]
+            except KeyError:
+                count = 0
+            status["total"].append((length, count))
         return status
         
     def words_by_direction(self, direction):
