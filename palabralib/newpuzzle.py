@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import gobject
 import gtk
 import operator
 import os
@@ -212,7 +213,8 @@ class NewWindow(gtk.Dialog):
         label.set_markup(u"<b>Patterns</b>")
         options_vbox.pack_start(label, False, False, 6)
         
-        self.store = gtk.ListStore(str)
+        # display_string grid
+        self.store = gtk.ListStore(str, gobject.TYPE_PYOBJECT)
         self.tree = gtk.TreeView(self.store)
         self.tree.set_headers_visible(False)
         self.tree.get_selection().connect("changed", self.on_pattern_changed)
@@ -287,7 +289,7 @@ class NewWindow(gtk.Dialog):
         store, it = selection.get_selected()
         self.clear_button.set_sensitive(it is not None)
         if it is not None:
-            self.grid = self.grids[store.get_path(it)[0]]
+            self.grid = store.get_value(it, 1)
             self.preview.display(self.grid)
             
     def clear_pattern(self, button):
@@ -299,16 +301,27 @@ class NewWindow(gtk.Dialog):
     def load_empty_grid(self, width, height):
         self.grid = Grid(width, height)
         self.preview.display(self.grid)
-        self.display_patterns(width, height)
+        self.display_patterns(width, height, criteria={"counts": {15: 3}})
         
-    def display_patterns(self, width, height):
+    def _check_grid(self, grid, criteria):
+        """Return True when the grid meets all the search criteria."""
+        if "counts" in criteria:
+            counts = grid.determine_word_counts()
+            for k, v in criteria["counts"].items():
+                if k not in counts or counts[k] < v:
+                    return False
+        return True
+        
+    def display_patterns(self, width, height, criteria=None):
         self.store.clear()
         for grid in self.grids:
             if grid.size == (width, height):
+                if criteria and not self._check_grid(grid, criteria):
+                    continue
                 blocks = grid.count_blocks()
                 words = grid.count_words()
-                s = "".join([str(words), " words, ", str(blocks), " blocks"])
-                self.store.append([s])
+                s = ''.join([str(words), " words, ", str(blocks), " blocks"])
+                self.store.append([s, grid])
                 
     def get_configuration(self):
         configuration = {}
