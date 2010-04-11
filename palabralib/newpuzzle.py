@@ -301,8 +301,7 @@ class NewWindow(gtk.Dialog):
     def load_empty_grid(self, width, height):
         self.grid = Grid(width, height)
         self.preview.display(self.grid)
-        criteria = self.generate_criteria(["aa"])
-        self.display_patterns(width, height, criteria)
+        self.display_patterns(width, height, criteria=None)
         
     def generate_criteria(self, words):
         """Determine search criteria per word length."""
