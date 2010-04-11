@@ -217,11 +217,6 @@ class WordTool:
         store, it = self.tree.get_selection().get_selected()
         self._perform_overlay_callback(it)
 
-class Cell:
-    def __init__(self, x=-1, y=-1):
-        self.x = x
-        self.y = y
-        
 class Selection:
     def __init__(self, x, y, direction):
         self.x = x
@@ -267,7 +262,7 @@ class Editor(gtk.HBox):
             palabra_window.editor_settings = sett
         self.settings = palabra_window.editor_settings
         
-        self.current = Cell(-1, -1)
+        self.current = (-1, -1)
         self.selection = Selection(-1, -1, "across")
         
         self.mouse_buttons_down = [False, False, False]
@@ -367,11 +362,11 @@ class Editor(gtk.HBox):
             self.puzzle.view.render_location(context, x, y, r, g, b)
                 
         # current cell and symmetrical cells
-        if self.current.x >= 0 and self.current.y >= 0:
+        if self.current[0] >= 0 and self.current[1] >= 0:
             r = preferences.prefs["color_secondary_active_red"] / 65535.0
             g = preferences.prefs["color_secondary_active_green"] / 65535.0
             b = preferences.prefs["color_secondary_active_blue"] / 65535.0
-            if (x, y) in self.apply_symmetry(self.current.x, self.current.y):
+            if (x, y) in self.apply_symmetry(*self.current):
                 self.puzzle.view.render_location(context, x, y, r, g, b)
                 
             # draw current cell last to prevent
@@ -379,7 +374,7 @@ class Editor(gtk.HBox):
             r = preferences.prefs["color_primary_active_red"] / 65535.0
             g = preferences.prefs["color_primary_active_green"] / 65535.0
             b = preferences.prefs["color_primary_active_blue"] / 65535.0
-            if (x, y) == (self.current.x, self.current.y):
+            if (x, y) == self.current:
                 self.puzzle.view.render_location(context, x, y, r, g, b)
         
     def on_expose_event(self, drawing_area, event):
@@ -442,10 +437,8 @@ class Editor(gtk.HBox):
             ex, ey, estate = event.x, event.y, event.state
         cx = self.puzzle.view.properties.screen_to_grid_x(ex)
         cy = self.puzzle.view.properties.screen_to_grid_y(ey)
-        prev_x = self.current.x
-        prev_y = self.current.y
-        self.current.x = cx
-        self.current.y = cy
+        prev_x, prev_y = self.current
+        self.current = (cx, cy)
 
         if (prev_x, prev_y) != (cx, cy):
             c0 = self.apply_symmetry(prev_x, prev_y)
