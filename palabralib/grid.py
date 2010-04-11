@@ -147,13 +147,13 @@ class Grid:
             determine_word_counts("across")
             determine_word_counts("down")
                     
-            status["word_counts_total"] = []
+            status["word_counts"]["total"] = []
             for length in range(2, max(self.width, self.height) + 1):
                 try:
                     count = status["word_counts"][length]
                 except KeyError:
                     count = 0
-                status["word_counts_total"].append((length, count))
+                status["word_counts"]["total"].append((length, count))
                     
             status["char_counts"] = {}
             for x, y in self.cells():

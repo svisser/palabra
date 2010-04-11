@@ -294,7 +294,7 @@ class PropertiesWindow(gtk.Dialog):
         column = gtk.TreeViewColumn(u"Count", cell, text=1)
         tree.append_column(column)
         
-        for i in status["word_counts_total"]:
+        for i in status["word_counts"]["total"]:
             store.append(i)
         
         window = gtk.ScrolledWindow(None, None)
