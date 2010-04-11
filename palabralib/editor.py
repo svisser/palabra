@@ -27,6 +27,28 @@ import preferences
 import transform
 from word import search_wordlists
 
+class WordPropertiesDialog(gtk.Dialog):
+    def __init__(self, palabra_window, properties):
+        gtk.Dialog.__init__(self, u"Word properties", palabra_window
+            , gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
+        self.set_size_request(384, 256)
+        
+        label = gtk.Label()
+        label.set_markup(''.join(['<b>', properties["word"], '</b>']))
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(label, True, True, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        self.vbox.add(hbox)
+
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
@@ -133,6 +155,20 @@ class WordTool:
         item.connect("activate", on_search_web)
         item.connect("select", on_search_web_select)
         item.connect("deselect", on_search_web_deselect)
+        menu.append(item)
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        def on_word_properties(item):
+            props = {}
+            props["word"] = word
+            window = WordPropertiesDialog(self.editor.palabra_window, props)
+            window.show_all()
+            window.run()
+            window.destroy()
+        
+        item = gtk.MenuItem("Properties")
+        item.connect("activate", on_word_properties)
         menu.append(item)
         
         menu.show_all()
