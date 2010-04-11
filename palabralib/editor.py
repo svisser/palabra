@@ -120,12 +120,19 @@ class WordTool:
             return
         menu = gtk.Menu()
         
+        # TODO ugly coupling        
+        def on_search_web_select(item):
+            self.editor.palabra_window.update_status(constants.STATUS_MENU, "Search the web for this word")
+        def on_search_web_deselect(item):
+            self.editor.palabra_window.pop_status(constants.STATUS_MENU)
         def on_search_web(item):
             link = ''.join(['http://google.com/search?q="', word, '"']) 
             webbrowser.open(link)
         
         item = gtk.MenuItem("Search the web")
         item.connect("activate", on_search_web)
+        item.connect("select", on_search_web_select)
+        item.connect("deselect", on_search_web_deselect)
         menu.append(item)
         
         menu.show_all()
