@@ -19,6 +19,7 @@ Version 0.1.3 (unreleased)
 * Added partial support for circles.
 * Improved speed of new puzzle window.
 * Improved speed of rendering a grid.
+* Added popup menu for words in the word list.
 
 Version 0.1.2 (April 2, 2010)
 =============================
