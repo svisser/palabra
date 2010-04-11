@@ -178,14 +178,16 @@ class PropertiesWindow(gtk.Dialog):
         label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
         table.attach(label, 0, 2, 11, 12)
-        label = gtk.Label(''.join(letters_in_use))
+        msg = ''.join(letters_in_use) if letters_in_use else "(none)"
+        label = gtk.Label(msg)
         label.set_alignment(0, 0)
         table.attach(label, 2, 4, 11, 12)
         
         label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
         table.attach(label, 0, 2, 12, 13)
-        label = gtk.Label(''.join(letters_not_in_use))
+        msg = ''.join(letters_not_in_use) if letters_not_in_use else "(none, this is a pangram)"
+        label = gtk.Label(msg)
         label.set_alignment(0, 0)
         table.attach(label, 2, 4, 12, 13)
         
