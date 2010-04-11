@@ -376,6 +376,36 @@ class Grid:
         """Return the number of blocks in the grid."""
         return sum([1 for x, y in self.cells() if self.is_block(x, y)])
         
+    def neighbors(self, x, y, diagonals=False):
+        """
+        Iterate over all neighboring cells of a cell.
+        
+        If diagonals is True, the diagonal neighbors will be included as well.
+        """
+        if diagonals:
+            neighbors = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1]]
+            neighbors.remove((0, 0))
+        else:
+            neighbors = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+        for dx, dy in neighbors:
+            if self.is_valid(x + dx, y + dy):
+                yield x + dx, y + dy
+        
+    def count_open_squares(self):
+        """
+        Return the number of open squares.
+        
+        A square is open if it does not touch a block, including diagonally.
+        """
+        def is_open(x, y):
+            if not self.is_available(x, y):
+                return False
+            for p, q in self.neighbors(x, y, diagonals=True):
+                if self.is_block(p, q):
+                    return False
+            return True
+        return sum([1 for x, y in self.cells() if is_open(x, y)])
+        
     # TODO incorrect
     def count_cheaters(self):
         """Return the number of cheating blocks in the grid."""
