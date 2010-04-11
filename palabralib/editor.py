@@ -18,6 +18,7 @@
 import cairo
 import gobject
 import gtk
+import webbrowser
 
 import action
 import constants
@@ -102,13 +103,33 @@ class WordTool:
         self._perform_overlay_callback(it)
         
     def on_tree_clicked(self, tree, event):
-        if event.button == 1:
+        if event.button in [1, 3]:
             item = tree.get_path_at_pos(int(event.x), int(event.y))
             if item is not None:
                 path, col, cellx, celly = item
-                if tree.get_selection().path_is_selected(path):
-                    it = tree.get_model().get_iter(path)
-                    self._perform_overlay_callback(it)
+                it = tree.get_model().get_iter(path)
+                if event.button == 1:
+                    if tree.get_selection().path_is_selected(path):
+                        self._perform_overlay_callback(it)
+                elif event.button == 3:
+                    self._create_popup_menu(it, event)
+                        
+    def _create_popup_menu(self, it, event):
+        word = self.store.get_value(it, 0) if it is not None else None
+        if not word:
+            return
+        menu = gtk.Menu()
+        
+        def on_search_web(item):
+            link = ''.join(['http://google.com/search?q="', word, '"']) 
+            webbrowser.open(link)
+        
+        item = gtk.MenuItem("Search the web")
+        item.connect("activate", on_search_web)
+        menu.append(item)
+        
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
                     
     def _perform_overlay_callback(self, it):
         word = self.store.get_value(it, 0) if it is not None else None
