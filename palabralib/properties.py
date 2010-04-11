@@ -86,7 +86,7 @@ class PropertiesWindow(gtk.Dialog):
             , gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.puzzle = puzzle
-        self.set_size_request(512, 384)
+        self.set_size_request(512, 448)
         self.connect("destroy", lambda widget: self.palabra_window.editor.clear_highlighted_words())
 
         status = puzzle.grid.determine_status(True)
@@ -117,7 +117,7 @@ class PropertiesWindow(gtk.Dialog):
         self.palabra_window.editor.clear_highlighted_words()
     
     def create_general_tab(self, status, puzzle):
-        table = gtk.Table(12, 4, False)
+        table = gtk.Table(13, 4, False)
         table.set_col_spacings(18)
         table.set_row_spacings(6)
         
@@ -149,6 +149,7 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Voids", str(status["void_count"]), 0, 6)
         create_statistic(table, u"Checked cells", str(status["checked_count"]), 0, 7)
         create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 0, 8)
+        create_statistic(table, u"Open cells", str(status["open_count"]), 0, 9)
         
         create_header(table, u"<b>Words</b>", 2, 0)
         create_statistic(table, u"Total words", str(status["word_count"]), 2, 1)
@@ -165,7 +166,7 @@ class PropertiesWindow(gtk.Dialog):
         avg_score = float(score) / status["char_count"]
         create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 8)
         
-        create_header(table, u"<b>Letters</b>", 0, 9)
+        create_header(table, u"<b>Letters</b>", 0, 10)
         
         letters_in_use = [c for (c, count) in status["char_counts_total"] if count > 0]
         letters_not_in_use = [c for (c, count) in status["char_counts_total"] if count == 0]
@@ -176,17 +177,17 @@ class PropertiesWindow(gtk.Dialog):
         
         label = gtk.Label(u"Letters in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 10, 11)
+        table.attach(label, 0, 2, 11, 12)
         label = gtk.Label(''.join(letters_in_use))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 10, 11)
+        table.attach(label, 2, 4, 11, 12)
         
         label = gtk.Label(u"Letters not in use")
         label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 11, 12)
+        table.attach(label, 0, 2, 12, 13)
         label = gtk.Label(''.join(letters_not_in_use))
         label.set_alignment(0, 0)
-        table.attach(label, 2, 4, 11, 12)
+        table.attach(label, 2, 4, 12, 13)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)

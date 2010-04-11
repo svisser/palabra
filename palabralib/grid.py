@@ -166,6 +166,8 @@ class Grid:
             status["clue_count"] = 0
             for x, y in self.cells():
                 status["clue_count"] += len(self.data[y][x]["clues"])
+                
+            status["open_count"] = self.count_open_squares()
         
         return status
         
