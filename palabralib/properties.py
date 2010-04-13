@@ -165,6 +165,7 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Scrabble score", str(score), 2, 7)
         avg_score = float(score) / status["char_count"]
         create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 8)
+        create_statistic(table, u"Connected?", "Yes" if status["connected"] else "No", 2, 9)
         
         create_header(table, u"<b>Letters</b>", 0, 10)
         

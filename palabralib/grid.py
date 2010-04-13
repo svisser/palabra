@@ -168,7 +168,7 @@ class Grid:
                 status["clue_count"] += len(self.data[y][x]["clues"])
                 
             status["open_count"] = self.count_open_squares()
-        
+            status["connected"] = self.is_connected()
         return status
         
     def determine_word_counts(self):
@@ -399,7 +399,6 @@ class Grid:
         
         A square is open if it does not touch a block, including diagonally.
         """
-        print self.is_connected()
         def is_open(x, y):
             if not self.is_available(x, y):
                 return False
