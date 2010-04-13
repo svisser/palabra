@@ -21,6 +21,7 @@ Version 0.1.3 (unreleased)
 * Improved speed of rendering a grid.
 * Added popup menu for words in the word list.
 * Added open cell count to properties window.
+* Added connectedness to properties window.
 
 Version 0.1.2 (April 2, 2010)
 =============================
