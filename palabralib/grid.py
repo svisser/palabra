@@ -399,6 +399,7 @@ class Grid:
         
         A square is open if it does not touch a block, including diagonally.
         """
+        print self.is_connected()
         def is_open(x, y):
             if not self.is_available(x, y):
                 return False
@@ -407,6 +408,33 @@ class Grid:
                     return False
             return True
         return sum([1 for x, y in self.cells() if is_open(x, y)])
+        
+    def is_connected(self):
+        """
+        Return True when all character cells are connected with each
+        other by going from cell to cell, using only horizontal and
+        vertical steps.
+        """
+        total = sum([1 for x, y in self.cells() if self.is_available(x, y)])
+    
+        x, y = -1, -1
+        for p, q in self.cells():
+            if self.is_available(p, q):
+                x, y = p, q
+                break
+        if x < 0 or y < 0:
+            return True
+        done = []
+        check = [(x, y)]
+        while check:
+            x, y = check.pop()
+            done.append((x, y))
+            for p, q in self.neighbors(x, y):
+                if (p, q) in done or (p, q) in check:
+                    continue
+                if self.is_available(p, q):
+                    check.append((p, q))
+        return total == len(done)
         
     # TODO incorrect
     def count_cheaters(self):
