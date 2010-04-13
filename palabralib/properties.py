@@ -159,13 +159,13 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Average word length", message, 2, 4)
         msg = ''.join([str(status["clue_count"]), " / ", str(status["word_count"])])
         create_statistic(table, u"Clues", msg, 2, 5)
+        create_statistic(table, u"Connected?", "Yes" if status["connected"] else "No", 2, 6)
         
-        create_header(table, u"<b>Score</b>", 2, 6)
+        create_header(table, u"<b>Score</b>", 2, 7)
         score = self.determine_scrabble_score(puzzle)
-        create_statistic(table, u"Scrabble score", str(score), 2, 7)
+        create_statistic(table, u"Scrabble score", str(score), 2, 8)
         avg_score = float(score) / status["char_count"]
-        create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 8)
-        create_statistic(table, u"Connected?", "Yes" if status["connected"] else "No", 2, 9)
+        create_statistic(table, u"Average letter score", "%.2f" % avg_score, 2, 9)
         
         create_header(table, u"<b>Letters</b>", 0, 10)
         
