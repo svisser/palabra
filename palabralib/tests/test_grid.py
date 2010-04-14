@@ -386,6 +386,24 @@ class GridTestCase(unittest.TestCase):
         indir = [(x, y) for x, y
             in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
         self.assertEqual(cells, indir)
+        
+    def testWordCounts(self):
+        counts = self.grid.determine_word_counts()
+        self.assertEquals(counts["across"], 15)
+        self.assertEquals(counts["down"], 12)
+        self.assertEquals(counts[12], 15)
+        self.assertEquals(counts[15], 12)
+        for i in xrange(2, 16):
+            if i == 12 or i == 15:
+                continue
+            self.assertEquals(i not in counts, True)
+        for l, c in counts["total"]:
+            if l == 12:
+                self.assertEquals(c, 15)
+            elif l == 15:
+                self.assertEquals(c, 12)
+            else:
+                self.assertEquals(c, 0)
     
     def testGatherWordOne(self):
         word = self.grid.gather_word(0, 0, "across", "_")
