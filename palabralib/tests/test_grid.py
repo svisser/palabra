@@ -737,6 +737,31 @@ class GridTestCase(unittest.TestCase):
             clues.append((0, self.grid.height - 1, "C"))
         for x, y, value in clues:
             self.grid.store_clue(x, y, direction, "text", value)
+            
+    def testOpenSquares(self):
+        g = Grid(5, 5)
+        self.assertEquals(g.count_open_squares(), 5 * 5)
+        g.set_block(2, 2, True)
+        self.assertEquals(g.count_open_squares(), (5 * 5) - 1 - 8)
+        g.set_block(0, 0, True)
+        self.assertEquals(g.count_open_squares(), (5 * 5) - 9 - 1 - 2)
+        g.set_block(1, 1, True)
+        self.assertEquals(g.count_open_squares(), (5 * 5) - 9 - 3 - 2)
+            
+    def testIsConnected(self):
+        g = Grid(5, 5)
+        self.assertEquals(g.is_connected(), True)
+        for i in xrange(5):
+            g.set_block(i, i, True)
+        self.assertEquals(g.is_connected(), False)
+        for i in xrange(5):
+            g.set_block(i, i, False)
+            self.assertEquals(g.is_connected(), True)
+            g.set_block(i, i, True)
+        for i in xrange(5):
+            for j in xrange(5):
+                g.set_block(i, j, True)
+        self.assertEquals(g.is_connected(), True)
        
     def testRemoveRowDirty(self):
         self._set_clues_one("down")
