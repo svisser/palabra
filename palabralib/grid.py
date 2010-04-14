@@ -403,13 +403,11 @@ class Grid:
         A square is open if it does not touch a block, including diagonally.
         """
         def is_open(x, y):
-            if not self.is_available(x, y):
-                return False
             for p, q in self.neighbors(x, y, diagonals=True):
                 if self.is_block(p, q):
                     return False
             return True
-        return sum([1 for x, y in self.cells() if is_open(x, y)])
+        return sum([1 for x, y in self.availables() if is_open(x, y)])
         
     def is_connected(self):
         """
