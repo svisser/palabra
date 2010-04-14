@@ -200,7 +200,7 @@ class Grid:
         for x, y in self.cells():
             if self.is_start_word(x, y, direction):
                 yield self.cell(x, y)["number"], x, y
-                    
+
     def horizontal_clues(self):
         """Iterate over the horizontal clues of the grid."""
         for n, x, y in self.words_by_direction("across"):
@@ -288,10 +288,7 @@ class Grid:
         word = ""
         for p, q in self.in_direction(x, y, direction):
             c = self.get_char(p, q)
-            if c == "":
-                word += empty_char
-            else:
-                word += c
+            word += (empty_char if c == "" else c)
         return word
         
     @staticmethod
