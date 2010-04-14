@@ -250,6 +250,12 @@ class Grid:
             for x in xrange(self.width):
                 yield x, y
                 
+    def availables(self):
+        """Convenience function for iterating over available cells."""
+        for x, y in self.cells():
+            if self.is_available(x, y):
+                yield x, y
+                
     def lines_of_cell(self, x, y):
         """Return the lines of a cell (uses nonexistent cells for outer lines)."""
         lines = []
@@ -411,13 +417,12 @@ class Grid:
         other by going from cell to cell, using only horizontal and
         vertical steps.
         """
-        total = sum([1 for x, y in self.cells() if self.is_available(x, y)])
+        total = sum([1 for x, y in self.availables()])
     
         x, y = -1, -1
-        for p, q in self.cells():
-            if self.is_available(p, q):
-                x, y = p, q
-                break
+        for p, q in self.availables():
+            x, y = p, q
+            break
         if x < 0 or y < 0:
             return True
         done = []
@@ -463,10 +468,9 @@ class Grid:
     def count_chars(self, include_blanks=True):
         """Return the number of chars in the grid."""
         count = 0
-        for x, y in self.cells():
-            if self.is_available(x, y):
-                if include_blanks or self.get_char(x, y) != '':
-                    count += 1
+        for x, y in self.availables():
+            if include_blanks or self.get_char(x, y) != '':
+                count += 1
         return count
             
     def mean_word_length(self):
@@ -474,7 +478,7 @@ class Grid:
         word_count = self.count_words()
         if word_count == 0:
             return 0
-        char_counts = [self.get_check_count(x, y) for x, y in self.cells() if self.is_available(x, y)]
+        char_counts = [self.get_check_count(x, y) for x, y in self.availables()]
         return float(sum(char_counts)) / float(word_count)
             
     def resize(self, width, height, make_dirty=True):
