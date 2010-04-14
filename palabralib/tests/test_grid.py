@@ -239,6 +239,17 @@ class GridTestCase(unittest.TestCase):
             self.assertEqual(p, 0)
             self.assertEqual(q, 6)
             
+    def testGetEndWord(self):
+        self.assertEquals(self.grid.get_end_word(0, 0, "across"), (self.grid.width - 1, 0))
+        for i in xrange(10):
+            self.grid.set_block(i, i, True)
+        self.assertEquals(self.grid.get_end_word(0, 0, "across"), (0, 0))
+        for i in xrange(8):
+            self.assertEquals(self.grid.get_end_word(0, i + 2, "across"), (i + 1, i + 2))
+        self.assertEquals(self.grid.get_end_word(0, 0, "down"), (0, 0))
+        for i in xrange(8):
+            self.assertEquals(self.grid.get_end_word(i + 2, 0, "down"), (i + 2, i + 1))
+            
     def testCheckCountBlocks(self):
         """Check counts range from -1 to 2 for blocks/voids to default cells."""
         self.assertEqual(self.grid.get_check_count(5, 5), 2)
