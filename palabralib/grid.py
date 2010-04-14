@@ -417,16 +417,12 @@ class Grid:
         other by going from cell to cell, using only horizontal and
         vertical steps.
         """
-        total = sum([1 for x, y in self.availables()])
-    
-        x, y = -1, -1
-        for p, q in self.availables():
-            x, y = p, q
-            break
-        if x < 0 or y < 0:
+        avs = [(x, y) for x, y in self.availables()]
+        if len(avs) == 0:
             return True
+    
         done = []
-        check = [(x, y)]
+        check = [avs[0]]
         while check:
             x, y = check.pop()
             done.append((x, y))
@@ -435,7 +431,7 @@ class Grid:
                     continue
                 if self.is_available(p, q):
                     check.append((p, q))
-        return total == len(done)
+        return len(avs) == len(done)
         
     # TODO incorrect
     def count_cheaters(self):
