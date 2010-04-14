@@ -743,12 +743,20 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(len(ns), 2)
         self.assertEquals((0, 1) in ns, True)
         self.assertEquals((1, 0) in ns, True)
+        
+        ns2 = [(x, y) for x, y in self.grid.neighbors(0, 0, diagonals=True)]
+        self.assertEquals(len(ns2), 3)
+        for n in ns:
+            self.assertEquals(n in ns2, True)
+        self.assertEquals((1, 1) in ns2, True)
+        
         ns = [(x, y) for x, y in self.grid.neighbors(5, 5)]
         self.assertEquals(len(ns), 4)
         self.assertEquals((5, 6) in ns, True)
         self.assertEquals((6, 5) in ns, True)
         self.assertEquals((4, 5) in ns, True)
         self.assertEquals((5, 4) in ns, True)
+        
         ns2 = [(x, y) for x, y in self.grid.neighbors(5, 5, diagonals=True)]
         self.assertEquals(len(ns2), 8)
         for n in ns:
@@ -757,6 +765,10 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals((6, 4) in ns2, True)
         self.assertEquals((6, 6) in ns2, True)
         self.assertEquals((4, 6) in ns2, True)
+        
+        g = Grid(1, 1)
+        ns = [(x, y) for x, y in g.neighbors(0, 0)]
+        self.assertEquals(len(ns), 0)
             
     def testOpenSquares(self):
         g = Grid(5, 5)
