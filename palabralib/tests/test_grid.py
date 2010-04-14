@@ -427,6 +427,16 @@ class GridTestCase(unittest.TestCase):
             length = self.grid.word_length(0, y, "across")
             self.assertEqual(length, y)
             
+    def testMeanWordLength(self):
+        g = Grid(5, 5)
+        self.assertEquals(g.mean_word_length(), 5)
+        g.set_block(0, 0, True)
+        self.assertAlmostEqual(g.mean_word_length(), (8 * 5 + 2 * 4) / 10.0)
+        g.set_block(1, 1, True)
+        self.assertAlmostEqual(g.mean_word_length(), (2 * 4 + 2 * 3 + 6 * 5) / 10.0)
+        g.set_block(1, 3, True)
+        self.assertAlmostEqual(g.mean_word_length(), (2 * 4 + 2 * 3 + 5 * 5) / 9.0)
+            
     def testCountBlocks(self):
         self.assertEqual(self.grid.count_blocks(), 0)
         

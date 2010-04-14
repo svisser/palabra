@@ -477,12 +477,8 @@ class Grid:
         word_count = self.count_words()
         if word_count == 0:
             return 0
-        char_count = 0
-        for x, y in self.cells():
-            for d in ["across", "down"]:
-                if self.is_start_word(x, y, d):
-                    char_count += self.word_length(x, y, d)
-        return float(char_count) / float(word_count)
+        char_counts = [self.get_check_count(x, y) for x, y in self.cells() if self.is_available(x, y)]
+        return float(sum(char_counts)) / float(word_count)
             
     def resize(self, width, height, make_dirty=True):
         """
