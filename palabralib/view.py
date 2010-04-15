@@ -386,12 +386,12 @@ class GridView:
                 if ((x, y, "left", side_no_extend) in lines
                     or (x, y - 1, "left", side_no_extend) in lines):
                     return False, props.line["width"]
-                elems = [(x, y, "left", "normal"), (x, y - 1, "left", "normal")]
-                if True in [e in lines for e in elems]:
+                if ((x, y, "left", "normal") in lines
+                    or (x, y - 1, "left", "normal") in lines):
                     return False, props.line["width"]
-                elems = [(x, y, "left", side_extend), (x, y - 1, "left", side_extend)]
-                if True in [e in lines for e in elems]:
-                    return True, 0 #props.border["width"]
+                if ((x, y, "left", side_extend) in lines
+                    or (x, y - 1, "left", side_extend) in lines):
+                    return True, 0
                 return False, 0
             is_left_border, dx_left = get_delta(x, y, "innerborder", "outerborder")
             is_right_border, dx_right = get_delta(x + 1, y, "outerborder", "innerborder")
@@ -442,7 +442,6 @@ class GridView:
                         context.set_line_width(props.line["width"])
                         rx = sx - 0.5 * props.line["width"]
                         rdy = props.cell["size"]
-                        
                     elif border:
                         context.set_line_width(props.border["width"])
                         if side == "outerborder":
