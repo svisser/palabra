@@ -64,6 +64,16 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_void(0, 0, False)
         self.assertEqual(self.grid.is_void(0, 0), False)
         
+    def testIsValid(self):
+        """A cell is valid when its coordinates are within bounds."""
+        for j in xrange(self.grid.height):
+            for i in xrange(self.grid.width):
+                self.assertEquals(self.grid.is_valid(i, j), True)
+        self.assertEquals(self.grid.is_valid(-1, 1), False)
+        self.assertEquals(self.grid.is_valid(1, -1), False)
+        self.assertEquals(self.grid.is_valid(100, 1), False)
+        self.assertEquals(self.grid.is_valid(1, 100), False)
+        
     def testIsStartHorizontalWordOne(self):
         """A single cell (ended by a block) is not a horizontal word."""
         self.assertEqual(self.grid.is_start_word(0, 0, "across"), True)
