@@ -1098,5 +1098,8 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(self.grid.is_available(0, 0), True)
         self.grid.set_block(0, 0, True)
         self.assertEquals(self.grid.is_available(0, 0), False)
+        self.assertEquals(self.grid.is_available(1, 0), True)
         self.grid.set_void(1, 0, True)
         self.assertEquals(self.grid.is_available(1, 0), False)
+        self.assertEquals(self.grid.is_available(-1, -1), False)
+        self.assertEquals(self.grid.is_available(100, 100), False)
