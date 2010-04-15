@@ -635,6 +635,27 @@ class GridTestCase(unittest.TestCase):
             for y in range(self.grid.height):
                 self.assertEqual(self.grid.get_char(x, y), "")
                 
+    def testClearBlocks(self):
+        for x, y in self.grid.cells():
+            self.grid.set_block(x, y, True)
+        self.grid.clear_blocks()
+        for x, y in self.grid.cells():
+            self.assertEquals(self.grid.is_block(x, y), False)
+            
+    def testClearVoids(self):
+        for x, y in self.grid.cells():
+            self.grid.set_void(x, y, True)
+        self.grid.clear_voids()
+        for x, y in self.grid.cells():
+            self.assertEquals(self.grid.is_void(x, y), False)
+    
+    def testClearClues(self):
+        for x, y in self.grid.cells():
+            self.grid.store_clue(x, y, "across", "text", "foo")
+        self.grid.clear_clues()
+        for x, y in self.grid.cells():
+            self.assertEquals(self.grid.get_clues(x, y), {})
+                
     def testClearBars(self):
         for x, y in self.grid.cells():
             self.grid.set_bar(x, y, "top", True)
