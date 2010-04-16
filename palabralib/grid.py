@@ -248,8 +248,14 @@ class Grid:
         return entries
         
     def slot(self, x, y, direction):
-        """Iterate over all cells of a slot that contains (x, y) in an unspecified order."""
-        p = self.in_direction(x, y, direction)
+        """
+        Iterate over all cells of a slot that contains (x, y) in an unspecified order.
+        
+        This function also regards a slot of length 1 as a slot.
+        """
+        dx = 1 if direction == "across" else 0
+        dy = 1 if direction == "down" else 0
+        p = self.in_direction(x + dx, y + dy, direction)
         q = self.in_direction(x, y, direction, reverse=True)
         for r, s in chain(p, q):
             yield r, s
