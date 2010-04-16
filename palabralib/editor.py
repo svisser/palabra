@@ -22,7 +22,6 @@ import webbrowser
 
 import action
 import constants
-from itertools import chain
 import preferences
 import transform
 from word import search_wordlists
@@ -316,9 +315,7 @@ class Editor(gtk.HBox):
         """
         Render the selected cells containing (x, y) in the specified direction.
         """
-        p = self.puzzle.grid.in_direction(x, y, direction)
-        q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
-        self._render_cells(chain(p, q), editor=editor)
+        self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
     
     def _render_editor_of_cell(self, context, x, y):
         """Render everything editor related colors for the cell at (x, y)."""
@@ -347,9 +344,7 @@ class Editor(gtk.HBox):
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
                 
-                p = self.puzzle.grid.in_direction(sx, sy, sdir)
-                q = self.puzzle.grid.in_direction(sx, sy, sdir, reverse=True)
-                for cell in chain(p, q):
+                for cell in self.puzzle.grid.slot(sx, sy, sdir):
                     if (x, y) == cell:
                         self.puzzle.view.render_location(context, x, y, r, g, b)
                         break
@@ -489,9 +484,7 @@ class Editor(gtk.HBox):
     def clear_slot_of(self, x, y, direction):
         """Clear all letters of the slot in the specified direction
         that contains (x, y)."""
-        p = self.puzzle.grid.in_direction(x, y, direction)
-        q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
-        chars = [(r, s, "") for r, s in chain(p, q)]
+        chars = [(r, s, "") for r, s in self.puzzle.grid.slot(x, y, direction)]
         if len(chars) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=chars)
         

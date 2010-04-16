@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from itertools import chain
 import string
 
 import constants
@@ -122,7 +123,7 @@ class Grid:
         before = self.is_available(x + bdx, y + bdy) and not self.has_bar(x, y, bar_side)
         after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
         return before or after
-
+        
     def determine_status(self, full=False):
         """Return a dictionary with the grid's properties."""
         status = {}
@@ -245,6 +246,13 @@ class Grid:
         entries = (a + d)
         entries.sort()
         return entries
+        
+    def slot(self, x, y, direction):
+        """Iterate over all cells of a slot that contains (x, y) in an unspecified order."""
+        p = self.in_direction(x, y, direction)
+        q = self.in_direction(x, y, direction, reverse=True)
+        for r, s in chain(p, q):
+            yield r, s
                     
     def cells(self):
         """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""
