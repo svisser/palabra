@@ -981,7 +981,7 @@ class PalabraWindow(gtk.Window):
         
         menu.append(self._create_menu_item(
             lambda item: self.resize_grid()
-            , u"Change the size of the grid"
+            , u"Change the dimensions of the grid"
             , title=u"_Resize grid..."
             , is_puzzle_sensitive=True))
             
