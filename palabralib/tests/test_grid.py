@@ -318,6 +318,22 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_void(6, 6, True)
         self.assertEquals(self.grid.is_part_of_word(6, 6, "across"), False)
         
+    def testSlotOne(self):
+        """A slot consists of all cells starting from the first cell of that slot."""
+        p, q = self.grid.get_start_word(5, 0, "across")
+        indir = [(x, y) for x, y in self.grid.in_direction(p, q, "across")]
+        cells = [cell for cell in self.grid.slot(5, 0, "across")]
+        for cell in cells:
+            self.assertEquals(cell in indir, True)
+        self.assertEquals(len(cells), self.grid.width)
+        
+    def testSlotTwo(self):
+        """A slot of length 1 is also a slot."""
+        self.grid.set_block(1, 0, True)
+        cells = [cell for cell in self.grid.slot(0, 0, "across")]
+        self.assertEquals(cells, [(0, 0)])
+        self.assertEquals(len(cells), 1)
+        
     def testInDirectionNormal(self):
         """Direction iterator returns all cells in the given direction."""
         cells = [(x, 0) for x in xrange(self.grid.width)]
