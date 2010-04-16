@@ -309,6 +309,15 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_void(7, 9, True)
         self.assertEqual(self.grid.is_part_of_word(7, 8, "down"), False)
         
+    def testIsPartOfWordAvailable(self):
+        """A cell that is not available cannot be part of a word."""
+        self.assertEquals(self.grid.is_part_of_word(5, 5, "across"), True)
+        self.grid.set_block(5, 5, True)
+        self.assertEquals(self.grid.is_part_of_word(5, 5, "across"), False)
+        self.assertEquals(self.grid.is_part_of_word(6, 6, "across"), True)
+        self.grid.set_void(6, 6, True)
+        self.assertEquals(self.grid.is_part_of_word(6, 6, "across"), False)
+        
     def testInDirectionNormal(self):
         """Direction iterator returns all cells in the given direction."""
         cells = [(x, 0) for x in xrange(self.grid.width)]

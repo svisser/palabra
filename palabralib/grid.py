@@ -113,6 +113,8 @@ class Grid:
         
     def is_part_of_word(self, x, y, direction):
         """Return True if the specified (x, y, direction) is part of a word (2+ letters)."""
+        if not self.is_available(x, y):
+            return False
         if direction == "across":
             bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
         elif direction == "down":
