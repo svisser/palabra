@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cairo
+import copy
 import gobject
 import gtk
 import operator
@@ -339,7 +340,7 @@ class NewWindow(gtk.Dialog):
         configuration["type"] = "crossword"
         
         if self.grid is not None:
-            configuration["grid"] = self.grid
+            configuration["grid"] = copy.deepcopy(self.grid)
         return configuration
         
 class GridPreview(gtk.VBox):
