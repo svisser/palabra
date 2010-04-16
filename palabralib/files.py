@@ -605,7 +605,29 @@ def read_xpf(filename):
                         r_styles[x, y] = CellStyle()
                     r_styles[x, y].circle = True
             elif child.tag == "RebusEntries":
-                pass # TODO
+                for rebus in child:
+                    if rebus.tag != "Rebus":
+                        print "Warning: skipping a child of RebusEntries that is not a Rebus."
+                        continue
+                    a_row = rebus.get("Row")
+                    if a_row is None:
+                        print "Warning: skipping a child of RebusEntries without a Row."
+                        continue
+                    a_col = rebus.get("Col")
+                    if a_col is None:
+                        print "Warning: skipping a child of RebusEntries without a Col."
+                        continue
+                    a_short = rebus.get("Short")
+                    if a_short is None:
+                        print "Warning: skipping a child of RebusEntries without a Short."
+                        continue
+                    content = rebus.text
+                    if len(content) == 0:
+                        print "Warning: skipping a child of RebusEntries without content."
+                        continue
+                    x = int(a_col) - 1
+                    y = int(a_row) - 1
+                    print "TODO - rebus found:", x, y, a_short, content
             elif child.tag == "Shades":
                 for shade in child:
                     if shade.tag != "Shade":
