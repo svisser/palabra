@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import cairo
 import gobject
 import gtk
 import operator
@@ -346,6 +347,8 @@ class GridPreview(gtk.VBox):
         gtk.VBox.__init__(self)
         
         self.view = None
+        self.preview_surface = None
+        self.preview_pattern = None
         
         label = gtk.Label()
         label.set_alignment(0, 0)
@@ -363,6 +366,7 @@ class GridPreview(gtk.VBox):
         
     def display(self, grid):
         self.view = GridView(grid)
+        self.preview_surface = None
         self.refresh()
         
     def refresh(self):
@@ -373,9 +377,26 @@ class GridPreview(gtk.VBox):
         
     def clear(self):
         self.view = None
+        self.preview_surface = None
         self.drawing_area.queue_draw()
         
     def on_expose_event(self, drawing_area, event):
         if self.view is not None:
+            if not self.preview_surface:
+                width = self.view.properties.visual_width(True)
+                height = self.view.properties.visual_height(True)
+                self.preview_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+                self.preview_pattern = cairo.SurfacePattern(self.preview_surface)
+                context = cairo.Context(self.preview_surface)
+                self.view.render(context, constants.VIEW_MODE_PREVIEW)
             context = drawing_area.window.cairo_create()
-            self.view.render(context, constants.VIEW_MODE_PREVIEW)
+            context.set_source(self.preview_pattern)
+            context.paint()
+
+            #import pstats
+            #import cProfile
+            #cProfile.runctx('self.view.render(context, constants.VIEW_MODE_PREVIEW)', globals(), locals(), filename='fooprof')
+            #p = pstats.Stats('fooprof')
+            #p.sort_stats('time').print_stats(20)
+            #self.view.render(context, constants.VIEW_MODE_PREVIEW)
+
