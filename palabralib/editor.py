@@ -423,7 +423,41 @@ class Editor(gtk.HBox):
                     self.change_typing_direction()
                 if self.puzzle.grid.is_available(x, y):
                     self.set_selection(x, y)
+            elif event.button == 3:
+                if self.puzzle.grid.is_valid(x, y):
+                    self._create_popup_menu(event, x, y)
         return True
+    
+    def _create_popup_menu(self, event, x, y):
+        if not self.puzzle.grid.is_available(x, y):
+            return
+        menu = gtk.Menu()
+        
+        # TODO ugly coupling        
+        def on_clear_slot_select(item, direction):
+            txt = {"across": "across", "down": "down"}[direction]
+            msg = ''.join(["Clear all letters in the ", txt, " slot"])
+            self.palabra_window.update_status(constants.STATUS_MENU, msg)
+        def on_clear_slot_deselect(item):
+            self.palabra_window.pop_status(constants.STATUS_MENU)
+        def on_clear_slot(item, direction):
+            self.clear_slot_of(x, y, direction)
+        
+        item = gtk.MenuItem("Clear across slot")
+        item.connect("activate", on_clear_slot, "across")
+        item.connect("select", on_clear_slot_select, "across")
+        item.connect("deselect", on_clear_slot_deselect)
+        item.set_sensitive(self.puzzle.grid.is_part_of_word(x, y, "across"))
+        menu.append(item)
+        item = gtk.MenuItem("Clear down slot")
+        item.connect("activate", on_clear_slot, "down")
+        item.connect("select", on_clear_slot_select, "down")
+        item.connect("deselect", on_clear_slot_deselect)
+        item.set_sensitive(self.puzzle.grid.is_part_of_word(x, y, "down"))
+        menu.append(item)
+        
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
         
     def on_button_release_event(self, drawing_area, event):
         if 1 <= event.button <= 3:
@@ -451,6 +485,15 @@ class Editor(gtk.HBox):
             elif self.mouse_buttons_down[2]:
                 self.transform_blocks(cx, cy, False)
         return True
+        
+    def clear_slot_of(self, x, y, direction):
+        """Clear all letters of the slot in the specified direction
+        that contains (x, y)."""
+        p = self.puzzle.grid.in_direction(x, y, direction)
+        q = self.puzzle.grid.in_direction(x, y, direction, reverse=True)
+        chars = [(r, s, "") for r, s in chain(p, q)]
+        if len(chars) > 0:
+            self.palabra_window.transform_grid(transform.modify_chars, chars=chars)
         
     def highlight_words(self, length):
         """Highlight the words with the specified length."""
