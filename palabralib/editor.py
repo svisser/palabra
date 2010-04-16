@@ -26,6 +26,51 @@ import preferences
 import transform
 from word import search_wordlists
 
+class CellPropertiesDialog(gtk.Dialog):
+    def __init__(self, palabra_window, properties):
+        gtk.Dialog.__init__(self, u"Cell properties", palabra_window
+            , gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
+        self.set_size_request(384, 256)
+        
+        table = gtk.Table(1, 2, False)
+        table.set_col_spacings(18)
+        table.set_row_spacings(6)
+        
+        def create_row(table, title, value, x, y):
+            label = gtk.Label()
+            label.set_markup(title)
+            label.set_alignment(0, 0)
+            table.attach(label, x, x + 1, y, y + 1)
+            label = gtk.Label(value)
+            label.set_alignment(0, 0)
+            table.attach(label, x + 1, x + 2, y, y + 1)
+        
+        types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
+        create_row(table, "Type", types[properties["type"]], 0, 0)
+        content = u"-"
+        if properties["type"] == "letter" and properties["content"]:
+            content = properties["content"]
+        create_row(table, "Content", content, 0, 1)
+
+        x, y = properties["cell"]
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup(''.join(['<b>Properties of cell ', str((x + 1, y + 1)), '</b>']))
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(label, False, False, 0)
+        main.pack_start(table, False, False, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        self.vbox.add(hbox)
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
@@ -424,8 +469,6 @@ class Editor(gtk.HBox):
         return True
     
     def _create_popup_menu(self, event, x, y):
-        if not self.puzzle.grid.is_available(x, y):
-            return
         menu = gtk.Menu()
         
         # TODO ugly coupling        
@@ -449,6 +492,28 @@ class Editor(gtk.HBox):
         item.connect("select", on_clear_slot_select, "down")
         item.connect("deselect", on_clear_slot_deselect)
         item.set_sensitive(self.puzzle.grid.is_part_of_word(x, y, "down"))
+        menu.append(item)
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        def on_cell_properties(item):
+            def determine_type(x, y):
+                if self.puzzle.grid.is_block(x, y):
+                    return "block"
+                elif self.puzzle.grid.is_void(x, y):
+                    return "void"
+                return "letter"
+            props = {}
+            props["cell"] = (x, y)
+            props["type"] = determine_type(x, y)
+            props["content"] = self.puzzle.grid.get_char(x, y)
+            window = CellPropertiesDialog(self.palabra_window, props)
+            window.show_all()
+            window.run()
+            window.destroy()
+        
+        item = gtk.MenuItem("Properties")
+        item.connect("activate", on_cell_properties)
         menu.append(item)
         
         menu.show_all()

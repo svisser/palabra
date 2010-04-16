@@ -24,6 +24,7 @@ Version 0.1.3 (unreleased)
 * Added connectedness to properties window.
 * Added editor to Metadata tab in properties window.
 * Added popup menu for cells in the grid.
+* Added properties dialog for cells.
 
 Version 0.1.2 (April 2, 2010)
 =============================
