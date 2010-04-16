@@ -324,10 +324,20 @@ class PropertiesWindow(gtk.Dialog):
         text_vbox.pack_start(label, False, False, 0)
         text_vbox.pack_start(twindow, True, True, 0)
         
+        label = gtk.Label()
+        label.set_markup(u"<b>Lengths</b>")        
+        label.set_alignment(0, 0.5)
+        label.set_padding(3, 3)
+        
+        lengths_vbox = gtk.VBox(False, 0)
+        lengths_vbox.set_spacing(6)
+        lengths_vbox.pack_start(label, False, False, 0)
+        lengths_vbox.pack_start(window, True, True, 0)
+        
         hhbox = gtk.HBox(False, 0)
         hhbox.set_spacing(18)
         hhbox.pack_start(text_vbox, True, True, 0)
-        hhbox.pack_start(window, True, True, 0)
+        hhbox.pack_start(lengths_vbox, True, True, 0)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
