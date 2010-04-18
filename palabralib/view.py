@@ -419,7 +419,7 @@ class GridView:
                             ry = sy - 0.5 * props.border["width"]
                         elif side == "innerborder":
                             ry = sy + 0.5 * props.border["width"]
-                            if not grid.is_available(x, y + 1):
+                            if not grid.is_available(x, y + 1) or not grid.is_available(x, y):
                                 ry -= props.line["width"]
                         rdx = props.cell["size"]
                     
@@ -448,7 +448,7 @@ class GridView:
                             rx = sx - 0.5 * props.border["width"]
                         elif side == "innerborder":
                             rx = sx + 0.5 * props.border["width"]
-                            if not grid.is_available(x + 1, y):
+                            if not grid.is_available(x + 1, y) or not grid.is_available(x, y):
                                 rx -= props.line["width"]
                         rdy = props.cell["size"]
                     render_line(context, props, rx, sy, 0, rdy, bar, border)
