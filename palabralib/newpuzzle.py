@@ -26,6 +26,7 @@ import constants
 from files import read_containers
 import grid
 from grid import Grid
+from pattern import PatternEditor
 import preferences
 from view import GridPreview, GridView
 
@@ -323,12 +324,12 @@ class NewWindow(gtk.Dialog):
         self.clear_button.set_sensitive(False)
         
     def construct_pattern(self, button):
-        pass
-        #editor = PatternEditor(self)
-        #editor.show_all()
-        #if editor.run() == gtk.RESPONSE_OK:
-        #    self.show_grid(editor.grid)
-        #editor.destroy()
+        """Open the pattern editor to construct a pattern."""
+        editor = PatternEditor(self)
+        editor.show_all()
+        if editor.run() == gtk.RESPONSE_OK:
+            self.show_grid(editor.grid)
+        editor.destroy()
             
     def load_empty_grid(self, width, height):
         self.grid = Grid(width, height)
