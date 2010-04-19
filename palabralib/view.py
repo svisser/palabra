@@ -465,14 +465,13 @@ class GridView:
     def render_location(self, context, x, y, r, g, b):
         """Render a cell."""
         def render(context, grid, props):
-            bx = props.grid_to_screen_x(x, False)
-            by = props.grid_to_screen_y(y, False)
-            bsize = props.cell["size"]
-            i = gtk.gdk.Rectangle(bx, by, bsize, bsize)
-            
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
-            context.rectangle(i.x - 0.5, i.y - 0.5, i.width + 1, i.height + 1)
+            bx = props.grid_to_screen_x(x, False) - 0.5
+            by = props.grid_to_screen_y(y, False) - 0.5
+            bsize = props.cell["size"] + 1
+            
+            context.rectangle(bx, by, bsize, bsize)
             context.fill()
         self._render(context, render, color=(r, g, b))
         
