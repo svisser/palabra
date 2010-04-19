@@ -190,6 +190,8 @@ class NewWindow(gtk.Dialog):
             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(NewWindow, self).__init__("New puzzle", palabra_window, flags, buttons)
         
+        self.showing_pattern = False
+        
         self.set_size_request(640, 480)
         
         self.preview = GridPreview()
@@ -252,17 +254,31 @@ class NewWindow(gtk.Dialog):
         file_combo.connect("changed", self.on_file_changed)
         
         patterns_vbox = gtk.VBox(False, 0)
+        
+        files_hbox = gtk.HBox(False, 0)
+        files_hbox.pack_start(gtk.Label(u"Show patterns from: "), False, False, 0)
+        align = gtk.Alignment(0, 0.5, 0, 0)
+        align.add(file_combo)
+        files_hbox.pack_start(align, False, False, 0)
+        
+        patterns_vbox.pack_start(files_hbox, False, False, 6)
+        
         patterns_vbox.pack_start(window, True, True, 0)
         
         buttons_hbox = gtk.HBox(False, 0)
         
-        align = gtk.Alignment(0, 0, 0, 0)
-        align.add(file_combo)
-        buttons_hbox.pack_start(align, False, False, 0)
+        
+        #buttons_hbox.pack_start(align, False, False, 0)
         
         align = gtk.Alignment(0, 0, 1, 0)
         align.add(self.clear_button)
-        buttons_hbox.pack_start(align, True, True, 0)
+        buttons_hbox.pack_start(align, False, False, 0)
+        
+        generate_button = gtk.Button(u"Construct pattern")
+        generate_button.connect("clicked", self.construct_pattern)
+        
+        buttons_hbox.pack_start(generate_button, False, False, 0)
+        
         patterns_vbox.pack_start(buttons_hbox, False, False, 0)
         
         align = gtk.Alignment(0, 0, 1, 1)
@@ -289,16 +305,30 @@ class NewWindow(gtk.Dialog):
         
     def on_pattern_changed(self, selection):
         store, it = selection.get_selected()
-        self.clear_button.set_sensitive(it is not None)
         if it is not None:
-            self.grid = store.get_value(it, 1)
-            self.preview.display(self.grid)
+            self.show_grid(store.get_value(it, 1))
+            
+    def show_grid(self, grid):
+        self.showing_pattern = True
+        self.grid = grid
+        self.preview.display(self.grid)
+        self.clear_button.set_sensitive(True)
             
     def clear_pattern(self, button):
         """Display an empty grid without the currently selected pattern."""
+        self.showing_pattern = False
         self.grid = Grid(*self.grid.size)
         self.preview.display(self.grid)
         self.tree.get_selection().unselect_all()
+        self.clear_button.set_sensitive(False)
+        
+    def construct_pattern(self, button):
+        pass
+        #editor = PatternEditor(self)
+        #editor.show_all()
+        #if editor.run() == gtk.RESPONSE_OK:
+        #    self.show_grid(editor.grid)
+        #editor.destroy()
             
     def load_empty_grid(self, width, height):
         self.grid = Grid(width, height)

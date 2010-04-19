@@ -476,6 +476,15 @@ def tile_from_cell(width, height, x, y):
     pattern.blocks = [(p, q) for p in xs for q in ys]
     return pattern
     
+def fill_from_cell(width, height, content):
+    full = [(p, q) for p in xrange(width) for q in xrange(height)]
+    pattern = Pattern()
+    if content == "block":
+        pattern.blocks = full
+    elif content == "void":
+        pattern.voids = full
+    return pattern
+    
 def example(grid):
     p = tile_from_cell(grid.width, grid.height, 1, 1)
     apply_pattern(grid, p)
@@ -487,15 +496,27 @@ class PatternEditor(gtk.Dialog):
         self.palabra_window = palabra_window
         self.set_size_request(512, 384)
         
-        controls = gtk.HBox(False, 0)
+        all_vbox = gtk.VBox(False, 0)
         
+        controls = gtk.HBox(False, 0)
         self.tile_starts = [(p, q) for p in xrange(2) for q in xrange(2)]
         tile_combo = gtk.combo_box_new_text()
         for x, y in self.tile_starts:
             content = str(''.join(["(", str(x + 1), ",", str(y + 1), ")" ]))
             tile_combo.append_text(content)
         tile_combo.connect("changed", self.on_tile_changed)
+        controls.pack_start(gtk.Label(u"Tile from: "), False, False, 0)
         controls.pack_start(tile_combo, False, False, 0)
+        all_vbox.pack_start(controls, False, False, 0)
+        
+        controls = gtk.HBox(False, 0)
+        controls.pack_start(gtk.Label(u"Fill with: "), False, False, 0)
+        fill_combo = gtk.combo_box_new_text()
+        fill_combo.append_text(u"Block")
+        fill_combo.append_text(u"Void")
+        fill_combo.connect("changed", self.on_fill_changed)
+        controls.pack_start(fill_combo, False, False, 0)
+        all_vbox.pack_start(controls, False, False, 0)
         
         self.preview = GridPreview()
         self.preview.set_size_request(256, -1)
@@ -504,7 +525,7 @@ class PatternEditor(gtk.Dialog):
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        hbox.pack_start(controls, True, True, 0)
+        hbox.pack_start(all_vbox, True, True, 0)
         hbox.pack_start(self.preview, False, False, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
@@ -520,4 +541,13 @@ class PatternEditor(gtk.Dialog):
     def on_tile_changed(self, combo):
         x, y = self.tile_starts[combo.get_active()]
         pattern = tile_from_cell(self.grid.width, self.grid.height, x, y)
+        self.display_pattern(pattern)
+        
+    def on_fill_changed(self, combo):
+        index = combo.get_active()
+        if index == 0:
+            content = "block"
+        elif index == 1:
+            content = "void"
+        pattern = fill_from_cell(self.grid.width, self.grid.height, content)
         self.display_pattern(pattern)
