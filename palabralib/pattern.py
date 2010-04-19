@@ -490,11 +490,13 @@ def example(grid):
     apply_pattern(grid, p)
     
 class PatternEditor(gtk.Dialog):
-    def __init__(self, palabra_window):
+    def __init__(self, palabra_window, size=None):
         gtk.Dialog.__init__(self, u"Pattern editor"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(512, 384)
+        
+        self.size = size if size else (15, 15)
         
         all_vbox = gtk.VBox(False, 0)
         
@@ -533,7 +535,7 @@ class PatternEditor(gtk.Dialog):
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
     def display_pattern(self, pattern=None):
-        self.grid = Grid(15, 15)
+        self.grid = Grid(*self.size)
         if pattern:
             apply_pattern(self.grid, pattern)
         self.preview.display(self.grid)

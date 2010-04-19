@@ -950,7 +950,8 @@ class PalabraWindow(gtk.Window):
         editor.destroy()
         
     def create_patterns(self):
-        editor = PatternEditor(self)
+        size = self.puzzle_manager.current_puzzle.grid.size
+        editor = PatternEditor(self, size=size)
         editor.show_all()
         if editor.run() == gtk.RESPONSE_OK:
             self.transform_grid(transform.replace_grid, grid=editor.grid)

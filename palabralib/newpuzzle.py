@@ -325,7 +325,7 @@ class NewWindow(gtk.Dialog):
         
     def construct_pattern(self, button):
         """Open the pattern editor to construct a pattern."""
-        editor = PatternEditor(self)
+        editor = PatternEditor(self, size=self.grid.size)
         editor.show_all()
         if editor.run() == gtk.RESPONSE_OK:
             self.show_grid(editor.grid)
