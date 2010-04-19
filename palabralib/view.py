@@ -371,11 +371,11 @@ class GridView:
             context.move_to(rx, ry)
             context.rel_line_to(rdx, rdy)
             context.stroke()
-            if bar:
-                context.set_line_width(props.line["width"])
             if border:
                 color = [c / 65535.0 for c in props.line["color"]]
                 context.set_source_rgb(*color)
+            if bar:
+                context.set_line_width(props.line["width"])
                 
         def get_adjustments(lines, props, x, y):
             def get_delta(x, y, side_no_extend, side_extend):
@@ -383,15 +383,15 @@ class GridView:
                 Determine the delta in pixels.
                 The delta is at least the normal line width.
                 """
-                if ((x, y, "left", side_no_extend) in lines
-                    or (x, y - 1, "left", side_no_extend) in lines):
-                    return False, props.line["width"]
-                if ((x, y, "left", "normal") in lines
-                    or (x, y - 1, "left", "normal") in lines):
-                    return False, props.line["width"]
-                if ((x, y, "left", side_extend) in lines
-                    or (x, y - 1, "left", side_extend) in lines):
-                    return True, 0
+                for line in lines:
+                    if (line == (x, y, "left", side_no_extend)
+                        or line == (x, y - 1, "left", side_no_extend)
+                        or line == (x, y, "left", "normal")
+                        or (x, y - 1, "left", "normal")):
+                        return False, props.line["width"]
+                    if (line == (x, y, "left", side_extend)
+                        or line == (x, y - 1, "left", side_extend)):
+                        return True, 0
                 return False, 0
             is_left_border, dx_left = get_delta(x, y, "innerborder", "outerborder")
             is_right_border, dx_right = get_delta(x + 1, y, "outerborder", "innerborder")
@@ -404,21 +404,22 @@ class GridView:
                 
                 bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
                 border = "border" in side
+                if side == "normal":
+                    context.set_line_width(props.line["width"])
+                elif border:
+                    context.set_line_width(props.border["width"])
+                
                 if ltype == "top":
                     rx = sx
+                    rdx = props.cell["size"]
                     if side == "normal":
-                        context.set_line_width(props.line["width"])
                         ry = sy - 0.5 * props.line["width"]
-                        rdx = props.cell["size"]
-                    elif border:
-                        context.set_line_width(props.border["width"])
-                        if side == "outerborder":
-                            ry = sy - 0.5 * props.border["width"]
-                        elif side == "innerborder":
-                            ry = sy + 0.5 * props.border["width"]
-                            if not grid.is_available(x, y + 1) or not grid.is_available(x, y):
-                                ry -= props.line["width"]
-                        rdx = props.cell["size"]
+                    elif side == "outerborder":
+                        ry = sy - 0.5 * props.border["width"]
+                    elif side == "innerborder":
+                        ry = sy + 0.5 * props.border["width"]
+                        if not grid.is_available(x, y + 1) or not grid.is_available(x, y):
+                            ry -= props.line["width"]
                     
                     # adjust horizontal lines to fill empty spaces in corners
                     dxl, dxr, is_lb, is_rb = get_adjustments(grid.lines[x, y], props, x, y)
@@ -435,19 +436,15 @@ class GridView:
                         rdx = props.border["width"]
                         render_line(context, props, rx, ry, rdx, 0, False, True)
                 elif ltype == "left":
+                    rdy = props.cell["size"]
                     if side == "normal":
-                        context.set_line_width(props.line["width"])
                         rx = sx - 0.5 * props.line["width"]
-                        rdy = props.cell["size"]
-                    elif border:
-                        context.set_line_width(props.border["width"])
-                        if side == "outerborder":
-                            rx = sx - 0.5 * props.border["width"]
-                        elif side == "innerborder":
-                            rx = sx + 0.5 * props.border["width"]
-                            if not grid.is_available(x + 1, y) or not grid.is_available(x, y):
-                                rx -= props.line["width"]
-                        rdy = props.cell["size"]
+                    elif side == "outerborder":
+                        rx = sx - 0.5 * props.border["width"]
+                    elif side == "innerborder":
+                        rx = sx + 0.5 * props.border["width"]
+                        if not grid.is_available(x + 1, y) or not grid.is_available(x, y):
+                            rx -= props.line["width"]
                     render_line(context, props, rx, sy, 0, rdy, bar, border)
         color = [c / 65535.0 for c in self.properties.line["color"]]
         self._render(context, render, color=color)

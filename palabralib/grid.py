@@ -844,6 +844,7 @@ class Grid:
     def set_void(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["void"] = status
+        # TODO not correct
         self._store_lines_of_cell(x, y)
         
     def _on_cell_type_change(self, x, y, status):
