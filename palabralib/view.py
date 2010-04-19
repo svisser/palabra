@@ -407,8 +407,8 @@ class GridView:
                     render_line(context, props, sx + start, sy, 0, cellsize, bar, border)
                 elif ltype == "top":
                     rx = sx
-                    rdx = cellsize
                     ry = sy + start
+                    rdx = cellsize
                     
                     def get_delta(x, y, side_no_extend, side_extend):
                         """
@@ -435,12 +435,10 @@ class GridView:
                     render_line(context, props, rx, ry, rdx, 0, bar, border)
                     if is_lb:
                         rx -= bwidth
-                        rdx = bwidth
-                        render_line(context, props, rx, ry, rdx, 0, False, True)
+                        render_line(context, props, rx, ry, bwidth, 0, False, True)
                     if is_rb:
                         rx += (cellsize + dxl)
-                        rdx = bwidth
-                        render_line(context, props, rx, ry, rdx, 0, False, True)
+                        render_line(context, props, rx, ry, bwidth, 0, False, True)
         color = [c / 65535.0 for c in self.properties.line["color"]]
         self._render(context, render, color=color)
             
