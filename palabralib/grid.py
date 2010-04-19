@@ -29,9 +29,11 @@ class Grid:
         """Reset the grid to the given dimensions with all empty cells."""
         self.width = width
         self.height = height
+        self.lines = {}
         self.data = [[self._default_cell() for x in range(width)] for y in range(height)]
         # TODO modify when arbitrary number schemes are implemented
         self.assign_numbers()
+        self.compute_lines()
         
     def _default_cell(self):
         cell = {}
@@ -64,6 +66,13 @@ class Grid:
             if self.is_start_word(x, y):
                 self.cell(x, y)["number"] = n
                 n += 1
+                
+    def compute_lines(self):
+        for x, y in self.cells():
+            self._store_lines_of_cell(x, y)
+            
+    def _store_lines_of_cell(self, x, y):
+        self.lines[x, y] = self.lines_of_cell(x, y)
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
@@ -835,6 +844,7 @@ class Grid:
     def set_void(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["void"] = status
+        self._store_lines_of_cell(x, y)
         
     def _on_cell_type_change(self, x, y, status):
         if status:

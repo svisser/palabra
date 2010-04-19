@@ -398,10 +398,7 @@ class GridView:
             return (dx_left, dx_right, is_left_border, is_right_border)
         
         def render(context, grid, props):
-            context.set_line_width(props.line["width"])
-            
-            lines = grid.lines_of_cell(x, y)
-            for p, q, ltype, side in lines:
+            for p, q, ltype, side in grid.lines[x, y]:
                 sx = props.grid_to_screen_x(p, False)
                 sy = props.grid_to_screen_y(q, False)
                 
@@ -424,7 +421,7 @@ class GridView:
                         rdx = props.cell["size"]
                     
                     # adjust horizontal lines to fill empty spaces in corners
-                    dxl, dxr, is_lb, is_rb = get_adjustments(lines, props, x, y)
+                    dxl, dxr, is_lb, is_rb = get_adjustments(grid.lines[x, y], props, x, y)
                     rx -= dxl
                     rdx += dxl
                     rdx += dxr
