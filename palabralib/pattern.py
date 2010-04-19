@@ -490,10 +490,9 @@ def example(grid):
     apply_pattern(grid, p)
     
 class PatternEditor(gtk.Dialog):
-    def __init__(self, palabra_window, size=None):
+    def __init__(self, parent, size=None):
         gtk.Dialog.__init__(self, u"Pattern editor"
-            , palabra_window, gtk.DIALOG_MODAL)
-        self.palabra_window = palabra_window
+            , parent, gtk.DIALOG_MODAL)
         self.set_size_request(512, 384)
         
         self.size = size if size else (15, 15)
