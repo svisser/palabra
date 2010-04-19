@@ -671,6 +671,7 @@ class Editor(gtk.HBox):
         if len(actual) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
             
+    # TODO fix 90 degrees and diagonals symmetry for non-rectangular grids
     def apply_symmetry(self, x, y):
         """Apply one or more symmetrical transforms to (x, y)."""
         if not self.puzzle.grid.is_valid(x, y):
