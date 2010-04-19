@@ -394,22 +394,21 @@ class GridView:
                 elif border:
                     context.set_line_width(bwidth)
                 
-                def get_vector(x, y, side):
-                    start = 0
-                    if side == "normal":
-                        start = -0.5 * lwidth
-                    elif side == "outerborder":
-                        start = -0.5 * bwidth
-                    elif side == "innerborder":
-                        start = 0.5 * bwidth
-                        if not grid.is_available(x, y + 1) or not grid.is_available(x, y):
-                            start -= lwidth
-                    return start
+                if side == "normal":
+                    start = -0.5 * lwidth
+                elif side == "outerborder":
+                    start = -0.5 * bwidth
+                elif side == "innerborder":
+                    start = 0.5 * bwidth
+                    if not grid.is_available(x, y + 1) or not grid.is_available(x, y):
+                        start -= lwidth
                 
-                if ltype == "top":
+                if ltype == "left":
+                    render_line(context, props, sx + start, sy, 0, cellsize, bar, border)
+                elif ltype == "top":
                     rx = sx
                     rdx = cellsize
-                    ry = sy + get_vector(x, y, side)
+                    ry = sy + start
                     
                     def get_delta(x, y, side_no_extend, side_extend):
                         """
@@ -442,10 +441,6 @@ class GridView:
                         rx += (cellsize + dxl)
                         rdx = bwidth
                         render_line(context, props, rx, ry, rdx, 0, False, True)
-                elif ltype == "left":
-                    rdy = cellsize
-                    rx = sx + get_vector(x, y, side)
-                    render_line(context, props, rx, sy, 0, rdy, bar, border)
         color = [c / 65535.0 for c in self.properties.line["color"]]
         self._render(context, render, color=color)
             
