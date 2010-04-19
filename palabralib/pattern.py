@@ -499,24 +499,32 @@ class PatternEditor(gtk.Dialog):
         
         all_vbox = gtk.VBox(False, 0)
         
-        controls = gtk.HBox(False, 0)
-        self.tile_starts = [(p, q) for p in xrange(2) for q in xrange(2)]
-        tile_combo = gtk.combo_box_new_text()
-        for x, y in self.tile_starts:
-            content = str(''.join(["(", str(x + 1), ",", str(y + 1), ")" ]))
-            tile_combo.append_text(content)
-        tile_combo.connect("changed", self.on_tile_changed)
-        controls.pack_start(gtk.Label(u"Tile from: "), False, False, 0)
-        controls.pack_start(tile_combo, False, False, 0)
-        all_vbox.pack_start(controls, False, False, 0)
+        radio = gtk.RadioButton(None, u"Tile from: ")
+        radio.connect("toggled", self.on_option_toggle, "tile")
         
         controls = gtk.HBox(False, 0)
-        controls.pack_start(gtk.Label(u"Fill with: "), False, False, 0)
-        fill_combo = gtk.combo_box_new_text()
-        fill_combo.append_text(u"Block")
-        fill_combo.append_text(u"Void")
-        fill_combo.connect("changed", self.on_fill_changed)
-        controls.pack_start(fill_combo, False, False, 0)
+        self.tile_starts = [(p, q) for p in xrange(2) for q in xrange(2)]
+        self.tile_combo = gtk.combo_box_new_text()
+        self.tile_combo.append_text(u"")
+        for x, y in self.tile_starts:
+            content = str(''.join(["(", str(x + 1), ",", str(y + 1), ")" ]))
+            self.tile_combo.append_text(content)
+        self.tile_combo.connect("changed", self.on_tile_changed)
+        controls.pack_start(radio, False, False, 0)
+        controls.pack_start(self.tile_combo, False, False, 0)
+        all_vbox.pack_start(controls, False, False, 0)
+        
+        radio = gtk.RadioButton(radio, u"Fill with: ")
+        radio.connect("toggled", self.on_option_toggle, "fill")
+        
+        controls = gtk.HBox(False, 0)
+        controls.pack_start(radio, False, False, 0)
+        self.fill_combo = gtk.combo_box_new_text()
+        self.fill_combo.append_text(u"")
+        self.fill_combo.append_text(u"Block")
+        self.fill_combo.append_text(u"Void")
+        self.fill_combo.connect("changed", self.on_fill_changed)
+        controls.pack_start(self.fill_combo, False, False, 0)
         all_vbox.pack_start(controls, False, False, 0)
         
         self.preview = GridPreview()
@@ -532,6 +540,19 @@ class PatternEditor(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self._select_option("tile")
+        
+    def on_option_toggle(self, widget, option):
+        if widget.get_active() == 1:
+            self._select_option(option)
+    
+    def _select_option(self, option):
+        if option == "tile":
+            self.fill_combo.set_active(0)
+        elif option == "fill":
+            self.tile_combo.set_active(0)
+        self.tile_combo.set_sensitive(option == "tile")
+        self.fill_combo.set_sensitive(option == "fill")
         
     def display_pattern(self, pattern=None):
         self.grid = Grid(*self.size)
@@ -540,15 +561,22 @@ class PatternEditor(gtk.Dialog):
         self.preview.display(self.grid)
         
     def on_tile_changed(self, combo):
-        x, y = self.tile_starts[combo.get_active()]
+        index = combo.get_active()
+        if index == 0:
+            self.display_pattern(None)
+            return
+        x, y = self.tile_starts[index - 1]
         pattern = tile_from_cell(self.grid.width, self.grid.height, x, y)
         self.display_pattern(pattern)
         
     def on_fill_changed(self, combo):
         index = combo.get_active()
         if index == 0:
-            content = "block"
+            self.display_pattern(None)
+            return
         elif index == 1:
+            content = "block"
+        elif index == 2:
             content = "void"
         pattern = fill_from_cell(self.grid.width, self.grid.height, content)
         self.display_pattern(pattern)
