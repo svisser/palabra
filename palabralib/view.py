@@ -521,3 +521,61 @@ class GridView:
         visual_width = self.properties.visual_width()
         visual_height = self.properties.visual_height()
         drawing_area.set_size_request(visual_width, visual_height)
+
+class GridPreview(gtk.VBox):
+    def __init__(self):
+        gtk.VBox.__init__(self)
+        
+        self.view = None
+        self.preview_surface = None
+        self.preview_pattern = None
+        
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup("<b>Preview</b>")
+        
+        self.drawing_area = gtk.DrawingArea()
+        self.drawing_area.connect("expose_event", self.on_expose_event)
+        
+        self.scrolled_window = gtk.ScrolledWindow(None, None)
+        self.scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        self.scrolled_window.add_with_viewport(self.drawing_area)
+        
+        self.pack_start(label, False, False, 6)
+        self.pack_start(self.scrolled_window, True, True, 0)
+        
+    def display(self, grid):
+        self.view = GridView(grid)
+        self.preview_surface = None
+        self.refresh()
+        
+    def refresh(self):
+        if self.view is not None:
+            self.view.properties.cell["size"] = 12
+            self.view.refresh_visual_size(self.drawing_area)
+            self.drawing_area.queue_draw()
+        
+    def clear(self):
+        self.view = None
+        self.preview_surface = None
+        self.drawing_area.queue_draw()
+        
+    def on_expose_event(self, drawing_area, event):
+        if self.view is not None:
+            if not self.preview_surface:
+                width = self.view.properties.visual_width(True)
+                height = self.view.properties.visual_height(True)
+                self.preview_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+                self.preview_pattern = cairo.SurfacePattern(self.preview_surface)
+                context = cairo.Context(self.preview_surface)
+                self.view.render(context, constants.VIEW_MODE_PREVIEW)
+            context = drawing_area.window.cairo_create()
+            context.set_source(self.preview_pattern)
+            context.paint()
+
+            #import pstats
+            #import cProfile
+            #cProfile.runctx('self.view.render(context, constants.VIEW_MODE_PREVIEW)', globals(), locals(), filename='fooprof')
+            #p = pstats.Stats('fooprof')
+            #p.sort_stats('time').print_stats(20)
+            #self.view.render(context, constants.VIEW_MODE_PREVIEW)

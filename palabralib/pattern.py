@@ -20,8 +20,8 @@ import gtk
 
 from files import PalabraParserError, read_pattern_file, write_pattern_file
 from grid import Grid
-from newpuzzle import GridPreview
 import preferences
+from view import GridPreview
 
 class PatternFileEditor(gtk.Dialog):
     def __init__(self, palabra_window):
