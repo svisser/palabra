@@ -303,19 +303,16 @@ class NewWindow(gtk.Dialog):
         if it is not None:
             self.show_grid(store.get_value(it, 1))
             
-    def show_grid(self, grid):
-        self.showing_pattern = True
+    def show_grid(self, grid, showing_pattern=True):
+        self.showing_pattern = showing_pattern
         self.grid = grid
         self.preview.display(self.grid)
-        self.clear_button.set_sensitive(True)
+        self.clear_button.set_sensitive(showing_pattern)
             
     def clear_pattern(self, button):
         """Display an empty grid without the currently selected pattern."""
-        self.showing_pattern = False
-        self.grid = Grid(*self.grid.size)
-        self.preview.display(self.grid)
+        self.show_grid(Grid(*self.grid.size), False)
         self.tree.get_selection().unselect_all()
-        self.clear_button.set_sensitive(False)
         
     def construct_pattern(self, button):
         """Open the pattern editor to construct a pattern."""
@@ -323,9 +320,11 @@ class NewWindow(gtk.Dialog):
         editor.show_all()
         if editor.run() == gtk.RESPONSE_OK:
             self.show_grid(editor.grid)
+            self.tree.get_selection().unselect_all()
         editor.destroy()
             
     def load_empty_grid(self, width, height):
+        """Load an empty grid with the specified dimensions and load patterns."""
         self.grid = Grid(width, height)
         self.preview.display(self.grid)
         self.display_patterns(width, height, criteria=None)
