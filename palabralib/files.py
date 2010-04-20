@@ -109,8 +109,9 @@ def write_patterns(filename, patterns):
     root = etree.Element("palabra")
     root.set("version", constants.VERSION)
     
+    # TODO
     for grid in patterns:
-        _write_grid(root, grid)
+        _write_crossword(root, Puzzle(grid))
         
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     f = open(filename, "w")

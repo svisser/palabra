@@ -9,3 +9,4 @@ MANIFEST
 build/*
 dist/*
 *.egg-info/*
+patterns/*
