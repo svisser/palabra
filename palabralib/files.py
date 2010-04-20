@@ -105,6 +105,18 @@ def read_pattern_file(filename):
         contents[str(i)] = p.grid
     return (filename, metadata, contents)
     
+def write_patterns(filename, patterns):
+    root = etree.Element("palabra")
+    root.set("version", constants.VERSION)
+    
+    for grid in patterns:
+        _write_grid(root, grid)
+        
+    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
+    f = open(filename, "w")
+    f.write(contents)
+    f.close()
+    
 def write_pattern_file(filename, metadata, contents):
     root = etree.Element("palabra")
     root.set("version", constants.VERSION)
