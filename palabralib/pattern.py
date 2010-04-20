@@ -503,7 +503,7 @@ class PatternEditor(gtk.Dialog):
         radio.connect("toggled", self.on_option_toggle, "tile")
         
         controls = gtk.HBox(False, 0)
-        self.tile_starts = [(p, q) for p in xrange(2) for q in xrange(2)]
+        self.tile_starts = [(p, q) for q in xrange(2) for p in xrange(2)]
         self.tile_combo = gtk.combo_box_new_text()
         self.tile_combo.append_text(u"")
         for x, y in self.tile_starts:
