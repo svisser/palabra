@@ -78,7 +78,7 @@ class Grid:
         """Return True when a word begins in the cell (x, y)."""
         if not self.is_available(x, y):
             return False
-        def _is_start_word(d):
+        for d in ([direction] if direction else ["across", "down"]):
             if d == "across":
                 bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
             elif d == "down":
@@ -86,10 +86,9 @@ class Grid:
             
             before = not self.is_available(x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
             after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
-            return before and after
-        if direction:
-            return _is_start_word(direction)
-        return _is_start_word("across") or _is_start_word("down")
+            if before and after:
+                return True
+        return False
         
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
