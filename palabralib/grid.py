@@ -62,9 +62,9 @@ class Grid:
         """Assign word numbers to cells as they are commonly numbered."""
         n = 1
         for x, y in self.cells():
-            self.cell(x, y)["number"] = 0
+            self.set_number(x, y, 0)
             if self.is_start_word(x, y):
-                self.cell(x, y)["number"] = n
+                self.set_number(x, y, n)
                 n += 1
                 
     def compute_lines(self):
@@ -824,6 +824,12 @@ class Grid:
         
     def is_char(self, x, y):
         return self.data[y][x]["char"] != ''
+        
+    def set_number(self, x, y, n):
+        self.data[y][x]["number"] = n
+        
+    def get_number(self, x, y):
+        return self.data[y][x]["number"]
         
     def has_bar(self, x, y, side):
         return self.data[y][x]["bar"][side]
