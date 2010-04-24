@@ -240,10 +240,9 @@ class Grid:
         for x, y in self.cells():
             n = self.cell(x, y)["number"]
             if allow_duplicates:
-                if self.is_start_word(x, y, "across"):
-                    yield n, x, y
-                if self.is_start_word(x, y, "down"):
-                    yield n, x, y
+                for d in ["across", "down"]:
+                    if self.is_start_word(x, y, d):
+                        yield n, x, y
             else:
                 if self.is_start_word(x, y):
                     yield n, x, y
