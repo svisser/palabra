@@ -24,12 +24,11 @@ class AppearanceDialog(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Appearance"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
-        self.properties = properties
         self.set_size_request(480, 240)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
-        main.pack_start(self.create_content(), True, True, 0)
+        main.pack_start(self.create_content(properties), True, True, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
@@ -40,7 +39,7 @@ class AppearanceDialog(gtk.Dialog):
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
         self.vbox.add(hbox)
         
-    def create_content(self):
+    def create_content(self, properties):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
         
@@ -83,14 +82,14 @@ class AppearanceDialog(gtk.Dialog):
         
         # border
         label = create_label(u"Border:")
-        self.border_color_button = create_color_button(self.properties.border["color"])
-        self.border_width_spinner = create_width_spinner(self.properties.border["width"])
+        self.border_color_button = create_color_button(properties.border["color"])
+        self.border_width_spinner = create_width_spinner(properties.border["width"])
         create_row(table, 1, label, self.border_color_button, self.border_width_spinner)
         
         # lines
         label = create_label(u"Line:")
-        self.line_color_button = create_color_button(self.properties.line["color"])
-        self.line_width_spinner = create_width_spinner(self.properties.line["width"])
+        self.line_color_button = create_color_button(properties.line["color"])
+        self.line_width_spinner = create_width_spinner(properties.line["width"])
         create_row(table, 2, label, self.line_color_button, self.line_width_spinner)
         
         # cells
@@ -100,8 +99,8 @@ class AppearanceDialog(gtk.Dialog):
         table.attach(label, 5, 6, 0, 1, gtk.FILL, gtk.FILL)
         
         label = create_label(u"Cell:")
-        self.cell_color_button = create_color_button(self.properties.default.cell["color"])
-        adj = gtk.Adjustment(self.properties.cell["size"], 32, 128, 1, 0, 0)
+        self.cell_color_button = create_color_button(properties.default.cell["color"])
+        adj = gtk.Adjustment(properties.cell["size"], 32, 128, 1, 0, 0)
         self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
         create_row_two(table, 1, label, self.cell_color_button, self.cell_size_spinner)
         
@@ -111,21 +110,21 @@ class AppearanceDialog(gtk.Dialog):
         label = create_label(u"Margin (%)")
         table.attach(label, 5, 6, 2, 3, gtk.FILL, gtk.FILL)
         
-        current = self.properties.default.block["margin"]
+        current = properties.default.block["margin"]
         label = create_label(u"Block:")
-        self.block_color_button = create_color_button(self.properties.default.block["color"])
+        self.block_color_button = create_color_button(properties.default.block["color"])
         adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
         self.block_margin_spinner = gtk.SpinButton(adj, 0.0, 0)
         create_row_two(table, 3, label, self.block_color_button, self.block_margin_spinner)
         
         # letters
         label = create_label(u"Letter:")
-        self.char_color_button = create_color_button(self.properties.default.char["color"])
+        self.char_color_button = create_color_button(properties.default.char["color"])
         create_row(table, 3, label, self.char_color_button)
         
         # numbers
         label = create_label(u"Number:")
-        self.number_color_button = create_color_button(self.properties.default.number["color"])
+        self.number_color_button = create_color_button(properties.default.number["color"])
         create_row(table, 4, label, self.number_color_button)
         
         return main
