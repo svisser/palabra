@@ -529,7 +529,6 @@ class PatternEditor(gtk.Dialog):
         
         self.preview = GridPreview()
         self.preview.set_size_request(256, -1)
-        self.display_pattern(None)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
@@ -539,8 +538,10 @@ class PatternEditor(gtk.Dialog):
         self.vbox.pack_start(hbox, True, True, 0)
         
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.ok_button.set_sensitive(False)
         self._select_option("tile")
+        self.display_pattern(None)
         
     def on_option_toggle(self, widget, option):
         if widget.get_active() == 1:
@@ -555,6 +556,7 @@ class PatternEditor(gtk.Dialog):
         self.fill_combo.set_sensitive(option == "fill")
         
     def display_pattern(self, pattern=None):
+        self.ok_button.set_sensitive(pattern is not None)
         self.grid = Grid(*self.size)
         if pattern:
             apply_pattern(self.grid, pattern)
