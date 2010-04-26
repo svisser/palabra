@@ -33,6 +33,27 @@ class CellPropertiesDialog(gtk.Dialog):
         self.palabra_window = palabra_window
         self.set_size_request(384, 256)
         
+        tabs = gtk.Notebook()
+        tabs.append_page(self.create_general_tab(properties), gtk.Label(u"General"))
+        tabs.append_page(self.create_appearance_tab(properties), gtk.Label(u"Appearance"))
+        
+        x, y = properties["cell"]
+        title = ''.join(['Properties of cell ', str((x + 1, y + 1))])
+        #self.set_title(title)
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup(''.join(['<b>', title, '</b>']))
+        
+        hbox = gtk.VBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(9)
+        #hbox.pack_start(label, False, False, 0)
+        hbox.pack_start(tabs, True, True, 0)
+        
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        self.vbox.add(hbox)
+        
+    def create_general_tab(self, properties):
         table = gtk.Table(1, 2, False)
         table.set_col_spacings(18)
         table.set_row_spacings(6)
@@ -46,30 +67,36 @@ class CellPropertiesDialog(gtk.Dialog):
             label.set_alignment(0, 0)
             table.attach(label, x + 1, x + 2, y, y + 1)
         
+        x, y = properties["cell"]
+        location = str((x + 1, y + 1))
         types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
-        create_row(table, "Type", types[properties["type"]], 0, 0)
+        create_row(table, "Location", location, 0, 0)
+        create_row(table, "Type", types[properties["type"]], 0, 1)
         content = u"-"
         if properties["type"] == "letter" and properties["content"]:
             content = properties["content"]
-        create_row(table, "Content", content, 0, 1)
+        create_row(table, "Content", content, 0, 2)
 
-        x, y = properties["cell"]
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup(''.join(['<b>Properties of cell ', str((x + 1, y + 1)), '</b>']))
-        
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
-        main.pack_start(label, False, False, 0)
         main.pack_start(table, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
+        return hbox
         
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
-        self.vbox.add(hbox)
+    def create_appearance_tab(self, properties):
+        main = gtk.HBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(gtk.Label(u"TODO"), False, False, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        return hbox
 
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
