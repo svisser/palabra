@@ -73,7 +73,7 @@ class CellPropertiesDialog(gtk.Dialog):
         types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
         create_row(table, "Location", location, 0, 0)
         create_row(table, "Type", types[properties["type"]], 0, 1)
-        content = u"-"
+        content = u"(none)"
         if properties["type"] == "letter" and properties["content"]:
             content = properties["content"]
         create_row(table, "Content", content, 0, 2)
