@@ -50,7 +50,8 @@ class CellPropertiesDialog(gtk.Dialog):
         #hbox.pack_start(label, False, False, 0)
         hbox.pack_start(tabs, True, True, 0)
         
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
         self.vbox.add(hbox)
         
     def create_general_tab(self, properties):
