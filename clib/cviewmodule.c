@@ -25,86 +25,51 @@ cView_compute_lines(PyObject *self, PyObject *args) {
     PyObject *grid;
     if (!PyArg_ParseTuple(args, "O", &grid))
         return NULL;
-    PyObject *width;
-    char attr0[6];
-    // TODO
-    attr0[0] = 'w';
-    attr0[1] = 'i';
-    attr0[2] = 'd';
-    attr0[3] = 't';
-    attr0[4] = 'h';
-    attr0[5] = '\0';
-    const char *attr0_p = attr0;
-    width = PyObject_GetAttrString(grid, attr0_p);
-    int i_width = (int) PyInt_AsLong(width);
-    
-    PyObject *height;
-    char attr1[7];
-    attr1[0] = 'h';
-    attr1[1] = 'e';
-    attr1[2] = 'i';
-    attr1[3] = 'g';
-    attr1[4] = 'h';
-    attr1[5] = 't';
-    attr1[6] = '\0';
-    const char *attr1_p = attr1;
-    height = PyObject_GetAttrString(grid, attr1_p);
-    int i_height = (int) PyInt_AsLong(height);
+    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     
     PyObject* lines = PyDict_New();
     
+    PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
     int x = 0;
     int y = 0;
     int e = 0;
-    for (y = 0; y < i_height; y++) {
-        for (x = 0; x < i_width; x++) {
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
             PyObject *result = PyList_New(0);
             
-            char m_is_void[8] = { 'i', 's', '_', 'v', 'o', 'i', 'd', '\0' };
-            int v0 = PyObject_IsTrue(PyObject_CallMethod(grid, m_is_void, "(ii)", x, y));
+            // is_void
+            PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
+            PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
+            int v0 = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
             
             for (e = 0; e < 2; e++) {
                 int dx = e == 0 ? -1 : 0;
                 int dy = e == 0 ? 0 : -1;
-                char edge[e == 0 ? 5 : 4];
-                if (e == 0) {
-                    edge[0] = 'l';
-                    edge[1] = 'e';
-                    edge[2] = 'f';
-                    edge[3] = 't';
-                    edge[4] = '\0';
-                } else {
-                    edge[0] = 't';
-                    edge[1] = 'o';
-                    edge[2] = 'p';
-                    edge[3] = '\0';
-                }
                 
-                char m_is_valid[9] = { 'i', 's', '_', 'v', 'a', 'l', 'i', 'd', '\0' };
-                PyObject* b = PyObject_CallMethod(grid, m_is_valid, "(ii)", x + dx, y + dy);
-                if (PyObject_IsTrue(b) == 1) {
-                    int v1 = PyObject_IsTrue(PyObject_CallMethod(grid, m_is_void, "(ii)", x + dx, y + dy));
+                int nx = x + dx;
+                int ny = y + dy;
+                if (0 <= nx && nx < width && 0 <= ny && ny < height) {
+                    // is_void
+                    PyObject* col = PyObject_GetItem(data, PyInt_FromLong(ny));
+                    PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(nx));
+                    int v1 = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
                     if (v0 == 0 || v1 == 0) {
                         PyObject* r = NULL;
                         if (v0 == 1 && v0 == 0) {
-                            char side[12] = { 'i', 'n', 'n', 'e', 'r', 'b', 'o', 'r', 'd', 'e', 'r', '\0' };
-                            r = Py_BuildValue("(iiss)",  x, y, edge, side);
+                            r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "innerborder");
                         } else if (v0 == 0 && v1 == 1) {
-                            char side[12] = { 'o', 'u', 't', 'e', 'r', 'b', 'o', 'r', 'd', 'e', 'r', '\0' };
-                            r = Py_BuildValue("(iiss)",  x, y, edge, side);
+                            r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "outerborder");
                         } else {
-                            char side[7] = { 'n', 'o', 'r', 'm', 'a', 'l', '\0' };
-                            r = Py_BuildValue("(iiss)",  x, y, edge, side);
+                            r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "normal");
                         }
                         PyList_Append(result, r);
                     }
                 } else if (v0 == 0) {
-                    char side[12] = { 'o', 'u', 't', 'e', 'r', 'b', 'o', 'r', 'd', 'e', 'r', '\0' };
-                    PyObject* r = Py_BuildValue("(iiss)",  x, y, edge, side);
+                    PyObject* r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "outerborder");
                     PyList_Append(result, r);
                 }
             }
-            
             PyObject* key = Py_BuildValue("(ii)", x, y);
             PyDict_SetItem(lines, key, result);
         }
