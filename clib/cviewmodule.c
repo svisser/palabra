@@ -70,6 +70,27 @@ cView_compute_lines(PyObject *self, PyObject *args) {
                     PyList_Append(result, r);
                 }
             }
+            if (y == height - 1) {
+                // is_void
+                PyObject* col = PyObject_GetItem(data, PyInt_FromLong(height - 1));
+                PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
+                int v = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+                if (v == 0) {
+                    PyObject* r = Py_BuildValue("(iiss)",  x, height, "top", "innerborder");
+                    PyList_Append(result, r);
+                }
+            }
+            if (x == width - 1) {
+                // is_void
+                PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
+                PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(width - 1));
+                int v = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+                if (v == 0) {
+                    PyObject* r = Py_BuildValue("(iiss)",  width, y, "left", "innerborder");
+                    PyList_Append(result, r);
+                }
+            }
+            
             PyObject* key = Py_BuildValue("(ii)", x, y);
             PyDict_SetItem(lines, key, result);
         }
