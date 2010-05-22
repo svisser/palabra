@@ -19,6 +19,7 @@ from itertools import chain
 import string
 
 import constants
+import cView
 
 class Grid:
     def __init__(self, width, height):
@@ -33,7 +34,7 @@ class Grid:
         self.data = [[self._default_cell() for x in range(width)] for y in range(height)]
         # TODO modify when arbitrary number schemes are implemented
         self.assign_numbers()
-        self.compute_lines()
+        #self.compute_lines()
         
     def _default_cell(self):
         cell = {}
@@ -68,9 +69,11 @@ class Grid:
             else:
                 self.set_number(x, y, 0)
                 
-    def compute_lines(self):
-        for x, y in self.cells():
-            self._store_lines_of_cell(x, y)
+    def get_lines(self, x, y):
+        """Return lines surrounding cell (x, y)."""
+        if not self.lines:
+            self.lines = cView.compute_lines(self)
+        return self.lines[x, y]
             
     def _store_lines_of_cell(self, x, y):
         self.lines[x, y] = self.lines_of_cell(x, y)

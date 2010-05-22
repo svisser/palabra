@@ -378,7 +378,7 @@ class GridView:
                 context.set_line_width(props.line["width"])
         
         def render(context, grid, props):
-            lines = grid.lines[x, y]
+            lines = grid.get_lines(x, y)
             for p, q, ltype, side in lines:
                 sx = props.grid_to_screen_x(p, False)
                 sy = props.grid_to_screen_y(q, False)
