@@ -1,4 +1,6 @@
 
+IS_DEVELOPMENT = True
+
 TARGET = 'lib.linux-x86_64-2.6'
 
 import sys
@@ -32,10 +34,11 @@ setup(name="palabra"
         Extension('cView', sources = ['clib/cviewmodule.c'])
     ]
     )
-import os
-if os.path.exists('palabralib/cWord.so'):
-    os.remove('palabralib/cWord.so')
-if os.path.exists('palabralib/cView.so'):
-    os.remove('palabralib/cView.so')
-os.rename(''.join(['build/', TARGET, '/cWord.so']), 'palabralib/cWord.so')
-os.rename(''.join(['build/', TARGET, '/cView.so']), 'palabralib/cView.so')
+if IS_DEVELOPMENT:
+    import os
+    if os.path.exists('palabralib/cWord.so'):
+        os.remove('palabralib/cWord.so')
+    if os.path.exists('palabralib/cView.so'):
+        os.remove('palabralib/cView.so')
+    os.rename(''.join(['build/', TARGET, '/cWord.so']), 'palabralib/cWord.so')
+    os.rename(''.join(['build/', TARGET, '/cView.so']), 'palabralib/cView.so')
