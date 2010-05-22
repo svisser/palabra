@@ -561,7 +561,9 @@ def read_xpf(filename):
         r_notepad = ""
         r_styles = {}
         for child in puzzle:
-            if child.tag == "Title":
+            if child.tag == "Type":
+                r_meta["type"] = child.text
+            elif child.tag == "Title":
                 r_meta["title"] = child.text
             elif child.tag == "Author":
                 r_meta["creator"] = child.text
@@ -707,7 +709,8 @@ def write_xpf(puzzle, backup=True):
     root = etree.Element("Puzzles")
     main = etree.SubElement(root, "Puzzle")
     
-    elems = [("title", "Title")
+    elems = [("type", "Type")
+        , ("title", "Title")
         , ("creator", "Author")
         , ("contributor", "Editor")
         , ("publisher", "Publisher")
