@@ -10,6 +10,13 @@ if sys.version_info < (2, 4):
 
 from distutils.core import setup, Extension
 
+def create_ext(e):
+    name = 'c' + e.capitalize()
+    sources = ['clib/c' + e + 'module.c']
+    return name, sources
+EXTS = [create_ext(e) for e in ['grid', 'view', 'word']]
+ext_modules = [Extension(n, sources=s) for n, s in EXTS]
+
 setup(name="palabra"
     , version="0.1"
     , license="GNU General Public License (GPL)"
@@ -29,16 +36,12 @@ setup(name="palabra"
         , "Programming Language :: Python"
         , "Topic :: Games/Entertainment :: Puzzle Games"
         ]
-    , ext_modules = [
-        Extension('cWord', sources = ['clib/cwordmodule.c']), 
-        Extension('cView', sources = ['clib/cviewmodule.c'])
-    ]
-    )
+    , ext_modules=ext_modules)
 if IS_DEVELOPMENT:
     import os
-    if os.path.exists('palabralib/cWord.so'):
-        os.remove('palabralib/cWord.so')
-    if os.path.exists('palabralib/cView.so'):
-        os.remove('palabralib/cView.so')
-    os.rename(''.join(['build/', TARGET, '/cWord.so']), 'palabralib/cWord.so')
-    os.rename(''.join(['build/', TARGET, '/cView.so']), 'palabralib/cView.so')
+    for name, sources in EXTS:
+        f = name + '.so'
+        path = 'palabralib/' + f
+        if os.path.exists(path):
+            os.remove(path)
+        os.rename(''.join(['build/', TARGET, '/', f]), path)

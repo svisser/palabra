@@ -18,6 +18,7 @@
 from itertools import chain
 import string
 
+import cGrid
 import constants
 import cView
 
@@ -80,7 +81,8 @@ class Grid:
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
-        if not self.is_available(x, y):
+        
+        if not cGrid.is_available(self, x, y):
             return False
         for d in ([direction] if direction else ["across", "down"]):
             if d == "across":
@@ -88,8 +90,8 @@ class Grid:
             elif d == "down":
                 bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
             
-            before = not self.is_available(x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
-            after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
+            before = not cGrid.is_available(self, x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
+            after = cGrid.is_available(self, x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
             if before and after:
                 return True
         return False
