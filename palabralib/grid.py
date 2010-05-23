@@ -65,10 +65,10 @@ class Grid:
         n = 1
         for x, y in self.cells():
             if self.is_start_word(x, y):
-                self.set_number(x, y, n)
+                self.data[y][x]["number"] = n
                 n += 1
             else:
-                self.set_number(x, y, 0)
+                self.data[y][x]["number"] = 0
                 
     def get_lines(self, x, y):
         """Return lines surrounding cell (x, y)."""
