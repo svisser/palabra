@@ -1,8 +1,11 @@
 
 This is a list of changes since the initial release of Palabra.
 
-Version 0.1.3 (May 24, 2010)
-==========================
+0.1.4 (unreleased)
+==================
+
+0.1.3 (May 24, 2010)
+====================
 * Added ability to select words by length in properties window.
 * Added Scrabble score to properties window.
 * Added partial support to read/write XPF 0.9.
@@ -28,8 +31,8 @@ Version 0.1.3 (May 24, 2010)
 * Integrated pattern editor into new puzzle window.
 * Pattern editor can also fill a grid with a certain cell type.
 
-Version 0.1.2 (April 2, 2010)
-=============================
+0.1.2 (April 2, 2010)
+=====================
 * Partial support for voids.
 * Patterns can be selected for new puzzles.
 * Added option to create a backup file before saving.
@@ -37,14 +40,14 @@ Version 0.1.2 (April 2, 2010)
 * Speed improvements for word lists (rewritten in C).
 * Speed improvements for rendering the editor.
 
-Version 0.1.1 (September 15, 2009)
-==================================
+0.1.1 (September 15, 2009)
+==========================
 * XML files are validated against XML Schema.
 * Word lists can be used to populate the grid.
 * Speed improvements in rendering code.
 * Partial support for bars.
 * Clue editor is integrated in main window.
 
-Version 0.1 (August 14, 2009)
-=============================
+0.1 (August 14, 2009)
+=====================
 * Initial release.
