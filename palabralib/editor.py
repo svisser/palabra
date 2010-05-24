@@ -155,7 +155,7 @@ class WordTool:
         tree_window.set_size_request(192, -1)
         
         toggle_button = gtk.ToggleButton("I")
-        toggle_button.set_tooltip_text(u"Show only words with\nintersecting words")
+        toggle_button.set_tooltip_text(u"Show only words with intersecting words")
         toggle_button.connect("toggled", self.on_button_toggled)
         
         toggle_button2 = gtk.ToggleButton("U")
