@@ -7,4 +7,5 @@ Roadmap for 0.1.4
 - Disable profiling
 - Update README with running instructions
 - Hide american.xml until parser is fast enough
+- Fix bug with line rendering
 - Perform final testing
