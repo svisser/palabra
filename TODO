@@ -1,4 +1,7 @@
-* Finish functionality of pattern window
-** Pattern list should refresh after grids have been copied/moved.
-* Finish functionality of wordlists winow
-* Make loading and displaying of words smooth
+
+Roadmap for 0.1.4
+=================
+- Hide features in menus that are not yet ready
+- Cut XPF parser until 1.0 of spec has been implemented
+- Fix bug with entering clues
+- Perform final testing
