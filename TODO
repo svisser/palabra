@@ -4,4 +4,7 @@ Roadmap for 0.1.4
 - Hide features in menus that are not yet ready
 - Cut XPF parser until 1.0 of spec has been implemented
 - Fix bug with entering clues
+- Disable profiling
+- Update README with running instructions
+- Hide american.xml until parser is fast enough
 - Perform final testing
