@@ -399,7 +399,7 @@ class Editor(gtk.HBox):
         self.puzzle.view.render_warnings_of_cell(context, x, y, r, g, b)
         
         # blacklist
-        if self.puzzle.view.settings["warn_blacklist"]:
+        if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
             for p, q, direction, length in self.blacklist:
                 if direction == "across" and p <= x < p + length and q == y:
                     self.puzzle.view.render_location(context, x, y, r, g, b)
@@ -876,6 +876,7 @@ class Editor(gtk.HBox):
         Check whether the cell (x, y) is part of a blacklisted word.
         The blacklist is updated accordingly.
         """
+        return # TODO until ready
         def get_segment(direction, x, y, dx, dy):
             """Gather the content of the cells touching and including (x, y)."""
             segment = []
