@@ -400,7 +400,11 @@ class GridView:
                     start = -0.5 * bwidth
                 elif side == "innerborder":
                     start = 0.5 * bwidth
-                    if not grid.is_available(x, y + 1) or not grid.is_available(x, y):
+                    if ltype == "top":
+                        bdx, bdy = 0, 1
+                    elif ltype == "left":
+                        bdx, bdy = 1, 0
+                    if not grid.is_available(x + bdx, y + bdy) or not grid.is_available(x, y):
                         start -= lwidth
                 
                 if ltype == "left":
