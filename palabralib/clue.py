@@ -129,10 +129,13 @@ class ClueTool:
             explanation = row[5]
             display = self.create_display_string(n, direction, word, clue)
             return (n, x, y, direction, word, clue, explanation, display)
-        self.store.clear()
-        for d in ["across", "down"]:
-            for row in puzzle.grid.gather_words(d):
-                self.store.append(process_row(d, row))
+        def locked():
+            self.store.clear()
+            for d in ["across", "down"]:
+                for row in puzzle.grid.gather_words(d):
+                    self.store.append(process_row(d, row))
+        selection = self.tree.get_selection()
+        self.perform_while_locked(selection, locked)
         
     def update_current_word(self, clue, explanation):
         """Put the clue data of the word at (x, y, direction) in the text entries."""
