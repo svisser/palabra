@@ -989,10 +989,10 @@ class PalabraWindow(gtk.Window):
             
         menu.append(gtk.SeparatorMenuItem())
         
-        menu.append(self._create_menu_item(
-            lambda item: self.manage_patterns()
-            , u"Manage the pattern files available to the program"
-            , title="_Manage pattern files..."))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.manage_patterns()
+        #    , u"Manage the pattern files available to the program"
+        #    , title="_Manage pattern files..."))
             
         menu.append(self._create_menu_item(
             lambda item: self.create_patterns()
