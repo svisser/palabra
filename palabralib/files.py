@@ -136,6 +136,14 @@ def write_pattern_file(filename, metadata, contents):
 def read_containers(files):
     def load_container(f):
         metadata = {} # TODO
+        if "american" in f:
+            return f, {}, []
+            import pstats
+            import cProfile
+            cProfile.runctx('read_palabra(f)', globals(), locals(), filename='fooprof')
+            p = pstats.Stats('fooprof')
+            p.sort_stats('time').print_stats(20)
+            p.print_callers()
         return f, metadata, read_palabra(f)
     return [load_container(f) for f in files]
     
