@@ -96,7 +96,7 @@ class ClueTool:
             clue = store.get_value(it, 5)
             explanation = store.get_value(it, 6)
             
-            value = widget.get_text().strip()
+            value = widget.get_text()
             if key == "text":
                 clue = value
                 store.set_value(it, 5, value)
