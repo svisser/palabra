@@ -62,6 +62,8 @@ def export_puzzle(puzzle, filename, options):
 
 def read_crossword(filename):
     t = determine_file_type(filename)
+    if t is None or t == "xpf": # TODO just for now XPF is disabled
+        raise PalabraParserError("Palabra was unable to open: " + filename)
     if t == "palabra":
         results = read_palabra(filename)
         if not results:

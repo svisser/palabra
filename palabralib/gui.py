@@ -241,10 +241,10 @@ class PalabraWindow(gtk.Window):
             filter.add_pattern("*.xml")
             dialog.add_filter(filter)
             
-            filter = gtk.FileFilter()
-            filter.set_name(u"XPF puzzle files (*.xml)")
-            filter.add_pattern("*.xml")
-            dialog.add_filter(filter)
+            #filter = gtk.FileFilter()
+            #filter.set_name(u"XPF puzzle files (*.xml)")
+            #filter.add_pattern("*.xml")
+            #dialog.add_filter(filter)
             
             filter = gtk.FileFilter()
             filter.set_name(u"All files")
@@ -310,11 +310,11 @@ class PalabraWindow(gtk.Window):
             dialog.add_filter(f)
             filters[f] = constants.PUZZLE_PALABRA
             
-            f = gtk.FileFilter()
-            f.set_name(u"XPF puzzle files (*.xml)")
-            f.add_pattern("*.xml")
-            dialog.add_filter(f)
-            filters[f] = constants.PUZZLE_XPF
+            #f = gtk.FileFilter()
+            #f.set_name(u"XPF puzzle files (*.xml)")
+            #f.add_pattern("*.xml")
+            #dialog.add_filter(f)
+            #filters[f] = constants.PUZZLE_XPF
 
             dialog.show_all()
             response = dialog.run()
