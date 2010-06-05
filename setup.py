@@ -9,6 +9,7 @@ if sys.version_info < (2, 4):
     sys.exit("ERROR: Python 2.4 is required to run Palabra.")
 
 from distutils.core import setup, Extension
+import palabralib.constants as constants
 
 def create_ext(e):
     name = 'c' + e.capitalize()
@@ -18,7 +19,7 @@ EXTS = [create_ext(e) for e in ['grid', 'view', 'word']]
 ext_modules = [Extension(n, sources=s) for n, s in EXTS]
 
 setup(name="palabra"
-    , version="0.1"
+    , version=constants.VERSION
     , license="GNU General Public License (GPL)"
     , author="Simeon Visser"
     , author_email="simeonvisser@gmail.com"
