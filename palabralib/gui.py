@@ -1177,7 +1177,7 @@ class PalabraWindow(gtk.Window):
         dialog.set_program_name(u"Palabra")
         dialog.set_comments(u"Crossword creation software")
         dialog.set_version(constants.VERSION)
-        dialog.set_authors([u"Simeon Visser"])
+        dialog.set_authors([u"Simeon Visser <simeonvisser@gmail.com>"])
         dialog.set_copyright(u"Copyright © 2009 - 2010 Simeon Visser")
         def on_click_website(dialog, link):
             webbrowser.open(link)
