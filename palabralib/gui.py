@@ -764,10 +764,6 @@ class PalabraWindow(gtk.Window):
         transform(self.puzzle_manager.current_puzzle, **args)
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
         self.update_undo_redo()
-        try:
-            self.editor.refresh_clues()
-        except AttributeError:
-            pass
     
     def update_undo_redo(self):
         self.undo_menu_item.set_sensitive(action.stack.has_undo())
