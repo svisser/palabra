@@ -35,13 +35,13 @@ How to install/run
 
   python palabra
   
-- To install Palabra, use:
-
-  sudo python setup.py install
-  
-However, it may be better to wait until a version of Palabra is available
+The install command (sudo python setup.py install) should not be used yet
+as it's better to wait until a version of Palabra is available
 that is more suitable for daily use. For now, I recommend running Palabra
 from the directory itself using the command above.
+
+If you do want to install, edit setup.py and set IS_DEVELOPMENT to False
+and run the build and install commands.
 
 Getting started
 ===============
