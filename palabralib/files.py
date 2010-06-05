@@ -377,21 +377,13 @@ def export_to_pdf(puzzle, filename):
 def export_to_png(puzzle, filename, output, settings):
     width = puzzle.view.properties.visual_width(False)
     height = puzzle.view.properties.visual_height(False)
-    
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-
     context = cairo.Context(surface)
     context.rectangle(0, 0, width, height)
-    
-    r, g, b = puzzle.view.properties.cell["color"]
-    context.set_source_rgb(r / 65535.0, g / 65535.0, b / 65535.0)
-    context.fill()
-    
     if output == "grid":
         puzzle.view.render(context, constants.VIEW_MODE_EMPTY)
     elif output == "solution":
         puzzle.view.render(context, constants.VIEW_MODE_SOLUTION)
-    
     surface.write_to_png(filename)
     surface.finish()
     
