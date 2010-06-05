@@ -770,10 +770,12 @@ class PalabraWindow(gtk.Window):
         self.update_undo_redo()
     
     def update_undo_redo(self):
-        self.undo_menu_item.set_sensitive(action.stack.has_undo())
-        self.redo_menu_item.set_sensitive(action.stack.has_redo())
-        self.undo_tool_item.set_sensitive(action.stack.has_undo())
-        self.redo_tool_item.set_sensitive(action.stack.has_redo())
+        has_undo = action.stack.has_undo()
+        has_redo = action.stack.has_redo()
+        self.undo_menu_item.set_sensitive(has_undo)
+        self.redo_menu_item.set_sensitive(has_redo)
+        self.undo_tool_item.set_sensitive(has_undo)
+        self.redo_tool_item.set_sensitive(has_redo)
         
     def update_window(self, content_changed=False):
         puzzle = self.puzzle_manager.current_puzzle
