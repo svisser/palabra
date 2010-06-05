@@ -1182,7 +1182,7 @@ class PalabraWindow(gtk.Window):
         def on_click_website(dialog, link):
             webbrowser.open(link)
         gtk.about_dialog_set_url_hook(on_click_website)
-        dialog.set_website(u"http://bitbucket.org/svisser/palabra/wiki/Home")
+        dialog.set_website(constants.WEBSITE)
         dialog.set_license(u"""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
                 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.

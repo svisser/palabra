@@ -17,8 +17,9 @@
 
 import os
 
-# application version
+# application data
 VERSION = "0.1.4"
+WEBSITE = "http://bitbucket.org/svisser/palabra"
 
 # configuration file
 APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
