@@ -156,38 +156,22 @@ class GridViewProperties:
             if sy <= screen_y < sy + self.cell["size"]:
                 return y
         return -1
-       
-    def visual_width(self, include_padding=True):
+        
+    def visual_size(self, include_padding=True):
         """
-        Return the visual width, possibly including padding, as shown on screen.
+        Return the visual size, possibly including padding, as shown on screen.
         """
-        width = self.get_grid_width()
+        width = 2 * self.border["width"]
+        width += self.grid.width * self.cell["size"]
+        width += (self.grid.width - 1) * self.line["width"]
         if include_padding:
             width += (2 * self.margin_x)
-        return width
-    
-    def visual_height(self, include_padding=True):
-        """
-        Return the visual height, possibly including padding, as shown on screen.
-        """
-        height = self.get_grid_height()
+        height = 2 * self.border["width"]
+        height += self.grid.height * self.cell["size"]
+        height += (self.grid.height - 1) * self.line["width"]
         if include_padding:
             height += (2 * self.margin_y)
-        return height
-        
-    def get_grid_width(self):
-        """Return the width of the grid."""
-        w = 2 * self.border["width"]
-        w += self.grid.width * self.cell["size"]
-        w += (self.grid.width - 1) * self.line["width"]
-        return w
-        
-    def get_grid_height(self):
-        """Return the height of the grid."""
-        h = 2 * self.border["width"]
-        h += self.grid.height * self.cell["size"]
-        h += (self.grid.height - 1) * self.line["width"]
-        return h
+        return width, height
 
 class GridView:
     def __init__(self, grid, styles=None):
@@ -522,9 +506,7 @@ class GridView:
     # needs manual queue_draw() on drawing_area afterwards
     def refresh_visual_size(self, drawing_area):
         """Recalculate the visual width and height and resize the drawing area."""
-        visual_width = self.properties.visual_width()
-        visual_height = self.properties.visual_height()
-        drawing_area.set_size_request(visual_width, visual_height)
+        drawing_area.set_size_request(*self.properties.visual_size())
 
 class GridPreview(gtk.VBox):
     def __init__(self):
@@ -567,8 +549,7 @@ class GridPreview(gtk.VBox):
     def on_expose_event(self, drawing_area, event):
         if self.view is not None:
             if not self.preview_surface:
-                width = self.view.properties.visual_width(True)
-                height = self.view.properties.visual_height(True)
+                width, height = self.view.properties.visual_size(True)
                 self.preview_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
                 self.preview_pattern = cairo.SurfacePattern(self.preview_surface)
                 context = cairo.Context(self.preview_surface)

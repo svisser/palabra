@@ -375,8 +375,7 @@ def export_to_pdf(puzzle, filename):
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
-    width = puzzle.view.properties.visual_width(False)
-    height = puzzle.view.properties.visual_height(False)
+    width, height = puzzle.view.properties.visual_size(False)
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     context = cairo.Context(surface)
     context.rectangle(0, 0, width, height)

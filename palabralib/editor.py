@@ -448,8 +448,7 @@ class Editor(gtk.HBox):
     def on_expose_event(self, drawing_area, event):
         """Render the main editing component."""
         if not self.editor_surface or self.force_redraw:
-            width = self.puzzle.view.properties.visual_width(True)
-            height = self.puzzle.view.properties.visual_height(True)
+            width, height = self.puzzle.view.properties.visual_size(True)
             self.editor_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
             
             self.editor_pattern = cairo.SurfacePattern(self.editor_surface)
@@ -927,9 +926,8 @@ class Editor(gtk.HBox):
         # TODO fix design
         self.puzzle.view.grid = self.puzzle.grid
         self.puzzle.view.properties.grid = self.puzzle.grid
-        width = self.puzzle.view.properties.visual_width()
-        height = self.puzzle.view.properties.visual_height()
-        self.drawing_area.set_size_request(width, height)
+        size = self.puzzle.view.properties.visual_size()
+        self.drawing_area.set_size_request(*size)
        
     def _set_full_selection(self, x=None, y=None, direction=None):
         """Select (x, y), the direction or both."""
