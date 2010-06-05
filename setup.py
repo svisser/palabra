@@ -38,6 +38,12 @@ setup(name="palabra"
     , ext_modules=ext_modules)
 if IS_DEVELOPMENT:
     import os
+    
+    # TODO correct?
+    import distutils.util
+    platform = (distutils.util.get_platform()
+        + '-' + str(sys.version_info[0]) + '.' + str(sys.version_info[1]))
+    
     # TODO ugly
     import glob
     dirs = glob.glob('build/lib.*')
