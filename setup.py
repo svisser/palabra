@@ -1,8 +1,6 @@
 
 IS_DEVELOPMENT = True
 
-TARGET = 'lib.linux-x86_64-2.6'
-
 import sys
 
 if sys.version_info < (2, 4):
@@ -40,9 +38,15 @@ setup(name="palabra"
     , ext_modules=ext_modules)
 if IS_DEVELOPMENT:
     import os
-    for name, sources in EXTS:
-        f = name + '.so'
-        path = 'palabralib/' + f
-        if os.path.exists(path):
-            os.remove(path)
-        os.rename(''.join(['build/', TARGET, '/', f]), path)
+    # TODO ugly
+    import glob
+    dirs = glob.glob('build/lib.*')
+    if len(dirs) == 0:
+        print "ERROR! No lib.* directory found in /build directory"
+    else:
+        for name, sources in EXTS:
+            f = name + '.so'
+            path = 'palabralib/' + f
+            if os.path.exists(path):
+                os.remove(path)
+            os.rename(''.join(['build/', dirs[0][6:], '/', f]), path)
