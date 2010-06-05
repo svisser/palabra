@@ -528,6 +528,8 @@ class Grid:
         self.data = ndata
         self.width = width
         self.height = height
+        # invalidate lines
+        self.lines = None
         
     def _clear_clues(self, dirty_cells):
         """Remove the clues of the words that contain a dirty cell."""
