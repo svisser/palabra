@@ -9,34 +9,53 @@ version.
 Requirements
 ============
 
-- Python 2.4 (for lxml module)
-- PyGTK 2.12 (for gtk.Tooltip)
+- Python 2.4
+- PyGTK 2.8
 
 Palabra should work with the above versions of the software packages but they
-may need to be refined further. In any case, Palabra is known to work with:
+may need to be refined further (please contact me). In any case,
 
-- Python 2.5.2
-- GTK+ 2.12.9
-- PyGTK 2.12.1
+Palabra is known to work with:
 
-Installing
-==========
+- Python 2.6.4
+- GTK+ 2.18.3
+- PyGTK 2.16.0
 
-Palabra can be installed using:
+You need the lxml package, called python-lxml in repositories.
+It can also be found here: http://pypi.python.org/pypi/lxml.
+
+How to install/run
+==================
+
+- In the directory of Palabra, run the following command:
 
   python setup.py build
+  
+- You can now run Palabra using:
+
+  python palabra
+  
+- To install Palabra, use:
 
   sudo python setup.py install
-
-You also need the lxml package, called python-lxml in repositories.
-It can also be found here: http://pypi.python.org/pypi/lxml.
+  
+However, it may be better to wait until a version of Palabra is available
+that is more suitable for daily use. For now, I recommend running Palabra
+from the directory itself using the command above.
 
 Getting started
 ===============
 
-Please see the Palabra manual:
+Please see the Palabra manual (needs to be updated):
 
   http://bitbucket.org/svisser/palabra/wiki/Manual
+  
+Contact
+=======
+
+E-mail: simeonvisser@gmail.com
+
+For bugs/comments, see Development below.
 
 Development
 ============
