@@ -756,8 +756,12 @@ class PalabraWindow(gtk.Window):
             self.transform_grid(transform, x=sel_x, y=sel_y)
         
     def transform_grid(self, transform, **args):
-        transform(self.puzzle_manager.current_puzzle, **args)
+        puzzle = self.puzzle_manager.current_puzzle
+        transform(puzzle, **args)
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
+        # TODO catch all, should not be needed
+        if puzzle.grid.lines:
+            puzzle.grid.lines = None
         self.update_window(True)
         
     def transform_clues(self, transform, **args):
