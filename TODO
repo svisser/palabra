@@ -1,14 +1,19 @@
 
 Roadmap for 0.1.4
 =================
-- Hide features in menus that are not yet ready
-- Cut XPF parser until 1.0 of spec has been implemented
+- Hide features in menus that are not yet ready (done)
+- Cut XPF parser until 1.0 of spec has been implemented (done)
 - Fix bug with entering clues (done)
 - Disable profiling
-- Update README with running instructions
+- Update README with running instructions (done)
 - Hide american.xml until parser is fast enough (done)
 - Fix bug with line rendering (done)
 - Perform final testing
+
+Areas of development:
+- Web integration
+- Assistance with filling in content
+- Word/pattern/clue file management
 
 Known issues:
 - Rendering of hovering cell above voids cells leaves trails
