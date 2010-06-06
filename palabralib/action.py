@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
+import cPickle
 
 from grid import Grid
 import preferences
@@ -121,7 +121,7 @@ old_stack = ActionStack()
 
 class State:
     def __init__(self, source):
-        self.grid = copy.deepcopy(source)
+        self.grid = cPickle.dumps(source)
         
 class StateStack():
     def __init__(self):
@@ -145,14 +145,14 @@ class StateStack():
         state = self.undo_stack.pop()
         self.redo_stack.append(state)
         prev = self.undo_stack.pop()
-        puzzle.grid = copy.deepcopy(prev.grid)
+        puzzle.grid = cPickle.loads(prev.grid)
         self.undo_stack.append(prev)
         self.distance_from_saved -= 1
         
     def redo(self, puzzle):
         state = self.redo_stack.pop()
         self.undo_stack.append(state)
-        puzzle.grid = copy.deepcopy(state.grid)
+        puzzle.grid = cPickle.loads(state.grid)
         self.distance_from_saved += 1
         
     def has_undo(self):
