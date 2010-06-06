@@ -856,11 +856,13 @@ class Editor(gtk.HBox):
                 if keyval == gtk.keysyms.period:
                     self.transform_blocks(x, y, True)
                 else:
-                    self.palabra_window.transform_grid(transform.modify_char
-                            , x=x
-                            , y=y
-                            , next_char=chr(keyval).capitalize())
-                    self._check_blacklist_for_cell(x, y)
+                    c = chr(keyval).capitalize()
+                    if c != self.puzzle.grid.get_char(x, y):
+                        self.palabra_window.transform_grid(transform.modify_char
+                                , x=x
+                                , y=y
+                                , next_char=c)
+                        self._check_blacklist_for_cell(x, y)
                 nx = x + (1 if direction == "across" else 0)
                 ny = y + (1 if direction == "down" else 0)
                 cells = [(x, y)]
