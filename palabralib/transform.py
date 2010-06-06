@@ -32,6 +32,7 @@ def modify_blocks(puzzle, blocks=[]):
         puzzle.grid.set_block(x, y, status)
 
 def modify_chars(puzzle, chars):
+    modify_chars.__setattr__('type', constants.TRANSFORM_CONTENT)
     """Modify the characters at the given locations."""
     for x, y, c in chars:
         puzzle.grid.set_char(x, y, c)
@@ -43,6 +44,7 @@ def modify_char(puzzle, x, y, next_char):
     
 def modify_clue(puzzle, x, y, direction, key, value):
     """Store the given clue data at the given (x, y) and direction."""
+    modify_clue.__setattr__('type', constants.TRANSFORM_CONTENT)
     puzzle.grid.store_clue(x, y, direction, key, value)
 
 def clear_all(puzzle):
