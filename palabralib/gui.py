@@ -79,7 +79,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
-        self.menubar.append(self.create_word_menu())
+        #self.menubar.append(self.create_word_menu())
         #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
         
