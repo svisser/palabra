@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import constants
 from grid import Grid
 
 import copy
@@ -37,6 +38,7 @@ def modify_chars(puzzle, chars):
 
 def modify_char(puzzle, x, y, next_char):
     """Modify the character at the given location."""
+    modify_char.__setattr__('type', constants.TRANSFORM_CONTENT)
     modify_chars(puzzle, [(x, y, next_char)])
     
 def modify_clue(puzzle, x, y, direction, key, value):

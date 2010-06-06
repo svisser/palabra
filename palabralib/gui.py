@@ -762,7 +762,15 @@ class PalabraWindow(gtk.Window):
         # TODO catch all, should not be needed
         if puzzle.grid.lines:
             puzzle.grid.lines = None
-        self.update_window(True)
+        
+        # a transform function optionally has an attribute type to
+        # indicate whether it changed the structure or just the contennt
+        # of the puzzle
+        try:
+            t = transform.type
+        except AttributeError:
+            t = constants.TRANSFORM_STRUCTURE
+        self.update_window(True, transform=t)
         
     def transform_clues(self, transform, **args):
         transform(self.puzzle_manager.current_puzzle, **args)
@@ -777,7 +785,7 @@ class PalabraWindow(gtk.Window):
         self.undo_tool_item.set_sensitive(has_undo)
         self.redo_tool_item.set_sensitive(has_redo)
         
-    def update_window(self, content_changed=False):
+    def update_window(self, content_changed=False, transform=constants.TRANSFORM_STRUCTURE):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:
             self.set_title(u"Palabra")
@@ -802,10 +810,10 @@ class PalabraWindow(gtk.Window):
         self.update_undo_redo()
         
         try:
-            if content_changed:
+            if transform >= constants.TRANSFORM_STRUCTURE:
                 # TODO modify when arbitrary number schemes are implemented
                 self.editor.puzzle.grid.assign_numbers()
-                
+            if transform >= constants.TRANSFORM_CONTENT:
                 self.editor.refresh_clues()
             self.editor.force_redraw = True
             

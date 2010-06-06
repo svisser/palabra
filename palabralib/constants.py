@@ -35,6 +35,11 @@ MISSING_CHAR = '?'
 WORDLIST_DIRECTORY = os.path.expanduser("~/.palabra/words")
 MAX_WORD_LENGTH = 64 # also in .c
 
+# transform types (used in gui.py/update_window to indicate postprocessing)
+TRANSFORM_NONE = 0
+TRANSFORM_CONTENT = 1
+TRANSFORM_STRUCTURE = 2
+
 # puzzle types
 PUZZLE_PALABRA = 'palabra'
 PUZZLE_XPF = 'xpf'
