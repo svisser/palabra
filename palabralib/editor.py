@@ -863,12 +863,14 @@ class Editor(gtk.HBox):
                     self._check_blacklist_for_cell(x, y)
                 nx = x + (1 if direction == "across" else 0)
                 ny = y + (1 if direction == "down" else 0)
+                cells = [(x, y)]
                 if self.puzzle.grid.is_available(nx, ny):
                     self.selection.x = nx
                     self.selection.y = ny
+                    cells += [(nx, ny)]
                 x = self.selection.x
                 y = self.selection.y
-                self._render_selection(x, y, direction)
+                self._render_cells(cells)
                 
     def _check_blacklist_for_cell(self, x, y):
         """
