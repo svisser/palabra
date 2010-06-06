@@ -810,11 +810,13 @@ class PalabraWindow(gtk.Window):
         self.update_undo_redo()
         
         try:
-            if transform >= constants.TRANSFORM_STRUCTURE:
-                # TODO modify when arbitrary number schemes are implemented
-                self.editor.puzzle.grid.assign_numbers()
-            if transform >= constants.TRANSFORM_CONTENT:
-                self.editor.refresh_clues()
+            # TODO refactor content_changed away
+            if content_changed:
+                if transform >= constants.TRANSFORM_STRUCTURE:
+                    # TODO modify when arbitrary number schemes are implemented
+                    self.editor.puzzle.grid.assign_numbers()
+                if transform >= constants.TRANSFORM_CONTENT:
+                    self.editor.refresh_clues()
             self.editor.force_redraw = True
             
             self.editor.refresh_words()
