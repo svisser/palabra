@@ -229,7 +229,7 @@ class WordTool:
         item.connect("deselect", on_search_web_deselect)
         menu.append(item)
         
-        menu.append(gtk.SeparatorMenuItem())
+        #menu.append(gtk.SeparatorMenuItem())
         
         def on_word_properties(item):
             props = {}
@@ -241,7 +241,7 @@ class WordTool:
         
         item = gtk.MenuItem("Properties")
         item.connect("activate", on_word_properties)
-        menu.append(item)
+        #menu.append(item)
         
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
@@ -490,9 +490,9 @@ class Editor(gtk.HBox):
                     self.change_typing_direction()
                 if self.puzzle.grid.is_available(x, y):
                     self.set_selection(x, y)
-            elif event.button == 3:
-                if self.puzzle.grid.is_valid(x, y):
-                    self._create_popup_menu(event, x, y)
+            #elif event.button == 3: TODO disable for now
+            #    if self.puzzle.grid.is_valid(x, y):
+            #        self._create_popup_menu(event, x, y)
         return True
     
     def _create_popup_menu(self, event, x, y):
