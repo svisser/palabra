@@ -287,8 +287,18 @@ class PalabraWindow(gtk.Window):
         self.set_title(title)
     
     def save_puzzle(self, save_as=False):
-        WRITERS = {constants.PUZZLE_PALABRA: write_palabra
-            , constants.PUZZLE_XPF: write_xpf}
+        TYPES = {}
+        TYPES[constants.PUZZLE_PALABRA] = {
+            'description': u"Palabra puzzle files"
+            , 'pattern': u".xml"
+            , 'writer': write_palabra
+        }
+        TYPES[constants.PUZZLE_XPF] = {
+            'description': u"XPF puzzle files"
+            , 'pattern': u".xml"
+            , 'writer': write_xpf
+        }
+        
         puzzle = self.puzzle_manager.current_puzzle
         backup = preferences.prefs["backup_copy_before_save"]
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
@@ -303,30 +313,31 @@ class PalabraWindow(gtk.Window):
             dialog.set_do_overwrite_confirmation(True)
             
             filters = {}
-            
-            f = gtk.FileFilter()
-            f.set_name(u"Palabra puzzle files (*.xml)")
-            f.add_pattern("*.xml")
-            dialog.add_filter(f)
-            filters[f] = constants.PUZZLE_PALABRA
-            
-            #f = gtk.FileFilter()
-            #f.set_name(u"XPF puzzle files (*.xml)")
-            #f.add_pattern("*.xml")
-            #dialog.add_filter(f)
-            #filters[f] = constants.PUZZLE_XPF
+            keys = [constants.PUZZLE_PALABRA]#, constants.PUZZLE_XPF]
+            for key in keys:
+                description = TYPES[key]['description']
+                pattern = TYPES[constants.PUZZLE_PALABRA]['pattern']
+                f = gtk.FileFilter()
+                f.set_name(u''.join([description, ' (*', pattern, ')']))
+                f.add_pattern(u''.join(['*', pattern]))
+                dialog.add_filter(f)
+                filters[f] = key
 
             dialog.show_all()
             response = dialog.run()
             if response == gtk.RESPONSE_OK:
+                filetype = filters[dialog.get_filter()]
                 filename = dialog.get_filename()
+                extension = TYPES[filetype]['pattern']
+                if not filename.endswith(extension):
+                    filename = filename + extension
                 puzzle.filename = filename
-                puzzle.type = filters[dialog.get_filter()]
-                WRITERS[puzzle.type](puzzle, backup)
+                puzzle.type = filetype
+                TYPES[filetype]['writer'](puzzle, backup)
                 self.update_title(filename)
             dialog.destroy()
         else:
-            WRITERS[puzzle.type](puzzle, backup)
+            TYPES[puzzle.type]['writer'](puzzle, backup)
         action.stack.distance_from_saved = 0
         
     def export_puzzle(self):
