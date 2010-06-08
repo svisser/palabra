@@ -29,10 +29,9 @@ import constants
 from export import ExportWindow, verify_output_options
 from editor import Editor, WordTool
 from files import (
+    FILETYPES,
     ParserError,
     read_crossword,
-    write_palabra,
-    write_xpf,
     export_puzzle,
 )
 import grid
@@ -60,20 +59,6 @@ def create_splash():
     image.show()
     hbox.show()
     return window
-    
-# TODO move elsewhere
-FILETYPES = {}
-FILETYPES['keys'] = [constants.PUZZLE_PALABRA]#, constants.PUZZLE_XPF]
-FILETYPES[constants.PUZZLE_PALABRA] = {
-    'description': u"Palabra puzzle files"
-    , 'pattern': u".xml"
-    , 'writer': write_palabra
-}
-FILETYPES[constants.PUZZLE_XPF] = {
-    'description': u"XPF puzzle files"
-    , 'pattern': u".xml"
-    , 'writer': write_xpf
-}
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
