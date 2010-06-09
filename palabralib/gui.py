@@ -95,7 +95,7 @@ class PalabraWindow(gtk.Window):
         self.main.pack_start(self.statusbar, False, False, 0)
         self.add(self.main)
         
-        self.connect("destroy", lambda widget: self.on_quit())
+        self.connect("destroy", lambda widget: quit())
         
         self.wordlists = {}
         self.patterns = None
