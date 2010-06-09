@@ -95,7 +95,7 @@ class PalabraWindow(gtk.Window):
         self.main.pack_start(self.statusbar, False, False, 0)
         self.add(self.main)
         
-        self.connect("destroy", lambda widget: quit())
+        self.connect("destroy", lambda widget: self.on_quit())
         
         self.wordlists = {}
         self.patterns = None
@@ -105,6 +105,11 @@ class PalabraWindow(gtk.Window):
             self.blacklist = wordlist
         words = ["cunt", "whore"]
         gobject.idle_add(read_wordlist_from_iter(callback, words).next)
+        
+    def on_quit(self):
+        self.close_puzzle()
+        if not self.puzzle_manager.has_puzzle():
+            quit()
         
     def to_empty_panel(self):
         for widget in self.panel.get_children():
@@ -365,10 +370,8 @@ class PalabraWindow(gtk.Window):
         if need_to_close:
             if need_to_save:
                 self.save_puzzle(False)
-            
             self.puzzle_manager.current_puzzle = None
             action.stack.clear()
-            
             self.to_empty_panel()
             self.update_window(True)
 
@@ -578,7 +581,7 @@ class PalabraWindow(gtk.Window):
             , accel_group=accel_group
             , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
-            lambda item: quit()
+            lambda item: self.on_quit()
             , u"Quit the program"
             , image=gtk.STOCK_QUIT
             , accelerator="<Ctrl>Q"
