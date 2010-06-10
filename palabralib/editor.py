@@ -254,8 +254,8 @@ class WordTool:
         self.data = []
         colors = {True: "black", False: "gray"}
         for word, has_intersections in strings:
-            msg = ['<span color="', colors[has_intersections], '">', word, "</span>"]
-            self.data.append((word, has_intersections, ''.join(msg)))
+            msg = '<span color="' + colors[has_intersections] + '">' + word + "</span>"
+            self.data.append((word, has_intersections, msg))
         self.display_data()
         
     def display_data(self):
