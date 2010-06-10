@@ -792,7 +792,6 @@ class PalabraWindow(gtk.Window):
                 status = puzzle.grid.determine_status(False)
                 message = self.determine_status_message(status)
                 self.update_status(constants.STATUS_GRID, message)
-            
             selection = self.get_selection()
             if selection is not None:
                 sel_x, sel_y = selection
@@ -804,8 +803,8 @@ class PalabraWindow(gtk.Window):
                 
         for item in self.puzzle_toggle_items:
             item.set_sensitive(puzzle is not None)
-                
-        self.update_undo_redo()
+        if content_changed and transform >= constants.TRANSFORM_CONTENT:
+            self.update_undo_redo()
         
         try:
             # TODO refactor content_changed away
