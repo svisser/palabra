@@ -546,7 +546,23 @@ class GridTestCase(unittest.TestCase):
         for i in range(10):
             self.grid.set_void(i, i, False)
         self.assertEqual(self.grid.count_voids(), 0)
+
+    def testEntries(self):
+        count = self.grid.count_words()
+        entries = self.grid.entries()
+        self.assertEquals(len(entries), count)
         
+    def testGatherWords(self):
+        count = self.grid.count_words()
+        words = [item for item in self.grid.gather_words()]
+        self.assertEquals(len(words), count)
+        
+        counts = self.grid.determine_word_counts()
+        for d in ["across", "down"]:
+            d_count = counts[d]
+            d_words = [item for item in self.grid.gather_words(d)]
+            self.assertEquals(len(d_words), d_count)
+
     def testResize(self):
         for i in [2, 4, 6, 8]:
             self.grid.set_block(i, i, True)
