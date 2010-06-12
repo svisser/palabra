@@ -120,20 +120,14 @@ class ClueTool:
 
     def load_items(self, puzzle):
         """Load all word/clue items and put them in the ListStore."""
-        def process_row(direction, row):
-            n = row[0]
-            x = row[1]
-            y = row[2]
-            word = row[3]
-            clue = row[4]
-            explanation = row[5]
-            display = self.create_display_string(n, direction, word, clue)
-            return (n, x, y, direction, word, clue, explanation, display)
         def locked():
             self.store.clear()
             for d in ["across", "down"]:
                 for row in puzzle.grid.gather_words(d):
-                    self.store.append(process_row(d, row))
+                    n, x, y, word, clue, explanation = row
+                    display = self.create_display_string(n, d, word, clue)
+                    item = (n, x, y, d, word, clue, explanation, display)
+                    self.store.append(item)
         selection = self.tree.get_selection()
         self.perform_while_locked(selection, locked)
         
