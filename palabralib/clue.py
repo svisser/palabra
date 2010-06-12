@@ -88,24 +88,24 @@ class ClueTool:
         """
         store, it = self.tree.get_selection().get_selected()
         if it is not None:
-            n = store.get_value(it, 0)
-            x = store.get_value(it, 1)
-            y = store.get_value(it, 2)
-            direction = store.get_value(it, 3)
-            word = store.get_value(it, 4)
-            clue = store.get_value(it, 5)
-            explanation = store.get_value(it, 6)
+            n = store[it][0]
+            x = store[it][1]
+            y = store[it][2]
+            direction = store[it][3]
+            word = store[it][4]
+            clue = store[it][5]
+            explanation = store[it][6]
             
             value = widget.get_text()
             if key == "text":
                 clue = value
-                store.set_value(it, 5, value)
+                store[it][5] = value
             elif key == "explanation":
                 explanation = value
-                store.set_value(it, 6, value)
+                store[it][6] = value
 
             display = self.create_display_string(n, direction, word, clue)
-            store.set_value(it, 7, display)
+            store[it][7] = display
             
             self.editor.clue(x, y, direction, key, value)
             
@@ -160,11 +160,11 @@ class ClueTool:
                 self.set_clue_editor_status(False)
             self.perform_while_locked(selection, locked)
             return
-        x = store.get_value(it, 1)
-        y = store.get_value(it, 2)
-        direction = store.get_value(it, 3)
-        clue = store.get_value(it, 5)
-        explanation = store.get_value(it, 6)
+        x = store[it][1]
+        y = store[it][2]
+        direction = store[it][3]
+        clue = store[it][5]
+        explanation = store[it][6]
         
         def locked():
             self.update_current_word(clue, explanation)
