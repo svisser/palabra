@@ -562,6 +562,13 @@ class GridTestCase(unittest.TestCase):
             d_count = counts[d]
             d_words = [item for item in self.grid.gather_words(d)]
             self.assertEquals(len(d_words), d_count)
+            
+    def testGatherWordsEntries(self):
+        entries = self.grid.entries()
+        for d in ["across", "down"]:
+            words = [item[4] for item in self.grid.gather_words(d)]
+            for word in words:
+                self.assertEquals(word in entries, True)
 
     def testResize(self):
         for i in [2, 4, 6, 8]:
