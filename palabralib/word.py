@@ -123,7 +123,7 @@ class WordListEditor(gtk.Dialog):
         
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
-        name = self.store.get_value(it, 0)
+        name = self.store[it][0]
         nextprefs = [p for p in preferences.prefs["word_files"] if p["name"]["value"] != name]
         preferences.prefs["word_files"] = nextprefs
         

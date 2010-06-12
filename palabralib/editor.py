@@ -190,7 +190,7 @@ class WordTool:
         
     def on_row_activated(self, tree, path, column):
         store, it = self.tree.get_selection().get_selected()
-        self.editor.insert(store.get_value(it, 0))
+        self.editor.insert(store[it][0])
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
@@ -209,7 +209,7 @@ class WordTool:
                     self._create_popup_menu(it, event)
                         
     def _create_popup_menu(self, it, event):
-        word = self.store.get_value(it, 0) if it is not None else None
+        word = self.store[it][0] if it is not None else None
         if not word:
             return
         menu = gtk.Menu()
@@ -247,7 +247,7 @@ class WordTool:
         menu.popup(None, None, None, event.button, event.time)
                     
     def _perform_overlay_callback(self, it):
-        word = self.store.get_value(it, 0) if it is not None else None
+        word = self.store[it][0] if it is not None else None
         self.editor.set_overlay(word)
         
     def store_words(self, strings):
@@ -282,7 +282,7 @@ class WordTool:
         
     def get_selected_word(self):
         store, it = self.tree.get_selection().get_selected()
-        word = self.store.get_value(it, 0) if it is not None else None
+        word = self.store[it][0] if it is not None else None
         return word
         
     def display_overlay(self):
