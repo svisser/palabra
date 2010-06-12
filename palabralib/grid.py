@@ -254,9 +254,7 @@ class Grid:
     
     def entries(self):
         """Return all entries in alphabetical order."""
-        a = [word for (n, x, y, word, clue, explanation) in self.gather_words("across")]
-        d = [word for (n, x, y, word, clue, explanation) in self.gather_words("down")]
-        entries = (a + d)
+        entries = [item[4] for item in self.gather_words()]
         entries.sort()
         return entries
         
@@ -367,20 +365,21 @@ class Grid:
             result.append((index, length, constraints))
         return result
                 
-    def gather_words(self, direction):
+    def gather_words(self, direction=None):
         """Iterate over the word data in the given direction."""
-        for n, x, y in self.words_by_direction(direction):
-            try:
-                clue = self.cell(x, y)["clues"][direction]["text"]
-            except KeyError:
-                clue = ""
-            try:
-                explanation = self.cell(x, y)["clues"][direction]["explanation"]
-            except KeyError:
-                explanation = ""
-                
-            word = self.gather_word(x, y, direction)
-            yield n, x, y, word, clue, explanation
+        for d in ([direction] if direction else ["across", "down"]):
+            for n, x, y in self.words_by_direction(d):
+                try:
+                    clue = self.cell(x, y)["clues"][d]["text"]
+                except KeyError:
+                    clue = ""
+                try:
+                    explanation = self.cell(x, y)["clues"][d]["explanation"]
+                except KeyError:
+                    explanation = ""
+                    
+                word = self.gather_word(x, y, d)
+                yield n, x, y, d, word, clue, explanation
         
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""

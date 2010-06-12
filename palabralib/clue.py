@@ -122,12 +122,11 @@ class ClueTool:
         """Load all word/clue items and put them in the ListStore."""
         def locked():
             self.store.clear()
-            for d in ["across", "down"]:
-                for row in puzzle.grid.gather_words(d):
-                    n, x, y, word, clue, explanation = row
-                    display = self.create_display_string(n, d, word, clue)
-                    item = (n, x, y, d, word, clue, explanation, display)
-                    self.store.append(item)
+            for row in puzzle.grid.gather_words():
+                n, x, y, d, word, clue, explanation = row
+                display = self.create_display_string(n, d, word, clue)
+                item = (n, x, y, d, word, clue, explanation, display)
+                self.store.append(item)
         selection = self.tree.get_selection()
         self.perform_while_locked(selection, locked)
         

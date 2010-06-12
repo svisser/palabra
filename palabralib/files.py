@@ -767,16 +767,15 @@ def write_xpf(puzzle, backup=True):
             eshade.text = text
         
     clues = etree.SubElement(main, "Clues")
-    for d in ["across", "down"]:
-        for n, x, y, word, clue, explanation in puzzle.grid.gather_words(d):
-            eclue = etree.SubElement(clues, "Clue")
-            eclue.set("Row", str(y + 1))
-            eclue.set("Col", str(x + 1))
-            eclue.set("Num", str(n))
-            eclue.set("Dir", {"across": "Across", "down": "Down"}[d])
-            eclue.set("Ans", word)
-            if clue:
-                eclue.text = clue
+    for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
+        eclue = etree.SubElement(clues, "Clue")
+        eclue.set("Row", str(y + 1))
+        eclue.set("Col", str(x + 1))
+        eclue.set("Num", str(n))
+        eclue.set("Dir", {"across": "Across", "down": "Down"}[d])
+        eclue.set("Ans", word)
+        if clue:
+            eclue.text = clue
     
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     _write_puzzle(puzzle.filename, contents, backup)
