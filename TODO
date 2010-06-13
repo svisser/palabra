@@ -1,3 +1,8 @@
+Roadmap for unspecified version
+===============================
+- Rewrite parsers and drop python-lxml dependency
+- ...
+
 Roadmap for 0.1.5
 =================
 - Update XPF parser/writer to v1.0 of specification
@@ -14,10 +19,12 @@ Roadmap for 0.1.4
 - Fix bug with line rendering (done)
 - Perform final testing
 
-Areas of development:
+Areas of development
+====================
 - Web integration
 - Assistance with filling in content
 - Word/pattern/clue file management
 
-Known issues:
+Known issues
+============
 - Rendering of hovering cell above voids cells leaves trails
