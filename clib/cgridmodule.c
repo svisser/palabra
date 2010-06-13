@@ -52,6 +52,63 @@ cGrid_is_available(PyObject *self, PyObject *args) {
 }
 
 /*
+def is_start_word(self, x, y, direction=None):
+    """Return True when a word begins in the cell (x, y)."""
+    
+    if not self.is_available(x, y):
+        return False
+    for d in ([direction] if direction else ["across", "down"]):
+        if d == "across":
+            bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
+        elif d == "down":
+            bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
+        
+        before = not self.is_available(x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
+        after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
+        if before and after:
+            return True
+    return False
+*/
+
+// 0 = false, 1 = true
+int calc_is_start_word(PyObject *grid, int x, int y) {
+    int available = calc_is_available(grid, x, y);
+    if (available == 0)
+        return 0;
+
+    // 0 = across, 1 = down
+    int e;
+    for (e = 0; e < 2; e++) {
+        int bdx = e == 0 ? -1 : 0;
+        int bdy = e == 0 ? 0 : -1;
+        int adx = e == 0 ? 1 : 0;
+        int ady = e == 0 ? 0 : 1;
+        
+        // both conditions of after
+        if (calc_is_available(grid, x + adx, y + ady) == 0)
+            continue;
+        PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
+        PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y + ady));
+        PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x + adx));
+        PyObject* bars = PyObject_GetItem(cell, PyString_FromString("bar"));
+        int has_bar = PyObject_IsTrue(PyObject_GetItem(bars, PyString_FromString(e == 0 ? "left" : "top")));
+        if (has_bar == 1)
+            continue;
+        
+        // both conditions of before
+        if (calc_is_available(grid, x + bdx, y + bdy) == 0)
+            return 1;
+        col = PyObject_GetItem(data, PyInt_FromLong(y));
+        cell = PyObject_GetItem(col, PyInt_FromLong(x));
+        bars = PyObject_GetItem(cell, PyString_FromString("bar"));
+        has_bar = PyObject_IsTrue(PyObject_GetItem(bars, PyString_FromString(e == 0 ? "left" : "top")));
+        if (has_bar == 1)
+            return 1;
+    }
+    return 0;
+}
+
+/*
 n = 1
 for x, y in self.cells():
     if self.is_start_word(x, y):
@@ -79,7 +136,7 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
             PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
             
             PyObject* key = PyString_FromString("number");
-            if (1 == 1) {
+            if (calc_is_start_word(grid, x, y) == 1) {
                 PyDict_SetItem(cell, key, PyInt_FromLong(n));
                 n++;
             } else {
