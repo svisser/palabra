@@ -422,17 +422,15 @@ def read_palabra(filename):
         return meta
     def parse_grid(element):
         def parse_grid_size(attr, name):
-            width = element.get(attr)
-            if not width:
-                msg = "".join([name, u" attribute of grid not specified."])
+            try:
+                dim = int(element.get(attr))
+                if dim < 3:
+                    msg = name + u" attribute of grid must be at least 3."
+                    raise PalabraParserError(msg)
+                return int(dim)
+            except TypeError, ValueError:
+                msg = name + u" attribute of grid not or incorrectly specified."
                 raise PalabraParserError(msg)
-            if not width.isdigit():
-                msg = "".join([name, u" attribute of grid is not a number."])
-                raise PalabraParserError(msg)
-            if int(width) < 1:
-                msg = "".join([name, u" of grid must be at least one cell."])
-                raise PalabraParserError(msg)
-            return int(width)
         width = parse_grid_size("width", u"Width")
         height = parse_grid_size("height", u"Height")
         grid = Grid(width, height)
@@ -440,24 +438,13 @@ def read_palabra(filename):
             if cell.tag not in ["block", "letter", "void"]:
                 print u"Warning: skipping cell with invalid type."
                 continue
-            
-            for i, (attr, name) in enumerate([("x", "x"), ("y", "y")]):
-                coord = cell.get(attr)
-                if not coord:
-                    print "".join([u"Warning: skipping cell with no ", name, "-coordinate."])
-                    continue
-                if not coord.isdigit():
-                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
-                    continue
-                if int(coord) - 1 < 0:
-                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
-                    continue
-                if i == 0:
-                    x = int(coord) - 1
-                else:
-                    y = int(coord) - 1
+            try:
+                x = int(cell.get("x")) - 1
+                y = int(cell.get("y")) - 1
+            except TypeError, ValueError:
+                pass
             if not grid.is_valid(x, y):
-                print "Warning: skipping cell with invalid coordinates."
+                print "Warning: skipping cell with invalid coordinates: (" + str(x) + ", " + str(y) + ")"
                 continue
             data = {}
             data["block"] = cell.tag == "block"
@@ -485,21 +472,11 @@ def read_palabra(filename):
             if clue.tag != "clue":
                 print "Warning: skipping child of clues that is not a clue."
                 continue
-            for i, (attr, name) in enumerate([("x", "x"), ("y", "y")]):
-                coord = clue.get(attr)
-                if not coord:
-                    print "".join([u"Warning: skipping cell with no ", name, "-coordinate."])
-                    continue
-                if not coord.isdigit():
-                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
-                    continue
-                if int(coord) - 1 < 0:
-                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
-                    continue
-                if i == 0:
-                    x = int(coord) - 1
-                else:
-                    y = int(coord) - 1
+            try:
+                x = int(clue.get("x")) - 1
+                y = int(clue.get("y")) - 1
+            except TypeError, ValueError:
+                pass
             if not grid.is_valid(x, y):
                 print "Warning: skipping clue with invalid coordinates."
                 continue
@@ -515,11 +492,11 @@ def read_palabra(filename):
         if puzzle.tag != "puzzle":
             print "Warning: skipping a child of palabra that is not a puzzle."
             continue
-        type = puzzle.get("type")
-        if not type:
+        ptype = puzzle.get("type")
+        if not ptype:
             raise PalabraParserError(u"Type of puzzle not specified.")
-        if type != "crossword":
-            raise PalabraParserError("".join([u"This type of puzzle (", type, ") not supported."]))
+        if ptype != "crossword":
+            raise PalabraParserError("".join([u"This type of puzzle (", ptype, ") not supported."]))
         r_meta = {}
         r_grid = None
         r_notepad = ""
