@@ -32,7 +32,7 @@ class Grid:
         self.width = width
         self.height = height
         self.lines = {}
-        self.data = [[self._default_cell() for x in range(width)] for y in range(height)]
+        self.data = [[self._default_cell() for x in xrange(width)] for y in xrange(height)]
         # TODO modify when arbitrary number schemes are implemented
         self.assign_numbers()
         #self.compute_lines()
