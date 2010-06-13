@@ -1,7 +1,7 @@
 Roadmap for unspecified version
 ===============================
 - Rewrite parsers and drop python-lxml dependency
-- ...
+- Check C extensions for correctness of borrowing/new references
 
 Roadmap for 0.1.5
 =================
