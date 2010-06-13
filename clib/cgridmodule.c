@@ -75,7 +75,11 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
     int available = calc_is_available(grid, x, y);
     if (available == 0)
         return 0;
-
+    
+    PyObject *bar_str = PyString_FromString("bar");
+    PyObject *side_left = PyString_FromString("left");
+    PyObject *side_top = PyString_FromString("top");
+    
     // 0 = across, 1 = down
     int e;
     for (e = 0; e < 2; e++) {
@@ -90,8 +94,8 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
         PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
         PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y + ady));
         PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x + adx));
-        PyObject* bars = PyObject_GetItem(cell, PyString_FromString("bar"));
-        int has_bar = PyObject_IsTrue(PyObject_GetItem(bars, PyString_FromString(e == 0 ? "left" : "top")));
+        PyObject* bars = PyObject_GetItem(cell, bar_str);
+        int has_bar = PyObject_IsTrue(PyObject_GetItem(bars, e == 0 ? side_left : side_top));
         if (has_bar == 1)
             continue;
         
@@ -100,8 +104,8 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
             return 1;
         col = PyObject_GetItem(data, PyInt_FromLong(y));
         cell = PyObject_GetItem(col, PyInt_FromLong(x));
-        bars = PyObject_GetItem(cell, PyString_FromString("bar"));
-        has_bar = PyObject_IsTrue(PyObject_GetItem(bars, PyString_FromString(e == 0 ? "left" : "top")));
+        bars = PyObject_GetItem(cell, bar_str);
+        has_bar = PyObject_IsTrue(PyObject_GetItem(bars, e == 0 ? side_left : side_top));
         if (has_bar == 1)
             return 1;
     }
