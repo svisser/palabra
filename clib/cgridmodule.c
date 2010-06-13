@@ -26,7 +26,7 @@ int calc_is_available(PyObject *grid, int x, int y) {
     if (!(0 <= x && x < width && 0 <= y && y < height))
         return 0;
     
-    PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
+    PyObject* data = PyObject_GetAttrString(grid, "data");
     PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
     PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
     
@@ -87,16 +87,16 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
         int bdy = e == 0 ? 0 : -1;
         int adx = e == 0 ? 1 : 0;
         int ady = e == 0 ? 0 : 1;
+        PyObject *side = e == 0 ? side_left : side_top;
         
         // both conditions of after
         if (calc_is_available(grid, x + adx, y + ady) == 0)
             continue;
-        PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
+        PyObject* data = PyObject_GetAttrString(grid, "data");
         PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y + ady));
         PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x + adx));
         PyObject* bars = PyObject_GetItem(cell, bar_str);
-        int has_bar = PyObject_IsTrue(PyObject_GetItem(bars, e == 0 ? side_left : side_top));
-        if (has_bar == 1)
+        if (PyObject_IsTrue(PyObject_GetItem(bars, side)) == 1)
             continue;
         
         // both conditions of before
@@ -105,8 +105,7 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
         col = PyObject_GetItem(data, PyInt_FromLong(y));
         cell = PyObject_GetItem(col, PyInt_FromLong(x));
         bars = PyObject_GetItem(cell, bar_str);
-        has_bar = PyObject_IsTrue(PyObject_GetItem(bars, e == 0 ? side_left : side_top));
-        if (has_bar == 1)
+        if (PyObject_IsTrue(PyObject_GetItem(bars, side)) == 1)
             return 1;
     }
     return 0;
@@ -129,7 +128,7 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     
-    PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
+    PyObject* data = PyObject_GetAttrString(grid, "data");
     
     int n = 1;
     int x;
