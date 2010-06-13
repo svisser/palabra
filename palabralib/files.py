@@ -444,13 +444,13 @@ def read_palabra(filename):
             for i, (attr, name) in enumerate([("x", "x"), ("y", "y")]):
                 coord = cell.get(attr)
                 if not coord:
-                    print "".join([u"Warning: skipping ", skip, " with no ", name, "-coordinate."])
+                    print "".join([u"Warning: skipping cell with no ", name, "-coordinate."])
                     continue
                 if not coord.isdigit():
-                    print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
+                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
                     continue
                 if int(coord) - 1 < 0:
-                    print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
+                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
                     continue
                 if i == 0:
                     x = int(coord) - 1
@@ -485,12 +485,21 @@ def read_palabra(filename):
             if clue.tag != "clue":
                 print "Warning: skipping child of clues that is not a clue."
                 continue
-            x = parse_cell_coordinate(clue, "clue", "x", "x")
-            if x is None:
-                continue
-            y = parse_cell_coordinate(clue, "clue", "y", "y")
-            if y is None:
-                continue
+            for i, (attr, name) in enumerate([("x", "x"), ("y", "y")]):
+                coord = clue.get(attr)
+                if not coord:
+                    print "".join([u"Warning: skipping cell with no ", name, "-coordinate."])
+                    continue
+                if not coord.isdigit():
+                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
+                    continue
+                if int(coord) - 1 < 0:
+                    print "".join([u"Warning: skipping cell with invalid ", name, "-coordinate."])
+                    continue
+                if i == 0:
+                    x = int(coord) - 1
+                else:
+                    y = int(coord) - 1
             if not grid.is_valid(x, y):
                 print "Warning: skipping clue with invalid coordinates."
                 continue
