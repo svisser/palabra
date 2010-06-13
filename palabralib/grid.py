@@ -62,13 +62,7 @@ class Grid:
         
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
-        n = 1
-        for x, y in self.cells():
-            if self.is_start_word(x, y):
-                self.data[y][x]["number"] = n
-                n += 1
-            else:
-                self.data[y][x]["number"] = 0
+        cGrid.assign_numbers(self)
                 
     def get_lines(self, x, y):
         """Return lines surrounding cell (x, y)."""
