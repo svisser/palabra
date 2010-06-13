@@ -46,8 +46,7 @@ cGrid_is_available(PyObject *self, PyObject *args) {
     const int y;
     if (!PyArg_ParseTuple(args, "Oii", &grid, &x, &y))
         return NULL;
-    int available = calc_is_available(grid, x, y);
-    if (available == 0)
+    if (calc_is_available(grid, x, y) == 0)
         Py_RETURN_FALSE;
     Py_RETURN_TRUE;
 }
