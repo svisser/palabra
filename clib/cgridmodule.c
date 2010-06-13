@@ -18,18 +18,13 @@
 
 #include <Python.h>
 
-static PyObject*
-cGrid_is_available(PyObject *self, PyObject *args) {
-    PyObject *grid;
-    const int x;
-    const int y;
-    if (!PyArg_ParseTuple(args, "Oii", &grid, &x, &y))
-        return NULL;
+// 0 = false, 1 = true
+int calc_is_available(PyObject *grid, int x, int y) {
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     
     if (!(0 <= x && x < width && 0 <= y && y < height))
-        Py_RETURN_FALSE;
+        return 0;
     
     PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
     PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
@@ -37,9 +32,22 @@ cGrid_is_available(PyObject *self, PyObject *args) {
     
     int is_block = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("block")));
     if (is_block != 0)
-        Py_RETURN_FALSE;
+        return 0;
     int is_void = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
     if (is_void != 0)
+        return 0;
+    return 1;
+}
+
+static PyObject*
+cGrid_is_available(PyObject *self, PyObject *args) {
+    PyObject *grid;
+    const int x;
+    const int y;
+    if (!PyArg_ParseTuple(args, "Oii", &grid, &x, &y))
+        return NULL;
+    int available = calc_is_available(grid, x, y);
+    if (available == 0)
         Py_RETURN_FALSE;
     Py_RETURN_TRUE;
 }
@@ -80,7 +88,7 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
             }
         }
     }
-    Py_RETURN_TRUE;
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef methods[] = {
