@@ -44,8 +44,48 @@ cGrid_is_available(PyObject *self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
+/*
+n = 1
+for x, y in self.cells():
+    if self.is_start_word(x, y):
+        self.data[y][x]["number"] = n
+        n += 1
+    else:
+        self.data[y][x]["number"] = 0
+*/
+static PyObject*
+cGrid_assign_numbers(PyObject *self, PyObject *args) {
+    PyObject *grid;
+    if (!PyArg_ParseTuple(args, "O", &grid))
+        return NULL;
+    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    
+    PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
+    
+    int n = 1;
+    int x;
+    int y;
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
+            PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
+            
+            PyObject* key = PyString_FromString("number");
+            if (1 == 1) {
+                PyDict_SetItem(cell, key, PyInt_FromLong(n));
+                n++;
+            } else {
+                PyDict_SetItem(cell, key, PyInt_FromLong(0));
+            }
+        }
+    }
+    Py_RETURN_TRUE;
+}
+
 static PyMethodDef methods[] = {
     {"is_available",  cGrid_is_available, METH_VARARGS, "is_available"},
+    {"assign_numbers", cGrid_assign_numbers, METH_VARARGS, "assign_numbers"},
     {NULL, NULL, 0, NULL}
 };
 

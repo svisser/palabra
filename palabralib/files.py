@@ -21,6 +21,7 @@ from operator import itemgetter
 
 from lxml import etree
 
+import cGrid
 import constants
 import grid
 from grid import Grid
@@ -527,7 +528,7 @@ def read_palabra(filename):
             elif child.tag == "notepad":
                 r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
-        r_grid.assign_numbers()
+        cGrid.assign_numbers(r_grid)
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = constants.PUZZLE_PALABRA
