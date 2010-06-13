@@ -420,18 +420,6 @@ def read_palabra(filename):
                 continue
             meta[term] = m.text
         return meta
-    def parse_cell_coordinate(cell, skip, attr, name):
-        coord = cell.get(attr)
-        if not coord:
-            print "".join([u"Warning: skipping ", skip, " with no ", name, "-coordinate."])
-            return None
-        if not coord.isdigit():
-            print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
-            return None
-        if int(coord) - 1 < 0:
-            print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
-            return None
-        return int(coord) - 1
     def parse_grid(element):
         def parse_grid_size(attr, name):
             width = element.get(attr)
@@ -452,12 +440,22 @@ def read_palabra(filename):
             if cell.tag not in ["block", "letter", "void"]:
                 print u"Warning: skipping cell with invalid type."
                 continue
-            x = parse_cell_coordinate(cell, "cell", "x", "x")
-            if x is None:
-                continue
-            y = parse_cell_coordinate(cell, "cell", "y", "y")
-            if y is None:
-                continue
+            
+            for i, (attr, name) in enumerate([("x", "x"), ("y", "y")]):
+                coord = cell.get(attr)
+                if not coord:
+                    print "".join([u"Warning: skipping ", skip, " with no ", name, "-coordinate."])
+                    continue
+                if not coord.isdigit():
+                    print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
+                    continue
+                if int(coord) - 1 < 0:
+                    print "".join([u"Warning: skipping ", skip, " with invalid ", name, "-coordinate."])
+                    continue
+                if i == 0:
+                    x = int(coord) - 1
+                else:
+                    y = int(coord) - 1
             if not grid.is_valid(x, y):
                 print "Warning: skipping cell with invalid coordinates."
                 continue
