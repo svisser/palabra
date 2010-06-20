@@ -512,7 +512,6 @@ def read_palabra(filename):
             elif child.tag == "notepad":
                 r_notepad = child.text
         # TODO modify when arbitrary number schemes are implemented
-        cGrid.assign_numbers(r_grid)
         p = Puzzle(r_grid)
         p.metadata = r_meta
         p.type = constants.PUZZLE_PALABRA
