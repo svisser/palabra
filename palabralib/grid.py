@@ -38,14 +38,14 @@ class Grid:
         #self.compute_lines()
         
     def _default_cell(self):
-        cell = {}
-        cell["bar"] = {"top": False, "left": False}
-        cell["block"] = False
-        cell["char"] = ""
-        cell["clues"] = {}
-        cell["number"] = 0
-        cell["void"] = False
-        return cell
+        return {
+            "bar": {"top": False, "left": False}
+            , "block": False
+            , "char": ""
+            , "clues": {}
+            , "number": 0
+            , "void": False
+        }
         
     def __eq__(self, other):
         if other is None:
