@@ -140,7 +140,7 @@ def read_containers(files):
     def load_container(f):
         metadata = {} # TODO
         if "american" in f:
-            return f, {}, []
+            #return f, {}, []
             import pstats
             import cProfile
             cProfile.runctx('read_palabra(f)', globals(), locals(), filename='fooprof')
