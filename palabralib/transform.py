@@ -32,7 +32,10 @@ def modify_blocks(puzzle, blocks=[]):
         puzzle.grid.set_block(x, y, status)
 
 def modify_chars(puzzle, chars):
-    modify_chars.__setattr__('type', constants.TRANSFORM_CONTENT)
+    # intuition says this should be constants.TRANSFORM_CONTENT but slight
+    # hack to make update_window also recompute the status message when
+    # adding/removing characters
+    modify_chars.__setattr__('type', constants.TRANSFORM_STRUCTURE)
     """Modify the characters at the given locations."""
     for x, y, c in chars:
         puzzle.grid.set_char(x, y, c)
