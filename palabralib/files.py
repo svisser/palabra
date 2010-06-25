@@ -443,9 +443,6 @@ def read_palabra(filename):
                 y = int(cell.get("y")) - 1
             except TypeError, ValueError:
                 pass
-            if not grid.is_valid(x, y):
-                print "Warning: skipping cell with invalid coordinates: (" + str(x) + ", " + str(y) + ")"
-                continue
             data = {}
             data["block"] = cell.tag == "block"
             if cell.tag == "letter" and cell.text is not None:
@@ -458,7 +455,11 @@ def read_palabra(filename):
             data["bar"]["left"] = cell.get("left-bar") == "true"
             data["number"] = 0
             data["void"] = cell.tag == "void"
-            grid.set_cell(x, y, data)
+            try:
+                grid.set_cell(x, y, data)
+            except IndexError:
+                print "Warning: skipping cell with invalid coordinates: (" + str(x) + ", " + str(y) + ")"
+                continue
         return grid
     def parse_clues(element, grid):
         dir = element.get("direction")
