@@ -434,8 +434,11 @@ def read_palabra(filename):
         width = parse_grid_size("width", u"Width")
         height = parse_grid_size("height", u"Height")
         grid = Grid(width, height)
+        VALID_CELL_TYPES = ["block", "letter", "void"]
         for cell in element:
-            if cell.tag not in ["block", "letter", "void"]:
+            tag = cell.tag
+            text = cell.text
+            if tag not in VALID_CELL_TYPES:
                 print u"Warning: skipping cell with invalid type."
                 continue
             try:
@@ -443,18 +446,17 @@ def read_palabra(filename):
                 y = int(cell.get("y")) - 1
             except TypeError, ValueError:
                 pass
-            data = {}
-            data["block"] = cell.tag == "block"
-            if cell.tag == "letter" and cell.text is not None:
-                data["char"] = cell.text
-            else:
-                data["char"] = ""
-            data["clues"] = {}
-            data["bar"] = {}
-            data["bar"]["top"] = cell.get("top-bar") == "true"
-            data["bar"]["left"] = cell.get("left-bar") == "true"
-            data["number"] = 0
-            data["void"] = cell.tag == "void"
+            data = {
+                "bar": {
+                    "top": cell.get("top-bar") == "true"
+                    , "left": cell.get("left-bar") == "true"
+                }
+                , "block": tag == "block"
+                , "char": text if text and tag == "letter" else ""
+                , "clues": {}
+                , "number": 0
+                , "void": tag == "void"
+            }
             try:
                 # inlined grid.set_cell(x, y, data)
                 grid.data[y][x] = data
