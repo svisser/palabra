@@ -427,7 +427,7 @@ def read_palabra(filename):
                 if dim < 3:
                     msg = name + u" attribute of grid must be at least 3."
                     raise PalabraParserError(msg)
-                return int(dim)
+                return dim
             except TypeError, ValueError:
                 msg = name + u" attribute of grid not or incorrectly specified."
                 raise PalabraParserError(msg)
