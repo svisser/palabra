@@ -456,7 +456,8 @@ def read_palabra(filename):
             data["number"] = 0
             data["void"] = cell.tag == "void"
             try:
-                grid.set_cell(x, y, data)
+                # inlined grid.set_cell(x, y, data)
+                grid.data[y][x] = data
             except IndexError:
                 print "Warning: skipping cell with invalid coordinates: (" + str(x) + ", " + str(y) + ")"
                 continue
