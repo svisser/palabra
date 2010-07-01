@@ -539,6 +539,15 @@ def read_xpf(filename):
     puzzles = doc.getroot()
     if puzzles.tag != "Puzzles":
         raise XPFParserError(u"No root element called Puzzles found.")
+    version = puzzles.get("Version")
+    if version is None:
+        raise XPFParserError("uNo version specified for this XPF file. Possible older than v1.0?")
+    try:
+        version = float(version)
+    except ValueError:
+        raise XPFParserError("uXPF version is not a valid number")
+    if version < 1.0:
+        raise XPFParserError("uXPF versions older than 1.0 are not supported.")
     for puzzle in puzzles:
         if puzzle.tag != "Puzzle":
             print "Warning: skipping a child of Puzzles that is not a Puzzle."
@@ -697,6 +706,7 @@ def read_xpf(filename):
 def write_xpf(puzzle, backup=True):
     root = etree.Element("Puzzles")
     main = etree.SubElement(root, "Puzzle")
+    main.set("Version", "1.0")
     
     elems = [("type", "Type")
         , ("title", "Title")
