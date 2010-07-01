@@ -25,6 +25,7 @@ import constants
 import preferences
 import transform
 from word import search_wordlists
+from wordstore import WordStore
 
 class CellPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -130,9 +131,7 @@ class WordTool:
     
     def create(self):
         # word has_intersecting displayed_string
-        # TODO 2 models?
-        self.data = []
-        self.store = gtk.ListStore(str, bool, str)
+        self.store = WordStore()
         self.tree = gtk.TreeView(self.store)
         # use fixed size cells for speed
         self.tree.set_fixed_height_mode(True)
@@ -251,11 +250,7 @@ class WordTool:
         self.editor.set_overlay(word)
         
     def store_words(self, strings):
-        self.data = []
-        colors = {True: "black", False: "gray"}
-        for word, has_intersections in strings:
-            msg = '<span color="' + colors[has_intersections] + '">' + word + "</span>"
-            self.data.append((word, has_intersections, msg))
+        self.store.store_words(strings)
         self.display_data()
         
     def display_data(self):
@@ -269,7 +264,7 @@ class WordTool:
         if not show_used:
             entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
         store.clear()
-        for row in self.data:
+        for row in self.store.data:
             if show_intersections and not row[1]:
                 continue
             if not show_used and row[0] in entries:
