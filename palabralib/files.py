@@ -541,7 +541,7 @@ def read_xpf(filename):
         raise XPFParserError(u"No root element called Puzzles found.")
     version = puzzles.get("Version")
     if version is None:
-        raise XPFParserError("uNo version specified for this XPF file. Possible older than v1.0?")
+        raise XPFParserError(u"No version specified for this XPF file. Possible older than v1.0?")
     try:
         version = float(version)
     except ValueError:
