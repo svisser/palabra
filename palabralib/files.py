@@ -705,8 +705,8 @@ def read_xpf(filename):
     
 def write_xpf(puzzle, backup=True):
     root = etree.Element("Puzzles")
+    root.set("Version", "1.0")
     main = etree.SubElement(root, "Puzzle")
-    main.set("Version", "1.0")
     
     elems = [("type", "Type")
         , ("title", "Title")
