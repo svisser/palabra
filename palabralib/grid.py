@@ -21,7 +21,6 @@ import string
 import cGrid
 import constants
 import cView
-import copy
 
 class Grid:
     def __init__(self, width, height):
@@ -33,9 +32,7 @@ class Grid:
         self.width = width
         self.height = height
         self.lines = {}
-        # code below is faster than calling _default_cell all the time
-        cell = self._default_cell()
-        self.data = [[copy.copy(cell) for x in xrange(width)] for y in xrange(height)]
+        self.data = [[self._default_cell() for x in xrange(width)] for y in xrange(height)]
         # TODO modify when arbitrary number schemes are implemented
         self.assign_numbers()
         #self.compute_lines()
