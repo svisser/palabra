@@ -796,7 +796,7 @@ def _write_puzzle(filename, contents, backup=True):
     f.close()
     
 FILETYPES = {}
-FILETYPES['keys'] = [constants.PUZZLE_PALABRA]#, constants.PUZZLE_XPF]
+FILETYPES['keys'] = [constants.PUZZLE_PALABRA, constants.PUZZLE_XPF]
 FILETYPES[constants.PUZZLE_PALABRA] = {
     'description': u"Palabra puzzle files"
     , 'pattern': u".xml"
