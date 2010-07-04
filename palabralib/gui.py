@@ -24,6 +24,7 @@ import webbrowser
 import action
 from action import State
 from appearance import AppearanceDialog
+import cGrid
 from clue import ClueTool
 import constants
 from export import ExportWindow, verify_output_options
@@ -1139,8 +1140,8 @@ class PalabraWindow(gtk.Window):
     def on_fill_grid(self):
         words = ["simeonvisser"]
         grid = self.puzzle_manager.current_puzzle.grid
-        import cGrid
-        result = cGrid.fill(grid, words)
+        meta = [(x, y, d, grid.word_length(x, y, d)) for n, x, y, d in grid.words(True, True)]
+        result = cGrid.fill(grid, words, meta)
         self.transform_grid(transform.modify_chars, chars=result[0])
         
     def create_fill_menu(self):

@@ -154,7 +154,8 @@ static PyObject*
 cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
     PyObject *words;
-    if (!PyArg_ParseTuple(args, "OO", &grid, &words))
+    PyObject *meta;
+    if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
         return NULL;
     PyObject *result = PyList_New(0);
     
