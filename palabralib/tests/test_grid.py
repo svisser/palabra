@@ -741,6 +741,12 @@ class GridTestCase(unittest.TestCase):
         n = sum([1 for n, x, y in self.grid.words(True)])
         self.assertEquals(n, 29)
         
+        # added to test the appearance of d value (should not cause Python error)
+        l = [d for n, x, y, d in self.grid.words(True, True)]
+        l = [d for n, x, y in self.grid.words(True, False)]
+        l = [d for n, x, y in self.grid.words(False, True)]
+        l = [d for n, x, y in self.grid.words(False, False)]
+        
     def testHorizontalWords(self):
         n = len([1 for x in self.grid.words_by_direction("across")])
         self.assertEquals(self.grid.height, n)
