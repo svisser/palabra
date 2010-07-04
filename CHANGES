@@ -3,6 +3,7 @@ This is a list of changes since the initial release of Palabra.
 
 0.1.5 (unreleased)
 * Speed improvements to XML parser.
+* Speed improvements to displaying list of words.
 * Most common features of XPF 1.0 are supported.
 
 0.1.4 (June 13, 2010)
