@@ -78,6 +78,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
+        self.menubar.append(self.create_fill_menu())
         #self.menubar.append(self.create_word_menu())
         #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
@@ -1134,6 +1135,22 @@ class PalabraWindow(gtk.Window):
         clear_menu = gtk.MenuItem(u"_Clear", True)
         clear_menu.set_submenu(menu)
         return clear_menu
+        
+    def on_fill_grid(self):
+        pass
+        
+    def create_fill_menu(self):
+        menu = gtk.Menu()
+        
+        menu.append(self._create_menu_item(
+            lambda item: self.on_fill_grid()
+            , u"Fill the grid with words from the available word lists"
+            , title="_Fill grid"
+            , is_puzzle_sensitive=True))
+        
+        fill_menu = gtk.MenuItem(u"_Fill", True)
+        fill_menu.set_submenu(menu)
+        return fill_menu
     
     def create_word_menu(self):
         menu = gtk.Menu()
