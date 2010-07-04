@@ -22,8 +22,9 @@ import gtk
 class WordStore(gtk.GenericTreeModel):
     def __init__(self):
         gtk.GenericTreeModel.__init__(self)
-        self.data = []
-        self.view = []
+        data = []
+        self.data = data
+        self.set_view(data)
         
     def on_get_flags(self):
         return gtk.TREE_MODEL_LIST_ONLY
@@ -41,12 +42,12 @@ class WordStore(gtk.GenericTreeModel):
         return path
         
     def on_get_value(self, node, column):
-        if node[0] < len(self.view):
+        if node[0] < self.view_length:
             return self.view[node[0]][column]
         return None
         
     def on_iter_next(self, node):
-        if node[0] == len(self.view):
+        if node[0] == self.view_length:
             return None
         return (node[0] + 1,)
         
@@ -68,6 +69,10 @@ class WordStore(gtk.GenericTreeModel):
         
     def on_iter_parent(self, node):
         return None
+        
+    def set_view(self, words):
+        self.view = words
+        self.view_length = len(words)
         
     def store_words(self, strings):
         # bit ugly but needed for speed

@@ -264,8 +264,9 @@ class WordTool:
         if not show_used:
             entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
         # bit ugly but needed for speed
-        self.store.view = [row for row in self.store.data if 
+        shown = [row for row in self.store.data if 
             not ( (show_intersections and not row[1]) or (not show_used and row[0] in entries) ) ]
+        self.store.set_view(shown)
         
         self.tree.set_model(store)
         self.tree.thaw_child_notify()
