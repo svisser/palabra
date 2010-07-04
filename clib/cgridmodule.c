@@ -150,9 +150,42 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
+static PyObject*
+cGrid_fill(PyObject *self, PyObject *args) {
+    PyObject *grid;
+    PyObject *words;
+    if (!PyArg_ParseTuple(args, "OO", &grid, &words))
+        return NULL;
+    PyObject *result = PyList_New(0);
+    
+    PyObject *fill = PyList_New(0);
+    
+    PyObject* word = PyList_GetItem(words, 0);
+    char *it_word = PyString_AsString(word);
+    
+    int c;
+    for (c = 0; c < strlen(it_word); c++) {
+        char cell_c[2];
+        strncpy(cell_c, it_word + c, 1);
+        cell_c[1] = '\0';
+        PyObject* cell = Py_BuildValue("(iis)", c, 0, cell_c);
+        PyList_Append(fill, cell);
+    }
+    PyList_Append(result, fill);
+
+    /*Py_ssize_t w;
+    for (w = 0; w < PyList_Size(words); w++) {
+        PyObject* word = PyList_GetItem(words, w);
+        char *it_word = PyString_AsString(word);
+        printf("%s\n", it_word);
+    }*/
+    return result;
+}
+
 static PyMethodDef methods[] = {
     {"is_available",  cGrid_is_available, METH_VARARGS, "is_available"},
     {"assign_numbers", cGrid_assign_numbers, METH_VARARGS, "assign_numbers"},
+    {"fill", cGrid_fill, METH_VARARGS, "fill"},
     {NULL, NULL, 0, NULL}
 };
 

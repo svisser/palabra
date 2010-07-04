@@ -1137,7 +1137,11 @@ class PalabraWindow(gtk.Window):
         return clear_menu
         
     def on_fill_grid(self):
-        pass
+        words = ["simeonvisser"]
+        grid = self.puzzle_manager.current_puzzle.grid
+        import cGrid
+        result = cGrid.fill(grid, words)
+        self.transform_grid(transform.modify_chars, chars=result[0])
         
     def create_fill_menu(self):
         menu = gtk.Menu()
