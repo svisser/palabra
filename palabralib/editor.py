@@ -249,8 +249,8 @@ class WordTool:
         word = self.store[it][0] if it is not None else None
         self.editor.set_overlay(word)
         
-    def store_words(self, strings):
-        self.store.store_words(strings)
+    def store_words(self, data):
+        self.store.set_data(data)
         self.display_data()
         
     def display_data(self):

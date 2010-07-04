@@ -70,12 +70,12 @@ class WordStore(gtk.GenericTreeModel):
     def on_iter_parent(self, node):
         return None
         
-    def set_view(self, words):
-        self.view = words
-        self.view_length = len(words)
+    def set_view(self, view):
+        self.view = view
+        self.view_length = len(view)
         
-    def store_words(self, strings):
+    def set_data(self, data):
         # bit ugly but needed for speed
         self.data = [(word, has_intersections, '<span color="'
             + {True: "black", False: "gray"}[has_intersections] + '">' + word + "</span>")
-            for word, has_intersections in strings]
+            for word, has_intersections in data]
