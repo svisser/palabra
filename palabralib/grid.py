@@ -186,6 +186,7 @@ class Grid:
         """Calculate the number of words by direction and by length."""
         status = {}
         def count_by_dir(direction):
+            status[direction] = 0
             for n, x, y in self.words_by_direction(direction):
                 status[direction] += 1
                 length = self.word_length(x, y, direction)
@@ -193,7 +194,6 @@ class Grid:
                     status[length] += 1
                 except KeyError:
                     status[length] = 1
-        status = {"across": 0, "down": 0}
         count_by_dir("across")
         count_by_dir("down")
                 
