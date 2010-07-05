@@ -122,6 +122,13 @@ class WordPropertiesDialog(gtk.Dialog):
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
 
+class FillTool:
+    def __init__(self, editor):
+        self.editor = editor
+        
+    def create(self):
+        return gtk.Label(u"Not yet implemented.")
+
 class WordTool:
     def __init__(self, editor):
         self.editor = editor

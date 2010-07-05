@@ -28,7 +28,7 @@ import cGrid
 from clue import ClueTool
 import constants
 from export import ExportWindow, verify_output_options
-from editor import Editor, WordTool
+from editor import Editor, FillTool, WordTool
 from files import (
     FILETYPES,
     ParserError,
@@ -138,6 +138,7 @@ class PalabraWindow(gtk.Window):
         
         self.editor = Editor(self, drawing_area, puzzle)
         self.editor.tools["clue"] = ClueTool(self.editor)
+        self.editor.tools["fill"] = FillTool(self.editor)
         self.editor.tools["word"] = WordTool(self.editor)
         
         options_hbox = gtk.HBox(False, 0)
@@ -162,6 +163,8 @@ class PalabraWindow(gtk.Window):
         tabs.set_property("tab-vborder", 8)
         tool = self.editor.tools["word"].create()
         tabs.append_page(tool, gtk.Label(u"Word"))
+        tool = self.editor.tools["fill"].create()
+        #tabs.append_page(tool, gtk.Label(u"Fill"))
         tool = self.editor.tools["clue"].create(puzzle)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
