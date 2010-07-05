@@ -126,11 +126,9 @@ cWord_search(PyObject *self, PyObject *args) {
         PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as third argument.");
         return NULL;
     }
-    if (more_constraints != Py_None) {
-        if (!PyList_Check(more_constraints)) {
-            PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as fourth argument.");
-            return NULL;
-        }
+    if (more_constraints != Py_None && !PyList_Check(more_constraints)) {
+        PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as fourth argument.");
+        return NULL;
     }
 
     Py_ssize_t total = more_constraints != Py_None ? PyList_Size(more_constraints) : 0;
