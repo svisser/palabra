@@ -362,11 +362,6 @@ cWord_search(PyObject *self, PyObject *args) {
                                 break;
                             }
                         }
-                        
-                        if (has_matches == 2) {
-                            free_array(arr, total);
-                            return NULL;
-                        }
                         if (has_matches == 0 && DEBUG) {
                             printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_cc);
                         }
