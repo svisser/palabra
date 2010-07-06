@@ -273,11 +273,9 @@ cWord_search(PyObject *self, PyObject *args) {
             PyObject* key = Py_BuildValue("i", precons_l[m]);
             PyObject* words_m = PyDict_GetItem(words, key);
             for (w = 0; w < PyList_Size(words_m); w++) {
-                PyObject *word = PyList_GetItem(words_m, w);
-                char *it_word = PyString_AsString(word);
-                if (check_constraints(it_word, csm)) {
-                    it_word += precons_i[m];
-                    char *cons_c = it_word;
+                char *word = PyString_AsString(PyList_GetItem(words_m, w));
+                if (check_constraints(word, csm)) {
+                    char *cons_c = word + precons_i[m];
                     int j;
                     for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
                         int ivalue = (int) *cons_c;
@@ -337,14 +335,11 @@ cWord_search(PyObject *self, PyObject *args) {
             int has_intersecting = intersecting_zero_slot ? 0 : 1;
             if (more_constraints != Py_None && !intersecting_zero_slot) {
                 Py_ssize_t m;
-                for (m = 0; m < PyList_Size(more_constraints); m++) {
+                for (m = 0; m < total; m++) {
                     if (skip[m]) {
                         continue;
-                    }
-                    char *it_word = PyString_AsString(item);
-                    it_word += m;
-                    char *cons_c = it_word;
-                    
+                    } 
+                    char *cons_c = PyString_AsString(item) + m;
                     char cons_cc[2];
                     strncpy(cons_cc, cons_c, 1);
                     cons_cc[1] = '\0';
