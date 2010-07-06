@@ -296,18 +296,18 @@ cWord_search(PyObject *self, PyObject *args) {
             PyObject* words_m = PyDict_GetItem(words, key);
             for (w = 0; w < PyList_Size(words_m); w++) {
                 char *word = PyString_AsString(PyList_GetItem(words_m, w));
-                if (check_constraints(word, csm)) {
-                    char *cons_c = word + precons_i[m];
-                    int j;
-                    for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
-                        int ivalue = (int) *cons_c;
-                        if (arr[m][j] == ivalue) {
-                            break;
-                        }
-                        if (arr[m][j] == 0) {
-                            arr[m][j] = ivalue;
-                            break;
-                        }
+                if (!check_constraints(word, csm)) {
+                    continue;
+                }
+                int ivalue = (int) *(word + precons_i[m]);
+                int j;
+                for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
+                    if (arr[m][j] == ivalue) {
+                        break;
+                    }
+                    if (arr[m][j] == 0) {
+                        arr[m][j] = ivalue;
+                        break;
                     }
                 }
             }
