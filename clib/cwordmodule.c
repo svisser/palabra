@@ -59,6 +59,37 @@ inline int check_constraints(char *word, char *cs) {
     return 1;
 }
 
+int compute_median(int *numbers, const int length) {
+    // sort array
+    int s0, s1;
+    for (s0 = 0; s0 < length; s0++) {
+        for (s1 = s0 + 1; s1 < length; s1++) {
+            int v0 = numbers[s0];
+            int v1 = numbers[s1];
+            if (v1 < v0) {
+                numbers[s0] = v1;
+                numbers[s1] = v0;
+            }
+        }
+    }
+    if (length % 2 == 0) {
+        return ((numbers[length / 2 - 1] + numbers[length / 2]) / 2);
+    }
+    return numbers[(length - 1) / 2];
+}
+
+// TODO fix hardcoded array length below
+
+int lookup_number(int **arr, int **numbers, const int index, char c) {
+    int i;
+    for (i = 0; i < MAX_ALPHABET_SIZE; i++) {
+        if (arr[index][i] == c) {
+            return numbers[index][i];
+        }
+    }
+    return 0;
+}
+
 int lookup_array(int **arr, const int index, char c) {
     int i;
     for (i = 0; i < MAX_ALPHABET_SIZE; i++) {
@@ -168,6 +199,7 @@ cWord_search(PyObject *self, PyObject *args) {
     
     // process more_constraints
     int **arr = NULL;
+    int **n_matches = NULL;
     int skip[total];
     int equalities[total];
     int intersecting_zero_slot = 0;
@@ -255,18 +287,21 @@ cWord_search(PyObject *self, PyObject *args) {
         
         // allocate space for the list of characters (stored as ints)
         arr = allocate_array(total, MAX_ALPHABET_SIZE);
-        if (!arr) {
+        if (!arr)
+            return NULL;
+        n_matches = allocate_array(total, MAX_ALPHABET_SIZE);
+        if (!n_matches) {
+            free_array(arr, total);
             return NULL;
         }
         
         // gather possible characters that could be part of the
         // main slot, at each intersecting slot
-        int median[total];
         for (m = 0; m < total; m++) {
-            if (equalities[m] != -1) {
-                median[m] = median[equalities[m]];
+            // TODO FIXME XXX turn back on, this is only off for median calculations
+            /*if (equalities[m] != -1) {
                 continue;
-            }
+            }*/
             
             const int total_m = PyList_Size(precons_cs[m]);
             // if all characters are already filled in for this intersecting entry
@@ -274,7 +309,6 @@ cWord_search(PyObject *self, PyObject *args) {
                 if (DEBUG) {
                     printf("entry at %i will be skipped because it's filled in\n", (int) m);
                 }
-                median[m] = 0;
                 skip[m] = 1;
                 continue;
             }
@@ -292,6 +326,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 PyObject *item = PyList_GetItem(precons_cs[m], i);
                 if (!PyArg_ParseTuple(item, "is", &j, &c)) {
                     free_array(arr, total);
+                    free_array(n_matches, total);
                     return NULL;
                 }
                 csm[j] = *c;
@@ -304,26 +339,25 @@ cWord_search(PyObject *self, PyObject *args) {
             Py_ssize_t w;
             PyObject* key = Py_BuildValue("i", precons_l[m]);
             PyObject* words_m = PyDict_GetItem(words, key);
-            int n_matches = 0;
             for (w = 0; w < PyList_Size(words_m); w++) {
                 char *word = PyString_AsString(PyList_GetItem(words_m, w));
                 if (!check_constraints(word, csm)) {
                     continue;
                 }
-                n_matches++;
                 const int ivalue = (int) *(word + precons_i[m]);
                 int j;
                 for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
                     if (arr[m][j] == ivalue) {
+                        n_matches[m][j]++;
                         break;
                     }
                     if (arr[m][j] == 0) {
                         arr[m][j] = ivalue;
+                        n_matches[m][j]++;
                         break;
                     }
                 }
             }
-            median[m] = n_matches;
             // if no matches were found and if the word has at least one missing character...
             if (arr[m][0] == 0 && total_m != precons_l[m]) {
                 if (DEBUG) {
@@ -334,29 +368,13 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         
-        int ee;
-        for (ee = 0; ee < total; ee++) {
-            printf("%i has %i matches\n", (int) ee, median[ee]);
-        }
-        int s0;
-        int s1;
-        for (s0 = 0; s0 < total; s0++) {
-            for (s1 = s0 + 1; s1 < total; s1++) {
-                int v0 = median[s0];
-                int v1 = median[s1];
-                if (v1 < v0) {
-                    median[s0] = v1;
-                    median[s1] = v0;
-                }
+        for (m = 0; m < total; m++) {
+            int f;
+            for (f = 0; f < MAX_ALPHABET_SIZE; f++) {
+                if (arr[m][f] == 0)
+                    break;
+                printf("%i %c has n matches: %i\n", (int) m, (char) arr[m][f], n_matches[m][f]);
             }
-        }
-        for (ee = 0; ee < total; ee++) {
-            printf("%i has %i matches\n", (int) ee, median[ee]);
-        }
-        if (total % 2 == 0) {
-            printf("median = %i\n", (median[total / 2 - 1] + median[total / 2]) / 2);
-        } else {
-            printf("median = %i\n", median[(total - 1) / 2]);
         }
         
         if (DEBUG) {
@@ -373,6 +391,7 @@ cWord_search(PyObject *self, PyObject *args) {
     char cs[MAX_WORD_LENGTH];
     if (process_constraints(constraints, cs) == 1) {
         free_array(arr, total);
+        free_array(n_matches, total);
         return NULL;
     }
 
@@ -389,6 +408,14 @@ cWord_search(PyObject *self, PyObject *args) {
         int has_intersecting = intersecting_zero_slot ? 0 : 1;
         if (more_constraints != Py_None && !intersecting_zero_slot) {
             Py_ssize_t m;
+            int median[length];
+            printf("%s ", word);
+            for (m = 0; m < total; m++) {
+                median[m] = lookup_number(arr, n_matches, m, *(word + m));
+                printf("%i ", median[m]);
+            }
+            printf(" - median: %i\n", compute_median(median, length));
+            
             for (m = 0; m < total; m++) {
                 if (skip[m]) {
                     continue;
@@ -428,6 +455,7 @@ cWord_search(PyObject *self, PyObject *args) {
     
     if (more_constraints != Py_None) {
         free_array(arr, total);
+        free_array(n_matches, total);
     }
     return result;
 }
