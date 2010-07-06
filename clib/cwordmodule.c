@@ -177,29 +177,33 @@ cWord_search(PyObject *self, PyObject *args) {
         for (m = 1; m < total; m++) {
             Py_ssize_t mm;
             for (mm = m - 1; mm >= 0; mm--) {
-                int equal = 0;
-                if (precons_i[m] == precons_i[mm] && precons_l[m] == precons_l[mm]) {
-                    Py_ssize_t len_m = PyList_Size(precons_cs[m]);
-                    Py_ssize_t len_mm = PyList_Size(precons_cs[mm]);
-                    if (len_m == len_mm) {
-                        equal = 1;
-                        Py_ssize_t l;
-                        for (l = 0; l < len_m; l++) {
-                            int j_m;
-                            const char *c_m;
-                            PyObject *tuple_m = PyList_GetItem(precons_cs[m], l);
-                            if (!PyArg_ParseTuple(tuple_m, "is", &j_m, &c_m))
-                                return NULL;
-                            int j_mm;
-                            const char *c_mm;
-                            PyObject *tuple_mm = PyList_GetItem(precons_cs[mm], l);
-                            if (!PyArg_ParseTuple(tuple_mm, "is", &j_mm, &c_mm))
-                                return NULL;
-                            if (j_m != j_mm || *c_m != *c_mm) {
-                                equal = 0;
-                                break;
-                            }
-                        }
+                if (precons_i[m] != precons_i[mm]) {
+                    continue;
+                }
+                if (precons_l[m] != precons_l[mm]) {
+                    continue;
+                }
+                Py_ssize_t len_m = PyList_Size(precons_cs[m]);
+                Py_ssize_t len_mm = PyList_Size(precons_cs[mm]);
+                if (len_m != len_mm) {
+                    continue;
+                }
+                int equal = 1;
+                Py_ssize_t l;
+                for (l = 0; l < len_m; l++) {
+                    const int j_m;
+                    const char *c_m;
+                    PyObject *tuple_m = PyList_GetItem(precons_cs[m], l);
+                    if (!PyArg_ParseTuple(tuple_m, "is", &j_m, &c_m))
+                        return NULL;
+                    const int j_mm;
+                    const char *c_mm;
+                    PyObject *tuple_mm = PyList_GetItem(precons_cs[mm], l);
+                    if (!PyArg_ParseTuple(tuple_mm, "is", &j_mm, &c_mm))
+                        return NULL;
+                    if (j_m != j_mm || *c_m != *c_mm) {
+                        equal = 0;
+                        break;
                     }
                 }
                 // equal? then point the slot at m to the one at mm
