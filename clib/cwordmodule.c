@@ -82,6 +82,25 @@ void free_array(int **arr, int total) {
     arr = NULL;
 }
 
+int** allocate_array(int length, int depth) {
+    int **arr = malloc((int) length * sizeof(int*));
+    if (!arr) {
+        return NULL;
+    }
+    int a, b;
+    for (a = 0; a < length; a++) {
+        arr[a] = malloc(depth * sizeof(int));
+        if (!arr[a]) {
+            free_array(arr, a);
+            return NULL;
+        }
+        for (b = 0; b < depth; b++) {
+            arr[a][b] = 0;
+        }
+    }
+    return arr;
+}
+
 // return 1 if a word exists that matches the constraints, 0 otherwise
 static int
 cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
@@ -235,36 +254,27 @@ cWord_search(PyObject *self, PyObject *args) {
         }
         
         // allocate space for the list of characters (stored as ints)
-        arr = malloc((int) total * sizeof(int*));
+        arr = allocate_array(total, MAX_ALPHABET_SIZE);
         if (!arr) {
             return NULL;
-        }
-        int a;
-        int b;
-        for (a = 0; a < total; a++) {
-            arr[a] = malloc(MAX_ALPHABET_SIZE * sizeof(int));
-            if (!arr[a]) {
-                free_array(arr, a);
-                return NULL;
-            }
-            for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
-                arr[a][b] = 0;
-            }
         }
         
         // gather possible characters that could be part of the
         // main slot, at each intersecting slot
+        int median[total];
         for (m = 0; m < total; m++) {
             if (equalities[m] != -1) {
+                median[m] = median[equalities[m]];
                 continue;
             }
-
-            // if all characters are already filled in for this intersecting entry
+            
             const int total_m = PyList_Size(precons_cs[m]);
+            // if all characters are already filled in for this intersecting entry
             if (total_m == precons_l[m]) {
                 if (DEBUG) {
                     printf("entry at %i will be skipped because it's filled in\n", (int) m);
                 }
+                median[m] = 0;
                 skip[m] = 1;
                 continue;
             }
@@ -294,11 +304,13 @@ cWord_search(PyObject *self, PyObject *args) {
             Py_ssize_t w;
             PyObject* key = Py_BuildValue("i", precons_l[m]);
             PyObject* words_m = PyDict_GetItem(words, key);
+            int n_matches = 0;
             for (w = 0; w < PyList_Size(words_m); w++) {
                 char *word = PyString_AsString(PyList_GetItem(words_m, w));
                 if (!check_constraints(word, csm)) {
                     continue;
                 }
+                n_matches++;
                 const int ivalue = (int) *(word + precons_i[m]);
                 int j;
                 for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
@@ -311,6 +323,7 @@ cWord_search(PyObject *self, PyObject *args) {
                     }
                 }
             }
+            median[m] = n_matches;
             // if no matches were found and if the word has at least one missing character...
             if (arr[m][0] == 0 && total_m != precons_l[m]) {
                 if (DEBUG) {
@@ -321,7 +334,33 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         
+        int ee;
+        for (ee = 0; ee < total; ee++) {
+            printf("%i has %i matches\n", (int) ee, median[ee]);
+        }
+        int s0;
+        int s1;
+        for (s0 = 0; s0 < total; s0++) {
+            for (s1 = s0 + 1; s1 < total; s1++) {
+                int v0 = median[s0];
+                int v1 = median[s1];
+                if (v1 < v0) {
+                    median[s0] = v1;
+                    median[s1] = v0;
+                }
+            }
+        }
+        for (ee = 0; ee < total; ee++) {
+            printf("%i has %i matches\n", (int) ee, median[ee]);
+        }
+        if (total % 2 == 0) {
+            printf("median = %i\n", (median[total / 2 - 1] + median[total / 2]) / 2);
+        } else {
+            printf("median = %i\n", median[(total - 1) / 2]);
+        }
+        
         if (DEBUG) {
+            int a, b;
             for (a = 0; a < total; a++) {
                 for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
                     printf("arr[%i][%i] = %i\n", a, b, arr[a][b]);
