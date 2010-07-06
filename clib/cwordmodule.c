@@ -198,8 +198,8 @@ cWord_search(PyObject *self, PyObject *args) {
                 if (precons_l[m] != precons_l[mm]) {
                     continue;
                 }
-                Py_ssize_t len_m = PyList_Size(precons_cs[m]);
-                Py_ssize_t len_mm = PyList_Size(precons_cs[mm]);
+                const Py_ssize_t len_m = PyList_Size(precons_cs[m]);
+                const Py_ssize_t len_mm = PyList_Size(precons_cs[mm]);
                 if (len_m != len_mm) {
                     continue;
                 }
@@ -299,7 +299,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 if (!check_constraints(word, csm)) {
                     continue;
                 }
-                int ivalue = (int) *(word + precons_i[m]);
+                const int ivalue = (int) *(word + precons_i[m]);
                 int j;
                 for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
                     if (arr[m][j] == ivalue) {
@@ -365,7 +365,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_c);
                 if (!PyDict_Contains(cache, key)) {
                     const int index = equalities[m] != -1 ? equalities[m] : (int) m;
-                    int has_matches = lookup_array(arr, index, *(word + m));
+                    const int has_matches = lookup_array(arr, index, *(word + m));
                     if (DEBUG && has_matches == 0) {
                         printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_c);
                     }
@@ -390,7 +390,6 @@ cWord_search(PyObject *self, PyObject *args) {
     if (more_constraints != Py_None) {
         free_array(arr, total);
     }
-    
     return result;
 }
 
