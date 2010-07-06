@@ -245,9 +245,18 @@ cWord_search(PyObject *self, PyObject *args) {
             if (equalities[m] != -1) {
                 continue;
             }
-        
-            // convert the python list into an array
+
+            // if all characters are already filled in for this intersecting entry
             const int total_m = PyList_Size(precons_cs[m]);
+            if (total_m == precons_l[m]) {
+                if (DEBUG) {
+                    printf("entry at %i will be skipped because it's filled in\n", (int) m);
+                }
+                skip[m] = 1;
+                continue;
+            }
+            
+            // convert the python list into an array
             char csm[MAX_WORD_LENGTH];
             int k;
             for (k = 0; k < MAX_WORD_LENGTH; k++) {
@@ -297,13 +306,6 @@ cWord_search(PyObject *self, PyObject *args) {
                 intersecting_zero_slot = 1;
                 break;
             }
-            // if all characters are already filled in for this intersecting entry
-            if (total_m == precons_l[m]) {
-                if (DEBUG) {
-                    printf("entry at %i will be skipped because it's filled in\n", (int) m);
-                }
-                skip[m] = 1;
-            }
         }
         
         if (DEBUG) {
@@ -321,13 +323,12 @@ cWord_search(PyObject *self, PyObject *args) {
         free_array(arr, total);
         return NULL;
     }
-    
-    PyObject* cache = PyDict_New();
 
-    // process words    
-    Py_ssize_t w;
+    // process words
+    PyObject* cache = PyDict_New();
     PyObject* key = Py_BuildValue("i", length);
     PyObject* words_main = PyDict_GetItem(words, key);
+    Py_ssize_t w;
     for (w = 0; w < PyList_Size(words_main); w++) {
         char *word = PyString_AsString(PyList_GetItem(words_main, w));
         if (check_constraints(word, cs)) {
