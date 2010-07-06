@@ -329,8 +329,7 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject* key = Py_BuildValue("i", length);
     PyObject* words_main = PyDict_GetItem(words, key);
     for (w = 0; w < PyList_Size(words_main); w++) {
-        PyObject *item = PyList_GetItem(words_main, w);
-        char *word = PyString_AsString(item);
+        char *word = PyString_AsString(PyList_GetItem(words_main, w));
         if (check_constraints(word, cs)) {
             int has_intersecting = intersecting_zero_slot ? 0 : 1;
             if (more_constraints != Py_None && !intersecting_zero_slot) {
@@ -339,16 +338,15 @@ cWord_search(PyObject *self, PyObject *args) {
                     if (skip[m]) {
                         continue;
                     } 
-                    char *cons_c = PyString_AsString(item) + m;
-                    char cons_cc[2];
-                    strncpy(cons_cc, cons_c, 1);
-                    cons_cc[1] = '\0';
+                    char cons_c[2];
+                    cons_c[0] = *(word + m);
+                    cons_c[1] = '\0';
                     
                     // use a cache to lookup/store earlier searches
                     // the key is:
                     // (index of intersecting slot in word
                     // , index of intersection in intersecting word, char)
-                    PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_cc);
+                    PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_c);
                     if (!PyDict_Contains(cache, key)) {
                         int has_matches = 0;
                         int b;
@@ -357,13 +355,13 @@ cWord_search(PyObject *self, PyObject *args) {
                             if (arr[index][b] == 0) {
                                 break;
                             }
-                            if (arr[index][b] == ((int) *cons_c)) {
+                            if (arr[index][b] == *(word + m)) {
                                 has_matches = 1;
                                 break;
                             }
                         }
-                        if (has_matches == 0 && DEBUG) {
-                            printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_cc);
+                        if (DEBUG && has_matches == 0) {
+                            printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_c);
                         }
                         PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
                     }
