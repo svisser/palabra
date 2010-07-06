@@ -146,23 +146,26 @@ cWord_search(PyObject *self, PyObject *args) {
         // read more_constraints
         Py_ssize_t m;
         for (m = 0; m < total; m++) {
-            PyObject* cons = PyList_GetItem(more_constraints, m);
             const int cons_i;
             const int cons_l;
             PyObject *cons_cs;
+            PyObject* cons = PyList_GetItem(more_constraints, m);
             if (!PyArg_ParseTuple(cons, "iiO", &cons_i, &cons_l, &cons_cs))
                 return NULL;
             if (!PyList_Check(cons_cs)) {
                 PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as third part of intersecting constraints: (i, l, cs).");
                 return NULL;
             }
-            PyObject *cons_cs_e = PyList_New(PyList_Size(cons_cs) + 1);
-            Py_ssize_t e;
-            for (e = 0; e < PyList_Size(cons_cs); e++) {
-                PyList_SetItem(cons_cs_e, e, PyList_GetItem(cons_cs, e));
-            }
             precons_i[m] = cons_i;
             precons_l[m] = cons_l;
+            
+            // TODO copy function?
+            Py_ssize_t len_cons_cs = PyList_Size(cons_cs);
+            PyObject *cons_cs_e = PyList_New(len_cons_cs);
+            Py_ssize_t e;
+            for (e = 0; e < len_cons_cs; e++) {
+                PyList_SetItem(cons_cs_e, e, PyList_GetItem(cons_cs, e));
+            }
             precons_cs[m] = cons_cs_e;
         }
         // deterine which of them are exactly equal
@@ -176,12 +179,12 @@ cWord_search(PyObject *self, PyObject *args) {
             for (mm = m - 1; mm >= 0; mm--) {
                 int equal = 0;
                 if (precons_i[m] == precons_i[mm] && precons_l[m] == precons_l[mm]) {
-                    Py_ssize_t ml = PyList_Size(precons_cs[m]);
-                    Py_ssize_t mml = PyList_Size(precons_cs[mm]);
-                    if (ml == mml) {
-                        Py_ssize_t l;
+                    Py_ssize_t len_m = PyList_Size(precons_cs[m]);
+                    Py_ssize_t len_mm = PyList_Size(precons_cs[mm]);
+                    if (len_m == len_mm) {
                         equal = 1;
-                        for (l = 0; l < ml - 1; l++) {
+                        Py_ssize_t l;
+                        for (l = 0; l < len_m; l++) {
                             int j_m;
                             const char *c_m;
                             PyObject *tuple_m = PyList_GetItem(precons_cs[m], l);
@@ -246,7 +249,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 csm[k] = ' ';
             }
             Py_ssize_t i;
-            for (i = 0; i < PyList_Size(precons_cs[m]) - 1; i++) {
+            for (i = 0; i < PyList_Size(precons_cs[m]); i++) {
                 int j;
                 const char *c;
                 PyObject *item = PyList_GetItem(precons_cs[m], i);
