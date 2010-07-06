@@ -59,6 +59,19 @@ int check_constraints(char *word, char *cs) {
     return 1;
 }
 
+int lookup_array(int **arr, const int index, char c) {
+    int i;
+    for (i = 0; i < MAX_ALPHABET_SIZE; i++) {
+        if (arr[index][i] == 0) {
+            return 0;
+        }
+        if (arr[index][i] == c) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void free_array(int **arr, int total) {
     int a;
     for (a = 0; a < total; a++) {
@@ -331,51 +344,42 @@ cWord_search(PyObject *self, PyObject *args) {
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words_main); w++) {
         char *word = PyString_AsString(PyList_GetItem(words_main, w));
-        if (check_constraints(word, cs)) {
-            int has_intersecting = intersecting_zero_slot ? 0 : 1;
-            if (more_constraints != Py_None && !intersecting_zero_slot) {
-                Py_ssize_t m;
-                for (m = 0; m < total; m++) {
-                    if (skip[m]) {
-                        continue;
-                    } 
-                    char cons_c[2];
-                    cons_c[0] = *(word + m);
-                    cons_c[1] = '\0';
-                    
-                    // use a cache to lookup/store earlier searches
-                    // the key is:
-                    // (index of intersecting slot in word
-                    // , index of intersection in intersecting word, char)
-                    PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_c);
-                    if (!PyDict_Contains(cache, key)) {
-                        int has_matches = 0;
-                        int b;
-                        const int index = equalities[m] != -1 ? equalities[m] : (int) m;
-                        for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
-                            if (arr[index][b] == 0) {
-                                break;
-                            }
-                            if (arr[index][b] == *(word + m)) {
-                                has_matches = 1;
-                                break;
-                            }
-                        }
-                        if (DEBUG && has_matches == 0) {
-                            printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_c);
-                        }
-                        PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
+        if (!check_constraints(word, cs)) {
+            continue;
+        }
+        int has_intersecting = intersecting_zero_slot ? 0 : 1;
+        if (more_constraints != Py_None && !intersecting_zero_slot) {
+            Py_ssize_t m;
+            for (m = 0; m < total; m++) {
+                if (skip[m]) {
+                    continue;
+                } 
+                char cons_c[2];
+                cons_c[0] = *(word + m);
+                cons_c[1] = '\0';
+                
+                // use a cache to lookup/store earlier searches
+                // the key is:
+                // (index of intersecting slot in word
+                // , index of intersection in intersecting word, char)
+                PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_c);
+                if (!PyDict_Contains(cache, key)) {
+                    const int index = equalities[m] != -1 ? equalities[m] : (int) m;
+                    int has_matches = lookup_array(arr, index, *(word + m));
+                    if (DEBUG && has_matches == 0) {
+                        printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_c);
                     }
-                    PyObject* value = PyDict_GetItem(cache, key);
-                    if (!PyInt_AsLong(value)) {
-                        has_intersecting = 0;
-                        break;
-                    }
+                    PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
+                }
+                PyObject* value = PyDict_GetItem(cache, key);
+                if (!PyInt_AsLong(value)) {
+                    has_intersecting = 0;
+                    break;
                 }
             }
-            PyObject* r = Py_BuildValue("(sO)",  word, PyBool_FromLong(has_intersecting));
-            PyList_Append(result, r);
         }
+        PyObject* r = Py_BuildValue("(sO)",  word, PyBool_FromLong(has_intersecting));
+        PyList_Append(result, r);
     }
     if (DEBUG) {
         printf("cache size %i\n", (int) PyDict_Size(cache));
