@@ -46,7 +46,7 @@ int process_constraints(PyObject* constraints, char *cs) {
 }
 
 // return 0 if constraints don't matches, 1 if they do
-int check_constraints(char *word, char *cs) {
+inline int check_constraints(char *word, char *cs) {
     debug_checked++;
     int i = 0;                
     while (*word != '\0') {
