@@ -46,9 +46,8 @@ int process_constraints(PyObject* constraints, char *cs) {
 }
 
 // return 0 if constraints don't matches, 1 if they do
-int check_constraints(PyObject* string, char *cs) {
+int check_constraints(char *word, char *cs) {
     debug_checked++;
-    char *word = PyString_AsString(string);
     int i = 0;                
     while (*word != '\0') {
         if (cs[i] != ' ' && *word != cs[i]) {
@@ -78,8 +77,9 @@ cWord_calc_has_matches(PyObject *words, const int length, PyObject *constraints)
         return 2;
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
-        PyObject *word = PyList_GetItem(words, w);
-        if (length == PyString_Size(word) && check_constraints(word, cs)) {
+        PyObject *item = PyList_GetItem(words, w);
+        char *word = PyString_AsString(item);
+        if (length == PyString_Size(item) && check_constraints(word, cs)) {
             return 1;
         }
     }
@@ -274,8 +274,8 @@ cWord_search(PyObject *self, PyObject *args) {
             PyObject* words_m = PyDict_GetItem(words, key);
             for (w = 0; w < PyList_Size(words_m); w++) {
                 PyObject *word = PyList_GetItem(words_m, w);
-                if (check_constraints(word, csm)) {
-                    char *it_word = PyString_AsString(word);
+                char *it_word = PyString_AsString(word);
+                if (check_constraints(it_word, csm)) {
                     it_word += precons_i[m];
                     char *cons_c = it_word;
                     int j;
@@ -332,8 +332,8 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject* words_main = PyDict_GetItem(words, key);
     for (w = 0; w < PyList_Size(words_main); w++) {
         PyObject *item = PyList_GetItem(words_main, w);
-        if (check_constraints(item, cs)) {
-            char *word = PyString_AsString(item);
+        char *word = PyString_AsString(item);
+        if (check_constraints(word, cs)) {
             int has_intersecting = intersecting_zero_slot ? 0 : 1;
             if (more_constraints != Py_None && !intersecting_zero_slot) {
                 Py_ssize_t m;
