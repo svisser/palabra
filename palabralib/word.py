@@ -261,7 +261,8 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
         wordlist = item["list"]
         if wordlist is not None:
             result += wordlist.search(length, constraints, more_constraints)
-    result.sort()
+    # TODO need more intelligent way of merging
+    #result.sort()
     return result
 
 class CWordList:
@@ -286,5 +287,9 @@ class CWordList:
         If more_constraints is not specified, the second value
         in a tuple is True.
         """
-        return cWord.search(self.words, length, constraints, more_constraints)
+        ws = cWord.search(self.words, length, constraints, more_constraints)
+        from operator import itemgetter
+        ws.sort(key=itemgetter(2))
+        ws.reverse()
+        return [(w, h) for (w, h, i) in ws]
 

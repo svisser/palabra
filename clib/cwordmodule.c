@@ -373,7 +373,9 @@ cWord_search(PyObject *self, PyObject *args) {
             for (f = 0; f < MAX_ALPHABET_SIZE; f++) {
                 if (arr[m][f] == 0)
                     break;
-                printf("%i %c has n matches: %i\n", (int) m, (char) arr[m][f], n_matches[m][f]);
+                if (DEBUG) {
+                    printf("%i %c has n matches: %i\n", (int) m, (char) arr[m][f], n_matches[m][f]);
+                }
             }
         }
         
@@ -405,16 +407,24 @@ cWord_search(PyObject *self, PyObject *args) {
         if (!check_constraints(word, cs)) {
             continue;
         }
+        int indicator = 0;
         int has_intersecting = intersecting_zero_slot ? 0 : 1;
         if (more_constraints != Py_None && !intersecting_zero_slot) {
             Py_ssize_t m;
             int median[length];
-            printf("%s ", word);
+            if (DEBUG) {
+                printf("%s ", word);
+            }
             for (m = 0; m < total; m++) {
                 median[m] = lookup_number(arr, n_matches, m, *(word + m));
-                printf("%i ", median[m]);
+                if (DEBUG) {
+                    printf("%i ", median[m]);
+                }
             }
-            printf(" - median: %i\n", compute_median(median, length));
+            indicator = compute_median(median, length);
+            if (DEBUG) {
+                printf(" - indicator: %i\n", indicator);
+            }
             
             for (m = 0; m < total; m++) {
                 if (skip[m]) {
@@ -444,7 +454,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
         }
-        PyObject* r = Py_BuildValue("(sO)",  word, PyBool_FromLong(has_intersecting));
+        PyObject* r = Py_BuildValue("(sOi)",  word, PyBool_FromLong(has_intersecting), indicator);
         PyList_Append(result, r);
     }
     if (DEBUG) {
