@@ -289,7 +289,6 @@ class CWordList:
         """
         ws = cWord.search(self.words, length, constraints, more_constraints)
         from operator import itemgetter
-        ws.sort(key=itemgetter(2))
-        ws.reverse()
+        ws.sort(key=itemgetter(2), reverse=True)
         return [(w, h) for (w, h, i) in ws]
 
