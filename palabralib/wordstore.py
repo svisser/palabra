@@ -18,11 +18,13 @@
 # Based on treemodel.py in pygtk/demos
 
 import gtk
+from operator import itemgetter
 
 class WordStore(gtk.GenericTreeModel):
     def __init__(self):
         gtk.GenericTreeModel.__init__(self)
         self.columns = [str, bool, int, str]
+        self.ordering = 0
         data = []
         self.data = data
         self.set_view(data)
@@ -74,6 +76,10 @@ class WordStore(gtk.GenericTreeModel):
         return None
         
     def set_view(self, view):
+        if self.ordering == 0: # alphabet
+            view.sort(key=itemgetter(0))
+        elif self.ordering == 1: # suitability
+            view.sort(key=itemgetter(2), reverse=True)
         self.view = view
         self.view_length = len(view)
         

@@ -7,6 +7,7 @@ This is a list of changes since the initial release of Palabra.
 * Most common features of XPF 1.0 are supported.
 * Added indicator of word quality in search.
 * Added ability to sort search results by likelihood of fill.
+* Added combo control to main window to specify word sorting.
 
 0.1.4 (June 13, 2010)
 * Disabled various features for future release.

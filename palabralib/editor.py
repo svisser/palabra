@@ -180,7 +180,6 @@ class WordTool:
         
         combo = gtk.combo_box_new_text()
         combo.append_text(u"Sort by alphabet")
-        combo.append_text(u"Sort by rank")
         combo.append_text(u"Sort by suitability")
         combo.set_active(0)
         combo.connect("changed", self.on_sort_changed)
@@ -193,8 +192,8 @@ class WordTool:
         return hbox
         
     def on_sort_changed(self, combo):
-        index = combo.get_active()
-        print index
+        self.store.ordering = combo.get_active()
+        self.display_data()
         
     def on_button_toggled(self, button):
         status = button.get_active()
