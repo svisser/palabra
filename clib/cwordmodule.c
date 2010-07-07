@@ -392,8 +392,10 @@ cWord_search(PyObject *self, PyObject *args) {
     // process the constraints of the main slot
     char cs[MAX_WORD_LENGTH];
     if (process_constraints(constraints, cs) == 1) {
-        free_array(arr, total);
-        free_array(n_matches, total);
+        if (more_constraints != Py_None) {
+            free_array(arr, total);
+            free_array(n_matches, total);
+        }
         return NULL;
     }
 
