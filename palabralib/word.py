@@ -18,7 +18,6 @@
 import copy
 import gobject
 import gtk
-from operator import itemgetter
 import os
 import time
 
@@ -288,7 +287,5 @@ class CWordList:
         If more_constraints is not specified, the second value
         in a tuple is True.
         """
-        ws = cWord.search(self.words, length, constraints, more_constraints)
-        ws.sort(key=itemgetter(2), reverse=True)
-        return [(w, h) for (w, h, i) in ws]
+        return cWord.search(self.words, length, constraints, more_constraints)
 

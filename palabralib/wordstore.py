@@ -22,6 +22,7 @@ import gtk
 class WordStore(gtk.GenericTreeModel):
     def __init__(self):
         gtk.GenericTreeModel.__init__(self)
+        self.columns = [str, bool, int, str]
         data = []
         self.data = data
         self.set_view(data)
@@ -30,10 +31,10 @@ class WordStore(gtk.GenericTreeModel):
         return gtk.TREE_MODEL_LIST_ONLY
         
     def on_get_n_columns(self):
-        return 3
+        return len(self.columns)
         
     def on_get_column_type(self, index):
-        return [str, bool, str][index]
+        return self.columns[index]
         
     def on_get_path(self, node):
         return node
@@ -78,6 +79,6 @@ class WordStore(gtk.GenericTreeModel):
         
     def set_data(self, data):
         # bit ugly but needed for speed
-        self.data = [(word, has_intersections, '<span color="'
+        self.data = [(word, has_intersections, indicator, '<span color="'
             + {True: "black", False: "gray"}[has_intersections] + '">' + word + "</span>")
-            for word, has_intersections in data]
+            for word, has_intersections, indicator in data]
