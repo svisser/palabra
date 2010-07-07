@@ -194,7 +194,7 @@ cWord_search(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    Py_ssize_t total = more_constraints != Py_None ? PyList_Size(more_constraints) : 0;
+    int total = more_constraints != Py_None ? length : 0;
     PyObject *result = PyList_New(0);
     
     // process more_constraints
@@ -413,7 +413,7 @@ cWord_search(PyObject *self, PyObject *args) {
         int has_intersecting = intersecting_zero_slot ? 0 : 1;
         if (more_constraints != Py_None && !intersecting_zero_slot) {
             Py_ssize_t m;
-            int median[length];
+            int median[total];
             if (DEBUG) {
                 printf("%s ", word);
             }
