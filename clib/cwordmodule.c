@@ -407,7 +407,7 @@ cWord_search(PyObject *self, PyObject *args) {
         if (!check_constraints(word, cs)) {
             continue;
         }
-        int indicator = 0;
+        int indicator = 0, indicator2 = 0;
         int has_intersecting = intersecting_zero_slot ? 0 : 1;
         if (more_constraints != Py_None && !intersecting_zero_slot) {
             Py_ssize_t m;
@@ -423,7 +423,15 @@ cWord_search(PyObject *self, PyObject *args) {
             }
             indicator = compute_median(median, length);
             if (DEBUG) {
-                printf(" - indicator: %i\n", indicator);
+                printf("- indicator: %i", indicator);
+            }
+            for (m = 0; m < total; m++) {
+                if (median[m] < indicator) {
+                    indicator2 += (indicator - median[m]);
+                }
+            }
+            if (DEBUG) {
+                printf(" - new indicator: %i\n", indicator2);
             }
             
             for (m = 0; m < total; m++) {
@@ -454,7 +462,9 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
         }
-        PyObject* r = Py_BuildValue("(sOi)",  word, PyBool_FromLong(has_intersecting), indicator);
+        PyObject* py_intersect = PyBool_FromLong(has_intersecting);
+        PyObject* py_indicator = PyInt_FromLong(indicator + (-1 * indicator2));
+        PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, py_indicator);
         PyList_Append(result, r);
     }
     if (DEBUG) {
