@@ -18,6 +18,7 @@
 import copy
 import gobject
 import gtk
+from operator import itemgetter
 import os
 import time
 
@@ -288,7 +289,6 @@ class CWordList:
         in a tuple is True.
         """
         ws = cWord.search(self.words, length, constraints, more_constraints)
-        from operator import itemgetter
         ws.sort(key=itemgetter(2), reverse=True)
         return [(w, h) for (w, h, i) in ws]
 
