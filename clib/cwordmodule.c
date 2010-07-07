@@ -462,9 +462,9 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
         }
+        int py_ind_value = indicator + (-1 * indicator2);
         PyObject* py_intersect = PyBool_FromLong(has_intersecting);
-        PyObject* py_indicator = PyInt_FromLong(indicator + (-1 * indicator2));
-        PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, py_indicator);
+        PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, py_ind_value);
         PyList_Append(result, r);
     }
     if (DEBUG) {
