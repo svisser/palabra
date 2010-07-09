@@ -421,26 +421,21 @@ cWord_search(PyObject *self, PyObject *args) {
         if (more_constraints != Py_None && !intersecting_zero_slot) {
             Py_ssize_t m;
             int median[total];
-            if (DEBUG) {
-                printf("%s ", word);
-            }
             for (m = 0; m < total; m++) {
                 median[m] = lookup_number(arr, n_matches, m, *(word + m));
-                if (DEBUG) {
-                    printf("%i ", median[m]);
-                }
             }
             indicator = compute_median(median, length);
-            if (DEBUG) {
-                printf("- indicators: (%i", indicator);
-            }
             for (m = 0; m < total; m++) {
                 if (median[m] < indicator) {
                     indicator2 += (indicator - median[m]);
                 }
             }
             if (DEBUG) {
-                printf(", %i)\n", indicator2);
+                printf("%s ", word);
+                for (m = 0; m < total; m++) {
+                    printf("%i ", median[m]);
+                }
+                printf("- indicators: (%i, %i)\n", indicator, indicator2);
             }
             
             for (m = 0; m < total; m++) {
