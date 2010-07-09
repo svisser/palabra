@@ -296,10 +296,16 @@ cWord_search(PyObject *self, PyObject *args) {
         // gather possible characters that could be part of the
         // main slot, at each intersecting slot
         for (m = 0; m < total; m++) {
-            // TODO FIXME XXX turn back on, this is only off for median calculations
-            /*if (equalities[m] != -1) {
+            // we encountered a slot that is equal to a previous one
+            // just copy calculated values for median later on
+            if (equalities[m] != -1) {
+                int j;
+                for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
+                    arr[m][j] = arr[equalities[m]][j];
+                    n_matches[m][j] = n_matches[equalities[m]][j];
+                }
                 continue;
-            }*/
+            }
             
             const int total_m = PyList_Size(precons_cs[m]);
             // if all characters are already filled in for this intersecting entry
