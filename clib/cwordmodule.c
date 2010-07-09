@@ -18,7 +18,8 @@
 
 #include <Python.h>
 
-#define DEBUG 1
+#define DEBUG 0
+#define DEBUG_WORDS 0
 #define MAX_WORD_LENGTH 64
 #define MAX_ALPHABET_SIZE 50 // TODO
 
@@ -380,16 +381,19 @@ cWord_search(PyObject *self, PyObject *args) {
             int a, b;
             printf("arr = {");
             for (a = 0; a < total; a++) {
-                printf("{");
+                printf("%i: {", a);
                 for (b = 0; b < MAX_ALPHABET_SIZE; b++) {
-                    printf("(%i, %i): %i", a, b, arr[a][b]);
-                    if (b < MAX_ALPHABET_SIZE - 1) {
-                        printf(", ");
+                    if (arr[a][b] != 0) {
+                        //printf("%i: %c", b, arr[a][b]);
+                        printf("%c", arr[a][b]);
+                        if (b < MAX_ALPHABET_SIZE - 1 && arr[a][b + 1] != 0) {
+                            printf(", ");
+                        }
                     }
                 }
                 printf("}");
                 if (a < total - 1) {
-                    printf(", ");
+                    printf(",\n");
                 }
             }
             printf("}\n");
@@ -430,7 +434,7 @@ cWord_search(PyObject *self, PyObject *args) {
                     indicator2 += (indicator - median[m]);
                 }
             }
-            if (DEBUG) {
+            if (DEBUG & DEBUG_WORDS) {
                 printf("%s ", word);
                 for (m = 0; m < total; m++) {
                     printf("%i ", median[m]);
