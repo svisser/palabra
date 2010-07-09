@@ -1143,7 +1143,7 @@ class PalabraWindow(gtk.Window):
     def on_fill_grid(self):
         words = ["simeonvisser"]
         grid = self.puzzle_manager.current_puzzle.grid
-        meta = [(x, y, d, grid.word_length(x, y, d)) for n, x, y, d in grid.words(True, True)]
+        meta = [(x, y, 0 if d == 'across' else 1, grid.word_length(x, y, d), grid.gather_constraints(x, y, d)) for n, x, y, d in grid.words(True, True)]
         result = cGrid.fill(grid, words, meta)
         self.transform_grid(transform.modify_chars, chars=result[0])
         

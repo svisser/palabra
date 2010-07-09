@@ -157,13 +157,24 @@ cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *meta;
     if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
         return NULL;
+    
+    Py_ssize_t m;
+    for (m = 0; m < PyList_Size(meta); m++) {
+        PyObject *item = PyList_GetItem(meta, m);
+        const int x;
+        const int y;
+        const int dir;
+        const int length;
+        PyObject *constraints;
+        if (!PyArg_ParseTuple(item, "iiiiO", &x, &y, &dir, &length, &constraints))
+            return NULL;
+        printf("%i %i %i %i\n", x, y, dir, length);
+    }
+
     PyObject *result = PyList_New(0);
-    
     PyObject *fill = PyList_New(0);
-    
     PyObject* word = PyList_GetItem(words, 0);
     char *it_word = PyString_AsString(word);
-    
     int c;
     for (c = 0; c < strlen(it_word); c++) {
         char cell_c[2];
