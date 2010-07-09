@@ -421,16 +421,15 @@ class Editor(gtk.HBox):
         sdir = self.selection.direction
         
         # selection line
-        if self.puzzle.grid.is_valid(x, y):
-            if not self.puzzle.grid.is_block(x, y):
-                r = preferences.prefs["color_current_word_red"] / 65535.0
-                g = preferences.prefs["color_current_word_green"] / 65535.0
-                b = preferences.prefs["color_current_word_blue"] / 65535.0
-                
-                for cell in self.puzzle.grid.slot(sx, sy, sdir):
-                    if (x, y) == cell:
-                        self.puzzle.view.render_location(context, x, y, r, g, b)
-                        break
+        if self.puzzle.grid.is_available(x, y):
+            r = preferences.prefs["color_current_word_red"] / 65535.0
+            g = preferences.prefs["color_current_word_green"] / 65535.0
+            b = preferences.prefs["color_current_word_blue"] / 65535.0
+            
+            for cell in self.puzzle.grid.slot(sx, sy, sdir):
+                if (x, y) == cell:
+                    self.puzzle.view.render_location(context, x, y, r, g, b)
+                    break
         
         # selection cell                    
         if (x, y) == (sx, sy):
@@ -440,7 +439,7 @@ class Editor(gtk.HBox):
             self.puzzle.view.render_location(context, x, y, r, g, b)
                 
         # current cell and symmetrical cells
-        if self.current[0] >= 0 and self.current[1] >= 0:
+        if self.puzzle.grid.is_valid(*self.current):
             r = preferences.prefs["color_secondary_active_red"] / 65535.0
             g = preferences.prefs["color_secondary_active_green"] / 65535.0
             b = preferences.prefs["color_secondary_active_blue"] / 65535.0
