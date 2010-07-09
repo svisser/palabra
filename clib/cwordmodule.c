@@ -433,7 +433,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
             if (DEBUG) {
-                printf(" - new indicator: %i\n", indicator2);
+                printf(" - indicator2: %i\n", indicator2);
             }
             
             for (m = 0; m < total; m++) {
