@@ -17,6 +17,7 @@
 */
 
 #include <Python.h>
+#include "cpalabra.h"
 
 // 0 = false, 1 = true
 int calc_is_available(PyObject *grid, int x, int y) {

@@ -17,6 +17,7 @@
 */
 
 #include <Python.h>
+#include "cpalabra.h"
 
 #define DEBUG 0
 #define DEBUG_WORDS 0
@@ -24,24 +25,6 @@
 #define MAX_ALPHABET_SIZE 50 // TODO
 
 int debug_checked = 0;
-
-// return 1 in case of error, 0 otherwise
-int process_constraints(PyObject* constraints, char *cs) {
-    int k;
-    for (k = 0; k < MAX_WORD_LENGTH; k++) {
-        cs[k] = ' ';
-    }
-    Py_ssize_t i;
-    for (i = 0; i < PyList_Size(constraints); i++) {
-        int j;
-        const char *c;
-        PyObject *item = PyList_GetItem(constraints, i);
-        if (!PyArg_ParseTuple(item, "is", &j, &c))
-            return 1;
-        cs[j] = *c;
-    }
-    return 0;
-}
 
 // return 0 if constraints don't matches, 1 if they do
 inline int check_constraints(char *word, char *cs) {
