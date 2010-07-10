@@ -199,14 +199,13 @@ cGrid_fill(PyObject *self, PyObject *args) {
         s_count[m] = count;
         //printf("%i %i with %i\n", s_x[m], s_y[m], s_count[m]);
         
-        int filled_in = 1;
+        s_done[m] = 1;
         int j;
         for (j = 0; j < length; j++) {
             if (cs[j] == CONSTRAINT_EMPTY) {
-                filled_in = 0;
+                s_done[m] = 0;
             }
         }
-        s_done[m] = filled_in;
     }
     
     int n_done_slots = 0;
