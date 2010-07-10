@@ -298,12 +298,10 @@ cWord_search(PyObject *self, PyObject *args) {
                 const int ivalue = (int) *(word + precons_i[m]);
                 int j;
                 for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
-                    if (arr[m][j] == ivalue) {
-                        n_matches[m][j]++;
-                        break;
-                    }
                     if (arr[m][j] == 0) {
                         arr[m][j] = ivalue;
+                    }
+                    if (arr[m][j] == ivalue) {
                         n_matches[m][j]++;
                         break;
                     }
