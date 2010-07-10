@@ -9,8 +9,9 @@ int process_constraints(PyObject* constraints, char *cs) {
         cs[k] = CONSTRAINT_EMPTY;
     }
     Py_ssize_t i;
-    for (i = 0; i < PyList_Size(constraints); i++) {
-        int j;
+    Py_ssize_t size = PyList_Size(constraints);
+    for (i = 0; i < size; i++) {
+        const int j;
         const char *c;
         PyObject *item = PyList_GetItem(constraints, i);
         if (!PyArg_ParseTuple(item, "is", &j, &c))
