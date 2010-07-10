@@ -198,7 +198,15 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         s_count[m] = count;
         //printf("%i %i with %i\n", s_x[m], s_y[m], s_count[m]);
-        s_done[m] = 0; // TODO unless slot alread filled in entirely
+        
+        int filled_in = 1;
+        int j;
+        for (j = 0; j < length; j++) {
+            if (cs[j] == CONSTRAINT_EMPTY) {
+                filled_in = 0;
+            }
+        }
+        s_done[m] = filled_in;
     }
     
     int n_done_slots = 0;
@@ -216,6 +224,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 least_index = m;
             }
         }
+        
         //printf("least is: %i %i with %i\n", s_x[least_index], s_y[least_index], s_count[least_index]);
         s_done[least_index] = 1;
         n_done_slots++;

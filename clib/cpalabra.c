@@ -6,7 +6,7 @@
 int process_constraints(PyObject* constraints, char *cs) {
     int k;
     for (k = 0; k < MAX_WORD_LENGTH; k++) {
-        cs[k] = ' ';
+        cs[k] = CONSTRAINT_EMPTY;
     }
     Py_ssize_t i;
     for (i = 0; i < PyList_Size(constraints); i++) {
@@ -25,7 +25,7 @@ inline int check_constraints(char *word, char *cs) {
     //debug_checked++;
     int i = 0;                
     while (*word != '\0') {
-        if (cs[i] != ' ' && *word != cs[i]) {
+        if (cs[i] != CONSTRAINT_EMPTY && *word != cs[i]) {
             return 0;
         }
         word++;
