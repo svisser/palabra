@@ -158,9 +158,17 @@ cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *meta;
     if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
         return NULL;
-    
+        
+    // store information per slot
+    Py_ssize_t n_slots = PyList_Size(meta);
+    int s_x[n_slots];
+    int s_y[n_slots];
+    int s_dir[n_slots];
+    int s_len[n_slots];
+    int s_count[n_slots];
+    int s_done[n_slots];
     Py_ssize_t m;
-    for (m = 0; m < PyList_Size(meta); m++) {
+    for (m = 0; m < n_slots; m++) {
         PyObject *item = PyList_GetItem(meta, m);
         const int x;
         const int y;
@@ -169,12 +177,15 @@ cGrid_fill(PyObject *self, PyObject *args) {
         PyObject *constraints;
         if (!PyArg_ParseTuple(item, "iiiiO", &x, &y, &dir, &length, &constraints))
             return NULL;
-        printf("%i %i %i %i ", x, y, dir, length);
+        s_x[m] = x;
+        s_y[m] = y;
+        s_dir[m] = dir;
+        s_len[m] = length;
         char cs[MAX_WORD_LENGTH];
         if (process_constraints(constraints, cs) == 1)
             return NULL;
             
-        int total = 0;
+        int count = 0;
         Py_ssize_t w;
         PyObject* key = Py_BuildValue("i", length);
         PyObject* words_m = PyDict_GetItem(words, key);
@@ -183,9 +194,31 @@ cGrid_fill(PyObject *self, PyObject *args) {
             if (!check_constraints(word, cs)) {
                 continue;
             }
-            total++;
+            count++;
         }
-        printf(" %i words\n", total);
+        s_count[m] = count;
+        //printf("%i %i with %i\n", s_x[m], s_y[m], s_count[m]);
+        s_done[m] = 0; // TODO unless slot alread filled in entirely
+    }
+    
+    int n_done_slots = 0;
+    while (n_done_slots != n_slots) {
+        // TODO at least one!
+        int least_index = -1;
+        for (m = 0; m < n_slots; m++) {
+            if (!s_done[m]) {
+                least_index = m;
+                break;
+            }
+        }
+        for (m = 0; m < n_slots; m++) {
+            if (s_count[m] < s_count[least_index] && !s_done[m]) {
+                least_index = m;
+            }
+        }
+        //printf("least is: %i %i with %i\n", s_x[least_index], s_y[least_index], s_count[least_index]);
+        s_done[least_index] = 1;
+        n_done_slots++;
     }
 
     PyObject *result = PyList_New(0);
