@@ -244,10 +244,18 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         if (DEBUG) {
-            printf("equalities\n");
+            printf("equalities: {");
             for (m = 0; m < total; m++) {
-                printf("%i %i\n", (int) m, equalities[m]);
+                if (equalities[m] == -1) {
+                    printf("new");
+                } else {
+                    printf("equal(%i)", equalities[m]);
+                }
+                if (m < total - 1) {
+                    printf(", ");
+                }
             }
+            printf("}\n");
         }
         
         // allocate space for the list of characters (stored as ints)
@@ -286,21 +294,10 @@ cWord_search(PyObject *self, PyObject *args) {
             
             // convert the python list into an array
             char csm[MAX_WORD_LENGTH];
-            int k;
-            for (k = 0; k < MAX_WORD_LENGTH; k++) {
-                csm[k] = ' ';
-            }
-            Py_ssize_t i;
-            for (i = 0; i < total_m; i++) {
-                const int j;
-                const char *c;
-                PyObject *item = PyList_GetItem(precons_cs[m], i);
-                if (!PyArg_ParseTuple(item, "is", &j, &c)) {
-                    free_array(arr, total);
-                    free_array(n_matches, total);
-                    return NULL;
-                }
-                csm[j] = *c;
+            if (process_constraints(precons_cs[m], csm) == 1) {
+                free_array(arr, total);
+                free_array(n_matches, total);
+                return NULL;
             }
             
             // for all intersecting words of the desired length
@@ -338,19 +335,15 @@ cWord_search(PyObject *self, PyObject *args) {
                 break;
             }
         }
-        
-        for (m = 0; m < total; m++) {
-            int f;
-            for (f = 0; f < MAX_ALPHABET_SIZE; f++) {
-                if (arr[m][f] == 0)
-                    break;
-                if (DEBUG) {
+        if (DEBUG) {
+            for (m = 0; m < total; m++) {
+                int f;
+                for (f = 0; f < MAX_ALPHABET_SIZE; f++) {
+                    if (arr[m][f] == 0)
+                        break;
                     printf("%i %c has n matches: %i\n", (int) m, (char) arr[m][f], n_matches[m][f]);
                 }
             }
-        }
-        
-        if (DEBUG) {
             int a, b;
             printf("arr = {");
             for (a = 0; a < total; a++) {
