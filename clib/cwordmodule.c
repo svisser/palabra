@@ -159,7 +159,7 @@ cWord_search(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    int total = more_constraints != Py_None ? length : 0;
+    const int total = more_constraints != Py_None ? length : 0;
     PyObject *result = PyList_New(0);
     
     // process more_constraints
@@ -419,9 +419,9 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
         }
-        int py_ind_value = indicator + (-1 * indicator2);
+        const int w_indicator = indicator + (-1 * indicator2);
         PyObject* py_intersect = PyBool_FromLong(has_intersecting);
-        PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, py_ind_value);
+        PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, w_indicator);
         PyList_Append(result, r);
     }
     if (DEBUG) {
