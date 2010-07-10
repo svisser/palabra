@@ -172,35 +172,18 @@ cWord_search(PyObject *self, PyObject *args) {
     int precons_l[total];
     PyObject *precons_cs[total];
     if (more_constraints != Py_None) {
-        // initialize
+        // initialize and read more_constraints
         Py_ssize_t m;
         for (m = 0; m < total; m++) {
             equalities[m] = -1;
             skip[m] = 0;
-        }
-        // read more_constraints
-        for (m = 0; m < total; m++) {
-            const int cons_i;
-            const int cons_l;
-            PyObject *cons_cs;
-            PyObject* cons = PyList_GetItem(more_constraints, m);
-            if (!PyArg_ParseTuple(cons, "iiO", &cons_i, &cons_l, &cons_cs))
+            PyObject* item = PyList_GetItem(more_constraints, m);
+            if (!PyArg_ParseTuple(item, "iiO", &precons_i[m], &precons_l[m], &precons_cs[m]))
                 return NULL;
-            if (!PyList_Check(cons_cs)) {
+            if (!PyList_Check(precons_cs[m])) {
                 PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as third part of intersecting constraints: (i, l, cs).");
                 return NULL;
             }
-            precons_i[m] = cons_i;
-            precons_l[m] = cons_l;
-            
-            // TODO copy function?
-            Py_ssize_t len_cons_cs = PyList_Size(cons_cs);
-            PyObject *cons_cs_e = PyList_New(len_cons_cs);
-            Py_ssize_t e;
-            for (e = 0; e < len_cons_cs; e++) {
-                PyList_SetItem(cons_cs_e, e, PyList_GetItem(cons_cs, e));
-            }
-            precons_cs[m] = cons_cs_e;
         }
         // deterine which of them are exactly equal
         // equalities contains per slot the value -1 for a unique slot
