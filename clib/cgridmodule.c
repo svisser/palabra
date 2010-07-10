@@ -211,21 +211,21 @@ cGrid_fill(PyObject *self, PyObject *args) {
     int n_done_slots = 0;
     while (n_done_slots != n_slots) {
         // TODO at least one!
-        int least_index = -1;
+        int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!s_done[m]) {
-                least_index = m;
+                index = m;
                 break;
             }
         }
         for (m = 0; m < n_slots; m++) {
-            if (s_count[m] < s_count[least_index] && !s_done[m]) {
-                least_index = m;
+            if (s_count[m] < s_count[index] && !s_done[m]) {
+                index = m;
             }
         }
         
-        //printf("least is: %i %i with %i\n", s_x[least_index], s_y[least_index], s_count[least_index]);
-        s_done[least_index] = 1;
+        //printf("least is: %i %i with %i\n", s_x[index], s_y[index], s_count[index]);
+        s_done[index] = 1;
         n_done_slots++;
     }
 
