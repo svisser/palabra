@@ -169,11 +169,27 @@ cGrid_fill(PyObject *self, PyObject *args) {
         PyObject *constraints;
         if (!PyArg_ParseTuple(item, "iiiiO", &x, &y, &dir, &length, &constraints))
             return NULL;
-        printf("%i %i %i %i\n", x, y, dir, length);
+        printf("%i %i %i %i ", x, y, dir, length);
+        char cs[MAX_WORD_LENGTH];
+        if (process_constraints(constraints, cs) == 1)
+            return NULL;
+            
+        int total = 0;
+        Py_ssize_t w;
+        PyObject* key = Py_BuildValue("i", length);
+        PyObject* words_m = PyDict_GetItem(words, key);
+        for (w = 0; w < PyList_Size(words_m); w++) {
+            char *word = PyString_AsString(PyList_GetItem(words_m, w));
+            if (!check_constraints(word, cs)) {
+                continue;
+            }
+            total++;
+        }
+        printf(" %i words\n", total);
     }
 
     PyObject *result = PyList_New(0);
-    PyObject *fill = PyList_New(0);
+    /*PyObject *fill = PyList_New(0);
     PyObject* word = PyList_GetItem(words, 0);
     char *it_word = PyString_AsString(word);
     int c;
@@ -184,7 +200,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         PyObject* cell = Py_BuildValue("(iis)", c, 0, cell_c);
         PyList_Append(fill, cell);
     }
-    PyList_Append(result, fill);
+    PyList_Append(result, fill);*/
 
     /*Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {

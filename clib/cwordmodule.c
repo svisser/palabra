@@ -24,22 +24,6 @@
 #define MAX_WORD_LENGTH 64
 #define MAX_ALPHABET_SIZE 50 // TODO
 
-int debug_checked = 0;
-
-// return 0 if constraints don't matches, 1 if they do
-inline int check_constraints(char *word, char *cs) {
-    debug_checked++;
-    int i = 0;                
-    while (*word != '\0') {
-        if (cs[i] != ' ' && *word != cs[i]) {
-            return 0;
-        }
-        word++;
-        i++;
-    }
-    return 1;
-}
-
 int compute_median(int *numbers, const int length) {
     // sort array
     int s0, s1;
@@ -466,9 +450,9 @@ cWord_search(PyObject *self, PyObject *args) {
     }
     if (DEBUG) {
         printf("cache size %i\n", (int) PyDict_Size(cache));
-        printf("total words checked %i\n", debug_checked);
+        //printf("total words checked %i\n", debug_checked);
     }
-    debug_checked = 0;
+    //debug_checked = 0;
     
     if (more_constraints != Py_None) {
         free_array(arr, total);

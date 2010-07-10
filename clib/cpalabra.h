@@ -3,8 +3,9 @@
 
 #define MAX_WORD_LENGTH 64
 
-extern int process_constraints(PyObject* constraints, char *cs);
+//int debug_checked = 0;
 
-extern int checking(void);
+extern int process_constraints(PyObject* constraints, char *cs);
+extern int check_constraints(char *word, char *cs);
 
 #endif
