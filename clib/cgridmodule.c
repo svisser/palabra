@@ -197,8 +197,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
             count++;
         }
         s_count[m] = count;
-        //printf("%i %i with %i\n", s_x[m], s_y[m], s_count[m]);
-        
         s_done[m] = 1;
         int j;
         for (j = 0; j < length; j++) {
@@ -207,6 +205,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         }
     }
+    
+    PyObject *result = PyList_New(0);
+    PyObject *fill = PyList_New(0);
     
     int n_done_slots = 0;
     while (n_done_slots != n_slots) {
@@ -224,31 +225,30 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         }
         
+        if (s_dir[index] == 0) {
+            // TODO optimize third argument
+            //char* word = find_candidate(words, s_len[m], NULL);
+            //printf("%i %i %s\n", s_x[m], s_y[m], word);
+            
+            int c;
+            for (c = 0; c < s_len[index]; c++) {
+            //for (c = 0; c < strlen(word); c++) {
+                // TODO substr func?
+                char cell_c[2];
+                //strncpy(cell_c, word + c, 1);
+                cell_c[0] = 'A';
+                cell_c[1] = '\0';
+                PyObject* cell = Py_BuildValue("(iis)", c, 0, cell_c);
+                PyList_Append(fill, cell);
+            }
+        }
+        
         //printf("least is: %i %i with %i\n", s_x[index], s_y[index], s_count[index]);
         s_done[index] = 1;
         n_done_slots++;
     }
-
-    PyObject *result = PyList_New(0);
-    /*PyObject *fill = PyList_New(0);
-    PyObject* word = PyList_GetItem(words, 0);
-    char *it_word = PyString_AsString(word);
-    int c;
-    for (c = 0; c < strlen(it_word); c++) {
-        char cell_c[2];
-        strncpy(cell_c, it_word + c, 1);
-        cell_c[1] = '\0';
-        PyObject* cell = Py_BuildValue("(iis)", c, 0, cell_c);
-        PyList_Append(fill, cell);
-    }
-    PyList_Append(result, fill);*/
-
-    /*Py_ssize_t w;
-    for (w = 0; w < PyList_Size(words); w++) {
-        PyObject* word = PyList_GetItem(words, w);
-        char *it_word = PyString_AsString(word);
-        printf("%s\n", it_word);
-    }*/
+    
+    PyList_Append(result, fill);
     return result;
 }
 
