@@ -229,14 +229,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         if (s_dir[index] == 0) {
             char* word = find_candidate(words, s_len[index], s_cs[index]);
-            printf("candidate: %s\n", word);
-            //printf("candidate: %i %i %s\n", s_x[index], s_y[index], word);
-            
             int c;
             for (c = 0; c < s_len[index]; c++) {
-                // TODO substr func?
                 char cell_c[2];
-                //strncpy(cell_c, word + c, 1);
                 cell_c[0] = toupper(word[c]);
                 cell_c[1] = '\0';
                 int cx = s_x[index] + (s_dir[index] == 0 ? c : 0);
@@ -246,7 +241,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         }
         
-        //printf("least is: %i %i with %i\n", s_x[index], s_y[index], s_count[index]);
         s_done[index] = 1;
         n_done_slots++;
     }
