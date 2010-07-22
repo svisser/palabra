@@ -26,7 +26,6 @@ char* find_candidate(PyObject *words, int length, PyObject *constraints) {
             free(words_array);
             return word;
         }
-        printf(">> %s\n", words_array[w]);
     }
     free(words_array);
     return NULL;
