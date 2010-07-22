@@ -2,6 +2,36 @@
 #include <Python.h>
 #include "cpalabra.h"
 
+char* find_candidate(PyObject *words, int length, PyObject *constraints) {
+    char cs[MAX_WORD_LENGTH];
+    if (process_constraints(constraints, cs) == 1)
+        return NULL;
+    
+    PyObject* key = Py_BuildValue("i", length);
+    PyObject* words_m = PyDict_GetItem(words, key);
+    
+    int count = PyList_Size(words_m);
+    char **words_array = (char**) calloc(sizeof(char**), count);
+    if (!words_array)
+        return NULL;
+    
+    Py_ssize_t w;
+    for (w = 0; w < count; w++) {
+        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+        words_array[w] = word;
+    }
+    for (w = 0; w < count; w++) {
+        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+        if (check_constraints(word, cs) == 1) {
+            free(words_array);
+            return word;
+        }
+        printf(">> %s\n", words_array[w]);
+    }
+    free(words_array);
+    return NULL;
+}
+
 // return 1 in case of error, 0 otherwise
 int process_constraints(PyObject* constraints, char *cs) {
     int k;
