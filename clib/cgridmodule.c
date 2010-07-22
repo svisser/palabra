@@ -167,6 +167,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     int s_len[n_slots];
     int s_count[n_slots];
     int s_done[n_slots];
+    PyObject *s_cs[n_slots];
     Py_ssize_t m;
     for (m = 0; m < n_slots; m++) {
         PyObject *item = PyList_GetItem(meta, m);
@@ -181,6 +182,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         s_y[m] = y;
         s_dir[m] = dir;
         s_len[m] = length;
+        s_cs[m] = constraints;
         char cs[MAX_WORD_LENGTH];
         if (process_constraints(constraints, cs) == 1)
             return NULL;
@@ -226,14 +228,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         
         if (s_dir[index] == 0) {
-            // TODO obtain third argument
-            //char* word = find_candidate(words, s_len[m], NULL);
-            char word[s_len[index] + 1];
-            int d;
-            for (d = 0; d < s_len[index]; d++) {
-                word[d] = (char) (65 + d);
-            }
-            word[s_len[index]] = '\0';
+            char* word = find_candidate(words, s_len[index], s_cs[index]);
+            printf("candidate: %s\n", word);
             //printf("candidate: %i %i %s\n", s_x[index], s_y[index], word);
             
             int c;
@@ -241,7 +237,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 // TODO substr func?
                 char cell_c[2];
                 //strncpy(cell_c, word + c, 1);
-                cell_c[0] = word[c];
+                cell_c[0] = toupper(word[c]);
                 cell_c[1] = '\0';
                 int cx = s_x[index] + (s_dir[index] == 0 ? c : 0);
                 int cy = s_y[index] + (s_dir[index] == 1 ? c : 0);
