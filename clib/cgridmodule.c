@@ -226,19 +226,26 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         
         if (s_dir[index] == 0) {
-            // TODO optimize third argument
+            // TODO obtain third argument
             //char* word = find_candidate(words, s_len[m], NULL);
-            //printf("%i %i %s\n", s_x[m], s_y[m], word);
+            char word[s_len[index] + 1];
+            int d;
+            for (d = 0; d < s_len[index]; d++) {
+                word[d] = (char) (65 + d);
+            }
+            word[s_len[index]] = '\0';
+            //printf("candidate: %i %i %s\n", s_x[index], s_y[index], word);
             
             int c;
             for (c = 0; c < s_len[index]; c++) {
-            //for (c = 0; c < strlen(word); c++) {
                 // TODO substr func?
                 char cell_c[2];
                 //strncpy(cell_c, word + c, 1);
-                cell_c[0] = 'A';
+                cell_c[0] = word[c];
                 cell_c[1] = '\0';
-                PyObject* cell = Py_BuildValue("(iis)", c, 0, cell_c);
+                int cx = s_x[index] + (s_dir[index] == 0 ? c : 0);
+                int cy = s_y[index] + (s_dir[index] == 1 ? c : 0);
+                PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
                 PyList_Append(fill, cell);
             }
         }
