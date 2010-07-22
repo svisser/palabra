@@ -10,7 +10,7 @@ char* find_candidate(PyObject *words, int length, PyObject *constraints) {
     PyObject* key = Py_BuildValue("i", length);
     PyObject* words_m = PyDict_GetItem(words, key);
     
-    int count = PyList_Size(words_m);
+    Py_ssize_t count = PyList_Size(words_m);
     char **words_array = (char**) calloc(sizeof(char**), count);
     if (!words_array)
         return NULL;
