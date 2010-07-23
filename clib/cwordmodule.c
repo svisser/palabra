@@ -158,9 +158,6 @@ cWord_search(PyObject *self, PyObject *args) {
         PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as fourth argument.");
         return NULL;
     }
-    
-    char* wrd = find_candidate(words, length, constraints);
-    printf("wrd: %s\n", wrd);
 
     const int total = more_constraints != Py_None ? length : 0;
     PyObject *result = PyList_New(0);
