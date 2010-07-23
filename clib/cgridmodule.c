@@ -160,6 +160,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         return NULL;
         
     // store information per slot
+    int n_done_slots = 0;
     Py_ssize_t n_slots = PyList_Size(meta);
     int s_x[n_slots];
     int s_y[n_slots];
@@ -167,7 +168,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     int s_len[n_slots];
     int s_count[n_slots];
     int s_done[n_slots];
-    PyObject *s_cs[n_slots];
+    PyObject **s_cs = (PyObject**) malloc(n_slots * sizeof(PyObject*));
     Py_ssize_t m;
     for (m = 0; m < n_slots; m++) {
         PyObject *item = PyList_GetItem(meta, m);
@@ -206,14 +207,14 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 s_done[m] = 0;
             }
         }
+        if (s_done[m]) {
+            n_done_slots++;
+        }
     }
     
     PyObject *result = PyList_New(0);
     PyObject *fill = PyList_New(0);
-    
-    int n_done_slots = 0;
     while (n_done_slots != n_slots) {
-        // TODO at least one!
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!s_done[m]) {
@@ -246,6 +247,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         s_done[index] = 1;
         n_done_slots++;
     }
+    
+    free(s_cs);
     
     PyList_Append(result, fill);
     return result;
