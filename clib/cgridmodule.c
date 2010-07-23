@@ -168,7 +168,10 @@ cGrid_fill(PyObject *self, PyObject *args) {
     int s_len[n_slots];
     int s_count[n_slots];
     int s_done[n_slots];
-    PyObject **s_cs = (PyObject**) malloc(n_slots * sizeof(PyObject*));
+    PyObject **s_cs = malloc(n_slots * sizeof(PyObject*));
+    if (!s_cs) {
+        return NULL;
+    }
     Py_ssize_t m;
     for (m = 0; m < n_slots; m++) {
         PyObject *item = PyList_GetItem(meta, m);
