@@ -138,6 +138,12 @@ cWord_has_matches(PyObject *self, PyObject *args)
     Py_RETURN_FALSE;
 }
 
+typedef struct {
+    int index;
+    int length;
+    PyObject* cs;
+} IntersectingSlot;
+
 static PyObject*
 cWord_search(PyObject *self, PyObject *args) {
     PyObject *words;
@@ -168,9 +174,7 @@ cWord_search(PyObject *self, PyObject *args) {
     int skip[total];
     int equalities[total];
     int intersecting_zero_slot = 0;
-    int precons_i[total];
-    int precons_l[total];
-    PyObject *precons_cs[total];
+    IntersectingSlot slots[total];
     if (more_constraints != Py_None) {
         // initialize and read more_constraints
         Py_ssize_t m;
@@ -178,9 +182,9 @@ cWord_search(PyObject *self, PyObject *args) {
             equalities[m] = -1;
             skip[m] = 0;
             PyObject* item = PyList_GetItem(more_constraints, m);
-            if (!PyArg_ParseTuple(item, "iiO", &precons_i[m], &precons_l[m], &precons_cs[m]))
+            if (!PyArg_ParseTuple(item, "iiO", &slots[m].index, &slots[m].length, &slots[m].cs))
                 return NULL;
-            if (!PyList_Check(precons_cs[m])) {
+            if (!PyList_Check(slots[m].cs)) {
                 PyErr_SetString(PyExc_TypeError, "cWord.search expects a list as third part of intersecting constraints: (i, l, cs).");
                 return NULL;
             }
@@ -191,14 +195,14 @@ cWord_search(PyObject *self, PyObject *args) {
         for (m = 1; m < total; m++) {
             Py_ssize_t mm;
             for (mm = m - 1; mm >= 0; mm--) {
-                if (precons_i[m] != precons_i[mm]) {
+                if (slots[m].index != slots[mm].index) {
                     continue;
                 }
-                if (precons_l[m] != precons_l[mm]) {
+                if (slots[m].length != slots[mm].length) {
                     continue;
                 }
-                const Py_ssize_t len_m = PyList_Size(precons_cs[m]);
-                const Py_ssize_t len_mm = PyList_Size(precons_cs[mm]);
+                const Py_ssize_t len_m = PyList_Size(slots[m].cs);
+                const Py_ssize_t len_mm = PyList_Size(slots[mm].cs);
                 if (len_m != len_mm) {
                     continue;
                 }
@@ -207,12 +211,12 @@ cWord_search(PyObject *self, PyObject *args) {
                 for (l = 0; l < len_m; l++) {
                     const int j_m;
                     const char *c_m;
-                    PyObject *tuple_m = PyList_GetItem(precons_cs[m], l);
+                    PyObject *tuple_m = PyList_GetItem(slots[m].cs, l);
                     if (!PyArg_ParseTuple(tuple_m, "is", &j_m, &c_m))
                         return NULL;
                     const int j_mm;
                     const char *c_mm;
-                    PyObject *tuple_mm = PyList_GetItem(precons_cs[mm], l);
+                    PyObject *tuple_mm = PyList_GetItem(slots[mm].cs, l);
                     if (!PyArg_ParseTuple(tuple_mm, "is", &j_mm, &c_mm))
                         return NULL;
                     if (j_m != j_mm || *c_m != *c_mm) {
@@ -265,9 +269,9 @@ cWord_search(PyObject *self, PyObject *args) {
                 continue;
             }
             
-            const int total_m = PyList_Size(precons_cs[m]);
+            const int total_m = PyList_Size(slots[m].cs);
             // if all characters are already filled in for this intersecting entry
-            if (total_m == precons_l[m]) {
+            if (total_m == slots[m].length) {
                 if (DEBUG) {
                     printf("entry at %i will be skipped because it's filled in\n", (int) m);
                 }
@@ -277,7 +281,7 @@ cWord_search(PyObject *self, PyObject *args) {
             
             // convert the python list into an array
             char csm[MAX_WORD_LENGTH];
-            if (process_constraints(precons_cs[m], csm) == 1) {
+            if (process_constraints(slots[m].cs, csm) == 1) {
                 free_array(arr, total);
                 free_array(n_matches, total);
                 return NULL;
@@ -288,14 +292,14 @@ cWord_search(PyObject *self, PyObject *args) {
             // gather all characters that could be placed in the
             // word of the main slot for which we are searching
             Py_ssize_t w;
-            PyObject* key = Py_BuildValue("i", precons_l[m]);
+            PyObject* key = Py_BuildValue("i", slots[m].length);
             PyObject* words_m = PyDict_GetItem(words, key);
             for (w = 0; w < PyList_Size(words_m); w++) {
                 char *word = PyString_AsString(PyList_GetItem(words_m, w));
                 if (!check_constraints(word, csm)) {
                     continue;
                 }
-                const int ivalue = (int) *(word + precons_i[m]);
+                const int ivalue = (int) *(word + slots[m].index);
                 int j;
                 for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
                     if (arr[m][j] == 0) {
@@ -308,7 +312,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
             }
             // if no matches were found and if the word has at least one missing character...
-            if (arr[m][0] == 0 && total_m != precons_l[m]) {
+            if (arr[m][0] == 0 && total_m != slots[m].length) {
                 if (DEBUG) {
                     printf("intersecting_zero_slot for: %i\n", (int) m);
                 }
@@ -401,12 +405,12 @@ cWord_search(PyObject *self, PyObject *args) {
                 // the key is:
                 // (index of intersecting slot in word
                 // , index of intersection in intersecting word, char)
-                PyObject* key = Py_BuildValue("(iis)", m, precons_i[m], cons_c);
+                PyObject* key = Py_BuildValue("(iis)", m, slots[m].index, cons_c);
                 if (!PyDict_Contains(cache, key)) {
                     const int index = equalities[m] != -1 ? equalities[m] : (int) m;
                     const int has_matches = lookup_array(arr, index, *(word + m));
                     if (DEBUG && has_matches == 0) {
-                        printf("no matches for (%i %i %s)\n", (int) m, (int) precons_i[m], cons_c);
+                        printf("no matches for (%i %i %s)\n", (int) m, (int) slots[m].index, cons_c);
                     }
                     PyDict_SetItem(cache, key, PyInt_FromLong(has_matches));
                 }
