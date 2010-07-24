@@ -158,7 +158,8 @@ typedef struct {
     int length;
     int count;
     int done; // {0, 1}
-    PyObject* cs;
+    char cs[MAX_WORD_LENGTH];
+    //PyObject* cs;
 } Slot;
 
 static PyObject*
@@ -187,18 +188,16 @@ cGrid_fill(PyObject *self, PyObject *args) {
         slots[m].y = y;
         slots[m].dir = dir;
         slots[m].length = length;
-        slots[m].cs = constraints;
-        char cs[MAX_WORD_LENGTH];
-        if (process_constraints(constraints, cs) == 1)
+        if (process_constraints(constraints, slots[m].cs) == 1)
             return NULL;
-            
+
         int count = 0;
         Py_ssize_t w;
         PyObject* key = Py_BuildValue("i", length);
         PyObject* words_m = PyDict_GetItem(words, key);
         for (w = 0; w < PyList_Size(words_m); w++) {
             char *word = PyString_AsString(PyList_GetItem(words_m, w));
-            if (!check_constraints(word, cs)) {
+            if (!check_constraints(word, slots[m].cs)) {
                 continue;
             }
             count++;
@@ -207,7 +206,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         slots[m].done = 1;
         int j;
         for (j = 0; j < length; j++) {
-            if (cs[j] == CONSTRAINT_EMPTY) {
+            if (slots[m].cs[j] == CONSTRAINT_EMPTY) {
                 slots[m].done = 0;
             }
         }

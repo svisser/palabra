@@ -2,11 +2,7 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-char* find_candidate(PyObject *words, int length, PyObject *constraints) {
-    char cs[MAX_WORD_LENGTH];
-    if (process_constraints(constraints, cs) == 1)
-        return NULL;
-    
+char* find_candidate(PyObject *words, int length, char *cs) {
     PyObject* key = Py_BuildValue("i", length);
     PyObject* words_m = PyDict_GetItem(words, key);
     
