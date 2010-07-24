@@ -151,6 +151,16 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
+typedef struct {
+    int x;
+    int y;
+    int dir; // 0 = across, 1 = down
+    int length;
+    int count;
+    int done; // {0, 1}
+    PyObject* cs;
+} Slot;
+
 static PyObject*
 cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
@@ -158,20 +168,11 @@ cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *meta;
     if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
         return NULL;
-        
+
     // store information per slot
     int n_done_slots = 0;
     Py_ssize_t n_slots = PyList_Size(meta);
-    int s_x[n_slots];
-    int s_y[n_slots];
-    int s_dir[n_slots];
-    int s_len[n_slots];
-    int s_count[n_slots];
-    int s_done[n_slots];
-    PyObject **s_cs = malloc(n_slots * sizeof(PyObject*));
-    if (!s_cs) {
-        return NULL;
-    }
+    Slot slots[n_slots];
     Py_ssize_t m;
     for (m = 0; m < n_slots; m++) {
         PyObject *item = PyList_GetItem(meta, m);
@@ -182,11 +183,11 @@ cGrid_fill(PyObject *self, PyObject *args) {
         PyObject *constraints;
         if (!PyArg_ParseTuple(item, "iiiiO", &x, &y, &dir, &length, &constraints))
             return NULL;
-        s_x[m] = x;
-        s_y[m] = y;
-        s_dir[m] = dir;
-        s_len[m] = length;
-        s_cs[m] = constraints;
+        slots[m].x = x;
+        slots[m].y = y;
+        slots[m].dir = dir;
+        slots[m].length = length;
+        slots[m].cs = constraints;
         char cs[MAX_WORD_LENGTH];
         if (process_constraints(constraints, cs) == 1)
             return NULL;
@@ -202,15 +203,15 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
             count++;
         }
-        s_count[m] = count;
-        s_done[m] = 1;
+        slots[m].count = count;
+        slots[m].done = 1;
         int j;
         for (j = 0; j < length; j++) {
             if (cs[j] == CONSTRAINT_EMPTY) {
-                s_done[m] = 0;
+                slots[m].done = 0;
             }
         }
-        if (s_done[m]) {
+        if (slots[m].done) {
             n_done_slots++;
         }
     }
@@ -220,38 +221,36 @@ cGrid_fill(PyObject *self, PyObject *args) {
     while (n_done_slots != n_slots) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
-            if (!s_done[m]) {
+            if (!slots[m].done) {
                 index = m;
                 break;
             }
         }
         for (m = 0; m < n_slots; m++) {
-            if (s_count[m] < s_count[index] && !s_done[m]) {
+            if (slots[m].count < slots[index].count && !slots[m].done) {
                 index = m;
             }
         }
         
-        if (s_dir[index] == 0) {
-            char* word = find_candidate(words, s_len[index], s_cs[index]);
+        if (slots[index].dir == 0) {
+            char* word = find_candidate(words, slots[index].length, slots[index].cs);
             if (word) {
                 int c;
-                for (c = 0; c < s_len[index]; c++) {
+                for (c = 0; c < slots[index].length; c++) {
                     char cell_c[2];
                     cell_c[0] = toupper(word[c]);
                     cell_c[1] = '\0';
-                    int cx = s_x[index] + (s_dir[index] == 0 ? c : 0);
-                    int cy = s_y[index] + (s_dir[index] == 1 ? c : 0);
+                    int cx = slots[index].x + (slots[index].dir == 0 ? c : 0);
+                    int cy = slots[index].y + (slots[index].dir == 1 ? c : 0);
                     PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
                     PyList_Append(fill, cell);
                 }
             }
         }
         
-        s_done[index] = 1;
+        slots[index].done = 1;
         n_done_slots++;
     }
-    
-    free(s_cs);
     
     PyList_Append(result, fill);
     return result;
