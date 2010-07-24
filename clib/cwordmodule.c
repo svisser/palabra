@@ -146,6 +146,31 @@ typedef struct {
     int equal; // -1 = unique, 0 and up = index in array that this slot is equal to
 } IntersectingSlot;
 
+// 1 = equal, 0 = not equal, 2 = error
+int is_intersecting_equal(IntersectingSlot s0, IntersectingSlot s1) {
+    if (s0.index != s1.index) return 0;
+    if (s0.length != s1.length) return 0;
+    const Py_ssize_t len_m = PyList_Size(s0.cs);
+    const Py_ssize_t len_mm = PyList_Size(s1.cs);
+    if (len_m != len_mm) return 0;
+    Py_ssize_t l;
+    for (l = 0; l < len_m; l++) {
+        const int j_m;
+        const char *c_m;
+        PyObject *tuple_m = PyList_GetItem(s0.cs, l);
+        if (!PyArg_ParseTuple(tuple_m, "is", &j_m, &c_m))
+            return 2;
+        const int j_mm;
+        const char *c_mm;
+        PyObject *tuple_mm = PyList_GetItem(s1.cs, l);
+        if (!PyArg_ParseTuple(tuple_mm, "is", &j_mm, &c_mm))
+            return 2;
+        if (j_m != j_mm || *c_m != *c_mm)
+            return 0;
+    }
+    return 1;
+}
+
 static PyObject*
 cWord_search(PyObject *self, PyObject *args) {
     PyObject *words;
@@ -195,36 +220,9 @@ cWord_search(PyObject *self, PyObject *args) {
         for (m = 1; m < total; m++) {
             Py_ssize_t mm;
             for (mm = m - 1; mm >= 0; mm--) {
-                if (slots[m].index != slots[mm].index) {
-                    continue;
-                }
-                if (slots[m].length != slots[mm].length) {
-                    continue;
-                }
-                const Py_ssize_t len_m = PyList_Size(slots[m].cs);
-                const Py_ssize_t len_mm = PyList_Size(slots[mm].cs);
-                if (len_m != len_mm) {
-                    continue;
-                }
-                int equal = 1;
-                Py_ssize_t l;
-                for (l = 0; l < len_m; l++) {
-                    const int j_m;
-                    const char *c_m;
-                    PyObject *tuple_m = PyList_GetItem(slots[m].cs, l);
-                    if (!PyArg_ParseTuple(tuple_m, "is", &j_m, &c_m))
-                        return NULL;
-                    const int j_mm;
-                    const char *c_mm;
-                    PyObject *tuple_mm = PyList_GetItem(slots[mm].cs, l);
-                    if (!PyArg_ParseTuple(tuple_mm, "is", &j_mm, &c_mm))
-                        return NULL;
-                    if (j_m != j_mm || *c_m != *c_mm) {
-                        equal = 0;
-                        break;
-                    }
-                }
                 // equal? then point the slot at m to the one at mm
+                int equal = is_intersecting_equal(slots[m], slots[mm]);
+                if (equal == 2) return NULL;
                 if (equal == 1) {
                     slots[m].equal = mm;
                 }
