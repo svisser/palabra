@@ -142,6 +142,8 @@ typedef struct {
     int index;
     int length;
     PyObject* cs;
+    int skip; // 0 = ok, 1 = skip in search process
+    int equal; // -1 = unique, 0 and up = index in array that this slot is equal to
 } IntersectingSlot;
 
 static PyObject*
@@ -171,16 +173,14 @@ cWord_search(PyObject *self, PyObject *args) {
     // process more_constraints
     int **arr = NULL;
     int **n_matches = NULL;
-    int skip[total];
-    int equalities[total];
     int intersecting_zero_slot = 0;
     IntersectingSlot slots[total];
     if (more_constraints != Py_None) {
         // initialize and read more_constraints
         Py_ssize_t m;
         for (m = 0; m < total; m++) {
-            equalities[m] = -1;
-            skip[m] = 0;
+            slots[m].equal = -1;
+            slots[m].skip = 0;
             PyObject* item = PyList_GetItem(more_constraints, m);
             if (!PyArg_ParseTuple(item, "iiO", &slots[m].index, &slots[m].length, &slots[m].cs))
                 return NULL;
@@ -226,17 +226,17 @@ cWord_search(PyObject *self, PyObject *args) {
                 }
                 // equal? then point the slot at m to the one at mm
                 if (equal == 1) {
-                    equalities[m] = mm;
+                    slots[m].equal = mm;
                 }
             }
         }
         if (DEBUG) {
             printf("equalities: {");
             for (m = 0; m < total; m++) {
-                if (equalities[m] == -1) {
+                if (slots[m].equal == -1) {
                     printf("new");
                 } else {
-                    printf("equal(%i)", equalities[m]);
+                    printf("equal(%i)", slots[m].equal);
                 }
                 if (m < total - 1) {
                     printf(", ");
@@ -260,11 +260,11 @@ cWord_search(PyObject *self, PyObject *args) {
         for (m = 0; m < total; m++) {
             // we encountered a slot that is equal to a previous one
             // just copy calculated values for median later on
-            if (equalities[m] != -1) {
+            if (slots[m].equal != -1) {
                 int j;
                 for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
-                    arr[m][j] = arr[equalities[m]][j];
-                    n_matches[m][j] = n_matches[equalities[m]][j];
+                    arr[m][j] = arr[slots[m].equal][j];
+                    n_matches[m][j] = n_matches[slots[m].equal][j];
                 }
                 continue;
             }
@@ -275,7 +275,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 if (DEBUG) {
                     printf("entry at %i will be skipped because it's filled in\n", (int) m);
                 }
-                skip[m] = 1;
+                slots[m].skip = 1;
                 continue;
             }
             
@@ -394,7 +394,7 @@ cWord_search(PyObject *self, PyObject *args) {
             }
             
             for (m = 0; m < total; m++) {
-                if (skip[m]) {
+                if (slots[m].skip) {
                     continue;
                 } 
                 char cons_c[2];
@@ -407,7 +407,7 @@ cWord_search(PyObject *self, PyObject *args) {
                 // , index of intersection in intersecting word, char)
                 PyObject* key = Py_BuildValue("(iis)", m, slots[m].index, cons_c);
                 if (!PyDict_Contains(cache, key)) {
-                    const int index = equalities[m] != -1 ? equalities[m] : (int) m;
+                    const int index = slots[m].equal != -1 ? slots[m].equal : (int) m;
                     const int has_matches = lookup_array(arr, index, *(word + m));
                     if (DEBUG && has_matches == 0) {
                         printf("no matches for (%i %i %s)\n", (int) m, (int) slots[m].index, cons_c);
