@@ -79,7 +79,11 @@ class WordStore(gtk.GenericTreeModel):
         if self.ordering == 0: # alphabet
             view.sort(key=itemgetter(0))
         elif self.ordering == 1: # suitability
-            view.sort(key=itemgetter(2), reverse=True)
+            ok = [item for item in view if item[1]]
+            not_ok = [item for item in view if not item[1]]
+            ok.sort(key=itemgetter(2), reverse=True)
+            not_ok.sort(key=itemgetter(2), reverse=True)
+            view = ok + not_ok
         self.view = view
         self.view_length = len(view)
         
