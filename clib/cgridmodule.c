@@ -231,26 +231,39 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         }
         
-        if (slots[index].dir == 0) {
-            char* word = find_candidate(words, slots[index].length, slots[index].cs);
-            if (word) {
-                int k;
-                for (k = 0; k < slots[index].length; k++) {
-                    char c = toupper(word[k]);
-                    slots[index].cs[k] = c;
-                    char cell_c[2];
-                    cell_c[0] = c;
-                    cell_c[1] = '\0';
-                    int cx = slots[index].x + (slots[index].dir == 0 ? k : 0);
-                    int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
-                    PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
-                    PyList_Append(fill, cell);
+        printf("find word for (%i, %i, %i)\n", slots[index].x, slots[index].y, slots[index].dir);
+        char* word = find_candidate(words, slots[index].length, slots[index].cs);
+        if (word) {
+            int k;
+            for (k = 0; k < slots[index].length; k++) {
+                char c = word[k];
+                char cell_c[2];
+                cell_c[0] = toupper(c);
+                cell_c[1] = '\0';
+                int cx = slots[index].x + (slots[index].dir == 0 ? k : 0);
+                int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
+                
+                // update the two affected slots
+                int m;
+                for (m = 0; m < n_slots; m++) {
+                    if (slots[m].dir == 0 && slots[m].x <= cx
+                        && cx <= slots[m].x + slots[m].length && slots[m].y == cy) {
+                        slots[m].cs[cx - slots[m].x] = c;
+                    }
+                    if (slots[m].dir == 1 && slots[m].y <= cy
+                        && cy <= slots[m].y + slots[m].length && slots[m].x == cx) {
+                        slots[m].cs[cy - slots[m].y] = c;
+                    }
                 }
+                
+                PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
+                PyList_Append(fill, cell);
             }
         }
         
         slots[index].done = 1;
         n_done_slots++;
+        printf("done: %i %s\n", n_done_slots, word);
     }
     
     PyList_Append(result, fill);
