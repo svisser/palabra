@@ -234,13 +234,15 @@ cGrid_fill(PyObject *self, PyObject *args) {
         if (slots[index].dir == 0) {
             char* word = find_candidate(words, slots[index].length, slots[index].cs);
             if (word) {
-                int c;
-                for (c = 0; c < slots[index].length; c++) {
+                int k;
+                for (k = 0; k < slots[index].length; k++) {
+                    char c = toupper(word[k]);
+                    slots[index].cs[k] = c;
                     char cell_c[2];
-                    cell_c[0] = toupper(word[c]);
+                    cell_c[0] = c;
                     cell_c[1] = '\0';
-                    int cx = slots[index].x + (slots[index].dir == 0 ? c : 0);
-                    int cy = slots[index].y + (slots[index].dir == 1 ? c : 0);
+                    int cx = slots[index].x + (slots[index].dir == 0 ? k : 0);
+                    int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
                     PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
                     PyList_Append(fill, cell);
                 }
