@@ -161,6 +161,21 @@ typedef struct {
     char cs[MAX_WORD_LENGTH];
 } Slot;
 
+int count_words(PyObject *words, int length, char *cs) {
+    int count = 0;
+    Py_ssize_t w;
+    PyObject* key = Py_BuildValue("i", length);
+    PyObject* words_m = PyDict_GetItem(words, key);
+    for (w = 0; w < PyList_Size(words_m); w++) {
+        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+        if (!check_constraints(word, cs)) {
+            continue;
+        }
+        count++;
+    }
+    return count;
+}
+
 static PyObject*
 cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
@@ -190,18 +205,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         if (process_constraints(constraints, slots[m].cs) == 1)
             return NULL;
 
-        int count = 0;
-        Py_ssize_t w;
-        PyObject* key = Py_BuildValue("i", length);
-        PyObject* words_m = PyDict_GetItem(words, key);
-        for (w = 0; w < PyList_Size(words_m); w++) {
-            char *word = PyString_AsString(PyList_GetItem(words_m, w));
-            if (!check_constraints(word, slots[m].cs)) {
-                continue;
-            }
-            count++;
-        }
-        slots[m].count = count;
+        slots[m].count = count_words(words, length, slots[m].cs);
         slots[m].done = 1;
         int j;
         for (j = 0; j < length; j++) {
@@ -247,13 +251,19 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 // update the two affected slots
                 int m;
                 for (m = 0; m < n_slots; m++) {
+                    int modified = 0;
                     if (slots[m].dir == 0 && slots[m].x <= cx
                         && cx <= slots[m].x + slots[m].length && slots[m].y == cy) {
                         slots[m].cs[cx - slots[m].x] = c;
+                        modified = 1;
                     }
                     if (slots[m].dir == 1 && slots[m].y <= cy
                         && cy <= slots[m].y + slots[m].length && slots[m].x == cx) {
                         slots[m].cs[cy - slots[m].y] = c;
+                        modified = 1;
+                    }
+                    if (modified) {
+                        slots[m].count = count_words(words, slots[m].length, slots[m].cs);
                     }
                 }
                 
