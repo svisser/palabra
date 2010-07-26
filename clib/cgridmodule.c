@@ -231,7 +231,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         }
         
-        printf("find word for (%i, %i, %i)\n", slots[index].x, slots[index].y, slots[index].dir);
+        if (DEBUG) {
+            printf("find word for (%i, %i, %i)\n", slots[index].x, slots[index].y, slots[index].dir);
+        }
         char* word = find_candidate(words, slots[index].length, slots[index].cs);
         if (word) {
             int k;
@@ -263,7 +265,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         slots[index].done = 1;
         n_done_slots++;
-        printf("done: %i %s\n", n_done_slots, word);
+        if (DEBUG) {
+            printf("done: %i %s\n", n_done_slots, word);
+        }
     }
     
     PyList_Append(result, fill);
