@@ -159,7 +159,6 @@ typedef struct {
     int count;
     int done; // {0, 1}
     char cs[MAX_WORD_LENGTH];
-    //PyObject* cs;
 } Slot;
 
 static PyObject*

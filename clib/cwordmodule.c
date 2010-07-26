@@ -19,10 +19,6 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-#define DEBUG_WORDS 0
-#define MAX_WORD_LENGTH 64
-#define MAX_ALPHABET_SIZE 50 // TODO
-
 int compute_median(int *numbers, const int length) {
     // sort array
     int s0, s1;
