@@ -220,7 +220,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     
     PyObject *result = PyList_New(0);
     PyObject *fill = PyList_New(0);
-    while (n_done_slots != n_slots) {
+    while (n_done_slots < n_slots) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -277,6 +277,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
                     slots[mm].count = count_words(words, slots[mm].length, slots[mm].cs);
                 }
             }
+        } else {
+            printf("No word could be found for (%i, %i, %i)\n", slots[index].x, slots[index].y, slots[index].dir);
+            break;
         }
         
         slots[index].done = 1;
