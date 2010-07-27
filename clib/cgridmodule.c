@@ -239,7 +239,11 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         char* word = find_candidate(words, slots[index].length, slots[index].cs);
         if (word) {
+            int affected[slots[index].length];
             int k;
+            for (k = 0; k < slots[index].length; k++) {
+                affected[k] = -1;
+            }
             for (k = 0; k < slots[index].length; k++) {
                 char c = word[k];
                 char cell_c[2];
@@ -251,24 +255,27 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 // update the two affected slots
                 int m;
                 for (m = 0; m < n_slots; m++) {
-                    int modified = 0;
                     if (slots[m].dir == 0 && slots[m].x <= cx
                         && cx <= slots[m].x + slots[m].length && slots[m].y == cy) {
                         slots[m].cs[cx - slots[m].x] = c;
-                        modified = 1;
+                        if (m != index) affected[k] = m;
                     }
                     if (slots[m].dir == 1 && slots[m].y <= cy
                         && cy <= slots[m].y + slots[m].length && slots[m].x == cx) {
                         slots[m].cs[cy - slots[m].y] = c;
-                        modified = 1;
-                    }
-                    if (modified) {
-                        slots[m].count = count_words(words, slots[m].length, slots[m].cs);
+                        if (m != index) affected[k] = m;
                     }
                 }
-                
                 PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
                 PyList_Append(fill, cell);
+            }
+            // update counts
+            slots[index].count = count_words(words, slots[index].length, slots[index].cs);
+            for (k = 0; k < slots[index].length; k++) {
+                int mm = affected[k];
+                if (mm >= 0) {
+                    slots[mm].count = count_words(words, slots[mm].length, slots[mm].cs);
+                }
             }
         }
         
