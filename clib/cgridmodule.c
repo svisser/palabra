@@ -235,7 +235,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         
         if (DEBUG) {
-            printf("find word for (%i, %i, %i)\n", slots[index].x, slots[index].y, slots[index].dir);
+            printf("find word for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
         }
         char* word = find_candidate(words, slots[index].length, slots[index].cs);
         if (word) {
@@ -278,14 +278,14 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 }
             }
         } else {
-            printf("No word could be found for (%i, %i, %i)\n", slots[index].x, slots[index].y, slots[index].dir);
+            printf("No word could be found for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
             break;
         }
         
         slots[index].done = 1;
         n_done_slots++;
         if (DEBUG) {
-            printf("done: %i %s\n", n_done_slots, word);
+            printf("done: %s (%i, %i, %s)\n", word, slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
         }
     }
     
