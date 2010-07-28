@@ -176,6 +176,15 @@ int count_words(PyObject *words, int length, char *cs) {
     return count;
 }
 
+// TODO clear slot at index but leave intersecting words in place
+void backtrack(Slot *slots, int index) {
+    int l = 0;
+    for (l = 0; l < slots[index].length; l++) {
+        
+    }
+    &slots[index]
+}
+
 void analyze_cell(PyObject *words, int length, char *cs, int index, char *result) {
     printf("analyzing at offset %i\n", index);
     char prevChar = *(cs + index);
