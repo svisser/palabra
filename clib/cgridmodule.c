@@ -270,11 +270,19 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 PyList_Append(fill, cell);
             }
             // update counts
-            slots[index].count = count_words(words, slots[index].length, slots[index].cs);
+            slots[index].count = 1;
             for (k = 0; k < slots[index].length; k++) {
                 int mm = affected[k];
-                if (mm >= 0) {
+                // only recompute when a cell is affected and not already completely filled in
+                if (mm >= 0 && slots[mm].count > 1) {
+                    int prev = slots[mm].count;
                     slots[mm].count = count_words(words, slots[mm].length, slots[mm].cs);
+                    printf("slot %i: from %i to %i\n", mm, prev, slots[mm].count);
+                    if (slots[mm].count == 0) {
+                        int cx = slots[index].x + (slots[index].dir == 0 ? k : 0);
+                        int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
+                        printf("ZERO for (%i, %i)\n", cx, cy);
+                    }
                 }
             }
         } else {
