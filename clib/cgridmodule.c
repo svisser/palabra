@@ -176,6 +176,37 @@ int count_words(PyObject *words, int length, char *cs) {
     return count;
 }
 
+void analyze_cell(PyObject *words, int length, char *cs, int index, char *result) {
+    printf("analyzing at offset %i\n", index);
+    char prevChar = *(cs + index);
+    *(cs + index) = CONSTRAINT_EMPTY;
+    
+    int k;
+    for (k = 0; k < MAX_ALPHABET_SIZE; k++) {
+        result[k] = CONSTRAINT_EMPTY;
+    }
+    
+    Py_ssize_t w;
+    PyObject* key = Py_BuildValue("i", length);
+    PyObject* words_m = PyDict_GetItem(words, key);
+    for (w = 0; w < PyList_Size(words_m); w++) {
+        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+        if (!check_constraints(word, cs)) {
+            continue;
+        }
+        char c = *(word + index);
+        printf("char at %i is %c of %s\n", index, c, word);
+        for (k = 0; k < MAX_ALPHABET_SIZE; k++) {
+            if (result[k] == c) break;
+            if (result[k] == CONSTRAINT_EMPTY && c != prevChar) {
+                result[k] = c;
+                break;
+            }
+        }
+    }
+    *(cs + index) = prevChar;
+}
+
 static PyObject*
 cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
@@ -282,6 +313,13 @@ cGrid_fill(PyObject *self, PyObject *args) {
                         int cx = slots[index].x + (slots[index].dir == 0 ? k : 0);
                         int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
                         printf("ZERO for (%i, %i)\n", cx, cy);
+                        char result[MAX_ALPHABET_SIZE];
+                        analyze_cell(words, slots[mm].length, slots[mm].cs, slots[mm].dir == 0 ? cx - slots[mm].x : cy - slots[mm].y, result);
+                        int l;
+                        for (l = 0; l < MAX_ALPHABET_SIZE; l++) {
+                            printf("%c", result[l]);
+                        }
+                        printf("\n");
                     }
                 }
             }
