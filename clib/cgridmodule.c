@@ -159,6 +159,7 @@ typedef struct {
     int count;
     int done; // {0, 1}
     char cs[MAX_WORD_LENGTH];
+    int fixed[MAX_WORD_LENGTH]; // 0 = read/write, 1 = read
 } Slot;
 
 int count_words(PyObject *words, int length, char *cs) {
@@ -180,9 +181,28 @@ int count_words(PyObject *words, int length, char *cs) {
 void backtrack(Slot *slots, int index) {
     int l = 0;
     for (l = 0; l < slots[index].length; l++) {
+        int cx = slots[index].x + (slots[index].dir == 0 ? l : 0);
+        int cy = slots[index].y + (slots[index].dir == 1 ? l : 0);
         
     }
-    &slots[index]
+    //&slots[index]
+}
+
+int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
+    int s;
+    for (s = 0; s < n_slots; s++) {
+        if (dir == 0 && slots[s].dir == 0
+            && slots[s].x <= x && x < slots[s].x + slots[s].length
+            && slots[s].y == y) {
+            return s;
+        }
+        if (dir == 1 && slots[s].dir == 1
+            && slots[s].y <= y && y < slots[s].y + slots[s].length
+            && slots[s].x == x) {
+            return s;
+        }
+    }
+    return -1;
 }
 
 void analyze_cell(PyObject *words, int length, char *cs, int index, char *result) {
@@ -204,7 +224,6 @@ void analyze_cell(PyObject *words, int length, char *cs, int index, char *result
             continue;
         }
         char c = *(word + index);
-        printf("char at %i is %c of %s\n", index, c, word);
         for (k = 0; k < MAX_ALPHABET_SIZE; k++) {
             if (result[k] == c) break;
             if (result[k] == CONSTRAINT_EMPTY && c != prevChar) {
@@ -251,6 +270,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         for (j = 0; j < length; j++) {
             if (slots[m].cs[j] == CONSTRAINT_EMPTY) {
                 slots[m].done = 0;
+            } else {
+                slots[m].fixed = 1;
             }
         }
         if (slots[m].done) {
@@ -293,19 +314,17 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
                 
                 // update the two affected slots
-                int m;
-                for (m = 0; m < n_slots; m++) {
-                    if (slots[m].dir == 0 && slots[m].x <= cx
-                        && cx <= slots[m].x + slots[m].length && slots[m].y == cy) {
-                        slots[m].cs[cx - slots[m].x] = c;
-                        if (m != index) affected[k] = m;
-                    }
-                    if (slots[m].dir == 1 && slots[m].y <= cy
-                        && cy <= slots[m].y + slots[m].length && slots[m].x == cx) {
-                        slots[m].cs[cy - slots[m].y] = c;
-                        if (m != index) affected[k] = m;
+                int d;
+                for (d = 0; d < 2; d++) {
+                    int indexD = get_slot_index(slots, n_slots, cx, cy, d);
+                    if (indexD >= 0) {
+                        int offset = d == 0 ? cx - slots[indexD].x : cy - slots[indexD].y;
+                        slots[indexD].cs[offset] = c;
+                        if (indexD != index)
+                            affected[k] = indexD;
                     }
                 }
+                
                 PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
                 PyList_Append(fill, cell);
             }
