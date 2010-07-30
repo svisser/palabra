@@ -177,17 +177,6 @@ int count_words(PyObject *words, int length, char *cs) {
     return count;
 }
 
-// TODO clear slot at index but leave intersecting words in place
-void backtrack(Slot *slots, int index) {
-    int l = 0;
-    for (l = 0; l < slots[index].length; l++) {
-        int cx = slots[index].x + (slots[index].dir == 0 ? l : 0);
-        int cy = slots[index].y + (slots[index].dir == 1 ? l : 0);
-        
-    }
-    //&slots[index]
-}
-
 int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
     int s;
     for (s = 0; s < n_slots; s++) {
@@ -203,6 +192,33 @@ int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
         }
     }
     return -1;
+}
+
+// 1 = yes, 0 = no
+int can_clear_char(Slot slot) {
+    int count = 0;
+    int j;
+    for (j = 0; j < slot.length; j++) {
+        if (slot.cs[j] == CONSTRAINT_EMPTY)
+            count++;
+    }
+    return count > 0;
+}
+
+// TODO clear slot at index but leave intersecting words in place
+void clear_slot(Slot *slots, int n_slots, int index) {
+    Slot slot = slots[index];
+    int l = 0;
+    for (l = 0; l < slot.length; l++) {
+        if (slot.fixed[l] == 1) continue;
+        int cx = slot.x + (slot.dir == 0 ? l : 0);
+        int cy = slot.y + (slot.dir == 1 ? l : 0);
+        int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == 0 ? 1 : 0);
+        if (can_clear_char(slots[m]) && slot.cs[l] != CONSTRAINT_EMPTY) {
+            printf("%i can be cleared\n", l);
+            slot.cs[l] = CONSTRAINT_EMPTY;
+        }
+    }
 }
 
 void analyze_cell(PyObject *words, int length, char *cs, int index, char *result) {
@@ -268,10 +284,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
         slots[m].done = 1;
         int j;
         for (j = 0; j < length; j++) {
+            slots[m].fixed[j] = slots[m].cs[j] == CONSTRAINT_EMPTY ? 0 : 1;
             if (slots[m].cs[j] == CONSTRAINT_EMPTY) {
                 slots[m].done = 0;
-            } else {
-                slots[m].fixed = 1;
             }
         }
         if (slots[m].done) {
@@ -279,6 +294,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
     }
     
+    int recent_index = -1;
     PyObject *result = PyList_New(0);
     PyObject *fill = PyList_New(0);
     while (n_done_slots < n_slots) {
@@ -353,9 +369,14 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         } else {
             printf("No word could be found for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
+            if (recent_index >= 0) {
+                printf("About to clear (%i, %i, %s)\n", slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir == 0 ? "across" : "down");
+                clear_slot(slots, n_slots, recent_index);
+            }
             break;
         }
         
+        recent_index = index;
         slots[index].done = 1;
         n_done_slots++;
         if (DEBUG) {
