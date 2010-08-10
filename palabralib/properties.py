@@ -378,7 +378,7 @@ class PropertiesWindow(gtk.Dialog):
         return ''.join(result[:-1])
         
     def create_metadata_tab(self, puzzle):
-        details = gtk.Table(1, 2, False)
+        details = gtk.Table(9, 2, False)
         
         def metadata_changed(widget, key):
             value = widget.get_text().strip()
