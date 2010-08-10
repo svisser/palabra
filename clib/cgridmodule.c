@@ -340,9 +340,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
                             affected[k] = indexD;
                     }
                 }
-                
-                //PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
-                //PyList_Append(fill, cell);
             }
             // update counts
             slots[index].count = 1;
