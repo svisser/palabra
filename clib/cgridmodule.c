@@ -384,18 +384,29 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
     }
     
-    // gather fill (TODO: filter those that occur twice)
-    for (m = 0; m < n_slots; m++) {
-        int k;
-        for (k = 0; k < slots[m].length; k++) {
-            int cx = slots[m].x + (slots[m].dir == 0 ? k : 0);
-            int cy = slots[m].y + (slots[m].dir == 1 ? k : 0);
-            if (slots[m].fixed[k] == 1) continue;
-            char cell_c[2];
-            cell_c[0] = toupper(slots[m].cs[k]);
-            cell_c[1] = '\0';
-            PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
-            PyList_Append(fill, cell);
+    // gather fill (TODO: ugly)
+    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    int x;
+    int y;
+    int dir;
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            for (dir = 0; dir < 1; dir++) {
+                int index = get_slot_index(slots, n_slots, x, y, dir);
+                if (index >= 0) {
+                    int offset = dir == 0 ? x - slots[index].x : y - slots[index].y;
+                    char c = slots[index].cs[offset];
+                    if (slots[index].fixed[offset] == 1) continue;
+                    if (c == CONSTRAINT_EMPTY) continue;
+                    char cell_c[2];
+                    cell_c[0] = toupper(c);
+                    cell_c[1] = '\0';
+                    PyObject* cell = Py_BuildValue("(iis)", x, y, cell_c);
+                    PyList_Append(fill, cell);
+                    continue;
+                }
+            }
         }
     }
     
