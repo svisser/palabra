@@ -389,7 +389,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     int dir;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            for (dir = 0; dir < 1; dir++) {
+            for (dir = 0; dir < 2; dir++) {
                 int index = get_slot_index(slots, n_slots, x, y, dir);
                 if (index >= 0) {
                     int offset = dir == 0 ? x - slots[index].x : y - slots[index].y;
