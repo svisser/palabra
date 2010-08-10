@@ -341,8 +341,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
                     }
                 }
                 
-                PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
-                PyList_Append(fill, cell);
+                //PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
+                //PyList_Append(fill, cell);
             }
             // update counts
             slots[index].count = 1;
@@ -381,6 +381,21 @@ cGrid_fill(PyObject *self, PyObject *args) {
         n_done_slots++;
         if (DEBUG) {
             printf("done: %s (%i, %i, %s)\n", word, slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
+        }
+    }
+    
+    // gather fill (TODO: filter those that occur twice)
+    for (m = 0; m < n_slots; m++) {
+        int k;
+        for (k = 0; k < slots[m].length; k++) {
+            int cx = slots[m].x + (slots[m].dir == 0 ? k : 0);
+            int cy = slots[m].y + (slots[m].dir == 1 ? k : 0);
+            if (slots[m].fixed[k] == 1) continue;
+            char cell_c[2];
+            cell_c[0] = toupper(slots[m].cs[k]);
+            cell_c[1] = '\0';
+            PyObject* cell = Py_BuildValue("(iis)", cx, cy, cell_c);
+            PyList_Append(fill, cell);
         }
     }
     
