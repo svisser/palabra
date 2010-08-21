@@ -151,7 +151,7 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
-typedef struct {
+typedef struct Slot {
     int x;
     int y;
     int dir; // 0 = across, 1 = down
@@ -200,12 +200,11 @@ int can_clear_char(Slot slot) {
     int j;
     for (j = 0; j < slot.length; j++) {
         if (slot.cs[j] == CONSTRAINT_EMPTY)
-            count++;
+            return 1;
     }
-    return count > 0;
+    return 0;
 }
 
-// TODO clear slot at index but leave intersecting words in place
 void clear_slot(Slot *slots, int n_slots, int index) {
     Slot slot = slots[index];
     int l = 0;
