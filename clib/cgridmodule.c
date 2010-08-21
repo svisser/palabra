@@ -216,6 +216,10 @@ void clear_slot(Slot *slots, int n_slots, int index) {
             printf("%i can be cleared\n", l);
             slot->cs[l] = CONSTRAINT_EMPTY;
             printf("%i is now %c\n", l, slot->cs[l]);
+            // also clear cs from the intersecting slot's constraints
+            Slot *i_slot = &slots[m];
+            int offset = slot->dir == 0 ? cx - slots[m].x : cy - slots[m].y;
+            i_slot->cs[offset] = CONSTRAINT_EMPTY;
         }
     }
 }
