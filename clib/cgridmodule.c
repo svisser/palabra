@@ -196,7 +196,6 @@ int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
 
 // 1 = yes, 0 = no
 int can_clear_char(Slot slot) {
-    int count = 0;
     int j;
     for (j = 0; j < slot.length; j++) {
         if (slot.cs[j] == CONSTRAINT_EMPTY)
@@ -206,16 +205,17 @@ int can_clear_char(Slot slot) {
 }
 
 void clear_slot(Slot *slots, int n_slots, int index) {
-    Slot slot = slots[index];
+    Slot *slot = &slots[index];
     int l = 0;
-    for (l = 0; l < slot.length; l++) {
-        if (slot.fixed[l] == 1) continue;
-        int cx = slot.x + (slot.dir == 0 ? l : 0);
-        int cy = slot.y + (slot.dir == 1 ? l : 0);
-        int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == 0 ? 1 : 0);
-        if (can_clear_char(slots[m]) && slot.cs[l] != CONSTRAINT_EMPTY) {
+    for (l = 0; l < slot->length; l++) {
+        if (slot->fixed[l] == 1) continue;
+        int cx = slot->x + (slot->dir == 0 ? l : 0);
+        int cy = slot->y + (slot->dir == 1 ? l : 0);
+        int m = get_slot_index(slots, n_slots, cx, cy, slot->dir == 0 ? 1 : 0);
+        if (can_clear_char(slots[m]) && slot->cs[l] != CONSTRAINT_EMPTY) {
             printf("%i can be cleared\n", l);
-            slot.cs[l] = CONSTRAINT_EMPTY;
+            slot->cs[l] = CONSTRAINT_EMPTY;
+            printf("%i is now %c\n", l, slot->cs[l]);
         }
     }
 }
