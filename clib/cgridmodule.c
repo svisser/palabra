@@ -151,6 +151,16 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
+typedef struct Cell {
+    int top_bar; // {0,1}
+    int left_bar; // {0,1}
+    int block; // {0,1}
+    char c;
+    int number;
+    int empty; // {0,1}
+    int fixed; // {0,1}
+} Cell;
+
 typedef struct Slot {
     int x;
     int y;
@@ -218,8 +228,9 @@ void clear_slot(Slot *slots, int n_slots, int index) {
             printf("%i is now %c\n", l, slot->cs[l]);
             // also clear cs from the intersecting slot's constraints
             Slot *i_slot = &slots[m];
-            int offset = slot->dir == 0 ? cx - slots[m].x : cy - slots[m].y;
+            int offset = slot->dir == 0 ? cy - i_slot->y : cx - i_slot->x;
             i_slot->cs[offset] = CONSTRAINT_EMPTY;
+            printf("also clearing %i %i at %i\n", i_slot->x, i_slot->y, offset);
         }
     }
 }
@@ -261,6 +272,50 @@ cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *meta;
     if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
         return NULL;
+        
+    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    PyObject* data = PyObject_GetAttrString(grid, "data");
+    
+    /*
+"bar": {"top": False, "left": False}
+            , "block": False
+            , "char": ""
+            , "clues": {}
+            , "number": 0
+            , "void": False
+*/
+    
+    int x;
+    int y;
+    Cell cgrid[width][height];
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
+            PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
+            PyObject* block_obj = PyObject_GetItem(cell, PyString_FromString("block"));
+            PyObject* char_obj = PyObject_GetItem(cell, PyString_FromString("char"));
+            PyObject* empty_obj = PyObject_GetItem(cell, PyString_FromString("void"));
+            PyObject* number_obj = PyObject_GetItem(cell, PyString_FromString("number"));
+
+            int is_block = PyObject_IsTrue(block_obj);
+            int is_empty = PyObject_IsTrue(empty_obj);
+            char* c_str = PyString_AsString(char_obj);
+            int number = PyInt_AsLong(number_obj);//char* n_str = PyString_AsString(number_obj);
+            
+            cgrid[x][y].top_bar = 0;
+            cgrid[x][y].left_bar = 0;
+            cgrid[x][y].block = is_block;
+            if (strlen(c_str) > 0) {
+                cgrid[x][y].c = c_str[0];
+            } else {
+                cgrid[x][y].c = CONSTRAINT_EMPTY;
+            }
+            cgrid[x][y].number = number;
+            cgrid[x][y].empty = is_empty;
+            printf("%i %i %i %i %i %c %i %i\n", x, y, cgrid[x][y].top_bar, cgrid[x][y].left_bar, cgrid[x][y].block, cgrid[x][y].c, cgrid[x][y].number, cgrid[x][y].empty);
+        }
+    }
 
     // store information per slot
     int n_done_slots = 0;
@@ -385,10 +440,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
     }
     
     // gather fill (TODO: ugly)
-    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
-    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
-    int x;
-    int y;
     int dir;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
