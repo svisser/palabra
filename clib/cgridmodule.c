@@ -277,15 +277,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     PyObject* data = PyObject_GetAttrString(grid, "data");
     
-    /*
-"bar": {"top": False, "left": False}
-            , "block": False
-            , "char": ""
-            , "clues": {}
-            , "number": 0
-            , "void": False
-*/
-    
     int x;
     int y;
     Cell cgrid[width][height];
@@ -297,20 +288,14 @@ cGrid_fill(PyObject *self, PyObject *args) {
             PyObject* char_obj = PyObject_GetItem(cell, PyString_FromString("char"));
             PyObject* empty_obj = PyObject_GetItem(cell, PyString_FromString("void"));
             PyObject* number_obj = PyObject_GetItem(cell, PyString_FromString("number"));
-
             int is_block = PyObject_IsTrue(block_obj);
             int is_empty = PyObject_IsTrue(empty_obj);
             char* c_str = PyString_AsString(char_obj);
-            int number = PyInt_AsLong(number_obj);//char* n_str = PyString_AsString(number_obj);
-            
+            int number = PyInt_AsLong(number_obj);
             cgrid[x][y].top_bar = 0;
             cgrid[x][y].left_bar = 0;
             cgrid[x][y].block = is_block;
-            if (strlen(c_str) > 0) {
-                cgrid[x][y].c = c_str[0];
-            } else {
-                cgrid[x][y].c = CONSTRAINT_EMPTY;
-            }
+            cgrid[x][y].c = strlen(c_str) > 0 ? c_str[0] : CONSTRAINT_EMPTY;
             cgrid[x][y].number = number;
             cgrid[x][y].empty = is_empty;
             printf("%i %i %i %i %i %c %i %i\n", x, y, cgrid[x][y].top_bar, cgrid[x][y].left_bar, cgrid[x][y].block, cgrid[x][y].c, cgrid[x][y].number, cgrid[x][y].empty);
