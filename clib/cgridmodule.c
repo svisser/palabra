@@ -158,7 +158,7 @@ typedef struct Cell {
     char c;
     int number;
     int empty; // {0,1}
-    int fixed; // {0,1}
+    int fixed; // {0,1} 0 = read/write, 1 = read
 } Cell;
 
 typedef struct Slot {
@@ -169,7 +169,6 @@ typedef struct Slot {
     int count;
     int done; // {0, 1}
     char cs[MAX_WORD_LENGTH];
-    int fixed[MAX_WORD_LENGTH]; // 0 = read/write, 1 = read
 } Slot;
 
 int count_words(PyObject *words, int length, char *cs) {
@@ -214,11 +213,11 @@ int can_clear_char(Slot slot) {
     return 0;
 }
 
-void clear_slot(Slot *slots, int n_slots, int index) {
+void clear_slot(int width, int height, Cell *cgrid, Slot *slots, int n_slots, int index) {
     Slot *slot = &slots[index];
     int l = 0;
     for (l = 0; l < slot->length; l++) {
-        if (slot->fixed[l] == 1) continue;
+        if (cgrid[slot->x + slot->y * height].fixed == 1) continue;
         int cx = slot->x + (slot->dir == 0 ? l : 0);
         int cy = slot->y + (slot->dir == 1 ? l : 0);
         int m = get_slot_index(slots, n_slots, cx, cy, slot->dir == 0 ? 1 : 0);
@@ -279,7 +278,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     
     int x;
     int y;
-    Cell cgrid[width][height];
+    Cell cgrid[width * height];
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
             PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
@@ -292,13 +291,15 @@ cGrid_fill(PyObject *self, PyObject *args) {
             int is_empty = PyObject_IsTrue(empty_obj);
             char* c_str = PyString_AsString(char_obj);
             int number = PyInt_AsLong(number_obj);
-            cgrid[x][y].top_bar = 0;
-            cgrid[x][y].left_bar = 0;
-            cgrid[x][y].block = is_block;
-            cgrid[x][y].c = strlen(c_str) > 0 ? c_str[0] : CONSTRAINT_EMPTY;
-            cgrid[x][y].number = number;
-            cgrid[x][y].empty = is_empty;
-            printf("%i %i %i %i %i %c %i %i\n", x, y, cgrid[x][y].top_bar, cgrid[x][y].left_bar, cgrid[x][y].block, cgrid[x][y].c, cgrid[x][y].number, cgrid[x][y].empty);
+            int index = x + y * height;
+            cgrid[index].top_bar = 0;
+            cgrid[index].left_bar = 0;
+            cgrid[index].block = is_block;
+            cgrid[index].c = strlen(c_str) > 0 ? c_str[0] : CONSTRAINT_EMPTY;
+            cgrid[index].number = number;
+            cgrid[index].empty = is_empty;
+            cgrid[index].fixed = cgrid[index].c == CONSTRAINT_EMPTY ? 0 : 1;
+            printf("%i %i %i %i %i %c %i %i\n", x, y, cgrid[index].top_bar, cgrid[index].left_bar, cgrid[index].block, cgrid[index].c, cgrid[index].number, cgrid[index].empty);
         }
     }
 
@@ -327,7 +328,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
         slots[m].done = 1;
         int j;
         for (j = 0; j < length; j++) {
-            slots[m].fixed[j] = slots[m].cs[j] == CONSTRAINT_EMPTY ? 0 : 1;
             if (slots[m].cs[j] == CONSTRAINT_EMPTY) {
                 slots[m].done = 0;
             }
@@ -411,7 +411,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             printf("No word could be found for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
             if (recent_index >= 0) {
                 printf("About to clear (%i, %i, %s)\n", slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir == 0 ? "across" : "down");
-                clear_slot(slots, n_slots, recent_index);
+                clear_slot(width, height, cgrid, slots, n_slots, recent_index);
             }
             break;
         }
@@ -433,7 +433,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 if (index >= 0) {
                     int offset = dir == 0 ? x - slots[index].x : y - slots[index].y;
                     char c = slots[index].cs[offset];
-                    if (slots[index].fixed[offset] == 1) continue;
+                    if (cgrid[x + y * height].fixed == 1) continue;
                     if (c == CONSTRAINT_EMPTY) continue;
                     char cell_c[2];
                     cell_c[0] = toupper(c);
