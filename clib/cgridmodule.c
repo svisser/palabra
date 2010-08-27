@@ -268,7 +268,8 @@ void update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slo
     int prev = slot->count;
     char *ds = get_constraints(cgrid, width, height, slot);
     if (!ds) {
-        printf("Warning: update_count was unable to update the count\n");
+        printf("Warning: update_count failed to obtain constraints.\n");
+        return;
     }
     slot->count = count_words(words, slot->length, ds);
     printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
@@ -334,7 +335,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         slots[m].length = length;
         char *cs = get_constraints(cgrid, width, height, &slots[m]);
         if (!cs) {
-            // TODO
+            printf("Warning: fill failed to obtain constraints.\n");
+            return NULL;
         }
         slots[m].count = count_words(words, length, cs);
         slots[m].done = 1;
@@ -373,7 +375,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         char *cs = get_constraints(cgrid, width, height, slot);
         if (!cs) {
-            // TODO
+            printf("Warning: fill failed to obtain constraints.\n");
+            return NULL;
         }
         
         char* word = find_candidate(words, slot->length, cs, slot->offset);
