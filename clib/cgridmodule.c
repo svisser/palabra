@@ -36,6 +36,7 @@ typedef struct Slot {
     int length;
     int count;
     int done; // {0, 1}
+    int offset;
 } Slot;
 
 // 0 = false, 1 = true
@@ -337,6 +338,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         slots[m].count = count_words(words, length, cs);
         slots[m].done = 1;
+        slots[m].offset = 0;
         int j;
         for (j = 0; j < length; j++) {
             if (cs[j] == CONSTRAINT_EMPTY) {
@@ -374,7 +376,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             // TODO
         }
         
-        char* word = find_candidate(words, slot->length, cs);
+        char* word = find_candidate(words, slot->length, cs, slot->offset);
         if (word) {
             int affected[slot->length];
             int k;
@@ -403,8 +405,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
             if (recent_index >= 0) {
                 printf("About to clear (%i, %i, %s)\n", slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir == 0 ? "across" : "down");
                 clear_slot(cgrid, width, height, slots, n_slots, recent_index);
+                slots[recent_index].offset++;
+                printf("Slot %i (%i, %i, %i) now has offset %i\n", recent_index, slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir, slots[recent_index].offset);
             }
-            break;
         }
         
         free(cs);

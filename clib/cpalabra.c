@@ -2,7 +2,7 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-char* find_candidate(PyObject *words, int length, char *cs) {
+char* find_candidate(PyObject *words, int length, char *cs, int offset) {
     PyObject* key = Py_BuildValue("i", length);
     PyObject* words_m = PyDict_GetItem(words, key);
     
@@ -16,7 +16,7 @@ char* find_candidate(PyObject *words, int length, char *cs) {
         char *word = PyString_AsString(PyList_GetItem(words_m, w));
         words_array[w] = word;
     }
-    for (w = 0; w < count; w++) {
+    for (w = offset; w < count; w++) {
         char *word = PyString_AsString(PyList_GetItem(words_m, w));
         if (check_constraints(word, cs) == 1) {
             free(words_array);
