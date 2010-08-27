@@ -379,20 +379,16 @@ cGrid_fill(PyObject *self, PyObject *args) {
             int affected[slot->length];
             int k;
             for (k = 0; k < slot->length; k++) {
-                affected[k] = -1;
-            }
-            for (k = 0; k < slot->length; k++) {
                 int cx = slot->x + (slot->dir == 0 ? k : 0);
                 int cy = slot->y + (slot->dir == 1 ? k : 0);
                 cgrid[cx + cy * height].c = word[k];
                 
-                // mark the two affected slots of the modified cell
-                int d;
-                for (d = 0; d < 2; d++) {
-                    int indexD = get_slot_index(slots, n_slots, cx, cy, d);
-                    if (indexD >= 0 && indexD != index) {
-                        affected[k] = indexD;
-                    }
+                // mark the affected slot of the modified cell
+                affected[k] = -1;
+                int d = slot->dir == 0 ? 1 : 0;
+                int indexD = get_slot_index(slots, n_slots, cx, cy, d);
+                if (indexD >= 0 && indexD != index) {
+                    affected[k] = indexD;
                 }
             }
             // update counts for affected slots
