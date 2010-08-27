@@ -263,6 +263,17 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     return cs;
 }
 
+void update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
+    int prev = slot->count;
+    char *ds = get_constraints(cgrid, width, height, slot);
+    if (!ds) {
+        printf("Warning: update_count was unable to update the count\n");
+    }
+    slot->count = count_words(words, slot->length, ds);
+    printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+    free(ds);
+}
+
 static PyObject*
 cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
@@ -375,7 +386,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 int cy = slot->y + (slot->dir == 1 ? k : 0);
                 cgrid[cx + cy * height].c = word[k];
                 
-                // update the two affected slots
+                // mark the two affected slots of the modified cell
                 int d;
                 for (d = 0; d < 2; d++) {
                     int indexD = get_slot_index(slots, n_slots, cx, cy, d);
@@ -384,21 +395,11 @@ cGrid_fill(PyObject *self, PyObject *args) {
                     }
                 }
             }
-            // update counts
+            // update counts for affected slots
             slot->count = 1;
             for (k = 0; k < slot->length; k++) {
-                int mm = affected[k];
-                // only recompute when a cell is affected and not already completely filled in
-                Slot *slot_mm = &slots[mm];
-                if (mm >= 0 && slot_mm->count > 1) {
-                    int prev = slot_mm->count;
-                    char *ds = get_constraints(cgrid, width, height, slot_mm);
-                    if (!ds) {
-                        // TODO
-                    }
-                    slot_mm->count = count_words(words, slot_mm->length, ds);
-                    printf("slot %i: from %i to %i\n", mm, prev, slot_mm->count);
-                    free(ds);
+                if (affected[k] >= 0) {
+                    update_count(words, cgrid, width, height, &slots[affected[k]]);
                 }
             }
         } else {
