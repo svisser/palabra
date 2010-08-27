@@ -420,24 +420,17 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
     }
     
-    // gather fill (TODO: ugly)
-    int dir;
+    // gather fill
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            for (dir = 0; dir < 2; dir++) {
-                int index = get_slot_index(slots, n_slots, x, y, dir);
-                if (index >= 0) {
-                    char c = cgrid[x + y * height].c;
-                    if (cgrid[x + y * height].fixed == 1) continue;
-                    if (c == CONSTRAINT_EMPTY) continue;
-                    char cell_c[2];
-                    cell_c[0] = toupper(c);
-                    cell_c[1] = '\0';
-                    PyObject* cell = Py_BuildValue("(iis)", x, y, cell_c);
-                    PyList_Append(fill, cell);
-                    continue;
-                }
-            }
+            if (cgrid[x + y * height].fixed == 1) continue;
+            char c = cgrid[x + y * height].c;
+            if (c == CONSTRAINT_EMPTY) continue;
+            char cell_c[2];
+            cell_c[0] = toupper(c);
+            cell_c[1] = '\0';
+            PyObject* cell = Py_BuildValue("(iis)", x, y, cell_c);
+            PyList_Append(fill, cell);
         }
     }
     
