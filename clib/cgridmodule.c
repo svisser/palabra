@@ -276,6 +276,23 @@ void update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slo
     free(ds);
 }
 
+PyObject* gather_fill(Cell *cgrid, int width, int height) {
+    int x;
+    int y;
+    PyObject *fill = PyList_New(0);
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            Cell *cell = &cgrid[x + y * height];
+            if (cell->fixed == 1 || cell->c == CONSTRAINT_EMPTY) continue;
+            char cell_c[2];
+            cell_c[0] = toupper(cell->c);
+            cell_c[1] = '\0';
+            PyList_Append(fill, Py_BuildValue("(iis)", x, y, cell_c));
+        }
+    }
+    return fill;
+}
+
 static PyObject*
 cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
@@ -355,7 +372,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
     
     int recent_index = -1;
     PyObject *result = PyList_New(0);
-    PyObject *fill = PyList_New(0);
     while (n_done_slots < n_slots) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
@@ -423,20 +439,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
     }
     
-    // gather fill
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
-            if (cgrid[x + y * height].fixed == 1) continue;
-            char c = cgrid[x + y * height].c;
-            if (c == CONSTRAINT_EMPTY) continue;
-            char cell_c[2];
-            cell_c[0] = toupper(c);
-            cell_c[1] = '\0';
-            PyObject* cell = Py_BuildValue("(iis)", x, y, cell_c);
-            PyList_Append(fill, cell);
-        }
-    }
-    
+    PyObject *fill = gather_fill(cgrid, width, height);
     PyList_Append(result, fill);
     return result;
 }
