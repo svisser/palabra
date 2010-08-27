@@ -240,15 +240,15 @@ int is_available(Cell *cgrid, int width, int height, int x, int y) {
         && is_valid(x, y, width, height);
 }
 
-char* get_constraints(Cell *cgrid, int width, int height, Slot slot) {
-    char* cs = malloc(slot.length * sizeof(char));
+char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
+    char* cs = malloc(slot->length * sizeof(char));
     if (!cs) {
         return NULL;
     }
-    int dx = slot.dir == 0 ? 1 : 0;
-    int dy = slot.dir == 1 ? 1 : 0;
-    int x = slot.x;
-    int y = slot.y;
+    int dx = slot->dir == 0 ? 1 : 0;
+    int dy = slot->dir == 1 ? 1 : 0;
+    int x = slot->x;
+    int y = slot->y;
     int count = 0;
     while (is_available(cgrid, width, height, x, y)) {
         cs[count] = cgrid[x + y * height].c;
@@ -320,7 +320,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         slots[m].y = y;
         slots[m].dir = dir;
         slots[m].length = length;
-        char *cs = get_constraints(cgrid, width, height, slots[m]);
+        char *cs = get_constraints(cgrid, width, height, &slots[m]);
         if (!cs) {
             // TODO
         }
@@ -354,59 +354,55 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 index = m;
             }
         }
-        
+        Slot *slot = &slots[index];
         if (DEBUG) {
-            printf("find word for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
+            printf("find word for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         }
-        char *cs = get_constraints(cgrid, width, height, slots[index]);
+        char *cs = get_constraints(cgrid, width, height, slot);
         if (!cs) {
             // TODO
         }
         
-        char* word = find_candidate(words, slots[index].length, cs);
+        char* word = find_candidate(words, slot->length, cs);
         if (word) {
-            int affected[slots[index].length];
+            int affected[slot->length];
             int k;
-            for (k = 0; k < slots[index].length; k++) {
+            for (k = 0; k < slot->length; k++) {
                 affected[k] = -1;
             }
-            for (k = 0; k < slots[index].length; k++) {
-                char c = word[k];
-                char cell_c[2];
-                cell_c[0] = toupper(c);
-                cell_c[1] = '\0';
-                int cx = slots[index].x + (slots[index].dir == 0 ? k : 0);
-                int cy = slots[index].y + (slots[index].dir == 1 ? k : 0);
+            for (k = 0; k < slot->length; k++) {
+                int cx = slot->x + (slot->dir == 0 ? k : 0);
+                int cy = slot->y + (slot->dir == 1 ? k : 0);
+                cgrid[cx + cy * height].c = word[k];
                 
                 // update the two affected slots
                 int d;
                 for (d = 0; d < 2; d++) {
                     int indexD = get_slot_index(slots, n_slots, cx, cy, d);
-                    if (indexD >= 0) {
-                        cgrid[cx + cy * height].c = c;
-                        if (indexD != index)
-                            affected[k] = indexD;
+                    if (indexD >= 0 && indexD != index) {
+                        affected[k] = indexD;
                     }
                 }
             }
             // update counts
-            slots[index].count = 1;
-            for (k = 0; k < slots[index].length; k++) {
+            slot->count = 1;
+            for (k = 0; k < slot->length; k++) {
                 int mm = affected[k];
                 // only recompute when a cell is affected and not already completely filled in
-                if (mm >= 0 && slots[mm].count > 1) {
-                    int prev = slots[mm].count;
-                    char *ds = get_constraints(cgrid, width, height, slots[mm]);
+                Slot *slot_mm = &slots[mm];
+                if (mm >= 0 && slot_mm->count > 1) {
+                    int prev = slot_mm->count;
+                    char *ds = get_constraints(cgrid, width, height, slot_mm);
                     if (!ds) {
                         // TODO
                     }
-                    slots[mm].count = count_words(words, slots[mm].length, ds);
-                    printf("slot %i: from %i to %i\n", mm, prev, slots[mm].count);
+                    slot_mm->count = count_words(words, slot_mm->length, ds);
+                    printf("slot %i: from %i to %i\n", mm, prev, slot_mm->count);
                     free(ds);
                 }
             }
         } else {
-            printf("No word could be found for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
+            printf("No word could be found for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
             if (recent_index >= 0) {
                 printf("About to clear (%i, %i, %s)\n", slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir == 0 ? "across" : "down");
                 clear_slot(cgrid, width, height, slots, n_slots, recent_index);
@@ -417,10 +413,10 @@ cGrid_fill(PyObject *self, PyObject *args) {
         free(cs);
         
         recent_index = index;
-        slots[index].done = 1;
+        slot->done = 1;
         n_done_slots++;
         if (DEBUG) {
-            printf("done: %s (%i, %i, %s)\n", word, slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
+            printf("done: %s (%i, %i, %s)\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         }
     }
     
