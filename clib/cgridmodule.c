@@ -19,6 +19,25 @@
 #include <Python.h>
 #include "cpalabra.h"
 
+typedef struct Cell {
+    int top_bar; // {0,1}
+    int left_bar; // {0,1}
+    int block; // {0,1}
+    char c;
+    int number;
+    int empty; // {0,1}
+    int fixed; // {0,1} 0 = read/write, 1 = read
+} Cell;
+
+typedef struct Slot {
+    int x;
+    int y;
+    int dir; // 0 = across, 1 = down
+    int length;
+    int count;
+    int done; // {0, 1}
+} Slot;
+
 // 0 = false, 1 = true
 int calc_is_available(PyObject *grid, int x, int y) {
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
@@ -151,25 +170,6 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     Py_RETURN_NONE;
 }
 
-typedef struct Cell {
-    int top_bar; // {0,1}
-    int left_bar; // {0,1}
-    int block; // {0,1}
-    char c;
-    int number;
-    int empty; // {0,1}
-    int fixed; // {0,1} 0 = read/write, 1 = read
-} Cell;
-
-typedef struct Slot {
-    int x;
-    int y;
-    int dir; // 0 = across, 1 = down
-    int length;
-    int count;
-    int done; // {0, 1}
-} Slot;
-
 int count_words(PyObject *words, int length, char *cs) {
     int count = 0;
     Py_ssize_t w;
@@ -188,15 +188,15 @@ int count_words(PyObject *words, int length, char *cs) {
 int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
     int s;
     for (s = 0; s < n_slots; s++) {
-        if (dir == 0 && slots[s].dir == 0
-            && slots[s].x <= x && x < slots[s].x + slots[s].length
-            && slots[s].y == y) {
-            return s;
-        }
-        if (dir == 1 && slots[s].dir == 1
-            && slots[s].y <= y && y < slots[s].y + slots[s].length
-            && slots[s].x == x) {
-            return s;
+        Slot slot = slots[s];
+        if (dir == slot.dir) {
+            int match_across = (dir == 0 && x>= slot.x
+                && x < slot.x + slot.length && slot.y == y);
+            int match_down = (dir == 1 && y >= slot.y
+                && y < slot.y + slot.length && slot.x == x);
+            if (match_across || match_down) {
+                return s;
+            }
         }
     }
     return -1;
@@ -234,6 +234,12 @@ int is_valid(int x, int y, int width, int height) {
     return x >= 0 && y >= 0 && x < width && y < height;
 }
 
+int is_available(Cell *cgrid, int width, int height, int x, int y) {
+    return cgrid[x + y * height].block == 0
+        && cgrid[x + y * height].empty == 0
+        && is_valid(x, y, width, height);
+}
+
 char* get_constraints(Cell *cgrid, int width, int height, Slot slot) {
     char* cs = malloc(slot.length * sizeof(char));
     if (!cs) {
@@ -244,7 +250,7 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot slot) {
     int x = slot.x;
     int y = slot.y;
     int count = 0;
-    while (cgrid[x + y * height].block == 0 && cgrid[x + y * height].empty == 0 && is_valid(x, y, width, height)) {
+    while (is_available(cgrid, width, height, x, y)) {
         cs[count] = cgrid[x + y * height].c;
         if (dx == 1 && is_valid(x + dx, y, width, height) && cgrid[(x + dx) + y * height].left_bar == 1)
             break;
@@ -352,7 +358,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
         if (DEBUG) {
             printf("find word for (%i, %i, %s)\n", slots[index].x, slots[index].y, slots[index].dir == 0 ? "across" : "down");
         }
-        //char* get_constraints(Cell *cgrid, int width, int height, Slot slot) {
         char *cs = get_constraints(cgrid, width, height, slots[index]);
         if (!cs) {
             // TODO
