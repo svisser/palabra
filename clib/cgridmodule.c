@@ -370,7 +370,12 @@ cGrid_fill(PyObject *self, PyObject *args) {
         free(cs);
     }
     
-    int recent_index = -1;
+    int order[n_slots];
+    int o;
+    for (o = 0; o < n_slots; o++) {
+        order[o] = -1;
+    }
+    
     PyObject *result = PyList_New(0);
     while (n_done_slots < n_slots) {
         int index = -1;
@@ -421,6 +426,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         } else {
             printf("No word could be found for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
+            int recent_index = n_done_slots > 0 ? order[n_done_slots - 1] : -1;
             if (recent_index >= 0) {
                 printf("About to clear (%i, %i, %s)\n", slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir == 0 ? "across" : "down");
                 clear_slot(cgrid, width, height, slots, n_slots, recent_index);
@@ -431,8 +437,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         free(cs);
         
-        recent_index = index;
         slot->done = 1;
+        order[n_done_slots] = index;
         n_done_slots++;
         if (DEBUG) {
             printf("done: %s (%i, %i, %s)\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
