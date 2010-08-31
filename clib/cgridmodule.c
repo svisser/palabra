@@ -231,6 +231,40 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
     }
 }
 
+// 0 = false, 1 = true
+int is_intersecting(Slot *slot1, Slot *slot2) {
+    if (slot1->dir == slot2->dir) return 0;
+    if (slot1->dir == 0) {
+        return (slot2->x >= slot1->x && slot2->x < slot1->x + slot1->length
+            && slot1->y >= slot2->y && slot1->y < slot2->y + slot2->length);
+    } else if (slot1->dir == 1) {
+        return (slot1->x >= slot2->x && slot1->x < slot2->x + slot2->length
+            && slot2->y >= slot1->y && slot2->y < slot1->y + slot1->length);
+    }
+    return 0;
+}
+
+void backtrack(Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
+    int s;
+    int iindex = -1;
+    for (s = index; s >= 0; s--) {
+        Slot *slot = &slots[order[s]];
+        printf("Considering %i: %i %i %i\n", s, slot->x, slot->y, slot->dir);
+        if (is_intersecting(slot, &slots[index])) {
+            printf("They intersect: %i (%i, %i, %i) %i (%i, %i, %i)\n", s, slot->x, slot->y, slot->dir, index, (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir);
+            iindex = s;
+            break;
+        }
+    }
+    if (iindex >= 0) {
+        for (s = index; s >= iindex; s--) {
+            clear_slot(cgrid, width, height, slots, n_slots, s);
+            if (s > iindex) (&slots[s])->offset = 0;
+            if (s == iindex) (&slots[s])->offset++;
+        }
+    }
+}
+
 int is_valid(int x, int y, int width, int height) {
     return x >= 0 && y >= 0 && x < width && y < height;
 }
@@ -272,7 +306,9 @@ void update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slo
         return;
     }
     slot->count = count_words(words, slot->length, ds);
-    printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+    if (DEBUG) {
+        printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+    }
     free(ds);
 }
 
@@ -425,13 +461,12 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 }
             }
         } else {
-            printf("No word could be found for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
-            int recent_index = n_done_slots > 0 ? order[n_done_slots - 1] : -1;
-            if (recent_index >= 0) {
-                printf("About to clear (%i, %i, %s)\n", slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir == 0 ? "across" : "down");
-                clear_slot(cgrid, width, height, slots, n_slots, recent_index);
-                slots[recent_index].offset++;
-                printf("Slot %i (%i, %i, %i) now has offset %i\n", recent_index, slots[recent_index].x, slots[recent_index].y, slots[recent_index].dir, slots[recent_index].offset);
+            if (DEBUG) {
+                printf("No word could be found for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
+            }
+            int prev_index = n_done_slots > 0 ? order[n_done_slots - 1] : -1;
+            if (prev_index >= 0) {
+                backtrack(cgrid, width, height, slots, n_slots, order, prev_index);
             }
         }
         
@@ -439,6 +474,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         slot->done = 1;
         order[n_done_slots] = index;
+        printf("Slot %i (%i) is %i %i %i\n", n_done_slots, index, slot->x, slot->y, slot->dir);
         n_done_slots++;
         if (DEBUG) {
             printf("done: %s (%i, %i, %s)\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
