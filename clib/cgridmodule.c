@@ -249,14 +249,15 @@ void backtrack(Cell *cgrid, int width, int height, Slot *slots, int n_slots, int
     int iindex = -1;
     for (s = index; s >= 0; s--) {
         Slot *slot = &slots[order[s]];
-        printf("Considering %i: %i %i %i\n", s, slot->x, slot->y, slot->dir);
+        //printf("Considering %i: %i %i %i\n", s, slot->x, slot->y, slot->dir);
         if (is_intersecting(slot, &slots[index])) {
-            printf("They intersect: %i (%i, %i, %i) %i (%i, %i, %i)\n", s, slot->x, slot->y, slot->dir, index, (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir);
-            iindex = s;
+            //printf("They intersect: %i (%i, %i, %i) %i (%i, %i, %i)\n", s, slot->x, slot->y, slot->dir, index, (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir);
+            iindex = order[s];
             break;
         }
     }
     if (iindex >= 0) {
+        printf("Blanking between %i and %i\n", iindex, index);
         for (s = index; s >= iindex; s--) {
             clear_slot(cgrid, width, height, slots, n_slots, s);
             if (s > iindex) (&slots[s])->offset = 0;
