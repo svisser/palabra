@@ -244,32 +244,6 @@ int is_intersecting(Slot *slot1, Slot *slot2) {
     return 0;
 }
 
-void backtrack(Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
-    int s;
-    int iindex = -1;
-    for (s = index; s >= 0; s--) {
-        Slot *slot = &slots[order[s]];
-        //printf("Considering %i: %i %i %i\n", s, slot->x, slot->y, slot->dir);
-        if (is_intersecting(slot, &slots[index])) {
-            //printf("They intersect: %i (%i, %i, %i) %i (%i, %i, %i)\n", s, slot->x, slot->y, slot->dir, index, (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir);
-            iindex = order[s];
-            break;
-        }
-    }
-    if (iindex >= 0) {
-        if (DEBUG) {
-            printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
-                , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
-                , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
-        }
-        for (s = index; s >= iindex; s--) {
-            clear_slot(cgrid, width, height, slots, n_slots, s);
-            if (s > iindex) (&slots[s])->offset = 0;
-            if (s == iindex) (&slots[s])->offset++;
-        }
-    }
-}
-
 int is_valid(int x, int y, int width, int height) {
     return x >= 0 && y >= 0 && x < width && y < height;
 }
@@ -303,18 +277,49 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     return cs;
 }
 
-void update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
+int update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
     int prev = slot->count;
     char *ds = get_constraints(cgrid, width, height, slot);
     if (!ds) {
         printf("Warning: update_count failed to obtain constraints.\n");
-        return;
+        return -1;
     }
     slot->count = count_words(words, slot->length, ds);
     if (DEBUG) {
-        //printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+        if (slot->count == 0) {
+            //printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+        }
     }
     free(ds);
+    return slot->count;
+}
+
+void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
+    int s;
+    int iindex = -1;
+    for (s = index; s >= 0; s--) {
+        Slot *slot = &slots[order[s]];
+        //printf("Considering %i: %i %i %i\n", s, slot->x, slot->y, slot->dir);
+        if (is_intersecting(slot, &slots[index])) {
+            //printf("They intersect: %i (%i, %i, %i) %i (%i, %i, %i)\n", s, slot->x, slot->y, slot->dir, index, (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir);
+            iindex = order[s];
+            break;
+        }
+    }
+    if (iindex >= 0) {
+        if (DEBUG) {
+            printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
+                , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
+                , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
+        }
+        for (s = index; s >= iindex; s--) {
+            clear_slot(cgrid, width, height, slots, n_slots, s);
+            int count = update_count(words, cgrid, width, height, &slots[s]);
+            (&slots[s])->done = 0;
+            if (s > iindex) (&slots[s])->offset = 0;
+            if (s == iindex) (&slots[s])->offset++;
+        }
+    }
 }
 
 PyObject* gather_fill(Cell *cgrid, int width, int height) {
@@ -417,7 +422,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     }
     
     PyObject *result = PyList_New(0);
-    while (n_done_slots < n_slots) {
+    while (n_done_slots < /*n_slots*/ 100) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -464,7 +469,10 @@ cGrid_fill(PyObject *self, PyObject *args) {
             slot->count = 1;
             for (k = 0; k < slot->length; k++) {
                 if (affected[k] >= 0) {
-                    update_count(words, cgrid, width, height, &slots[affected[k]]);
+                    int count = update_count(words, cgrid, width, height, &slots[affected[k]]);
+                    if (count == 0) {
+                        printf("WARNING: an intersecting slot has 0!!!\n");
+                    }
                 }
             }
         } else {
@@ -473,7 +481,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
             int prev_index = n_done_slots > 0 ? order[n_done_slots - 1] : -1;
             if (prev_index >= 0) {
-                backtrack(cgrid, width, height, slots, n_slots, order, prev_index);
+                backtrack(words, cgrid, width, height, slots, n_slots, order, prev_index);
             }
         }
         
