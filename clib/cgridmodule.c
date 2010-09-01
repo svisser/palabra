@@ -257,7 +257,11 @@ void backtrack(Cell *cgrid, int width, int height, Slot *slots, int n_slots, int
         }
     }
     if (iindex >= 0) {
-        printf("Blanking between %i and %i\n", iindex, index);
+        if (DEBUG) {
+            printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
+                , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
+                , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
+        }
         for (s = index; s >= iindex; s--) {
             clear_slot(cgrid, width, height, slots, n_slots, s);
             if (s > iindex) (&slots[s])->offset = 0;
@@ -308,7 +312,7 @@ void update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slo
     }
     slot->count = count_words(words, slot->length, ds);
     if (DEBUG) {
-        printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+        //printf("slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
     }
     free(ds);
 }
@@ -365,7 +369,6 @@ cGrid_fill(PyObject *self, PyObject *args) {
             cgrid[index].number = number;
             cgrid[index].empty = is_empty;
             cgrid[index].fixed = cgrid[index].c == CONSTRAINT_EMPTY ? 0 : 1;
-            printf("%i %i %i %i %i %c %i %i\n", x, y, cgrid[index].top_bar, cgrid[index].left_bar, cgrid[index].block, cgrid[index].c, cgrid[index].number, cgrid[index].empty);
         }
     }
 
@@ -429,7 +432,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         }
         Slot *slot = &slots[index];
         if (DEBUG) {
-            printf("find word for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
+            printf("Searching word for (%i, %i, %s): ", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         }
         char *cs = get_constraints(cgrid, width, height, slot);
         if (!cs) {
@@ -439,6 +442,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         char* word = find_candidate(words, slot->length, cs, slot->offset);
         if (word) {
+            if (DEBUG) {
+                printf("%s\n", word);
+            }
             int affected[slot->length];
             int k;
             for (k = 0; k < slot->length; k++) {
@@ -463,7 +469,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         } else {
             if (DEBUG) {
-                printf("No word could be found for (%i, %i, %s)\n", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
+                printf("no word found\n");
             }
             int prev_index = n_done_slots > 0 ? order[n_done_slots - 1] : -1;
             if (prev_index >= 0) {
@@ -475,11 +481,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         slot->done = 1;
         order[n_done_slots] = index;
-        printf("Slot %i (%i) is %i %i %i\n", n_done_slots, index, slot->x, slot->y, slot->dir);
         n_done_slots++;
-        if (DEBUG) {
-            printf("done: %s (%i, %i, %s)\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
-        }
     }
     
     PyObject *fill = gather_fill(cgrid, width, height);
