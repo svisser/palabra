@@ -277,21 +277,19 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     return cs;
 }
 
-int update_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
+int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
     int prev = slot->count;
     char *ds = get_constraints(cgrid, width, height, slot);
     if (!ds) {
-        printf("Warning: update_count failed to obtain constraints.\n");
+        printf("Warning: determine_count failed to obtain constraints.\n");
         return -1;
     }
-    slot->count = count_words(words, slot->length, ds);
-    if (DEBUG) {
-        if (slot->count == 0) {
-            //printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
-        }
+    int count = count_words(words, slot->length, ds);
+    if (DEBUG && count == 0) {
+        printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
     }
     free(ds);
-    return slot->count;
+    return count;
 }
 
 void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
@@ -314,7 +312,7 @@ void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots,
         }
         for (s = index; s >= iindex; s--) {
             clear_slot(cgrid, width, height, slots, n_slots, s);
-            int count = update_count(words, cgrid, width, height, &slots[s]);
+            (&slots[s])->count = determine_count(words, cgrid, width, height, &slots[s]);
             (&slots[s])->done = 0;
             if (s > iindex) (&slots[s])->offset = 0;
             if (s == iindex) (&slots[s])->offset++;
@@ -447,6 +445,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         char* word = find_candidate(words, slot->length, cs, slot->offset);
         if (word) {
+            int is_word_ok = 1;
             if (DEBUG) {
                 printf("%s\n", word);
             }
@@ -455,7 +454,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             for (k = 0; k < slot->length; k++) {
                 int cx = slot->x + (slot->dir == 0 ? k : 0);
                 int cy = slot->y + (slot->dir == 1 ? k : 0);
-                cgrid[cx + cy * height].c = word[k];
+                //cgrid[cx + cy * height].c = word[k];
                 
                 // mark the affected slot of the modified cell
                 affected[k] = -1;
@@ -469,11 +468,23 @@ cGrid_fill(PyObject *self, PyObject *args) {
             slot->count = 1;
             for (k = 0; k < slot->length; k++) {
                 if (affected[k] >= 0) {
-                    int count = update_count(words, cgrid, width, height, &slots[affected[k]]);
+                    int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
                     if (count == 0) {
+                        is_word_ok = 0;
                         printf("WARNING: an intersecting slot has 0!!!\n");
                     }
                 }
+            }
+            if (is_word_ok) {
+                for (k = 0; k < slot->length; k++) {
+                    int cx = slot->x + (slot->dir == 0 ? k : 0);
+                    int cy = slot->y + (slot->dir == 1 ? k : 0);
+                    cgrid[cx + cy * height].c = word[k];
+                    int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
+                    (&slots[affected[k]])->count = count;
+                }
+            } else {
+                printf("WORD IS NOT OK\n");
             }
         } else {
             if (DEBUG) {
