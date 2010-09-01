@@ -286,7 +286,7 @@ int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *s
     }
     int count = count_words(words, slot->length, ds);
     if (DEBUG && count == 0) {
-        printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, slot->count);
+        printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, count);
     }
     free(ds);
     return count;
@@ -443,9 +443,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
             return NULL;
         }
         
+        int is_word_ok = 1;
         char* word = find_candidate(words, slot->length, cs, slot->offset);
         if (word) {
-            int is_word_ok = 1;
             if (DEBUG) {
                 printf("%s\n", word);
             }
@@ -484,6 +484,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
                     (&slots[affected[k]])->count = count;
                 }
             } else {
+                slot->offset++;
                 printf("WORD IS NOT OK\n");
             }
         } else {
@@ -498,8 +499,10 @@ cGrid_fill(PyObject *self, PyObject *args) {
         
         free(cs);
         
-        slot->done = 1;
-        order[n_done_slots] = index;
+        if (is_word_ok) {
+            slot->done = 1;
+            order[n_done_slots] = index;
+        }
         n_done_slots++;
     }
     
