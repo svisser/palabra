@@ -295,11 +295,11 @@ int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *s
 // return = number of slots cleared
 int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
     int cleared = 0;
-    //int j;
-    //for (j = 0; j < n_slots; j++) {
-    //    printf("%i ", order[j]);
-    //}
-    //printf("\n");
+    int j;
+    for (j = 0; j < n_slots; j++) {
+        printf("%i ", order[j]);
+    }
+    printf("\n");
     int s;
     int iindex = -1;
     for (s = index; s >= 0; s--) {
@@ -431,7 +431,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     }
     
     PyObject *result = PyList_New(0);
-    while (n_done_slots < /*n_slots*/ 100) {
+    while (n_done_slots < 1000) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -525,8 +525,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
         if (is_word_ok) {
             slot->done = 1;
             order[n_done_slots] = index;
+            n_done_slots++;
         }
-        n_done_slots++;
     }
     
     PyObject *fill = gather_fill(cgrid, width, height);
