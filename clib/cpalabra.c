@@ -16,11 +16,15 @@ char* find_candidate(PyObject *words, int length, char *cs, int offset) {
         char *word = PyString_AsString(PyList_GetItem(words_m, w));
         words_array[w] = word;
     }
-    for (w = offset; w < count; w++) {
-        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+    int matches = 0;
+    for (w = 0; w < count; w++) {
+        char *word = words_array[w];
         if (check_constraints(word, cs) == 1) {
-            free(words_array);
-            return word;
+            if (matches == offset) {
+                free(words_array);
+                return word;
+            }
+            matches++;
         }
     }
     free(words_array);
