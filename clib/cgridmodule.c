@@ -292,14 +292,19 @@ int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *s
     return count;
 }
 
-void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
+// return = number of slots cleared
+int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
+    int cleared = 0;
+    //int j;
+    //for (j = 0; j < n_slots; j++) {
+    //    printf("%i ", order[j]);
+    //}
+    //printf("\n");
     int s;
     int iindex = -1;
     for (s = index; s >= 0; s--) {
         Slot *slot = &slots[order[s]];
-        //printf("Considering %i: %i %i %i\n", s, slot->x, slot->y, slot->dir);
         if (is_intersecting(slot, &slots[index])) {
-            //printf("They intersect: %i (%i, %i, %i) %i (%i, %i, %i)\n", s, slot->x, slot->y, slot->dir, index, (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir);
             iindex = order[s];
             break;
         }
@@ -312,6 +317,7 @@ void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots,
             printf("Indices: %i %i\n", iindex, index);
         }
         for (s = index; s >= iindex; s--) {
+            cleared++;
             int blank = order[s];
             Slot *bslot = &slots[blank];
             printf("Blanking: %i %i %i %i (%i, %i, %s)\n", s, blank, index, iindex, bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
@@ -322,6 +328,7 @@ void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots,
             if (blank == iindex) bslot->offset++;
         }
     }
+    return cleared;
 }
 
 PyObject* gather_fill(Cell *cgrid, int width, int height) {
@@ -451,7 +458,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         char* word = find_candidate(words, slot->length, cs, slot->offset);
         if (word) {
             if (DEBUG) {
-                printf("%s\n", word);
+                printf("%s (%i)\n", word, slot->offset);
             }
             int affected[slot->length];
             int k;
@@ -468,9 +475,17 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
             // update counts for affected slots
             slot->count = 1;
+            printf("before updating affected\n");
             for (k = 0; k < slot->length; k++) {
                 if (affected[k] >= 0) {
+                    int cx = slot->x + (slot->dir == 0 ? k : 0);
+                    int cy = slot->y + (slot->dir == 1 ? k : 0);
+                    int is_empty = cgrid[cx + cy * height].c == CONSTRAINT_EMPTY;
+                    cgrid[cx + cy * height].c = word[k];
                     int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
+                    if (is_empty) {
+                        cgrid[cx + cy * height].c = CONSTRAINT_EMPTY;
+                    }
                     if (count == 0) {
                         is_word_ok = 0;
                         printf("WARNING: an intersecting slot has 0!!!\n");
@@ -478,6 +493,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
                 }
             }
             if (is_word_ok) {
+                printf("before updating cells\n");
                 for (k = 0; k < slot->length; k++) {
                     int cx = slot->x + (slot->dir == 0 ? k : 0);
                     int cy = slot->y + (slot->dir == 1 ? k : 0);
@@ -486,8 +502,8 @@ cGrid_fill(PyObject *self, PyObject *args) {
                     (&slots[affected[k]])->count = count;
                 }
             } else {
-                slot->offset++;
-                printf("WORD IS NOT OK\n");
+                slot->offset += 1;
+                printf("WORD IS NOT OK (%i %i %i) %i\n", slot->x, slot->y, slot->dir, slot->offset);
             }
         } else {
             if (DEBUG) {
@@ -495,7 +511,12 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
             int prev_index = n_done_slots > 0 ? n_done_slots - 1 : -1;
             if (prev_index >= 0) {
-                backtrack(words, cgrid, width, height, slots, n_slots, order, prev_index);
+                int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, prev_index);
+                int c;
+                for (c = prev_index; c >= prev_index - cleared; c--) {
+                    order[c] = -1;
+                }
+                n_done_slots -= cleared;
             }
         }
         
