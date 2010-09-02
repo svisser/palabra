@@ -309,13 +309,17 @@ void backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots,
             printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
                 , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
                 , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
+            printf("Indices: %i %i\n", iindex, index);
         }
         for (s = index; s >= iindex; s--) {
-            clear_slot(cgrid, width, height, slots, n_slots, s);
-            (&slots[s])->count = determine_count(words, cgrid, width, height, &slots[s]);
-            (&slots[s])->done = 0;
-            if (s > iindex) (&slots[s])->offset = 0;
-            if (s == iindex) (&slots[s])->offset++;
+            int blank = order[s];
+            Slot *bslot = &slots[blank];
+            printf("Blanking: %i %i %i %i (%i, %i, %s)\n", s, blank, index, iindex, bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
+            clear_slot(cgrid, width, height, slots, n_slots, blank);
+            bslot->count = determine_count(words, cgrid, width, height, bslot);
+            bslot->done = 0;
+            if (blank > iindex) bslot->offset = 0;
+            if (blank == iindex) bslot->offset++;
         }
     }
 }
@@ -452,14 +456,12 @@ cGrid_fill(PyObject *self, PyObject *args) {
             int affected[slot->length];
             int k;
             for (k = 0; k < slot->length; k++) {
-                int cx = slot->x + (slot->dir == 0 ? k : 0);
-                int cy = slot->y + (slot->dir == 1 ? k : 0);
-                //cgrid[cx + cy * height].c = word[k];
-                
                 // mark the affected slot of the modified cell
                 affected[k] = -1;
-                int d = slot->dir == 0 ? 1 : 0;
-                int indexD = get_slot_index(slots, n_slots, cx, cy, d);
+                int cx = slot->x + (slot->dir == 0 ? k : 0);
+                int cy = slot->y + (slot->dir == 1 ? k : 0);
+                int dir = slot->dir == 0 ? 1 : 0;
+                int indexD = get_slot_index(slots, n_slots, cx, cy, dir);
                 if (indexD >= 0 && indexD != index) {
                     affected[k] = indexD;
                 }
@@ -491,7 +493,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             if (DEBUG) {
                 printf("no word found\n");
             }
-            int prev_index = n_done_slots > 0 ? order[n_done_slots - 1] : -1;
+            int prev_index = n_done_slots > 0 ? n_done_slots - 1 : -1;
             if (prev_index >= 0) {
                 backtrack(words, cgrid, width, height, slots, n_slots, order, prev_index);
             }
