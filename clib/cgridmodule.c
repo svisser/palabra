@@ -295,11 +295,6 @@ int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *s
 // return = number of slots cleared
 int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
     int cleared = 0;
-    int j;
-    for (j = 0; j < n_slots; j++) {
-        printf("%i ", order[j]);
-    }
-    printf("\n");
     int s;
     int iindex = -1;
     for (s = index; s >= 0; s--) {
@@ -328,6 +323,11 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
             if (blank == iindex) bslot->offset++;
         }
     }
+    int j;
+    for (j = 0; j < n_slots; j++) {
+        printf("%i ", order[j]);
+    }
+    printf("\n");
     return cleared;
 }
 
@@ -430,8 +430,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
         order[o] = -1;
     }
     
+    int attempts = 0;
     PyObject *result = PyList_New(0);
-    while (n_done_slots < 1000) {
+    while (attempts < 1000) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -445,8 +446,14 @@ cGrid_fill(PyObject *self, PyObject *args) {
             }
         }
         Slot *slot = &slots[index];
+        if (index < 0) {
+            if (DEBUG) {
+                printf("BREAKING - SHOULD NOT OCCUR\n");
+            }
+            break;
+        }
         if (DEBUG) {
-            printf("Searching word for (%i, %i, %s): ", slot->x, slot->y, slot->dir == 0 ? "across" : "down");
+            printf("Searching word for (%i, %i, %s) at index %i: ", slot->x, slot->y, slot->dir == 0 ? "across" : "down", index);
         }
         char *cs = get_constraints(cgrid, width, height, slot);
         if (!cs) {
@@ -512,6 +519,9 @@ cGrid_fill(PyObject *self, PyObject *args) {
             int prev_index = n_done_slots > 0 ? n_done_slots - 1 : -1;
             if (prev_index >= 0) {
                 int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, prev_index);
+                if (cleared < 0) {
+                    break;
+                }
                 int c;
                 for (c = prev_index; c >= prev_index - cleared; c--) {
                     order[c] = -1;
@@ -527,6 +537,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
             order[n_done_slots] = index;
             n_done_slots++;
         }
+        attempts++;
     }
     
     PyObject *fill = gather_fill(cgrid, width, height);
