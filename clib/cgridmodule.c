@@ -526,16 +526,16 @@ cGrid_fill(PyObject *self, PyObject *args) {
             if (DEBUG) {
                 printf("no word found\n");
             }
-            int prev_index = n_done_slots > 0 ? n_done_slots - 1 : -1;
-            if (prev_index >= 0) {
-                int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, prev_index);
+            if (n_done_slots > 0) {
+                int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots);
                 if (cleared < 0) {
                     break;
                 }
                 int c;
-                for (c = prev_index; c >= prev_index - cleared; c--) {
+                for (c = n_done_slots; c >= n_done_slots - cleared; c--) {
                     order[c] = -1;
                 }
+                printf("subtracting %i\n", cleared);
                 n_done_slots -= cleared;
             }
         }
@@ -545,6 +545,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
         if (is_word_ok) {
             slot->done = 1;
             order[n_done_slots] = index;
+            printf("n_done_slots = %i and incrementing\n", n_done_slots);
             n_done_slots++;
         }
         attempts++;
