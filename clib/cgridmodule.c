@@ -432,7 +432,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     
     int attempts = 0;
     PyObject *result = PyList_New(0);
-    while (attempts < 1000) {
+    while (attempts < 10000) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
