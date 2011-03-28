@@ -193,7 +193,7 @@ class NewWindow(gtk.Dialog):
         
         self.showing_pattern = False
         
-        self.set_size_request(640, 480)
+        self.set_size_request(706, 480)
         
         self.preview = GridPreview()
         self.preview.set_size_request(200, -1)

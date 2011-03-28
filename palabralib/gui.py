@@ -79,7 +79,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
-        self.menubar.append(self.create_fill_menu())
+        #self.menubar.append(self.create_fill_menu())
         #self.menubar.append(self.create_word_menu())
         #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
@@ -975,11 +975,11 @@ class PalabraWindow(gtk.Window):
     def create_grid_menu(self):
         menu = gtk.Menu()
         
-        menu.append(self._create_menu_item(
-            lambda item: self.edit_appearance()
-            , u"Edit the appearance of the puzzle"
-            , title=u"Edit _appearance..."
-            , is_puzzle_sensitive=True))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.edit_appearance()
+        #    , u"Edit the appearance of the puzzle"
+        #    , title=u"Edit _appearance..."
+        #    , is_puzzle_sensitive=True))
             
         menu.append(gtk.SeparatorMenuItem())
         
