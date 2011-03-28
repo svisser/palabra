@@ -86,7 +86,7 @@ class PropertiesWindow(gtk.Dialog):
             , gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.puzzle = puzzle
-        self.set_size_request(512, 448)
+        self.set_size_request(640, 480)
         self.connect("destroy", lambda widget: self.palabra_window.editor.clear_highlighted_words())
 
         status = puzzle.grid.determine_status(True)
