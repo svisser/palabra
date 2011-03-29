@@ -65,7 +65,7 @@ SETTINGS_SOLUTION = {
     , "warn_blacklist": False
 }
 SETTINGS_EXPORT_PDF_PUZZLE = {
-    "has_padding": False
+    "has_padding": True
     , "show_chars": False
     , "show_numbers": True
     , "render_overlays": False
@@ -75,7 +75,7 @@ SETTINGS_EXPORT_PDF_PUZZLE = {
     , "warn_blacklist": False
 }
 SETTINGS_EXPORT_PDF_SOLUTION = {
-    "has_padding": False
+    "has_padding": True
     , "show_chars": True
     , "show_numbers": True
     , "render_overlays": False
@@ -208,6 +208,7 @@ class GridView:
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
         self.settings = {}
+        self.mode = mode
         if mode == constants.VIEW_MODE_EDITOR:
             self.settings.update(SETTINGS_EDITOR)
             self.settings.update(custom_settings)
@@ -231,9 +232,20 @@ class GridView:
         """
         if mode is not None:
             self.select_mode(mode)
+        if (self.mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+            or self.mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION):
+            # 595 = PDF width
+            size = (595 - ((self.grid.width + 1) * self.properties.line["width"]) - (2 * 24)) / self.grid.width
+            self.properties.cell["size"] = min(32, size)
+            self.properties.margin_x = 24
+            self.properties.margin_y = 24
         for x, y in self.grid.cells():
             self.render_bottom(context, x, y)
             self.render_top(context, x, y)
+        if self.mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE:
+            self.properties.cell["size"] = 32
+            self.properties.margin_x = 10
+            self.properties.margin_y = 10
 
     def render_bottom(self, context, x, y):
         # background
