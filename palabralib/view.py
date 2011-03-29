@@ -231,8 +231,9 @@ class GridView:
             c = grid.get_char(x, y)
             if c != '':
                 self._render_char(context, props, x, y, c)
-        color = [c / 65535.0 for c in self.style(x, y).char["color"]]
-        self._render(context, render, color=color)
+        if self.settings["show_chars"]:
+            color = [c / 65535.0 for c in self.style(x, y).char["color"]]
+            self._render(context, render, color=color)
         
         # overlay char
         def render(context, grid, props):
