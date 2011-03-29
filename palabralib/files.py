@@ -58,6 +58,8 @@ def export_puzzle(puzzle, filename, options):
     settings = options["settings"]
     if options["format"] == "csv":
         export_to_csv(puzzle, filename, outputs, settings)
+    elif options["format"] == "pdf":
+        export_to_pdf(puzzle, filename, outputs[0], settings)
     elif options["format"] == "png":
         export_to_png(puzzle, filename, outputs[0], settings)
 
@@ -360,7 +362,7 @@ def export_to_csv(puzzle, filename, outputs, settings):
                 f.write(''.join(line))
     f.close()
                     
-def export_to_pdf(puzzle, filename):
+def export_to_pdf(puzzle, filename, output, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
     width = paper_size.get_width(gtk.UNIT_POINTS)
     height = paper_size.get_height(gtk.UNIT_POINTS)
@@ -368,11 +370,13 @@ def export_to_pdf(puzzle, filename):
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     
-    puzzle.view.render(context, constants.VIEW_MODE_EMPTY)
-    context.show_page()
-    puzzle.view.render(context, constants.VIEW_MODE_SOLUTION)
-    context.show_page()
-    
+    if output == "grid":
+        puzzle.view.render(context, constants.VIEW_MODE_EMPTY)
+        context.show_page()
+        puzzle.view.render(context, constants.VIEW_MODE_SOLUTION)
+        context.show_page()
+    elif output == "solution":
+        pass
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
