@@ -1008,11 +1008,11 @@ class PalabraWindow(gtk.Window):
         #    , u"Manage the pattern files available to the program"
         #    , title="_Manage pattern files..."))
             
-        menu.append(self._create_menu_item(
-            lambda item: self.create_patterns()
-            , u"Generate a pattern using the pattern editor"
-            , title="_Create pattern..."
-            , is_puzzle_sensitive=True))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.create_patterns()
+        #    , u"Generate a pattern using the pattern editor"
+        #    , title="_Create pattern..."
+        #    , is_puzzle_sensitive=True))
         
         grid_menu = gtk.MenuItem(u"_Grid", True)
         grid_menu.set_submenu(menu)
