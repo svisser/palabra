@@ -64,6 +64,26 @@ SETTINGS_SOLUTION = {
     , "warn_two_letter_words": False
     , "warn_blacklist": False
 }
+SETTINGS_EXPORT_PDF_PUZZLE = {
+    "has_padding": False
+    , "show_chars": False
+    , "show_numbers": True
+    , "render_overlays": False
+    , "warn_consecutive_unchecked": False
+    , "warn_unchecked_cells": False
+    , "warn_two_letter_words": False
+    , "warn_blacklist": False
+}
+SETTINGS_EXPORT_PDF_SOLUTION = {
+    "has_padding": False
+    , "show_chars": True
+    , "show_numbers": True
+    , "render_overlays": False
+    , "warn_consecutive_unchecked": False
+    , "warn_unchecked_cells": False
+    , "warn_two_letter_words": False
+    , "warn_blacklist": False
+}
 custom_settings = {}
 
 class CellStyle:
@@ -197,6 +217,10 @@ class GridView:
             self.settings.update(SETTINGS_PREVIEW)
         elif mode == constants.VIEW_MODE_SOLUTION:
             self.settings.update(SETTINGS_SOLUTION)
+        elif mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE:
+            self.settings.update(SETTINGS_EXPORT_PDF_PUZZLE)
+        elif mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION:
+            self.settings.update(SETTINGS_EXPORT_PDF_SOLUTION)
         
     def render(self, context, mode=None):
         """

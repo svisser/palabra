@@ -371,12 +371,11 @@ def export_to_pdf(puzzle, filename, output, settings):
     context = cairo.Context(surface)
     
     if output == "grid":
-        puzzle.view.render(context, constants.VIEW_MODE_EMPTY)
-        context.show_page()
-        puzzle.view.render(context, constants.VIEW_MODE_SOLUTION)
+        puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         context.show_page()
     elif output == "solution":
-        pass
+        puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
+        context.show_page()
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
