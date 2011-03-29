@@ -61,7 +61,7 @@ class ExportWindow(gtk.Dialog):
         self.formats = []
 
         csv = Format("csv", u"CSV (csv)", ["grid", "solution", "clues"])
-        self.formats.append(csv)
+        #self.formats.append(csv)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
 
