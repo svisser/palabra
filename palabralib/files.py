@@ -17,6 +17,7 @@
 
 import cairo
 import gtk
+import pangocairo
 from operator import itemgetter
 
 from lxml import etree
@@ -373,6 +374,30 @@ def export_to_pdf(puzzle, filename, output, settings):
     if output == "grid":
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         context.show_page()
+        
+        def show_clue_page(caption, direction):
+            rx, ry = 20, 20
+            pcr = pangocairo.CairoContext(context)
+            layout = pcr.create_layout()
+            layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 10", caption))
+            context.save()
+            context.move_to(rx, ry)
+            pcr.show_layout(layout)
+            context.restore()
+            def display_clue(n, clue, rrx, rry):
+                layout = pcr.create_layout()
+                content = ''.join([str(n), ". ", clue.replace("&", "&amp;")])
+                layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 8", content))
+                context.save()
+                context.move_to(rx, ry)
+                pcr.show_layout(layout)
+                context.restore()
+            for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words(direction):
+                ry += 16
+                display_clue(n, clue, rx, ry)
+            context.show_page()
+        show_clue_page("Across", "across")
+        show_clue_page("Down", "down")
     elif output == "solution":
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
         context.show_page()
