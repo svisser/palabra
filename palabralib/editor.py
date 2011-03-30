@@ -707,30 +707,31 @@ class Editor(gtk.HBox):
         if len(actual) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
             
-    # TODO fix 90 degrees and diagonals symmetry for non-rectangular grids
     def apply_symmetry(self, x, y):
         """Apply one or more symmetrical transforms to (x, y)."""
         if not self.puzzle.grid.is_valid(x, y):
             return []
         cells = []
-        if "horizontal" in self.settings["symmetries"]:
+        symms = self.settings["symmetries"]
+        if "horizontal" in symms:
             cells.append((x, self.puzzle.grid.height - 1 - y))
-        if "vertical" in self.settings["symmetries"]:
+        if "vertical" in symms:
             cells.append((self.puzzle.grid.width - 1 - x, y))
-        if (("horizontal" in self.settings["symmetries"]
-            and "vertical" in self.settings["symmetries"])
-            or "180_degree" in self.settings["symmetries"]
-            or "90_degree" in self.settings["symmetries"]):
+        if (("horizontal" in symms and "vertical" in symms)
+            or "180_degree" in symms
+            or "90_degree" in symms
+            or "diagonals" in symms):
             p = self.puzzle.grid.width - 1 - x
             q = self.puzzle.grid.height - 1 - y
             cells.append((p, q))
-        if "diagonals" in self.settings["symmetries"]:
+        if "diagonals" in symms:
             p = int((y / float(self.puzzle.grid.height - 1)) * (self.puzzle.grid.width - 1))
             q = int((x / float(self.puzzle.grid.width - 1)) * (self.puzzle.grid.height - 1))
             cells.append((p, q))
-            cells.append((self.puzzle.grid.width - 1 - p, self.puzzle.grid.height - 1 - q))
-            cells.append((self.puzzle.grid.width - 1 - x, self.puzzle.grid.height - 1 - y))
-        if "90_degree" in self.settings["symmetries"]:
+            r = self.puzzle.grid.width - 1 - p
+            s = self.puzzle.grid.height - 1 - q
+            cells.append((r, s))
+        if "90_degree" in symms:
             cells.append((self.puzzle.grid.width - 1 - y, x))
             cells.append((y, self.puzzle.grid.height - 1 - x))
         return cells
