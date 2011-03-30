@@ -720,19 +720,19 @@ class Editor(gtk.HBox):
         if (("horizontal" in self.settings["symmetries"]
             and "vertical" in self.settings["symmetries"])
             or "180_degree" in self.settings["symmetries"]
-            or "90_degree" in self.settings["symmetries"]
-            or "diagonals" in self.settings["symmetries"]):
+            or "90_degree" in self.settings["symmetries"]):
             p = self.puzzle.grid.width - 1 - x
             q = self.puzzle.grid.height - 1 - y
             cells.append((p, q))
+        if "diagonals" in self.settings["symmetries"]:
+            p = int((y / float(self.puzzle.grid.height - 1)) * (self.puzzle.grid.width - 1))
+            q = int((x / float(self.puzzle.grid.width - 1)) * (self.puzzle.grid.height - 1))
+            cells.append((p, q))
+            cells.append((self.puzzle.grid.width - 1 - p, self.puzzle.grid.height - 1 - q))
+            cells.append((self.puzzle.grid.width - 1 - x, self.puzzle.grid.height - 1 - y))
         if "90_degree" in self.settings["symmetries"]:
             cells.append((self.puzzle.grid.width - 1 - y, x))
             cells.append((y, self.puzzle.grid.height - 1 - x))
-        if "diagonals" in self.settings["symmetries"]:
-            cells.append((y, x))
-            p = self.puzzle.grid.height - 1 - y
-            q = self.puzzle.grid.width - 1 - x
-            cells.append((p, q))
         return cells
 
     def transform_blocks(self, x, y, status):
