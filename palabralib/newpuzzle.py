@@ -163,7 +163,7 @@ class SizeWindow(gtk.Dialog):
                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
         super(SizeWindow, self).__init__("Resize grid", parent, flags, buttons)
         
-        self.set_size_request(360, -1)
+        self.set_size_request(424, -1)
         self.puzzle = puzzle
         
         hbox = gtk.HBox(False, 0)
