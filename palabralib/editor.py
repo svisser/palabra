@@ -643,11 +643,8 @@ class Editor(gtk.HBox):
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        self.tools["word"].store_words([])
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        if not result:
-            return
         self.tools["word"].store_words(result)
             
     def select(self, x, y, direction):
