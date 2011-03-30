@@ -160,11 +160,17 @@ class WordTool:
         tree_window.add(self.tree)
         tree_window.set_size_request(192, -1)
         
-        toggle_button = gtk.ToggleButton("I")
+        img = gtk.Image()
+        img.set_from_file("resources/icon1.png")
+        toggle_button = gtk.ToggleButton()
+        toggle_button.set_property("image", img)
         toggle_button.set_tooltip_text(u"Show only words with intersecting words")
         toggle_button.connect("toggled", self.on_button_toggled)
         
-        toggle_button2 = gtk.ToggleButton("U")
+        img = gtk.Image()
+        img.set_from_file("resources/icon2.png")
+        toggle_button2 = gtk.ToggleButton()
+        toggle_button2.set_property("image", img)
         toggle_button2.set_tooltip_text(u"Show only unused words")
         toggle_button2.connect("toggled", self.on_button2_toggled)
         
