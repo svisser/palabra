@@ -497,12 +497,10 @@ class PatternEditor(gtk.Dialog):
         
         self.size = size if size else (15, 15)
         
-        all_vbox = gtk.VBox(False, 0)
+        table = gtk.Table(2, 2, False)
         
         radio = gtk.RadioButton(None, u"Tile from: ")
         radio.connect("toggled", self.on_option_toggle, "tile")
-        
-        controls = gtk.HBox(False, 0)
         self.tile_starts = [(p, q) for q in xrange(2) for p in xrange(2)]
         self.tile_combo = gtk.combo_box_new_text()
         self.tile_combo.append_text(u"")
@@ -510,22 +508,17 @@ class PatternEditor(gtk.Dialog):
             content = str(''.join(["(", str(x + 1), ",", str(y + 1), ")" ]))
             self.tile_combo.append_text(content)
         self.tile_combo.connect("changed", self.on_tile_changed)
-        controls.pack_start(radio, False, False, 0)
-        controls.pack_start(self.tile_combo, False, False, 0)
-        all_vbox.pack_start(controls, False, False, 0)
+        table.attach(radio, 0, 1, 0, 1)
+        table.attach(self.tile_combo, 1, 2, 0, 1)
         
         radio = gtk.RadioButton(radio, u"Fill with: ")
         radio.connect("toggled", self.on_option_toggle, "fill")
-        
-        controls = gtk.HBox(False, 0)
-        controls.pack_start(radio, False, False, 0)
         self.fill_combo = gtk.combo_box_new_text()
         self.fill_combo.append_text(u"")
         self.fill_combo.append_text(u"Block")
-        self.fill_combo.append_text(u"Void")
         self.fill_combo.connect("changed", self.on_fill_changed)
-        controls.pack_start(self.fill_combo, False, False, 0)
-        all_vbox.pack_start(controls, False, False, 0)
+        table.attach(radio, 0, 1, 1, 2)
+        table.attach(self.fill_combo, 1, 2, 1, 2)
         
         self.preview = GridPreview()
         self.preview.set_size_request(256, -1)
@@ -533,7 +526,7 @@ class PatternEditor(gtk.Dialog):
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        hbox.pack_start(all_vbox, True, True, 0)
+        hbox.pack_start(table, False, False, 0)
         hbox.pack_start(self.preview, False, False, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
