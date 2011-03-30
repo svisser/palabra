@@ -89,9 +89,9 @@ def determine_file_type(filename):
     except etree.XMLSyntaxError:
         raise ParserError(u"ParserError", u"This is not an XML file.")
     root = doc.getroot()
-    if root.tag == "palabra":
-        return "palabra"
-    elif root.tag == "Puzzles":
+    #if root.tag == "palabra":
+    #    return "palabra"
+    if root.tag == "Puzzles":
         return 'xpf'
     return None
     
