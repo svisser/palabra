@@ -18,7 +18,7 @@
 # Based on treemodel.py in pygtk/demos
 
 import gtk
-from operator import itemgetter
+from operator import add, itemgetter
 
 class WordStore(gtk.GenericTreeModel):
     def __init__(self):
@@ -50,9 +50,7 @@ class WordStore(gtk.GenericTreeModel):
         return None
         
     def on_iter_next(self, node):
-        if self.view_length == 0:
-            return None
-        if node[0] == self.view_length - 1:
+        if self.view_length == 0 or (node[0] == self.view_length - 1):
             return None
         return (node[0] + 1,)
         
