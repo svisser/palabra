@@ -373,6 +373,17 @@ def export_to_pdf(puzzle, filename, output, settings):
     context = cairo.Context(surface)
     
     if output == "grid":
+        header = puzzle.metadata["title"] if "title" in puzzle.metadata else "(nameless)"
+        if "creator" in puzzle.metadata:
+            header += (" / " + puzzle.metadata["creator"])
+        pcr = pangocairo.CairoContext(context)
+        layout = pcr.create_layout()
+        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 10", header))
+        context.save()
+        context.move_to(20, 20)
+        pcr.show_layout(layout)
+        context.restore()
+        context.translate(0, 24)
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         context.show_page()
         
