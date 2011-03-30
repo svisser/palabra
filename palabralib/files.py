@@ -17,6 +17,7 @@
 
 import cairo
 import gtk
+import pango
 import pangocairo
 from operator import itemgetter
 
@@ -375,7 +376,28 @@ def export_to_pdf(puzzle, filename, output, settings):
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         context.show_page()
         
-        def show_clue_page(caption, direction):
+        def show_clue_page_compact():
+            content = []        
+            for caption, direction in [("Across", "across"), ("Down", "down")]:
+                content += ['''<span font_desc="%s">%s</span>\n<span font_desc="%s">''' % ("Sans 10", caption, "Sans 8")]
+                for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words(direction):
+                    if clue == "":
+                        clue = '''<span color="%s">(missing clue)</span>''' % ("#ff0000")
+                    content += [" <b>", str(n), "</b> ", clue.replace("&", "&amp;")]
+                content += ["</span>\n\n"]
+            content = ''.join(content)
+            rx, ry = 20, 20
+            pcr = pangocairo.CairoContext(context)
+            layout = pcr.create_layout()
+            layout.set_width(pango.SCALE * 500)
+            layout.set_wrap(pango.WRAP_WORD_CHAR)
+            layout.set_markup(content)
+            context.save()
+            context.move_to(20, 36)
+            pcr.show_layout(layout)
+            context.restore()
+            context.show_page()
+        def show_clue_page_list(caption, direction):
             rx, ry = 20, 20
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
@@ -396,8 +418,9 @@ def export_to_pdf(puzzle, filename, output, settings):
                 ry += 16
                 display_clue(n, clue, rx, ry)
             context.show_page()
-        show_clue_page("Across", "across")
-        show_clue_page("Down", "down")
+        show_clue_page_compact()
+        #show_clue_page("Across", "across")
+        #show_clue_page("Down", "down")
     elif output == "solution":
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
         context.show_page()
