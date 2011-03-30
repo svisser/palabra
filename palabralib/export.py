@@ -62,10 +62,10 @@ class ExportWindow(gtk.Dialog):
 
         csv = Format("csv", u"CSV (csv)", ["grid", "solution", "clues"])
         #self.formats.append(csv)
-        png = Format("png", u"PNG (png)", ["grid", "solution"], False)
-        self.formats.append(png)
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"], False)
         self.formats.append(pdf)
+        png = Format("png", u"PNG (png)", ["grid", "solution"], False)
+        self.formats.append(png)
 
         setting = FormatSetting("combo", u"Separator:", "separator", ","
             , [(u"Comma", ","), (u"Tab", "\t")])
