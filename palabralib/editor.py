@@ -279,7 +279,6 @@ class WordTool:
         
     def display_data(self):
         self.tree.freeze_child_notify()
-        store = self.tree.get_model()
         self.tree.set_model(None)
         
         show_intersections = self.settings["show_intersecting_words"]
@@ -292,7 +291,7 @@ class WordTool:
             not ( (show_intersections and not row[1]) or (not show_used and row[0] in entries) ) ]
         self.store.set_view(shown)
         
-        self.tree.set_model(store)
+        self.tree.set_model(self.store)
         self.tree.thaw_child_notify()
         self.tree.queue_draw()
         
