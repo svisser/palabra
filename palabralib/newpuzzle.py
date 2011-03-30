@@ -266,7 +266,7 @@ class NewWindow(gtk.Dialog):
         
         patterns_vbox.pack_start(window, True, True, 0)
         
-        buttons_hbox = gtk.HBox(False, 0)
+        buttons_hbox = gtk.HBox(False, 6)
         generate_button = gtk.Button(u"Construct pattern")
         generate_button.connect("clicked", self.construct_pattern)
         buttons_hbox.pack_start(generate_button, False, False, 0)
@@ -274,7 +274,7 @@ class NewWindow(gtk.Dialog):
         align.add(self.clear_button)
         buttons_hbox.pack_start(align, False, False, 0)
         
-        patterns_vbox.pack_start(buttons_hbox, False, False, 0)
+        patterns_vbox.pack_start(buttons_hbox, False, False, 6)
         
         align = gtk.Alignment(0, 0, 1, 1)
         align.set_padding(0, 0, 12, 0)
