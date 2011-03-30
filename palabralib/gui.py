@@ -1110,21 +1110,21 @@ class PalabraWindow(gtk.Window):
             , u"Clear all the content of the puzzle"
             , title=u"_All"
             , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.clear_bars)
-            , u"Clear the bars and the involved clues of the puzzle"
-            , title=u"_Bars"
-            , is_puzzle_sensitive=True))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.transform_grid(transform.clear_bars)
+        #    , u"Clear the bars and the involved clues of the puzzle"
+        #    , title=u"_Bars"
+        #    , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_blocks)
             , u"Clear the blocks and the involved clues of the puzzle"
             , title=u"Bl_ocks"
             , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.clear_voids)
-            , u"Clear the void cells and the involved clues of the puzzle"
-            , title=u"_Voids"
-            , is_puzzle_sensitive=True))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.transform_grid(transform.clear_voids)
+        #    , u"Clear the void cells and the involved clues of the puzzle"
+        #    , title=u"_Voids"
+        #    , is_puzzle_sensitive=True))
         menu.append(self._create_menu_item(
             lambda item: self.transform_grid(transform.clear_chars)
             , u"Clear the letters and the involved clues of the puzzle"
