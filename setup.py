@@ -13,7 +13,7 @@ def create_ext(e):
     name = 'c' + e.capitalize()
     sources = ['clib/c' + e + 'module.c', 'clib/cpalabra.c']
     return name, sources
-EXTS = [create_ext(e) for e in ['grid', 'view', 'word', 'word2']]
+EXTS = [create_ext(e) for e in ['grid', 'view', 'word']]
 ext_modules = [Extension(n, sources=s) for n, s in EXTS]
 
 setup(name="palabra"
