@@ -287,5 +287,11 @@ class CWordList:
         If more_constraints is not specified, the second value
         in a tuple is True.
         """
-        return cWord.search(self.words, length, constraints, more_constraints)
+        def cs_to_str(l, cs):
+            result = ['.' for i in xrange(l)]
+            for (i, c) in cs:
+                result[i] = c
+            return ''.join(result)
+        css_str = [cs_to_str(l, cs) for (i, l, cs) in more_constraints]
+        return cWord.search2(self.words, length, cs_to_str(length, constraints), css_str)
 
