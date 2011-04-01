@@ -177,6 +177,8 @@ typedef struct tnode {
     Tptr lokid, eqkid, hikid;
 } Tnode;
 
+Tptr trees[MAX_WORD_LENGTH];
+
 void print(Tptr p, int indent)
 {
     if (p == NULL) return;
@@ -280,28 +282,14 @@ cWord_search2(PyObject *self, PyObject *args) {
     char *cons_str = PyString_AsString(constraints);
     
     // main word
-    Tptr root;
-    root = insert1(root, "", "");
-    PyObject* key = Py_BuildValue("i", length);
-    PyObject* words_main = PyDict_GetItem(words, key);
-    Py_ssize_t w;
-    for (w = 0; w < PyList_Size(words_main); w++) {
-        char *word = PyString_AsString(PyList_GetItem(words_main, w));
-        root = insert1(root, word, word);
-    }
     PyObject *mwords = PyList_New(0);
-    mwords = search3(mwords, root, cons_str);
+    mwords = search3(mwords, trees[strlen(cons_str)], cons_str);
     
     // each of the constraints
     int intersections[length];
-    Tptr trees[length];
     int lengths[length];
     int t;
     for (t = 0; t < length; t++) {
-        Tptr a;
-        trees[t] = a;
-        trees[t] = insert1(trees[t], "", "");
-        
         PyObject* item = PyList_GetItem(more_constraints, (Py_ssize_t) t);
         char *cons_str2 = PyString_AsString(item);
         lengths[t] = strlen(cons_str2);
@@ -316,14 +304,7 @@ cWord_search2(PyObject *self, PyObject *args) {
         }
         
         if (skip == 0) {
-            PyObject* key = Py_BuildValue("i", lengths[t]);
-            PyObject* words_main = PyDict_GetItem(words, key);
-            Py_ssize_t w;
-            for (w = 0; w < PyList_Size(words_main); w++) {
-                char *word = PyString_AsString(PyList_GetItem(words_main, w));
-                trees[t] = insert1(trees[t], word, word);
-            }
-            intersections[t] = count_matches(trees[t], cons_str2);
+            intersections[t] = count_matches(trees[lengths[t]], cons_str2);
         } else {
             intersections[t] = intersections[s];
         }
@@ -620,6 +601,8 @@ cWord_preprocess(PyObject *self, PyObject *args) {
     PyObject *words;
     if (!PyArg_ParseTuple(args, "O", &words))
         return NULL;
+    
+    // create dict (keys are word lengths, each item is a list with words of that length)
     PyObject* dict = PyDict_New();
     PyObject* keys[MAX_WORD_LENGTH];
     int l;
@@ -633,6 +616,22 @@ cWord_preprocess(PyObject *self, PyObject *args) {
         PyObject* key = keys[(int) PyString_Size(word)];
         PyList_Append(PyDict_GetItem(dict, key), word);
     }
+    
+    // build ternary search trees per word length
+    int m;
+    for (m = 0; m < MAX_WORD_LENGTH; m++) {
+        Tptr root;
+        trees[m] = root;
+        trees[m] = insert1(trees[m], "", "");
+        
+        Py_ssize_t w;
+        PyObject *words = PyDict_GetItem(dict, Py_BuildValue("i", m));
+        for (w = 0; w < PyList_Size(words); w++) {
+            char *word = PyString_AsString(PyList_GetItem(words, w));
+            trees[m] = insert1(trees[m], word, word);
+        }
+    }
+    
     return dict;
 }
 
