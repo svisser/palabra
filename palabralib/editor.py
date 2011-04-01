@@ -184,22 +184,11 @@ class WordTool:
         main.pack_start(buttons, False, False, 0)
         main.pack_start(tree_window, True, True, 0)
         
-        combo = gtk.combo_box_new_text()
-        combo.append_text(u"Sort by alphabet")
-        combo.append_text(u"Sort by suitability")
-        combo.set_active(0)
-        combo.connect("changed", self.on_sort_changed)
-        main.pack_start(combo, False, False, 0)
-        
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
         hbox.set_spacing(6)
         hbox.pack_start(main, True, True, 0)
         return hbox
-        
-    def on_sort_changed(self, combo):
-        self.store.ordering = combo.get_active()
-        self.display_data()
         
     def on_button_toggled(self, button):
         status = button.get_active()
