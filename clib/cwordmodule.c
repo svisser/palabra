@@ -631,8 +631,35 @@ cWord_preprocess(PyObject *self, PyObject *args) {
             trees[m] = insert1(trees[m], word, word);
         }
     }
-    
     return dict;
+}
+
+void free_tree(Tptr p) {
+    if (p->lokid != NULL) {
+        free_tree(p->lokid);
+        free(p->lokid);
+        p->lokid = NULL;
+    }
+    if (p->eqkid != NULL) {
+        free_tree(p->eqkid);
+        free(p->eqkid);
+        p->eqkid = NULL;
+    }
+    if (p->hikid != NULL) {
+        free_tree(p->hikid);
+        free(p->hikid);
+        p->hikid = NULL;
+    }
+}
+
+static PyObject*
+cWord_postprocess(PyObject *self, PyObject *args) {
+    int m;
+    for (m = 0; m < MAX_WORD_LENGTH; m++) {
+        free_tree(trees[m]);
+        free(trees[m]);
+    }
+    return Py_None;
 }
 
 static PyMethodDef methods[] = {
@@ -640,6 +667,7 @@ static PyMethodDef methods[] = {
     {"search", cWord_search, METH_VARARGS, "search"},
     {"search2", cWord_search2, METH_VARARGS, "search2"},
     {"preprocess", cWord_preprocess, METH_VARARGS, "preprocess"},
+    {"postprocess", cWord_postprocess, METH_VARARGS, "postprocess"},
     {NULL, NULL, 0, NULL}
 };
 

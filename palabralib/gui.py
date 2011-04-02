@@ -25,6 +25,7 @@ import action
 from action import State
 from appearance import AppearanceDialog
 import cGrid
+import cWord
 from clue import ClueTool
 import constants
 from export import ExportWindow, verify_output_options
@@ -1242,4 +1243,5 @@ You should have received a copy of the GNU General Public License along with thi
 
 def quit():
     gtk.main_quit()
+    cWord.postprocess()
     write_config_file()
