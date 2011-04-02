@@ -29,6 +29,7 @@ import grid
 from grid import Grid
 from puzzle import Puzzle
 from view import CellStyle, GridView
+from xpf import read_xpf
 
 DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
 DC_SIMPLE_TERMS = ["title"
@@ -592,7 +593,7 @@ class XPFParserError(ParserError):
         ParserError.__init__(self, "XPFParserError", message)
 
 # http://www.xwordinfo.com/XPF/
-def read_xpf(filename):
+def read_xpf_old(filename):
     # TODO check validity coordinates
     results = []
     try:
