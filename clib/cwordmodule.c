@@ -290,8 +290,13 @@ cWord_search2(PyObject *self, PyObject *args) {
     int lengths[length];
     int t;
     for (t = 0; t < length; t++) {
+        int index;
+        PyObject *py_cons_str2;
         PyObject* item = PyList_GetItem(more_constraints, (Py_ssize_t) t);
-        char *cons_str2 = PyString_AsString(item);
+        if (!PyArg_ParseTuple(item, "iO", &index, &py_cons_str2))
+            return NULL;
+        
+        char *cons_str2 = PyString_AsString(py_cons_str2);
         lengths[t] = strlen(cons_str2);
         
         int skip = 0;

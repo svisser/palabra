@@ -292,6 +292,6 @@ class CWordList:
             for (i, c) in cs:
                 result[i] = c
             return ''.join(result)
-        css_str = [cs_to_str(l, cs) for (i, l, cs) in more_constraints]
+        css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more_constraints]
         return cWord.search2(self.words, length, cs_to_str(length, constraints), css_str)
 
