@@ -177,6 +177,18 @@ typedef struct tnode {
     Tptr lokid, eqkid, hikid;
 } Tnode;
 
+typedef struct sresult *Sptr;
+typedef struct sresult {
+    int n_matches;
+    char *chars;
+} SearchResult;
+
+typedef struct sparams *SPPtr;
+typedef struct sparams {
+    int length;
+    int *offsets;
+} SearchParams;
+
 Tptr trees[MAX_WORD_LENGTH];
 
 void print(Tptr p, int indent)
@@ -195,7 +207,7 @@ void print(Tptr p, int indent)
     if (p->hikid != NULL) print(p->hikid, indent + 2);
 }
 
-// TODO release memory afterwards
+// TODO check malloc
 Tptr insert1(Tptr p, char *s, char *word)
 {
     if (p == 0) {
@@ -245,20 +257,37 @@ PyObject* search3(PyObject *list, Tptr p, char *s)
     return list;
 }
 
-int count_matches(Tptr p, char *s)
+int count_matches(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
 {
     if (!p) return 0;
-    int result = 0;
+    int n = 0;
     if (*s == '.' || *s < p->splitchar)
-        result += count_matches(p->lokid, s);
+        n += count_matches(params, result, p->lokid, s, cs);
     if (*s == '.' || *s == p->splitchar)
         if (p->splitchar && *s)
-            result += count_matches(p->eqkid, s + 1);
-    if (*s == 0 && p->splitchar == 0)
-        result += 1;
+            n += count_matches(params, result, p->eqkid, s + 1, cs);
+    if (*s == 0 && p->splitchar == 0) {
+        n += 1;
+        int l;
+        for (l = 0; l < params->length; l++) {
+            if (*(cs + params->offsets[l]) == '.') {
+                char c = *(p->word + params->offsets[l]);
+                int m;
+                for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
+                    if (result->chars[m] == c)
+                        break;
+                    if (result->chars[m] == ' ') {
+                        result->chars[m] = c;
+                        break;
+                    }
+                }
+            }
+        }
+    }
     if (*s == '.' || *s > p->splitchar)
-        result += count_matches(p->hikid, s);
-    return result;
+        n += count_matches(params, result, p->hikid, s, cs);
+    result->n_matches = n;
+    return n;
 }
 
 int main(int argc, const char* argv[])
@@ -286,32 +315,68 @@ cWord_search2(PyObject *self, PyObject *args) {
     mwords = search3(mwords, trees[strlen(cons_str)], cons_str);
     
     // each of the constraints
+    int offsets[length];
+    char *cs[length];
     int intersections[length];
     int lengths[length];
     int t;
     for (t = 0; t < length; t++) {
-        int index;
+        int offset;
         PyObject *py_cons_str2;
         PyObject* item = PyList_GetItem(more_constraints, (Py_ssize_t) t);
-        if (!PyArg_ParseTuple(item, "iO", &index, &py_cons_str2))
+        if (!PyArg_ParseTuple(item, "iO", &offset, &py_cons_str2))
             return NULL;
         
         char *cons_str2 = PyString_AsString(py_cons_str2);
         lengths[t] = strlen(cons_str2);
-        
-        int skip = 0;
+        offsets[t] = offset;
+        cs[t] = cons_str2;
+    }
+    int skipped[length];
+    for (t = 0; t < length; t++) skipped[t] = 0;
+    Sptr results[length];
+    for (t = 0; t < length; t++) {
+        int skip = -1;
         int s;
         for (s = 0; s < t; s++) {
-            if (lengths[s] == lengths[t]) {
+            if (strcmp(cs[s], cs[t]) == 0) {
                 skip = s;
                 break;
             }
         }
         
-        if (skip == 0) {
-            intersections[t] = count_matches(trees[lengths[t]], cons_str2);
+        if (skip < 0) {
+            SPPtr params;
+            params = (SPPtr) malloc(sizeof(SearchParams));
+            if (!params)
+                return NULL;
+            params->length = length;
+            params->offsets = offsets;
+
+            Sptr result;
+            result = (Sptr) malloc(sizeof(SearchResult));
+            if (!result) {
+                free(params);
+                return NULL;
+            }
+            result->chars = malloc(MAX_ALPHABET_SIZE * sizeof(char));
+            if (!result->chars) {
+                free(result);
+                free(params);
+                return NULL;
+            }
+            int c;
+            for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
+                result->chars[c] = ' ';
+            }
+            
+            printf("%s\n", cs[t]);
+            intersections[t] = count_matches(params, result, trees[lengths[t]], cs[t], cs[t]);
+            results[t] = result;
         } else {
-            intersections[t] = intersections[s];
+            skipped[t] = 1;
+            intersections[t] = intersections[skip];
+            results[t] = results[skip];
         }
     }
     
@@ -328,9 +393,27 @@ cWord_search2(PyObject *self, PyObject *args) {
     PyObject *result = PyList_New(0);
     for (m = 0; m < PyList_Size(mwords); m++) {
         char *word = PyString_AsString(PyList_GetItem(mwords, m));
-        PyObject* py_intersect = PyBool_FromLong(!zero_slot);
+        
+        int n_chars = 0;
+        int c;
+        for (c = 0; c < length; c++) {
+            int m;
+            for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
+                if (results[c]->chars[m] == ' ') break;
+                if (results[c]->chars[m] == *(word + c)) {
+                    n_chars += 1;
+                    break;
+                }
+            }
+        }
+        printf("n_chars %i %i\n", n_chars, length);
+        PyObject* py_intersect = PyBool_FromLong(!zero_slot && (n_chars == length));
         PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, 0);
         PyList_Append(result, r);
+    }
+    for (z = 0; z < length; z++) {
+        if (skipped[z] == 0)
+            free(results[z]);
     }
     return result;
 }
