@@ -244,66 +244,68 @@ class GridView:
         """
         if mode is not None:
             self.select_mode(mode)
-        for x, y in self.grid.cells():
-            self.render_bottom(context, x, y)
-            self.render_top(context, x, y)
+        self.render_bottom(context)
+        self.render_top(context)
 
-    def render_bottom(self, context, x, y):
+    def render_bottom(self, context, x=None, y=None):
         # background
-        def render(context, grid, props):
-            rx = props.grid_to_screen_x(x, False)
-            ry = props.grid_to_screen_y(y, False)
-            rsize = props.cell["size"]
-            
+        if self.settings["has_padding"]:
+            context.translate(self.properties.margin_x, self.properties.margin_y)
+        cells = [(x, y)] if x is not None and y is not None else self.grid.cells()
+        for p, q in cells:
+            context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).cell["color"]])
+            rx = self.properties.grid_to_screen_x(p, False)
+            ry = self.properties.grid_to_screen_y(q, False)
+            rsize = self.properties.cell["size"]
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
             context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
-        color = [c / 65535.0 for c in self.style(x, y).cell["color"]]
-        self._render(context, render, color=color)
+        if self.settings["has_padding"]:
+            context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
-    def render_top(self, context, x, y):
-        # char
-        def render(context, grid, props):
-            c = grid.get_char(x, y)
-            if c != '':
-                self._render_char(context, props, x, y, c)
-        if self.settings["show_chars"]:
-            color = [c / 65535.0 for c in self.style(x, y).char["color"]]
-            self._render(context, render, color=color)
-        
-        # overlay char
-        def render(context, grid, props):
-            for p, q, c in self.overlay:
-                if (x, y) == (p, q):
-                    self._render_char(context, props, x, y, c)
-        # TODO custom color
-        if self.settings["render_overlays"]:
-            color = [c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)]
-            self._render(context, render, color=color)
-        
-        # highlights
-        def render(context, grid, props):
+    def render_top(self, context, x=None, y=None):
+        if self.settings["has_padding"]:
+            context.translate(self.properties.margin_x, self.properties.margin_y)
+        cells = [(x, y)] if x is not None and y is not None else self.grid.cells()
+        for p, q in cells:
+            # char
+            if self.settings["show_chars"]:
+                context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).char["color"]])
+                c = self.grid.get_char(p, q)
+                if c != '':
+                    self._render_char(context, self.properties, p, q, c)
+                    
+            # overlay char
+            if self.settings["render_overlays"]:
+                # TODO custom color
+                context.set_source_rgb(*[c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)])
+                for r, s, c in self.overlay:
+                    if (p, q) == (r, s):
+                        self._render_char(context, self.properties, p, q, c)
+            
+            # highlights - TODO custom color
+            context.set_source_rgb(*[c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)])
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
-                sx = props.grid_to_screen_x(p, False)
-                sy = props.grid_to_screen_y(q, False)
-                hwidth = int(props.cell["size"] / 8)
+                sx = self.properties.grid_to_screen_x(p, False)
+                sy = self.properties.grid_to_screen_y(q, False)
+                hwidth = int(self.properties.cell["size"] / 8)
                 lines = []
                 if top:
                     ry = sy + 0.5 * hwidth
-                    rdx = props.cell["size"]
+                    rdx = self.properties.cell["size"]
                     lines.append((sx, ry, rdx, 0))
                 if bottom:
-                    ry = sy + props.cell["size"] - 0.5 * hwidth
-                    rdx = props.cell["size"]
+                    ry = sy + self.properties.cell["size"] - 0.5 * hwidth
+                    rdx = self.properties.cell["size"]
                     lines.append((sx, ry, rdx, 0))
                 if left:
                     rx = sx + 0.5 * hwidth
-                    rdy = props.cell["size"]
+                    rdy = self.properties.cell["size"]
                     lines.append((rx, sy, 0, rdy))
                 if right:
-                    rx = sx + props.cell["size"] - 0.5 * hwidth
-                    rdy = props.cell["size"]
+                    rx = sx + self.properties.cell["size"] - 0.5 * hwidth
+                    rdy = self.properties.cell["size"]
                     lines.append((rx, sy, 0, rdy))
                 
                 context.set_line_width(hwidth)
@@ -311,68 +313,61 @@ class GridView:
                     context.move_to(rx, ry)
                     context.rel_line_to(rdx, rdy)
                     context.stroke()
-                context.set_line_width(props.line["width"])
+                context.set_line_width(self.properties.line["width"])
                 
-            for p, q, direction, length in self.highlights:
-                if direction == "across" and p <= x < p + length and q == y:
+            for r, s, direction, length in self.highlights:
+                if direction == "across" and r <= p < r + length and s == q:
                     top = bottom = True
-                    right = x == (p + length - 1)
-                    left = x == p
-                    render_highlights_of_cell(context, x, y, top, bottom, left, right)
-                elif direction == "down" and q <= y < q + length and p == x:
+                    right = p == (r + length - 1)
+                    left = p == r
+                    render_highlights_of_cell(context, p, q, top, bottom, left, right)
+                elif direction == "down" and s <= q < s + length and r == p:
                     left = right = True
-                    top = y == q
-                    bottom = y == (q + length - 1)
-                    render_highlights_of_cell(context, x, y, top, bottom, left, right)
-        # TODO custom color
-        color = [c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)]
-        self._render(context, render, color=color)
-        
-        # block
-        def render(context, grid, props):
-            if grid.is_block(x, y):
-                rx = props.grid_to_screen_x(x, False)
-                ry = props.grid_to_screen_y(y, False)
-                rsize = props.cell["size"]
+                    top = q == s
+                    bottom = q == (s + length - 1)
+                    render_highlights_of_cell(context, p, q, top, bottom, left, right)
+            # block
+            context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).block["color"]])
+            if self.grid.is_block(p, q):
+                rx = self.properties.grid_to_screen_x(p, False)
+                ry = self.properties.grid_to_screen_y(q, False)
+                rsize = self.properties.cell["size"]
                 
-                if props.style(x, y).block["margin"] != 0:
-                    offset = int((props.style(x, y).block["margin"] / 100.0) * props.cell["size"])
+                if self.properties.style(p, q).block["margin"] != 0:
+                    offset = int((self.properties.style(p, q).block["margin"] / 100.0) * self.properties.cell["size"])
                     rx += offset
                     ry += offset
                     rsize -= (2 * offset)
                 
-                if props.style(x, y).block["margin"] == 0:
+                if self.properties.style(p, q).block["margin"] == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
                     context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
                 else:                
                     context.rectangle(rx, ry, rsize, rsize)
             context.fill()
-        color = [c / 65535.0 for c in self.style(x, y).block["color"]]
-        self._render(context, render, color=color)
-        
-        self.render_all_lines_of_cell(context, x, y)
             
-        # number
-        def render(context, grid, props):
-            n = grid.cell(x, y)["number"]
-            if n > 0:
-                self._render_number(context, props, x, y, n)
-        if self.settings["show_numbers"]:
-            color = [c / 65535.0 for c in self.style(x, y).number["color"]]
-            self._render(context, render, color=color)
+            # lines
+            self.render_all_lines_of_cell(context, p, q)
             
-        # circle
-        def render(context, grid, props):
-            rx = props.grid_to_screen_x(x, False)
-            ry = props.grid_to_screen_y(y, False)
-            rsize = props.cell["size"]
-            context.new_sub_path()
-            context.arc(rx + rsize / 2, ry + rsize / 2, rsize / 2, 0, 2 * math.pi)
-            context.stroke()
-        if self.style(x, y).circle:
-            color = [c / 65535.0 for c in self.style(x, y).char["color"]]
-            self._render(context, render, color=color)
+            # number
+            if self.settings["show_numbers"]:
+                context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).number["color"]])
+                n = self.grid.cell(p, q)["number"]
+                if n > 0:
+                    self._render_number(context, self.properties, p, q, n)
+                    
+            # circle
+            if self.style(p, q).circle:
+                context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).char["color"]])
+                rx = self.properties.grid_to_screen_x(p, False)
+                ry = self.properties.grid_to_screen_y(q, False)
+                rsize = self.properties.cell["size"]
+                context.new_sub_path()
+                context.arc(rx + rsize / 2, ry + rsize / 2, rsize / 2, 0, 2 * math.pi)
+                context.stroke()
+        if self.settings["has_padding"]:
+            context.translate(-self.properties.margin_x, -self.properties.margin_y)
     
     def render_all_lines_of_cell(self, context, x, y):
         """Render the lines that surround a cell (all four sides)."""
@@ -384,89 +379,87 @@ class GridView:
     def render_lines_of_cell(self, context, x, y):
         # lines
         """Render the lines that belong to a cell (top and left line)."""
-        def render_line(context, props, rx, ry, rdx, rdy, bar, border):
+        def render_line(context, rx, ry, rdx, rdy, bar, border):
             if bar:
-                context.set_line_width(props.bar["width"])
+                context.set_line_width(self.properties.bar["width"])
             if border:
-                color = [c / 65535.0 for c in props.border["color"]]
+                color = [c / 65535.0 for c in self.properties.border["color"]]
                 context.set_source_rgb(*color)
             context.move_to(rx, ry)
             context.rel_line_to(rdx, rdy)
             context.stroke()
             if border:
-                color = [c / 65535.0 for c in props.line["color"]]
+                color = [c / 65535.0 for c in self.properties.line["color"]]
                 context.set_source_rgb(*color)
             if bar:
-                context.set_line_width(props.line["width"])
+                context.set_line_width(self.properties.line["width"])
         
-        def render(context, grid, props):
-            lines = grid.get_lines(x, y)
-            for p, q, ltype, side in lines:
-                sx = props.grid_to_screen_x(p, False)
-                sy = props.grid_to_screen_y(q, False)
+        context.set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
+        lines = self.grid.get_lines(x, y)
+        for p, q, ltype, side in lines:
+            sx = self.properties.grid_to_screen_x(p, False)
+            sy = self.properties.grid_to_screen_y(q, False)
+            
+            lwidth = self.properties.line["width"]
+            bwidth = self.properties.border["width"]
+            cellsize = self.properties.cell["size"]
+            
+            bar = self.grid.is_valid(x, y) and self.grid.has_bar(x, y, ltype)
+            border = "border" in side
+            if side == "normal":
+                context.set_line_width(lwidth)
+            elif border:
+                context.set_line_width(bwidth)
+            
+            if side == "normal":
+                start = -0.5 * lwidth
+            elif side == "outerborder":
+                start = -0.5 * bwidth
+            elif side == "innerborder":
+                start = 0.5 * bwidth
+                if ltype == "top":
+                    check = x, y + 1
+                elif ltype == "left":
+                    check = x + 1, y
+                if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
+                    start -= lwidth
+            
+            if ltype == "left":
+                render_line(context, sx + start, sy, 0, cellsize, bar, border)
+            elif ltype == "top":
+                rx = sx
+                ry = sy + start
+                rdx = cellsize
                 
-                lwidth = props.line["width"]
-                bwidth = props.border["width"]
-                cellsize = props.cell["size"]
+                def get_delta(x, y, side_no_extend, side_extend):
+                    """
+                    Determine the delta in pixels.
+                    The delta is at least the normal line width.
+                    """
+                    if ((x, y, "left", side_no_extend) in lines
+                        or (x, y - 1, "left", side_no_extend) in lines):
+                        return False, self.properties.line["width"]
+                    if ((x, y, "left", "normal") in lines
+                        or (x, y - 1, "left", "normal") in lines):
+                        return False, self.properties.line["width"]
+                    if ((x, y, "left", side_extend) in lines
+                        or (x, y - 1, "left", side_extend) in lines):
+                        return True, 0
+                    return False, 0
+                is_lb, dxl = get_delta(x, y, "innerborder", "outerborder")
+                is_rb, dxr = get_delta(x + 1, y, "outerborder", "innerborder")
                 
-                bar = grid.is_valid(x, y) and grid.has_bar(x, y, ltype)
-                border = "border" in side
-                if side == "normal":
-                    context.set_line_width(lwidth)
-                elif border:
-                    context.set_line_width(bwidth)
-                
-                if side == "normal":
-                    start = -0.5 * lwidth
-                elif side == "outerborder":
-                    start = -0.5 * bwidth
-                elif side == "innerborder":
-                    start = 0.5 * bwidth
-                    if ltype == "top":
-                        check = x, y + 1
-                    elif ltype == "left":
-                        check = x + 1, y
-                    if not grid.is_available(*check) or not grid.is_available(x, y):
-                        start -= lwidth
-                
-                if ltype == "left":
-                    render_line(context, props, sx + start, sy, 0, cellsize, bar, border)
-                elif ltype == "top":
-                    rx = sx
-                    ry = sy + start
-                    rdx = cellsize
-                    
-                    def get_delta(x, y, side_no_extend, side_extend):
-                        """
-                        Determine the delta in pixels.
-                        The delta is at least the normal line width.
-                        """
-                        if ((x, y, "left", side_no_extend) in lines
-                            or (x, y - 1, "left", side_no_extend) in lines):
-                            return False, props.line["width"]
-                        if ((x, y, "left", "normal") in lines
-                            or (x, y - 1, "left", "normal") in lines):
-                            return False, props.line["width"]
-                        if ((x, y, "left", side_extend) in lines
-                            or (x, y - 1, "left", side_extend) in lines):
-                            return True, 0
-                        return False, 0
-                    is_lb, dxl = get_delta(x, y, "innerborder", "outerborder")
-                    is_rb, dxr = get_delta(x + 1, y, "outerborder", "innerborder")
-                    
-                    # adjust horizontal lines to fill empty spaces in corners
-                    rx -= dxl
-                    rdx += dxl
-                    rdx += dxr
-                    render_line(context, props, rx, ry, rdx, 0, bar, border)
-                    if is_lb:
-                        rx -= bwidth
-                        render_line(context, props, rx, ry, bwidth, 0, False, True)
-                    if is_rb:
-                        rx += (cellsize + dxl)
-                        render_line(context, props, rx, ry, bwidth, 0, False, True)
-        color = [c / 65535.0 for c in self.properties.line["color"]]
-        self._render(context, render, color=color)
+                # adjust horizontal lines to fill empty spaces in corners
+                rx -= dxl
+                rdx += dxl
+                rdx += dxr
+                render_line(context, rx, ry, rdx, 0, bar, border)
+                if is_lb:
+                    rx -= bwidth
+                    render_line(context, rx, ry, bwidth, 0, False, True)
+                if is_rb:
+                    rx += (cellsize + dxl)
+                    render_line(context, rx, ry, bwidth, 0, False, True)
             
     def render_warnings_of_cell(self, context, x, y, r, g, b):
         """Render undesired cell in the specified color."""
@@ -500,8 +493,11 @@ class GridView:
             context.rectangle(bx, by, bsize, bsize)
             context.fill()
         self._render(context, render, color=(r, g, b))
-        
-        self.render_all_lines_of_cell(context, x, y)
+        if self.settings["has_padding"]:
+            context.translate(self.properties.margin_x, self.properties.margin_y)
+            self.render_all_lines_of_cell(context, x, y)
+        if self.settings["has_padding"]:
+            context.translate(-self.properties.margin_x, -self.properties.margin_y)
     
     def _render_pango(self, context, x, y, font, content):
         """Render the content at (x, y) using the specified font description."""

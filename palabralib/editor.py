@@ -459,11 +459,17 @@ class Editor(gtk.HBox):
             context = cairo.Context(self.editor_surface)
             # TODO should not be needed
             self.puzzle.view.grid = self.puzzle.grid
-            for x, y in self.puzzle.grid.cells():
-                self.puzzle.view.render_bottom(context, x, y)
-                self._render_editor_of_cell(context, x, y)
-                self.puzzle.view.render_top(context, x, y)
+            def _draw(context):
+                self.puzzle.view.render_bottom(context)
+                for x, y in self.puzzle.grid.cells():
+                    self._render_editor_of_cell(context, x, y)
+                self.puzzle.view.render_top(context)
             self.force_redraw = False
+            import pstats
+            import cProfile
+            cProfile.runctx('_draw(context)', globals(), locals(), filename='fooprof')
+            p = pstats.Stats('fooprof')
+            p.sort_stats('time').print_stats(20)
         context = self.drawing_area.window.cairo_create()
         context.set_source(self.editor_pattern)
         context.paint()
