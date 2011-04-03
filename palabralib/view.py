@@ -242,7 +242,8 @@ class GridView:
         for x, y in self.grid.cells():
             self.render_bottom(context, x, y)
             self.render_top(context, x, y)
-        if self.mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE:
+        if (self.mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+            or self.mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION):
             self.properties.cell["size"] = 32
             self.properties.margin_x = 10
             self.properties.margin_y = 10
