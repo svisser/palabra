@@ -658,10 +658,14 @@ def read_xpf(filename):
                     if row.tag != "Row":
                         print "Warning: skipping a child of Grid that is not a Row."
                         continue
-                    content = row.text
-                    for i, c in enumerate(content):
+                    if not row.text or len(row.text) < r_width:
+                        print "Warning: skipping a row with missing content."
+                        continue
+                    for i, c in enumerate(row.text):
                         if c == '.':
                             r_grid.set_block(x + i, y, True)
+                        elif c == '~':
+                            r_grid.set_void(x + i, y, True)
                         else:
                             r_grid.set_char(x + i, y, c if c != ' ' else '')
                     y += 1
@@ -672,11 +676,8 @@ def read_xpf(filename):
                         continue
                     a_row = circle.get("Row")
                     a_col = circle.get("Col")
-                    if a_row is None:
-                        print "Warning: skipping a child of Circles without a Row."
-                        continue
-                    if a_col is None:
-                        print "Warning: skipping a child of Circles without a Col."
+                    if not (a_row and a_col):
+                        print "Warning: skipping a child of Circles."
                         continue
                     x = int(a_col) - 1
                     y = int(a_row) - 1
@@ -689,20 +690,11 @@ def read_xpf(filename):
                         print "Warning: skipping a child of RebusEntries that is not a Rebus."
                         continue
                     a_row = rebus.get("Row")
-                    if a_row is None:
-                        print "Warning: skipping a child of RebusEntries without a Row."
-                        continue
                     a_col = rebus.get("Col")
-                    if a_col is None:
-                        print "Warning: skipping a child of RebusEntries without a Col."
-                        continue
                     a_short = rebus.get("Short")
-                    if a_short is None:
-                        print "Warning: skipping a child of RebusEntries without a Short."
-                        continue
                     content = rebus.text
-                    if len(content) == 0:
-                        print "Warning: skipping a child of RebusEntries without content."
+                    if not (a_row and a_row and a_short and content):
+                        print "Warning: skipping a child of RebusEntries."
                         continue
                     x = int(a_col) - 1
                     y = int(a_row) - 1
@@ -714,27 +706,20 @@ def read_xpf(filename):
                         continue
                     a_row = shade.get("Row")
                     a_col = shade.get("Col")
-                    if a_row is None:
-                        print "Warning: skipping a child of Shades without a Row."
-                        continue
-                    if a_col is None:
-                        print "Warning: skipping a child of Shades without a Col."
+                    if not (a_row and a_col and shade.text):
+                        print "Warning: skipping a child of Shades."
                         continue
                     x = int(a_col) - 1
                     y = int(a_row) - 1
-                    if shade.text:
-                        if (x, y) not in r_styles:
-                            r_styles[x, y] = CellStyle()
-                        if shade.text == "gray":
-                            shade.text = "#808080"
-                        if shade.text[0] == '#':
-                            colorhex = shade.text[1:]
-                            split = (colorhex[0:2], colorhex[2:4], colorhex[4:6])
-                            rgb = [int((int(d, 16) / 255.0) * 65535) for d in split]
-                            r_styles[x, y].cell["color"] = tuple(rgb)
-                    else:
-                        print "Warning: Skipping a child of Shades with no content."
-                        continue
+                    if (x, y) not in r_styles:
+                        r_styles[x, y] = CellStyle()
+                    if shade.text == "gray":
+                        shade.text = "#808080"
+                    if shade.text[0] == '#':
+                        colorhex = shade.text[1:]
+                        split = (colorhex[0:2], colorhex[2:4], colorhex[4:6])
+                        rgb = [int((int(d, 16) / 255.0) * 65535) for d in split]
+                        r_styles[x, y].cell["color"] = tuple(rgb)
             elif child.tag == "Clues":
                 for clue in child:
                     if clue.tag != "Clue":
