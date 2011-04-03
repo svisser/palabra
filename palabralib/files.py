@@ -47,9 +47,28 @@ DC_SIMPLE_TERMS = ["title"
     , "coverage"
     , "rights"]
 
+XPF_META_ELEMS = {'Type': 'type'
+    , 'Title': 'title'
+    , 'Author': 'creator'
+    , 'Editor': 'contributor'
+    , 'Copyright': 'rights'
+    , 'Publisher': 'publisher'
+    , 'Date': 'date'}
+XPF_META_ELEMS_LIST = [("type", "Type")
+    , ("title", "Title")
+    , ("creator", "Author")
+    , ("contributor", "Editor")
+    , ("rights", "Copyright")
+    , ("publisher", "Publisher")
+    , ("date", "Date")]
+
 class ParserError(Exception):
     def __init__(self, prefix, message):
         self.message = ''.join([prefix, ": ", message])
+
+class XPFParserError(ParserError):
+    def __init__(self, message=""):
+        ParserError.__init__(self, "XPFParserError", message)
 
 class PalabraParserError(ParserError):
     def __init__(self, message):
@@ -587,25 +606,6 @@ def read_palabra(filename):
         results.append(p)
     return results
 
-class XPFParserError(ParserError):
-    def __init__(self, message=""):
-        ParserError.__init__(self, "XPFParserError", message)
-
-XPF_META_ELEMS = {'Type': 'type'
-    , 'Title': 'title'
-    , 'Author': 'creator'
-    , 'Editor': 'contributor'
-    , 'Copyright': 'rights'
-    , 'Publisher': 'publisher'
-    , 'Date': 'date'}
-XPF_META_ELEMS_LIST = [("type", "Type")
-    , ("title", "Title")
-    , ("creator", "Author")
-    , ("contributor", "Editor")
-    , ("rights", "Copyright")
-    , ("publisher", "Publisher")
-    , ("date", "Date")]
-
 # http://www.xwordinfo.com/XPF/
 def read_xpf(filename):
     # TODO check validity coordinates
@@ -856,7 +856,7 @@ def _write_puzzle(filename, contents, backup=True):
     f.close()
     
 FILETYPES = {}
-FILETYPES['keys'] = [constants.PUZZLE_XPF] # [constants.PUZZLE_PALABRA, constants.PUZZLE_XPF]
+FILETYPES['keys'] = [constants.PUZZLE_XPF]
 FILETYPES[constants.PUZZLE_PALABRA] = {
     'description': u"Palabra puzzle files"
     , 'pattern': u".xml"
