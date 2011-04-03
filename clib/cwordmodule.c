@@ -186,7 +186,7 @@ typedef struct sresult {
 typedef struct sparams *SPPtr;
 typedef struct sparams {
     int length;
-    int *offsets;
+    int offset;
 } SearchParams;
 
 Tptr trees[MAX_WORD_LENGTH];
@@ -268,18 +268,15 @@ int count_matches(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
             n += count_matches(params, result, p->eqkid, s + 1, cs);
     if (*s == 0 && p->splitchar == 0) {
         n += 1;
-        int l;
-        for (l = 0; l < params->length; l++) {
-            if (*(cs + params->offsets[l]) == '.') {
-                char c = *(p->word + params->offsets[l]);
-                int m;
-                for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-                    if (result->chars[m] == c)
-                        break;
-                    if (result->chars[m] == ' ') {
-                        result->chars[m] = c;
-                        break;
-                    }
+        if (*(cs + params->offset) == '.') {
+            char c = *(p->word + params->offset);
+            int m;
+            for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
+                if (result->chars[m] == c)
+                    break;
+                if (result->chars[m] == ' ') {
+                    result->chars[m] = c;
+                    break;
                 }
             }
         }
@@ -351,7 +348,7 @@ cWord_search2(PyObject *self, PyObject *args) {
             if (!params)
                 return NULL;
             params->length = length;
-            params->offsets = offsets;
+            params->offset = offsets[t];
 
             Sptr result;
             result = (Sptr) malloc(sizeof(SearchResult));
@@ -369,9 +366,13 @@ cWord_search2(PyObject *self, PyObject *args) {
             for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
                 result->chars[c] = ' ';
             }
-            
-            printf("%s\n", cs[t]);
             intersections[t] = count_matches(params, result, trees[lengths[t]], cs[t], cs[t]);
+            printf("%s %i %i ", cs[t], intersections[t], offsets[t]);
+            printf(">>>");
+            for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
+                printf("%c", result->chars[c]);
+            }
+            printf("<<<\n");
             results[t] = result;
         } else {
             skipped[t] = 1;
@@ -380,40 +381,46 @@ cWord_search2(PyObject *self, PyObject *args) {
         }
     }
     
-    int zero_slot = 0;
-    int z;
-    for (z = 0; z < length; z++) {
-        if (0 == intersections[z]) {
-            zero_slot = 1;
-            break;
-        }
-    }
-    
     Py_ssize_t m;
     PyObject *result = PyList_New(0);
     for (m = 0; m < PyList_Size(mwords); m++) {
         char *word = PyString_AsString(PyList_GetItem(mwords, m));
         
+        //printf("%s", word);
+        int zero_slot = 0;
         int n_chars = 0;
         int c;
         for (c = 0; c < length; c++) {
+            if (strchr(cs[c], '.') == NULL) { // ignore
+                n_chars += 1;
+                //printf("S");
+                continue;
+            }
+            if (0 == intersections[c]) {
+                zero_slot = 1;
+                break;
+            }
             int m;
             for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-                if (results[c]->chars[m] == ' ') break;
+                if (results[c]->chars[m] == ' ') {
+                    //printf("E(%i, %i)", c, m);
+                    break;
+                }
                 if (results[c]->chars[m] == *(word + c)) {
+                    //printf("C");
                     n_chars += 1;
                     break;
                 }
             }
         }
-        printf("n_chars %i %i\n", n_chars, length);
+        //printf(" n_chars %i %i %i\n", n_chars, length, zero_slot);
         PyObject* py_intersect = PyBool_FromLong(!zero_slot && (n_chars == length));
-        PyObject* r = Py_BuildValue("(sOi)",  word, py_intersect, 0);
+        PyObject* r = Py_BuildValue("(sOi)", word, py_intersect, 0);
         PyList_Append(result, r);
     }
-    for (z = 0; z < length; z++) {
-        if (skipped[z] == 0)
-            free(results[z]);
+    for (t = 0; t < length; t++) {
+        if (skipped[t] == 0)
+            free(results[t]);
     }
     return result;
 }
