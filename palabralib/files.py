@@ -29,7 +29,6 @@ import grid
 from grid import Grid
 from puzzle import Puzzle
 from view import CellStyle, GridView
-from xpf import read_xpf
 
 DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
 DC_SIMPLE_TERMS = ["title"
@@ -592,8 +591,23 @@ class XPFParserError(ParserError):
     def __init__(self, message=""):
         ParserError.__init__(self, "XPFParserError", message)
 
+XPF_META_ELEMS = {'Type': 'type'
+    , 'Title': 'title'
+    , 'Author': 'creator'
+    , 'Editor': 'contributor'
+    , 'Copyright': 'rights'
+    , 'Publisher': 'publisher'
+    , 'Date': 'date'}
+XPF_META_ELEMS_LIST = [("type", "Type")
+    , ("title", "Title")
+    , ("creator", "Author")
+    , ("contributor", "Editor")
+    , ("rights", "Copyright")
+    , ("publisher", "Publisher")
+    , ("date", "Date")]
+
 # http://www.xwordinfo.com/XPF/
-def read_xpf_old(filename):
+def read_xpf(filename):
     # TODO check validity coordinates
     results = []
     try:
@@ -623,20 +637,8 @@ def read_xpf_old(filename):
         r_notepad = ""
         r_styles = {}
         for child in puzzle:
-            if child.tag == "Type":
-                r_meta["type"] = child.text
-            elif child.tag == "Title":
-                r_meta["title"] = child.text
-            elif child.tag == "Author":
-                r_meta["creator"] = child.text
-            elif child.tag == "Editor":
-                r_meta["contributor"] = child.text
-            elif child.tag == "Copyright":
-                r_meta["rights"] = child.text
-            elif child.tag == "Publisher":
-                r_meta["publisher"] = child.text
-            elif child.tag == "Date":
-                r_meta["date"] = child.text
+            if child.tag in XPF_META_ELEMS:
+                r_meta[XPF_META_ELEMS[child.tag]] = child.text
             elif child.tag == "Size":
                 for d in child:
                     if d.tag == "Rows":
@@ -772,13 +774,7 @@ def write_xpf(puzzle, backup=True):
     root.set("Version", "1.0")
     main = etree.SubElement(root, "Puzzle")
     
-    elems = [("type", "Type")
-        , ("title", "Title")
-        , ("creator", "Author")
-        , ("contributor", "Editor")
-        , ("publisher", "Publisher")
-        , ("date", "Date")]
-    for dc, e in elems:
+    for dc, e in XPF_META_ELEMS_LIST:
         if dc in puzzle.metadata and puzzle.metadata[dc]:
             child = etree.SubElement(main, e)
             child.text = puzzle.metadata[dc]
