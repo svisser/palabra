@@ -387,38 +387,35 @@ def export_to_pdf(puzzle, filename, output, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
     width = paper_size.get_width(gtk.UNIT_POINTS)
     height = paper_size.get_height(gtk.UNIT_POINTS)
-    
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
-    
     def pdf_header():
         header = puzzle.metadata["title"] if "title" in puzzle.metadata else "(nameless)"
         if "creator" in puzzle.metadata:
             header += (" / " + puzzle.metadata["creator"])
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 10", header))
+        layout.set_markup('''<span font_desc="Sans 10">%s</span>''' % header)
         context.save()
         context.move_to(20, 20)
         pcr.show_layout(layout)
         context.restore()
         context.translate(0, 24)
-    
     if output == "grid":
         pdf_header()
         puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         puzzle.view.pdf_reset()
         context.show_page()
-        
         def show_clue_page_compact():
-            content = []        
+            content = []
             for caption, direction in [("Across", "across"), ("Down", "down")]:
-                content += ['''<span font_desc="%s">%s</span>\n<span font_desc="%s">''' % ("Sans 10", caption, "Sans 8")]
-                for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words(direction):
+                content += ['''<span font_desc="Sans 10">%s</span>\n<span font_desc="Sans 8">''' % caption]
+                for n, x, y, d, w, clue, e in puzzle.grid.gather_words(direction):
                     if clue == "":
-                        clue = '''<span color="%s">(missing clue)</span>''' % ("#ff0000")
-                    content += [" <b>", str(n), "</b> ", clue.replace("&", "&amp;")]
+                        clue = '''<span color="#ff0000">(missing clue)</span>'''
+                    clue = clue.replace("&", "&amp;")
+                    content += [''' <b>%s</b> %s''' % (str(n), clue)]
                 content += ["</span>\n\n"]
             rx, ry = 20, 20
             pcr = pangocairo.CairoContext(context)
@@ -431,30 +428,7 @@ def export_to_pdf(puzzle, filename, output, settings):
             pcr.show_layout(layout)
             context.restore()
             context.show_page()
-        def show_clue_page_list(caption, direction):
-            rx, ry = 20, 20
-            pcr = pangocairo.CairoContext(context)
-            layout = pcr.create_layout()
-            layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 10", caption))
-            context.save()
-            context.move_to(rx, ry)
-            pcr.show_layout(layout)
-            context.restore()
-            def display_clue(n, clue, rrx, rry):
-                layout = pcr.create_layout()
-                content = ''.join([str(n), ". ", clue.replace("&", "&amp;")])
-                layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Sans 8", content))
-                context.save()
-                context.move_to(rx, ry)
-                pcr.show_layout(layout)
-                context.restore()
-            for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words(direction):
-                ry += 16
-                display_clue(n, clue, rx, ry)
-            context.show_page()
         show_clue_page_compact()
-        #show_clue_page("Across", "across")
-        #show_clue_page("Down", "down")
     elif output == "solution":
         pdf_header()
         puzzle.view.pdf_configure()
@@ -468,10 +442,8 @@ def export_to_png(puzzle, filename, output, settings):
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     context = cairo.Context(surface)
     context.rectangle(0, 0, width, height)
-    if output == "grid":
-        puzzle.view.render(context, constants.VIEW_MODE_EMPTY)
-    elif output == "solution":
-        puzzle.view.render(context, constants.VIEW_MODE_SOLUTION)
+    modes = {"grid": constants.VIEW_MODE_EMPTY, "solution": constants.VIEW_MODE_SOLUTION}
+    puzzle.view.render(context, modes[output])
     surface.write_to_png(filename)
     surface.finish()
     
