@@ -19,6 +19,27 @@
 #include <Python.h>
 #include "cpalabra.h"
 
+typedef struct tnode *Tptr;
+typedef struct tnode {
+    char splitchar;
+    char *word;
+    Tptr lokid, eqkid, hikid;
+} Tnode;
+
+typedef struct sresult *Sptr;
+typedef struct sresult {
+    int n_matches;
+    char *chars;
+} SearchResult;
+
+typedef struct sparams *SPPtr;
+typedef struct sparams {
+    int length;
+    int offset;
+} SearchParams;
+
+Tptr trees[MAX_WORD_LENGTH];
+
 int compute_median(int *numbers, const int length) {
     // sort array
     int s0, s1;
@@ -166,31 +187,6 @@ int is_intersecting_equal(IntersectingSlot s0, IntersectingSlot s1) {
     return 1;
 }
 
-
-#include <stdio.h>
-#include <stdlib.h>
-
-typedef struct tnode *Tptr;
-typedef struct tnode {
-    char splitchar;
-    char *word;
-    Tptr lokid, eqkid, hikid;
-} Tnode;
-
-typedef struct sresult *Sptr;
-typedef struct sresult {
-    int n_matches;
-    char *chars;
-} SearchResult;
-
-typedef struct sparams *SPPtr;
-typedef struct sparams {
-    int length;
-    int offset;
-} SearchParams;
-
-Tptr trees[MAX_WORD_LENGTH];
-
 void print(Tptr p, int indent)
 {
     if (p == NULL) return;
@@ -285,16 +281,6 @@ int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
         n += analyze(params, result, p->hikid, s, cs);
     result->n_matches = n;
     return n;
-}
-
-int main(int argc, const char* argv[])
-{
-    /*Tptr root;
-    root = insert1(root, "simeon", "simeon");
-    root = insert1(root, "simone", "simone");
-    print(root, 0);
-    search2(root, "s....e");*/
-    return 0;
 }
 
 static PyObject*
