@@ -222,6 +222,18 @@ class GridView:
             self.settings.update(SETTINGS_EXPORT_PDF_PUZZLE)
         elif mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION:
             self.settings.update(SETTINGS_EXPORT_PDF_SOLUTION)
+    
+    def pdf_configure(self):
+        # 595 = PDF width
+        size = (595 - ((self.grid.width + 1) * self.properties.line["width"]) - (2 * 24)) / self.grid.width
+        self.properties.cell["size"] = min(32, size)
+        self.properties.margin_x = 24
+        self.properties.margin_y = 24
+        
+    def pdf_reset(self):
+        self.properties.cell["size"] = 32
+        self.properties.margin_x = 10
+        self.properties.margin_y = 10
         
     def render(self, context, mode=None):
         """
@@ -232,21 +244,9 @@ class GridView:
         """
         if mode is not None:
             self.select_mode(mode)
-        if (self.mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-            or self.mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION):
-            # 595 = PDF width
-            size = (595 - ((self.grid.width + 1) * self.properties.line["width"]) - (2 * 24)) / self.grid.width
-            self.properties.cell["size"] = min(32, size)
-            self.properties.margin_x = 24
-            self.properties.margin_y = 24
         for x, y in self.grid.cells():
             self.render_bottom(context, x, y)
             self.render_top(context, x, y)
-        if (self.mode == constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-            or self.mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION):
-            self.properties.cell["size"] = 32
-            self.properties.margin_x = 10
-            self.properties.margin_y = 10
 
     def render_bottom(self, context, x, y):
         # background

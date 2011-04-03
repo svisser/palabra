@@ -403,7 +403,9 @@ def export_to_pdf(puzzle, filename, output, settings):
         pcr.show_layout(layout)
         context.restore()
         context.translate(0, 24)
+        puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
+        puzzle.view.pdf_reset()
         context.show_page()
         
         def show_clue_page_compact():
@@ -415,13 +417,12 @@ def export_to_pdf(puzzle, filename, output, settings):
                         clue = '''<span color="%s">(missing clue)</span>''' % ("#ff0000")
                     content += [" <b>", str(n), "</b> ", clue.replace("&", "&amp;")]
                 content += ["</span>\n\n"]
-            content = ''.join(content)
             rx, ry = 20, 20
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
             layout.set_width(pango.SCALE * 500)
             layout.set_wrap(pango.WRAP_WORD_CHAR)
-            layout.set_markup(content)
+            layout.set_markup(''.join(content))
             context.save()
             context.move_to(20, 36)
             pcr.show_layout(layout)
