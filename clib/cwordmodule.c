@@ -257,15 +257,15 @@ PyObject* search3(PyObject *list, Tptr p, char *s)
     return list;
 }
 
-int count_matches(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
+int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
 {
     if (!p) return 0;
     int n = 0;
     if (*s == '.' || *s < p->splitchar)
-        n += count_matches(params, result, p->lokid, s, cs);
+        n += analyze(params, result, p->lokid, s, cs);
     if (*s == '.' || *s == p->splitchar)
         if (p->splitchar && *s)
-            n += count_matches(params, result, p->eqkid, s + 1, cs);
+            n += analyze(params, result, p->eqkid, s + 1, cs);
     if (*s == 0 && p->splitchar == 0) {
         n += 1;
         if (*(cs + params->offset) == '.') {
@@ -282,7 +282,7 @@ int count_matches(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
         }
     }
     if (*s == '.' || *s > p->splitchar)
-        n += count_matches(params, result, p->hikid, s, cs);
+        n += analyze(params, result, p->hikid, s, cs);
     result->n_matches = n;
     return n;
 }
@@ -366,7 +366,7 @@ cWord_search2(PyObject *self, PyObject *args) {
             for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
                 result->chars[c] = ' ';
             }
-            intersections[t] = count_matches(params, result, trees[lengths[t]], cs[t], cs[t]);
+            intersections[t] = analyze(params, result, trees[lengths[t]], cs[t], cs[t]);
             printf("%s %i %i ", cs[t], intersections[t], offsets[t]);
             printf(">>>");
             for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
@@ -386,34 +386,25 @@ cWord_search2(PyObject *self, PyObject *args) {
     for (m = 0; m < PyList_Size(mwords); m++) {
         char *word = PyString_AsString(PyList_GetItem(mwords, m));
         
-        //printf("%s", word);
         int zero_slot = 0;
         int n_chars = 0;
         int c;
         for (c = 0; c < length; c++) {
-            if (strchr(cs[c], '.') == NULL) { // ignore
+            zero_slot = 0 == intersections[c];
+            if (zero_slot) break;
+            if (strchr(cs[c], '.') == NULL) {
                 n_chars += 1;
-                //printf("S");
                 continue;
-            }
-            if (0 == intersections[c]) {
-                zero_slot = 1;
-                break;
             }
             int m;
             for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-                if (results[c]->chars[m] == ' ') {
-                    //printf("E(%i, %i)", c, m);
-                    break;
-                }
+                if (results[c]->chars[m] == ' ') break;
                 if (results[c]->chars[m] == *(word + c)) {
-                    //printf("C");
                     n_chars += 1;
                     break;
                 }
             }
         }
-        //printf(" n_chars %i %i %i\n", n_chars, length, zero_slot);
         PyObject* py_intersect = PyBool_FromLong(!zero_slot && (n_chars == length));
         PyObject* r = Py_BuildValue("(sOi)", word, py_intersect, 0);
         PyList_Append(result, r);
