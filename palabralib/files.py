@@ -391,7 +391,7 @@ def export_to_pdf(puzzle, filename, output, settings):
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     
-    if output == "grid":
+    def pdf_header():
         header = puzzle.metadata["title"] if "title" in puzzle.metadata else "(nameless)"
         if "creator" in puzzle.metadata:
             header += (" / " + puzzle.metadata["creator"])
@@ -403,6 +403,9 @@ def export_to_pdf(puzzle, filename, output, settings):
         pcr.show_layout(layout)
         context.restore()
         context.translate(0, 24)
+    
+    if output == "grid":
+        pdf_header()
         puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         puzzle.view.pdf_reset()
@@ -453,7 +456,10 @@ def export_to_pdf(puzzle, filename, output, settings):
         #show_clue_page("Across", "across")
         #show_clue_page("Down", "down")
     elif output == "solution":
+        pdf_header()
+        puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
+        puzzle.view.pdf_reset()
         context.show_page()
     surface.finish()
     
