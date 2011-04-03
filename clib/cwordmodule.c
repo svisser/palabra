@@ -315,19 +315,13 @@ cWord_search2(PyObject *self, PyObject *args) {
     int offsets[length];
     char *cs[length];
     int intersections[length];
-    int lengths[length];
     int t;
     for (t = 0; t < length; t++) {
-        int offset;
         PyObject *py_cons_str2;
         PyObject* item = PyList_GetItem(more_constraints, (Py_ssize_t) t);
-        if (!PyArg_ParseTuple(item, "iO", &offset, &py_cons_str2))
+        if (!PyArg_ParseTuple(item, "iO", &offsets[t], &py_cons_str2))
             return NULL;
-        
-        char *cons_str2 = PyString_AsString(py_cons_str2);
-        lengths[t] = strlen(cons_str2);
-        offsets[t] = offset;
-        cs[t] = cons_str2;
+        cs[t] = PyString_AsString(py_cons_str2);
     }
     int skipped[length];
     for (t = 0; t < length; t++) skipped[t] = 0;
@@ -366,7 +360,7 @@ cWord_search2(PyObject *self, PyObject *args) {
             for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
                 result->chars[c] = ' ';
             }
-            intersections[t] = analyze(params, result, trees[lengths[t]], cs[t], cs[t]);
+            intersections[t] = analyze(params, result, trees[strlen(cs[t])], cs[t], cs[t]);
             printf("%s %i %i ", cs[t], intersections[t], offsets[t]);
             printf(">>>");
             for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
@@ -406,8 +400,7 @@ cWord_search2(PyObject *self, PyObject *args) {
             }
         }
         PyObject* py_intersect = PyBool_FromLong(!zero_slot && (n_chars == length));
-        PyObject* r = Py_BuildValue("(sOi)", word, py_intersect, 0);
-        PyList_Append(result, r);
+        PyList_Append(result, Py_BuildValue("(sOi)", word, py_intersect, 0));
     }
     for (t = 0; t < length; t++) {
         if (skipped[t] == 0)
