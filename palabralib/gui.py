@@ -822,7 +822,12 @@ class PalabraWindow(gtk.Window):
                     self.editor.refresh_clues()
             self.editor.force_redraw = True
             
-            self.editor.refresh_words()
+            import pstats
+            import cProfile
+            cProfile.runctx('self.editor.refresh_words()', globals(), locals(), filename='fooprof')
+            p = pstats.Stats('fooprof')
+            p.sort_stats('time').print_stats(20)
+            #self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
             pass
@@ -976,11 +981,11 @@ class PalabraWindow(gtk.Window):
     def create_grid_menu(self):
         menu = gtk.Menu()
         
-        #menu.append(self._create_menu_item(
-        #    lambda item: self.edit_appearance()
-        #    , u"Edit the appearance of the puzzle"
-        #    , title=u"Edit _appearance..."
-        #    , is_puzzle_sensitive=True))
+        menu.append(self._create_menu_item(
+            lambda item: self.edit_appearance()
+            , u"Edit the appearance of the puzzle"
+            , title=u"Edit _appearance..."
+            , is_puzzle_sensitive=True))
             
         menu.append(gtk.SeparatorMenuItem())
         

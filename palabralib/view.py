@@ -319,7 +319,8 @@ class GridView:
                 height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
             _render_pango(r, s, self.properties.style(r, s).char["font"], c, rx, ry)
 
-        cells = [(x, y)] if x is not None and y is not None else self.grid.cells()
+        all_cells = [(p, q) for p, q in self.grid.cells()]
+        cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             style = self.properties.style(p, q)
         
@@ -423,7 +424,7 @@ class GridView:
         if x is not None and y is not None:
             self.render_all_lines_of_cell(context, x, y)
         else:
-            for p, q in self.grid.cells():
+            for p, q in all_cells:
                 self.render_lines_of_cell(context, p, q)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)

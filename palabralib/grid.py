@@ -310,15 +310,10 @@ class Grid:
     def slot(self, x, y, direction):
         """
         Iterate over all cells of a slot that contains (x, y) in an unspecified order.
-        
-        This function also regards a slot of length 1 as a slot.
         """
-        dx = 1 if direction == "across" else 0
-        dy = 1 if direction == "down" else 0
-        p = self.in_direction(x + dx, y + dy, direction)
-        q = self.in_direction(x, y, direction, reverse=True)
-        for r, s in chain(p, q):
-            yield r, s
+        sx, sy = self.get_start_word(x, y, direction)
+        for p, q in self.in_direction(sx, sy, direction):
+            yield p, q
                     
     def cells(self):
         """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""
@@ -456,7 +451,9 @@ class Grid:
         if reverse:
             dx *= -1
             dy *= -1
-        while self.is_available(x, y):
+        while (0 <= x < self.width and 0 <= y < self.height
+            and not self.data[y][x]["block"]
+            and not self.data[y][x]["void"]):
             yield x, y
             if not (0 <= x + dx < self.width and 0 <= y < self.height):
                 break
