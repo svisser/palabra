@@ -23,6 +23,7 @@ import pango
 import pangocairo
 
 import constants
+import cView
 
 SETTINGS_PREVIEW = {
     "has_padding": True
@@ -126,6 +127,7 @@ class GridViewProperties:
         
         #self.styles[5, 5] = CellStyle()
         #self.styles[5, 5].cell["color"] = (65535.0, 0, 0)
+        #self.grid.set_void(3, 3, True)
         
         # TODO needed?
         self.border = {}
@@ -319,7 +321,7 @@ class GridView:
                 height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
             _render_pango(r, s, self.properties.style(r, s).char["font"], c, rx, ry)
 
-        all_cells = [(p, q) for p, q in self.grid.cells()]
+        all_cells = list(self.grid.cells())
         cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             style = self.properties.style(p, q)
@@ -327,7 +329,7 @@ class GridView:
             # char
             if self.settings["show_chars"]:
                 context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
-                c = self.grid.get_char(p, q)
+                c = self.grid.data[q][p]["char"]
                 if c != '':
                     _render_char(p, q, c)
                     
@@ -383,7 +385,7 @@ class GridView:
                     render_highlights_of_cell(context, p, q, top, bottom, left, right)
             # block
             context.set_source_rgb(*[c / 65535.0 for c in style.block["color"]])
-            if self.grid.is_block(p, q):
+            if self.grid.data[q][p]["block"]:
                 rx = self.properties.grid_to_screen_x(p, False)
                 ry = self.properties.grid_to_screen_y(q, False)
                 rsize = self.properties.cell["size"]
@@ -405,7 +407,7 @@ class GridView:
             # number
             if self.settings["show_numbers"]:
                 context.set_source_rgb(*[c / 65535.0 for c in style.number["color"]])
-                n = self.grid.cell(p, q)["number"]
+                n = self.grid.data[q][p]["number"]
                 if n > 0:
                     font = self.properties.style(p, q).number["font"]
                     _render_pango(p, q, font, str(n))
@@ -455,7 +457,9 @@ class GridView:
                 context.set_line_width(self.properties.line["width"])
         
         context.set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
-        lines = self.grid.get_lines(x, y)
+        if not self.grid.lines:
+            self.grid.lines = cView.compute_lines(self.grid)
+        lines = self.grid.lines[x, y]
         for p, q, ltype, side in lines:
             sx = self.properties.grid_to_screen_x(p, False)
             sy = self.properties.grid_to_screen_y(q, False)
@@ -464,7 +468,9 @@ class GridView:
             bwidth = self.properties.border["width"]
             cellsize = self.properties.cell["size"]
             
-            bar = self.grid.is_valid(x, y) and self.grid.has_bar(x, y, ltype)
+            bar = (0 <= x < self.grid.width
+                and 0 <= y < self.grid.height
+                and self.grid.data[y][x]["bar"][ltype])
             border = "border" in side
             if side == "normal":
                 context.set_line_width(lwidth)
@@ -640,10 +646,3 @@ class GridPreview(gtk.VBox):
             context = drawing_area.window.cairo_create()
             context.set_source(self.preview_pattern)
             context.paint()
-
-            #import pstats
-            #import cProfile
-            #cProfile.runctx('self.view.render(context, constants.VIEW_MODE_PREVIEW)', globals(), locals(), filename='fooprof')
-            #p = pstats.Stats('fooprof')
-            #p.sort_stats('time').print_stats(20)
-            #self.view.render(context, constants.VIEW_MODE_PREVIEW)

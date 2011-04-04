@@ -397,7 +397,7 @@ class Editor(gtk.HBox):
     def _render_editor_of_cell(self, context, x=None, y=None):
         """Render everything editor related colors for the cell at (x, y)."""
         render = []
-        all_cells = [(p, q) for p, q in self.puzzle.grid.cells()]
+        all_cells = list(self.puzzle.grid.cells())
         cells = [(x, y)] if x is not None and y is not None else all_cells
         for wx, wy in self.puzzle.view.render_warnings_of_cells(context, cells):
             # warnings for undesired cells
@@ -439,6 +439,7 @@ class Editor(gtk.HBox):
             for i, j in self.puzzle.grid.in_direction(startx, starty, sdir):
                 render.append((i, j, r, g, b))
         
+        symms = list(self.apply_symmetry(*self.current))
         cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             # selection cell
@@ -453,7 +454,7 @@ class Editor(gtk.HBox):
                 r = preferences.prefs["color_secondary_active_red"] / 65535.0
                 g = preferences.prefs["color_secondary_active_green"] / 65535.0
                 b = preferences.prefs["color_secondary_active_blue"] / 65535.0
-                if (p, q) in self.apply_symmetry(*self.current):
+                if (p, q) in symms:
                     render.append((p, q, r, g, b))
                 
                 # draw current cell last to prevent

@@ -63,12 +63,6 @@ class Grid:
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
         cGrid.assign_numbers(self)
-                
-    def get_lines(self, x, y):
-        """Return lines surrounding cell (x, y)."""
-        if not self.lines:
-            self.lines = cView.compute_lines(self)
-        return self.lines[x, y]
             
     def _store_lines_of_cell(self, x, y):
         self.lines[x, y] = self.lines_of_cell(x, y)
@@ -925,7 +919,7 @@ class Grid:
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["void"] = status
         # TODO not correct
-        self._store_lines_of_cell(x, y)
+        #self._store_lines_of_cell(x, y)
         
     def _on_cell_type_change(self, x, y, status):
         if status:
