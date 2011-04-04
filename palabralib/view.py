@@ -100,6 +100,16 @@ class CellStyle:
         self.number["color"] = (0, 0, 0)
         self.number["font"] = "Sans 7"
         self.circle = False
+        
+    def __eq__(self, other):
+        if (other is None
+            or self.block != other.block
+            or self.cell != other.cell
+            or self.char != other.char
+            or self.number != other.number
+            or self.circle != other.circle):
+            return False
+        return True
 
 class GridViewProperties:
     def __init__(self, grid, styles=None):
@@ -114,8 +124,7 @@ class GridViewProperties:
         self.default = CellStyle()
         self.styles = styles if styles else {}
         
-        self.bar = {}
-        self.bar["width"] = 5
+        # TODO needed?
         self.border = {}
         self.border["width"] = 1
         self.border["color"] = (0, 0, 0)
@@ -202,8 +211,10 @@ class GridView:
         self.overlay = []
         self.highlights = []
         
-    def style(self, x, y):
-        return self.properties.style(x, y)
+    def style(self, x=None, y=None):
+        if x is not None and y is not None:
+            return self.properties.style(x, y)
+        return self.properties.default
         
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
@@ -249,18 +260,39 @@ class GridView:
 
     def render_bottom(self, context, x=None, y=None):
         # background
-        if self.settings["has_padding"]:
-            context.translate(self.properties.margin_x, self.properties.margin_y)
-        cells = [(x, y)] if x is not None and y is not None else self.grid.cells()
-        for p, q in cells:
-            context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).cell["color"]])
-            rx = self.properties.grid_to_screen_x(p, False)
-            ry = self.properties.grid_to_screen_y(q, False)
+        def render_rect(r, s):
+            context.set_source_rgb(*[c / 65535.0 for c in self.style(r, s).cell["color"]])
+            rx = self.properties.grid_to_screen_x(r, False)
+            ry = self.properties.grid_to_screen_y(s, False)
             rsize = self.properties.cell["size"]
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
             context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
+        if self.settings["has_padding"]:
+            context.translate(self.properties.margin_x, self.properties.margin_y)
+        if x is not None and y is not None:
+            render_rect(x, y)
+        else:
+            x0 = self.properties.grid_to_screen_x(0, False)
+            y0 = self.properties.grid_to_screen_y(0, False)
+            x1 = self.properties.grid_to_screen_y(self.grid.width - 1, False)
+            y1 = self.properties.grid_to_screen_y(self.grid.height - 1, False)
+            context.set_source_rgb(*[c / 65535.0 for c in self.style().cell["color"]])
+            rsize = self.properties.cell["size"]
+            
+            # rsize + 1, rsize + 1)
+            rwidth = (x1 + rsize + 1) - x0
+            rheight = (y1 + rsize + 1) - y0
+            
+            # -0.5 for coordinates and +1 for size
+            # are needed to render seamlessly in PDF
+            context.rectangle(x0 - 0.5, y0 - 0.5, rwidth, rheight)
+            context.fill()
+            
+            for p, q in self.grid.cells():
+                if self.style(p, q) != self.style():
+                    render_rect(p, q)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
@@ -367,9 +399,6 @@ class GridView:
                     context.rectangle(rx, ry, rsize, rsize)
             context.fill()
             
-            # lines
-            self.render_all_lines_of_cell(context, p, q)
-            
             # number
             if self.settings["show_numbers"]:
                 context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).number["color"]])
@@ -387,6 +416,13 @@ class GridView:
                 context.new_sub_path()
                 context.arc(rx + rsize / 2, ry + rsize / 2, rsize / 2, 0, 2 * math.pi)
                 context.stroke()
+        
+        # lines
+        if x is not None and y is not None:
+            self.render_all_lines_of_cell(context, x, y)
+        else:
+            for p, q in self.grid.cells():
+                self.render_lines_of_cell(context, p, q)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
     
