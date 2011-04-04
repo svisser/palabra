@@ -129,7 +129,9 @@ class Grid:
         1 : One word contains this cell
         2 : Two words contain this cell
         """
-        if not self.is_available(x, y):
+        if not (0 <= x < self.width and 0 <= y < self.height):
+            return -1
+        if self.data[y][x]["block"] or self.data[y][x]["void"]:
             return -1
         count = 0
         for d in ["across", "down"]:
@@ -139,14 +141,44 @@ class Grid:
         
     def is_part_of_word(self, x, y, direction):
         """Return True if the specified (x, y, direction) is part of a word (2+ letters)."""
-        if not self.is_available(x, y):
+        if not (0 <= x < self.width and 0 <= y < self.height):
+            return False
+        if self.data[y][x]["block"] or self.data[y][x]["void"]:
             return False
         if direction == "across":
-            bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
+            # before = self.is_available(x - 1, y) and not self.has_bar(x, y, "left")
+            before = True
+            if x - 1 < 0:
+                before = False
+            else:
+                before = not (self.data[y][x - 1]["block"]
+                or self.data[y][x - 1]["void"]
+                or self.data[y][x]["bar"]["left"])
+            # after = self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left")
+            after = True
+            if x + 1 >= self.width:
+                after = False
+            else:
+                after = not (self.data[y][x + 1]["block"]
+                or self.data[y][x + 1]["void"]
+                or self.data[y][x + 1]["bar"]["left"])
         elif direction == "down":
-            bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
-        before = self.is_available(x + bdx, y + bdy) and not self.has_bar(x, y, bar_side)
-        after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
+            # before = self.is_available(x, y - 1) and not self.has_bar(x, y, "top")
+            before = True
+            if y - 1 < 0:
+                before = False
+            else:
+                before = not (self.data[y - 1][x]["block"]
+                or self.data[y - 1][x]["void"]
+                or self.data[y][x]["bar"]["top"])
+            # after = self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top")
+            after = True
+            if y + 1 >= self.height:
+                after = False
+            else:
+                after = not (self.data[y + 1][x]["block"]
+                or self.data[y + 1][x]["void"]
+                or self.data[y + 1][x]["bar"]["top"])
         return before or after
         
     def determine_status(self, full=False):
