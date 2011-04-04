@@ -124,6 +124,9 @@ class GridViewProperties:
         self.default = CellStyle()
         self.styles = styles if styles else {}
         
+        #self.styles[5, 5] = CellStyle()
+        #self.styles[5, 5].cell["color"] = (65535.0, 0, 0)
+        
         # TODO needed?
         self.border = {}
         self.border["width"] = 1
@@ -134,8 +137,8 @@ class GridViewProperties:
         self.line["width"] = 1
         self.line["color"] = (0, 0, 0)
         
-    def style(self, x, y):
-        if (x, y) in self.styles:
+    def style(self, x=None, y=None):
+        if x is not None and y is not None and (x, y) in self.styles:
             return self.styles[x, y]
         return self.default
     
@@ -211,11 +214,6 @@ class GridView:
         self.overlay = []
         self.highlights = []
         
-    def style(self, x=None, y=None):
-        if x is not None and y is not None:
-            return self.properties.style(x, y)
-        return self.properties.default
-        
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
         self.settings = {}
@@ -261,7 +259,7 @@ class GridView:
     def render_bottom(self, context, x=None, y=None):
         # background
         def render_rect(r, s):
-            context.set_source_rgb(*[c / 65535.0 for c in self.style(r, s).cell["color"]])
+            context.set_source_rgb(*[c / 65535.0 for c in self.properties.style(r, s).cell["color"]])
             rx = self.properties.grid_to_screen_x(r, False)
             ry = self.properties.grid_to_screen_y(s, False)
             rsize = self.properties.cell["size"]
@@ -274,11 +272,13 @@ class GridView:
         if x is not None and y is not None:
             render_rect(x, y)
         else:
+            style_default = self.properties.style()
+        
             x0 = self.properties.grid_to_screen_x(0, False)
             y0 = self.properties.grid_to_screen_y(0, False)
             x1 = self.properties.grid_to_screen_y(self.grid.width - 1, False)
             y1 = self.properties.grid_to_screen_y(self.grid.height - 1, False)
-            context.set_source_rgb(*[c / 65535.0 for c in self.style().cell["color"]])
+            context.set_source_rgb(*[c / 65535.0 for c in style_default.cell["color"]])
             rsize = self.properties.cell["size"]
             
             # rsize + 1, rsize + 1)
@@ -291,7 +291,7 @@ class GridView:
             context.fill()
             
             for p, q in self.grid.cells():
-                if self.style(p, q) != self.style():
+                if self.properties.style(p, q) != style_default:
                     render_rect(p, q)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
@@ -321,9 +321,11 @@ class GridView:
 
         cells = [(x, y)] if x is not None and y is not None else self.grid.cells()
         for p, q in cells:
+            style = self.properties.style(p, q)
+        
             # char
             if self.settings["show_chars"]:
-                context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).char["color"]])
+                context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
                 c = self.grid.get_char(p, q)
                 if c != '':
                     _render_char(p, q, c)
@@ -379,7 +381,7 @@ class GridView:
                     bottom = q == (s + length - 1)
                     render_highlights_of_cell(context, p, q, top, bottom, left, right)
             # block
-            context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).block["color"]])
+            context.set_source_rgb(*[c / 65535.0 for c in style.block["color"]])
             if self.grid.is_block(p, q):
                 rx = self.properties.grid_to_screen_x(p, False)
                 ry = self.properties.grid_to_screen_y(q, False)
@@ -401,15 +403,15 @@ class GridView:
             
             # number
             if self.settings["show_numbers"]:
-                context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).number["color"]])
+                context.set_source_rgb(*[c / 65535.0 for c in style.number["color"]])
                 n = self.grid.cell(p, q)["number"]
                 if n > 0:
                     font = self.properties.style(p, q).number["font"]
                     _render_pango(p, q, font, str(n))
                     
             # circle
-            if self.style(p, q).circle:
-                context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).char["color"]])
+            if style.circle:
+                context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
                 rx = self.properties.grid_to_screen_x(p, False)
                 ry = self.properties.grid_to_screen_y(q, False)
                 rsize = self.properties.cell["size"]
