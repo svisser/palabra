@@ -481,40 +481,69 @@ class GridView:
                 if is_rb:
                     rx += (cellsize + dxl)
                     render_line(context, rx, ry, bwidth, 0, False, True)
-            
-    def render_warnings_of_cell(self, context, x, y, r, g, b):
-        """Render undesired cell in the specified color."""
-        count = self.grid.get_check_count(x, y)
-        if self.settings["warn_unchecked_cells"]:
-            # Color cells that are unchecked. Isolated cells are also colored.
-            if 0 <= count <= 1:
-                self.render_location(context, x, y, r, g, b)
-        if self.settings["warn_consecutive_unchecked"]:
-            # Color consecutive (two or more) unchecked cells.
-            if 0 <= count <= 1:
-                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                    if 0 <= self.grid.get_check_count(x + dx, y + dy) <= 1:
-                        self.render_location(context, x, y, r, g, b)
-        if self.settings["warn_two_letter_words"]:
-            # Color words with length two.
-            for d in ["across", "down"]:
-                sx, sy = self.grid.get_start_word(x, y, d)
-                if self.grid.word_length(sx, sy, d) == 2:
-                    self.render_location(context, x, y, r, g, b)
         
-    def render_location(self, context, x, y, r, g, b):
-        """Render a cell."""
-        context.set_source_rgb(r, g, b)
+    def render_warnings_of_cells(self, context, cells):
+        """Determine undesired cells."""
+        lengths = {}
+        starts = {}
+        counts = {}
+        warnings = []
+        for p, q in cells:
+            warn = False
+            if (p, q) not in counts:
+                counts[p, q] = self.grid.get_check_count(p, q)
+            if self.settings["warn_unchecked_cells"]:
+                # Color cells that are unchecked. Isolated cells are also colored.
+                if 0 <= counts[p, q] <= 1:
+                    warnings.append((p, q))
+                    continue
+            if self.settings["warn_consecutive_unchecked"]:
+                # Color consecutive (two or more) unchecked cells.
+                warn = False
+                if 0 <= count <= 1:
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        if (p + dx, q + dy) not in counts:
+                            counts[p + dx, q + dy] = self.grid.get_check_count(p + dx, q + dy)
+                        if 0 <= counts[p + dx, q + dy] <= 1:
+                            warn = True
+                            break
+                if warn:
+                    warnings.append((p, q))
+                    continue
+            if self.settings["warn_two_letter_words"]:
+                # Color words with length two.
+                warn = False
+                for d in ["across", "down"]:
+                    if (p, q, d) in starts:
+                        sx, sy = starts[p, q, d]
+                    else:
+                        sx, sy = self.grid.get_start_word(p, q, d)
+                        starts[p, q, d] = sx, sy
+                        for zx, zy in self.grid.in_direction(sx, sy, d):
+                            starts[zx, zy, d] = sx, sy
+                        lengths[sx, sy, d] = self.grid.word_length(sx, sy, d)
+                    if lengths[sx, sy, d] == 2:
+                        warn = True
+                        break
+                if warn:
+                    warnings.append((p, q))
+                    continue
+        return warnings
+        
+    def render_locations(self, context, cells):
+        """Render one or more cells."""
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
-        # -0.5 for coordinates and +1 for size
-        # are needed to render seamlessly in PDF
-        bx = self.properties.grid_to_screen_x(x, False) - 0.5
-        by = self.properties.grid_to_screen_y(y, False) - 0.5
-        bsize = self.properties.cell["size"] + 1
-        context.rectangle(bx, by, bsize, bsize)
-        context.fill()
-        self.render_all_lines_of_cell(context, x, y)
+        for x, y, r, g, b in cells:
+            context.set_source_rgb(r, g, b)
+            # -0.5 for coordinates and +1 for size
+            # are needed to render seamlessly in PDF
+            bx = self.properties.grid_to_screen_x(x, False) - 0.5
+            by = self.properties.grid_to_screen_y(y, False) - 0.5
+            bsize = self.properties.cell["size"] + 1
+            context.rectangle(bx, by, bsize, bsize)
+            context.fill()
+            self.render_all_lines_of_cell(context, x, y)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         

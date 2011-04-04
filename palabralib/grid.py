@@ -409,13 +409,9 @@ class Grid:
             if self.data[y][x]["block"] or self.data[y][x]["void"]:
                 break
             count += 1
-            if x + dx >= self.width:
+            if dx and (x + dx >= self.width or self.data[y][x + dx]["bar"]["left"]):
                 break
-            if dx == 1 and self.data[y][x + dx]["bar"]["left"]:
-                break
-            if y + dy >= self.height:
-                break
-            if dy == 1 and self.data[y + dy][x]["bar"]["top"]:
+            if dy and (y + dy >= self.height or self.data[y + dy][x]["bar"]["top"]):
                 break
             x += dx
             y += dy

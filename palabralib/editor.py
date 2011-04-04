@@ -394,59 +394,65 @@ class Editor(gtk.HBox):
         """
         self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
     
-    def _render_editor_of_cell(self, context, x, y):
+    def _render_editor_of_cell(self, context, x=None, y=None):
         """Render everything editor related colors for the cell at (x, y)."""
-        # warnings for undesired cells
-        r = preferences.prefs["color_warning_red"] / 65535.0
-        g = preferences.prefs["color_warning_green"] / 65535.0
-        b = preferences.prefs["color_warning_blue"] / 65535.0
-        self.puzzle.view.render_warnings_of_cell(context, x, y, r, g, b)
+        render = []
+        cells = [(x, y)] if x is not None and y is not None else self.puzzle.grid.cells()
         
-        # blacklist
-        if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
-            for p, q, direction, length in self.blacklist:
-                if direction == "across" and p <= x < p + length and q == y:
-                    self.puzzle.view.render_location(context, x, y, r, g, b)
-                elif direction == "down" and q <= y < q + length and p == x:
-                    self.puzzle.view.render_location(context, x, y, r, g, b)
+        for wx, wy in self.puzzle.view.render_warnings_of_cells(context, cells):
+            # warnings for undesired cells
+            r = preferences.prefs["color_warning_red"] / 65535.0
+            g = preferences.prefs["color_warning_green"] / 65535.0
+            b = preferences.prefs["color_warning_blue"] / 65535.0
+            render.append((wx, wy, r, g, b))
         
-        sx = self.selection.x
-        sy = self.selection.y
-        sdir = self.selection.direction
+        for p, q in cells:
+            # blacklist
+            if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
+                for bx, by, direction, length in self.blacklist:
+                    if direction == "across" and bx <= p < bx + length and by == q:
+                        render.append((p, q, r, g, b))
+                    elif direction == "down" and by <= q < by + length and bx == p:
+                        render.append((p, q, r, g, b))
         
-        # selection line
-        if self.puzzle.grid.is_available(x, y):
-            r = preferences.prefs["color_current_word_red"] / 65535.0
-            g = preferences.prefs["color_current_word_green"] / 65535.0
-            b = preferences.prefs["color_current_word_blue"] / 65535.0
-            
-            for cell in self.puzzle.grid.slot(sx, sy, sdir):
-                if (x, y) == cell:
-                    self.puzzle.view.render_location(context, x, y, r, g, b)
-                    break
+            sx = self.selection.x
+            sy = self.selection.y
+            sdir = self.selection.direction
         
-        # selection cell                    
-        if (x, y) == (sx, sy):
-            r = preferences.prefs["color_primary_selection_red"] / 65535.0
-            g = preferences.prefs["color_primary_selection_green"] / 65535.0
-            b = preferences.prefs["color_primary_selection_blue"] / 65535.0
-            self.puzzle.view.render_location(context, x, y, r, g, b)
+            # selection line
+            if self.puzzle.grid.is_available(p, q):
+                r = preferences.prefs["color_current_word_red"] / 65535.0
+                g = preferences.prefs["color_current_word_green"] / 65535.0
+                b = preferences.prefs["color_current_word_blue"] / 65535.0
                 
-        # current cell and symmetrical cells
-        if self.puzzle.grid.is_valid(*self.current):
-            r = preferences.prefs["color_secondary_active_red"] / 65535.0
-            g = preferences.prefs["color_secondary_active_green"] / 65535.0
-            b = preferences.prefs["color_secondary_active_blue"] / 65535.0
-            if (x, y) in self.apply_symmetry(*self.current):
-                self.puzzle.view.render_location(context, x, y, r, g, b)
+                for cell in self.puzzle.grid.slot(sx, sy, sdir):
+                    if (p, q) == cell:
+                        render.append((p, q, r, g, b))
+                        break
+        
+            # selection cell                    
+            if (p, q) == (sx, sy):
+                r = preferences.prefs["color_primary_selection_red"] / 65535.0
+                g = preferences.prefs["color_primary_selection_green"] / 65535.0
+                b = preferences.prefs["color_primary_selection_blue"] / 65535.0
+                render.append((p, q, r, g, b))
+                
+            # current cell and symmetrical cells
+            if self.puzzle.grid.is_valid(*self.current):
+                r = preferences.prefs["color_secondary_active_red"] / 65535.0
+                g = preferences.prefs["color_secondary_active_green"] / 65535.0
+                b = preferences.prefs["color_secondary_active_blue"] / 65535.0
+                if (p, q) in self.apply_symmetry(*self.current):
+                    render.append((p, q, r, g, b))
                 
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
             r = preferences.prefs["color_primary_active_red"] / 65535.0
             g = preferences.prefs["color_primary_active_green"] / 65535.0
             b = preferences.prefs["color_primary_active_blue"] / 65535.0
-            if (x, y) == self.current:
-                self.puzzle.view.render_location(context, x, y, r, g, b)
+            if (p, q) == self.current:
+                render.append((p, q, r, g, b))
+        self.puzzle.view.render_locations(context, render)
         
     def on_expose_event(self, drawing_area, event):
         """Render the main editing component."""
@@ -461,8 +467,7 @@ class Editor(gtk.HBox):
             self.puzzle.view.grid = self.puzzle.grid
             def _draw(context):
                 self.puzzle.view.render_bottom(context)
-                for x, y in self.puzzle.grid.cells():
-                    self._render_editor_of_cell(context, x, y)
+                self._render_editor_of_cell(context)
                 self.puzzle.view.render_top(context)
             self.force_redraw = False
             import pstats
@@ -470,6 +475,7 @@ class Editor(gtk.HBox):
             cProfile.runctx('_draw(context)', globals(), locals(), filename='fooprof')
             p = pstats.Stats('fooprof')
             p.sort_stats('time').print_stats(20)
+            p.print_callers()
         context = self.drawing_area.window.cairo_create()
         context.set_source(self.editor_pattern)
         context.paint()
