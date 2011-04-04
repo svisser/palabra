@@ -372,12 +372,12 @@ class Editor(gtk.HBox):
         self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
         if self.editor_surface:
             context = cairo.Context(self.editor_surface)
-            for x, y in cells:
-                if self.puzzle.grid.is_valid(x, y):
-                    self.puzzle.view.render_bottom(context, x, y)
-                    if editor:
-                        self._render_editor_of_cell(context, x, y)
-                    self.puzzle.view.render_top(context, x, y)
+            cs = [(p, q) for p, q in cells if self.puzzle.grid.is_valid(p, q)]
+            for x, y in cs:
+                self.puzzle.view.render_bottom(context, [(x, y)])
+                if editor:
+                    self._render_editor_of_cell(context, [(x, y)])
+                self.puzzle.view.render_top(context, [(x, y)])
             context = self.drawing_area.window.cairo_create()
             context.set_source(self.editor_pattern)
             context.paint()
@@ -394,11 +394,10 @@ class Editor(gtk.HBox):
         """
         self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
     
-    def _render_editor_of_cell(self, context, x=None, y=None):
-        """Render everything editor related colors for the cell at (x, y)."""
+    # cells = 1 cell or all cells of grid
+    def _render_editor_of_cell(self, context, cells):
+        """Render everything editor related colors for cells."""
         render = []
-        all_cells = list(self.puzzle.grid.cells())
-        cells = [(x, y)] if x is not None and y is not None else all_cells
         for wx, wy in self.puzzle.view.render_warnings_of_cells(context, cells):
             # warnings for undesired cells
             r = preferences.prefs["color_warning_red"] / 65535.0
@@ -406,7 +405,6 @@ class Editor(gtk.HBox):
             b = preferences.prefs["color_warning_blue"] / 65535.0
             render.append((wx, wy, r, g, b))
         
-        cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             # blacklist
             if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
@@ -421,7 +419,8 @@ class Editor(gtk.HBox):
         sdir = self.selection.direction
         
         # selection line
-        if x is not None and y is not None:
+        if len(cells) == 1:
+            x, y = cells[0]
             if self.puzzle.grid.is_available(x, y):
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
@@ -440,7 +439,6 @@ class Editor(gtk.HBox):
                 render.append((i, j, r, g, b))
         
         symms = list(self.apply_symmetry(*self.current))
-        cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             # selection cell
             if (p, q) == (sx, sy):
@@ -450,7 +448,8 @@ class Editor(gtk.HBox):
                 render.append((p, q, r, g, b))
                 
             # current cell and symmetrical cells
-            if self.puzzle.grid.is_valid(*self.current):
+            cx, cy = self.current
+            if 0 <= cx < self.puzzle.grid.width and 0 <= cy < self.puzzle.grid.height:
                 r = preferences.prefs["color_secondary_active_red"] / 65535.0
                 g = preferences.prefs["color_secondary_active_green"] / 65535.0
                 b = preferences.prefs["color_secondary_active_blue"] / 65535.0
@@ -477,14 +476,15 @@ class Editor(gtk.HBox):
             context = cairo.Context(self.editor_surface)
             # TODO should not be needed
             self.puzzle.view.grid = self.puzzle.grid
-            def _draw(context):
-                self.puzzle.view.render_bottom(context)
-                self._render_editor_of_cell(context)
-                self.puzzle.view.render_top(context)
+            cells = list(self.puzzle.grid.cells())
+            def _draw(context, cells):
+                self.puzzle.view.render_bottom(context, cells)
+                self._render_editor_of_cell(context, cells)
+                self.puzzle.view.render_top(context, cells)
             self.force_redraw = False
             import pstats
             import cProfile
-            cProfile.runctx('_draw(context)', globals(), locals(), filename='fooprof')
+            cProfile.runctx('_draw(context, cells)', globals(), locals(), filename='fooprof')
             p = pstats.Stats('fooprof')
             p.sort_stats('time').print_stats(20)
             p.print_callers()

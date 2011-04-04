@@ -255,10 +255,11 @@ class GridView:
         """
         if mode is not None:
             self.select_mode(mode)
-        self.render_bottom(context)
-        self.render_top(context)
+        cells = list(self.grid.cells())
+        self.render_bottom(context, cells)
+        self.render_top(context, cells)
 
-    def render_bottom(self, context, x=None, y=None):
+    def render_bottom(self, context, cells):
         # background
         def render_rect(r, s):
             context.set_source_rgb(*[c / 65535.0 for c in self.properties.style(r, s).cell["color"]])
@@ -271,14 +272,14 @@ class GridView:
             context.fill()
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
-        if x is not None and y is not None:
-            render_rect(x, y)
+        if len(cells) == 1:
+            render_rect(*cells[0])
         else:
             style_default = self.properties.style()
         
             x0 = self.properties.grid_to_screen_x(0, False)
             y0 = self.properties.grid_to_screen_y(0, False)
-            x1 = self.properties.grid_to_screen_y(self.grid.width - 1, False)
+            x1 = self.properties.grid_to_screen_x(self.grid.width - 1, False)
             y1 = self.properties.grid_to_screen_y(self.grid.height - 1, False)
             context.set_source_rgb(*[c / 65535.0 for c in style_default.cell["color"]])
             rsize = self.properties.cell["size"]
@@ -292,13 +293,13 @@ class GridView:
             context.rectangle(x0 - 0.5, y0 - 0.5, rwidth, rheight)
             context.fill()
             
-            for p, q in self.grid.cells():
+            for p, q in cells:
                 if self.properties.style(p, q) != style_default:
                     render_rect(p, q)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
-    def render_top(self, context, x=None, y=None):
+    def render_top(self, context, cells):
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
             
@@ -321,8 +322,6 @@ class GridView:
                 height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
             _render_pango(r, s, self.properties.style(r, s).char["font"], c, rx, ry)
 
-        all_cells = list(self.grid.cells())
-        cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             style = self.properties.style(p, q)
         
@@ -423,22 +422,39 @@ class GridView:
                 context.stroke()
         
         # lines
-        if x is not None and y is not None:
-            self.render_all_lines_of_cell(context, x, y)
+        screen_xs = self.comp_screen_xs()
+        screen_ys = self.comp_screen_ys()
+        if len(cells) == 1:
+            x, y = cells[0]
+            self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
         else:
-            for p, q in all_cells:
-                self.render_lines_of_cell(context, p, q)
+            for p, q in cells:
+                self.render_lines_of_cell(context, p, q, screen_xs, screen_ys)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
     
-    def render_all_lines_of_cell(self, context, x, y):
+    def render_all_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         """Render the lines that surround a cell (all four sides)."""
-        self.render_lines_of_cell(context, x, y)
+        self.render_lines_of_cell(context, x, y, screen_xs, screen_ys)
         for p, q in [(x + 1, y), (x, y + 1), (x + 1, y + 1)]:
             if self.grid.is_valid(p, q):
-                self.render_lines_of_cell(context, p, q)
+                self.render_lines_of_cell(context, p, q, screen_xs, screen_ys)
+                
+    def comp_screen_xs(self):
+        d = {}
+        # +1 because we also use coords of invalid cells
+        for x in xrange(self.grid.width + 1):
+            d[x] = self.properties.grid_to_screen_x(x, False)
+        return d
         
-    def render_lines_of_cell(self, context, x, y):
+    def comp_screen_ys(self):
+        d = {}
+        # +1 because we also use coords of invalid cells
+        for y in xrange(self.grid.height + 1):
+            d[y] = self.properties.grid_to_screen_y(y, False)
+        return d
+        
+    def render_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         # lines
         """Render the lines that belong to a cell (top and left line)."""
         def render_line(context, rx, ry, rdx, rdy, bar, border):
@@ -461,8 +477,8 @@ class GridView:
             self.grid.lines = cView.compute_lines(self.grid)
         lines = self.grid.lines[x, y]
         for p, q, ltype, side in lines:
-            sx = self.properties.grid_to_screen_x(p, False)
-            sy = self.properties.grid_to_screen_y(q, False)
+            sx = screen_xs[p]
+            sy = screen_ys[q]
             
             lwidth = self.properties.line["width"]
             bwidth = self.properties.border["width"]
@@ -579,6 +595,8 @@ class GridView:
         """Render one or more cells."""
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
+        screen_xs = self.comp_screen_xs()
+        screen_ys = self.comp_screen_ys()
         for x, y, r, g, b in cells:
             context.set_source_rgb(r, g, b)
             # -0.5 for coordinates and +1 for size
@@ -588,7 +606,7 @@ class GridView:
             bsize = self.properties.cell["size"] + 1
             context.rectangle(bx, by, bsize, bsize)
             context.fill()
-            self.render_all_lines_of_cell(context, x, y)
+            self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
