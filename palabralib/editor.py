@@ -397,7 +397,8 @@ class Editor(gtk.HBox):
     def _render_editor_of_cell(self, context, x=None, y=None):
         """Render everything editor related colors for the cell at (x, y)."""
         render = []
-        cells = [(x, y)] if x is not None and y is not None else self.puzzle.grid.cells()
+        all_cells = [(p, q) for p, q in self.puzzle.grid.cells()]
+        cells = [(x, y)] if x is not None and y is not None else all_cells
         for wx, wy in self.puzzle.view.render_warnings_of_cells(context, cells):
             # warnings for undesired cells
             r = preferences.prefs["color_warning_red"] / 65535.0
@@ -405,7 +406,7 @@ class Editor(gtk.HBox):
             b = preferences.prefs["color_warning_blue"] / 65535.0
             render.append((wx, wy, r, g, b))
         
-        cells = [(x, y)] if x is not None and y is not None else self.puzzle.grid.cells()
+        cells = [(x, y)] if x is not None and y is not None else all_cells
         for p, q in cells:
             # blacklist
             if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
@@ -415,21 +416,32 @@ class Editor(gtk.HBox):
                     elif direction == "down" and by <= q < by + length and bx == p:
                         render.append((p, q, r, g, b))
         
-            sx = self.selection.x
-            sy = self.selection.y
-            sdir = self.selection.direction
+        sx = self.selection.x
+        sy = self.selection.y
+        sdir = self.selection.direction
         
-            # selection line
-            if self.puzzle.grid.is_available(p, q):
+        # selection line
+        if x is not None and y is not None:
+            if self.puzzle.grid.is_available(x, y):
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
-                for cell in self.puzzle.grid.slot(sx, sy, sdir):
-                    if (p, q) == cell:
-                        render.append((p, q, r, g, b))
+                stx, sty = self.puzzle.grid.get_start_word(sx, sy, sdir)
+                for cell in self.puzzle.grid.in_direction(stx, sty, sdir):
+                    if (x, y) == cell:
+                        render.append((x, y, r, g, b))
                         break
+        else:
+            r = preferences.prefs["color_current_word_red"] / 65535.0
+            g = preferences.prefs["color_current_word_green"] / 65535.0
+            b = preferences.prefs["color_current_word_blue"] / 65535.0
+            startx, starty = self.puzzle.grid.get_start_word(sx, sy, sdir)
+            for i, j in self.puzzle.grid.in_direction(startx, starty, sdir):
+                render.append((i, j, r, g, b))
         
-            # selection cell                    
+        cells = [(x, y)] if x is not None and y is not None else all_cells
+        for p, q in cells:
+            # selection cell
             if (p, q) == (sx, sy):
                 r = preferences.prefs["color_primary_selection_red"] / 65535.0
                 g = preferences.prefs["color_primary_selection_green"] / 65535.0
