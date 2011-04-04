@@ -383,7 +383,26 @@ class Grid:
         
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""
-        return sum([1 for x, y in self.in_direction(x, y, direction)])
+        dx = 1 if direction == "across" else 0
+        dy = 1 if direction == "down" else 0
+        count = 0
+        while True:
+            if not (0 <= x < self.width and 0 <= y < self.height):
+                break
+            if self.data[y][x]["block"] or self.data[y][x]["void"]:
+                break
+            count += 1
+            if x + dx >= self.width:
+                break
+            if dx == 1 and self.data[y][x + dx]["bar"]["left"]:
+                break
+            if y + dy >= self.height:
+                break
+            if dy == 1 and self.data[y + dy][x]["bar"]["top"]:
+                break
+            x += dx
+            y += dy
+        return count
         
     def in_direction(self, x, y, direction, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
@@ -394,13 +413,17 @@ class Grid:
             dy *= -1
         while self.is_available(x, y):
             yield x, y
-            if dx == 1 and self.is_valid(x + dx, y) and self.has_bar(x + dx, y, "left"):
+            if not (0 <= x + dx < self.width and 0 <= y < self.height):
                 break
-            if dx == -1 and self.has_bar(x, y, "left"):
+            if dx == 1 and self.data[y][x + dx]["bar"]["left"]:
                 break
-            if dy == 1 and self.is_valid(x, y + dy) and self.has_bar(x, y + dy, "top"):
+            if dx == -1 and self.data[y][x]["bar"]["left"]:
                 break
-            if dy == -1 and self.has_bar(x, y, "top"):
+            if not (0 <= x < self.width and 0 <= y + dy < self.height):
+                break
+            if dy == 1 and self.data[y + dy][x]["bar"]["top"]:
+                break
+            if dy == -1 and self.data[y][x]["bar"]["top"]:
                 break
             x += dx
             y += dy
@@ -793,8 +816,12 @@ class Grid:
         
     def is_available(self, x, y):
         """Return True if the given (x, y) is valid and not a block or a void."""
-        return (self.is_valid(x, y) and not self.is_block(x, y)
-            and not self.is_void(x, y))
+        is_valid = 0 <= x < self.width and 0 <= y < self.height
+        if not is_valid:
+            return False
+        is_block = self.data[y][x]["block"]
+        is_void = self.data[y][x]["void"]
+        return not is_block and not is_void
         
     def get_size(self):
         """Return a tuple containing the width and height of the grid."""
