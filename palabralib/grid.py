@@ -94,7 +94,24 @@ class Grid:
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
         if not self.is_available(x, y):
             return x, y
-        return [(x, y) for x, y in self.in_direction(x, y, direction, reverse=True)][-1]
+        dx = -1 if direction == "across" else 0
+        dy = -1 if direction == "down" else 0
+        while True:
+            if dx < 0 and (x + dx < 0 or self.data[y][x]["bar"]["left"]):
+                break
+            if dy < 0 and (y + dy < 0 or self.data[y][x]["bar"]["top"]):
+                break
+            
+            is_valid = 0 <= x + dx < self.width and 0 <= y + dy < self.height
+            if not is_valid:
+                return False
+            is_block = self.data[y + dy][x + dx]["block"]
+            is_void = self.data[y + dy][x + dx]["void"]
+            if is_block or is_void:
+                break
+            x += dx
+            y += dy
+        return (x, y)
             
     def get_end_word(self, x, y, direction):
         """Return the last cell of a word in the given direction that contains the cell (x, y)."""
