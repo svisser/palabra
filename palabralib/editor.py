@@ -398,7 +398,6 @@ class Editor(gtk.HBox):
         """Render everything editor related colors for the cell at (x, y)."""
         render = []
         cells = [(x, y)] if x is not None and y is not None else self.puzzle.grid.cells()
-        
         for wx, wy in self.puzzle.view.render_warnings_of_cells(context, cells):
             # warnings for undesired cells
             r = preferences.prefs["color_warning_red"] / 65535.0
@@ -406,6 +405,7 @@ class Editor(gtk.HBox):
             b = preferences.prefs["color_warning_blue"] / 65535.0
             render.append((wx, wy, r, g, b))
         
+        cells = [(x, y)] if x is not None and y is not None else self.puzzle.grid.cells()
         for p, q in cells:
             # blacklist
             if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
@@ -424,7 +424,6 @@ class Editor(gtk.HBox):
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
-                
                 for cell in self.puzzle.grid.slot(sx, sy, sdir):
                     if (p, q) == cell:
                         render.append((p, q, r, g, b))
@@ -445,13 +444,13 @@ class Editor(gtk.HBox):
                 if (p, q) in self.apply_symmetry(*self.current):
                     render.append((p, q, r, g, b))
                 
-            # draw current cell last to prevent
-            # symmetrical cells from overlapping it
-            r = preferences.prefs["color_primary_active_red"] / 65535.0
-            g = preferences.prefs["color_primary_active_green"] / 65535.0
-            b = preferences.prefs["color_primary_active_blue"] / 65535.0
-            if (p, q) == self.current:
-                render.append((p, q, r, g, b))
+                # draw current cell last to prevent
+                # symmetrical cells from overlapping it
+                r = preferences.prefs["color_primary_active_red"] / 65535.0
+                g = preferences.prefs["color_primary_active_green"] / 65535.0
+                b = preferences.prefs["color_primary_active_blue"] / 65535.0
+                if (p, q) == self.current:
+                    render.append((p, q, r, g, b))
         self.puzzle.view.render_locations(context, render)
         
     def on_expose_event(self, drawing_area, event):
