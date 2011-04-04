@@ -428,19 +428,18 @@ class GridView:
             x, y = cells[0]
             self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
         else:
-            for p, q in cells:
-                self.render_lines_of_cell(context, p, q, screen_xs, screen_ys)
+            self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
     
     def render_all_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         """Render the lines that surround a cell (all four sides)."""
-        self.render_lines_of_cell(context, x, y, screen_xs, screen_ys)
-        for p, q in [(x + 1, y), (x, y + 1), (x + 1, y + 1)]:
-            if self.grid.is_valid(p, q):
-                self.render_lines_of_cell(context, p, q, screen_xs, screen_ys)
+        ns = [(x + 1, y), (x, y + 1), (x + 1, y + 1)]
+        cells = ([(x, y)] + [(p, q) for p, q in ns if self.grid.is_valid(p, q)])
+        self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
                 
     def comp_screen_xs(self):
+        """Compute screen x-coordinates of cells."""
         d = {}
         # +1 because we also use coords of invalid cells
         for x in xrange(self.grid.width + 1):
@@ -448,13 +447,14 @@ class GridView:
         return d
         
     def comp_screen_ys(self):
+        """Compute screen y-coordinates of cells."""
         d = {}
         # +1 because we also use coords of invalid cells
         for y in xrange(self.grid.height + 1):
             d[y] = self.properties.grid_to_screen_y(y, False)
         return d
         
-    def render_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
+    def render_lines_of_cells(self, context, cells, screen_xs, screen_ys):
         # lines
         """Render the lines that belong to a cell (top and left line)."""
         def render_line(context, rx, ry, rdx, rdy, bar, border):
@@ -471,77 +471,77 @@ class GridView:
                 context.set_source_rgb(*color)
             if bar:
                 context.set_line_width(self.properties.line["width"])
-        
         context.set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
         if not self.grid.lines:
             self.grid.lines = cView.compute_lines(self.grid)
-        lines = self.grid.lines[x, y]
-        for p, q, ltype, side in lines:
-            sx = screen_xs[p]
-            sy = screen_ys[q]
-            
-            lwidth = self.properties.line["width"]
-            bwidth = self.properties.border["width"]
-            cellsize = self.properties.cell["size"]
-            
-            bar = (0 <= x < self.grid.width
-                and 0 <= y < self.grid.height
-                and self.grid.data[y][x]["bar"][ltype])
-            border = "border" in side
-            if side == "normal":
-                context.set_line_width(lwidth)
-            elif border:
-                context.set_line_width(bwidth)
-            
-            if side == "normal":
-                start = -0.5 * lwidth
-            elif side == "outerborder":
-                start = -0.5 * bwidth
-            elif side == "innerborder":
-                start = 0.5 * bwidth
-                if ltype == "top":
-                    check = x, y + 1
-                elif ltype == "left":
-                    check = x + 1, y
-                if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
-                    start -= lwidth
-            
-            if ltype == "left":
-                render_line(context, sx + start, sy, 0, cellsize, bar, border)
-            elif ltype == "top":
-                rx = sx
-                ry = sy + start
-                rdx = cellsize
+        for x, y in cells:
+            lines = self.grid.lines[x, y]
+            for p, q, ltype, side in lines:
+                sx = screen_xs[p]
+                sy = screen_ys[q]
                 
-                def get_delta(x, y, side_no_extend, side_extend):
-                    """
-                    Determine the delta in pixels.
-                    The delta is at least the normal line width.
-                    """
-                    if ((x, y, "left", side_no_extend) in lines
-                        or (x, y - 1, "left", side_no_extend) in lines):
-                        return False, self.properties.line["width"]
-                    if ((x, y, "left", "normal") in lines
-                        or (x, y - 1, "left", "normal") in lines):
-                        return False, self.properties.line["width"]
-                    if ((x, y, "left", side_extend) in lines
-                        or (x, y - 1, "left", side_extend) in lines):
-                        return True, 0
-                    return False, 0
-                is_lb, dxl = get_delta(x, y, "innerborder", "outerborder")
-                is_rb, dxr = get_delta(x + 1, y, "outerborder", "innerborder")
+                lwidth = self.properties.line["width"]
+                bwidth = self.properties.border["width"]
+                cellsize = self.properties.cell["size"]
                 
-                # adjust horizontal lines to fill empty spaces in corners
-                rx -= dxl
-                rdx += dxl
-                rdx += dxr
-                render_line(context, rx, ry, rdx, 0, bar, border)
-                if is_lb:
-                    rx -= bwidth
-                    render_line(context, rx, ry, bwidth, 0, False, True)
-                if is_rb:
-                    rx += (cellsize + dxl)
-                    render_line(context, rx, ry, bwidth, 0, False, True)
+                bar = (0 <= x < self.grid.width
+                    and 0 <= y < self.grid.height
+                    and self.grid.data[y][x]["bar"][ltype])
+                border = "border" in side
+                if side == "normal":
+                    context.set_line_width(lwidth)
+                elif border:
+                    context.set_line_width(bwidth)
+                
+                if side == "normal":
+                    start = -0.5 * lwidth
+                elif side == "outerborder":
+                    start = -0.5 * bwidth
+                elif side == "innerborder":
+                    start = 0.5 * bwidth
+                    if ltype == "top":
+                        check = x, y + 1
+                    elif ltype == "left":
+                        check = x + 1, y
+                    if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
+                        start -= lwidth
+                
+                if ltype == "left":
+                    render_line(context, sx + start, sy, 0, cellsize, bar, border)
+                elif ltype == "top":
+                    rx = sx
+                    ry = sy + start
+                    rdx = cellsize
+                    
+                    def get_delta(x, y, side_no_extend, side_extend):
+                        """
+                        Determine the delta in pixels.
+                        The delta is at least the normal line width.
+                        """
+                        if ((x, y, "left", side_no_extend) in lines
+                            or (x, y - 1, "left", side_no_extend) in lines):
+                            return False, self.properties.line["width"]
+                        if ((x, y, "left", "normal") in lines
+                            or (x, y - 1, "left", "normal") in lines):
+                            return False, self.properties.line["width"]
+                        if ((x, y, "left", side_extend) in lines
+                            or (x, y - 1, "left", side_extend) in lines):
+                            return True, 0
+                        return False, 0
+                    is_lb, dxl = get_delta(x, y, "innerborder", "outerborder")
+                    is_rb, dxr = get_delta(x + 1, y, "outerborder", "innerborder")
+                    
+                    # adjust horizontal lines to fill empty spaces in corners
+                    rx -= dxl
+                    rdx += dxl
+                    rdx += dxr
+                    render_line(context, rx, ry, rdx, 0, bar, border)
+                    if is_lb:
+                        rx -= bwidth
+                        render_line(context, rx, ry, bwidth, 0, False, True)
+                    if is_rb:
+                        rx += (cellsize + dxl)
+                        render_line(context, rx, ry, bwidth, 0, False, True)
         
     def render_warnings_of_cells(self, context, cells):
         """Determine undesired cells."""
@@ -582,7 +582,9 @@ class GridView:
                         starts[p, q, d] = sx, sy
                         for zx, zy in self.grid.in_direction(sx, sy, d):
                             starts[zx, zy, d] = sx, sy
-                        lengths[sx, sy, d] = self.grid.word_length(sx, sy, d)
+                        # TODO why is next if needed?
+                        if (sx, sy, d) not in lengths:
+                            lengths[sx, sy, d] = self.grid.word_length(sx, sy, d)
                     if lengths[sx, sy, d] == 2:
                         warn = True
                         break
