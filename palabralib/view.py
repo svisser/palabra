@@ -127,9 +127,10 @@ class GridViewProperties:
         
         #self.styles[5, 5] = CellStyle()
         #self.styles[5, 5].cell["color"] = (65535.0, 0, 0)
-        #self.grid.set_void(3, 3, True)
         
         # TODO needed?
+        self.bar = {}
+        self.bar["width"] = 3
         self.border = {}
         self.border["width"] = 1
         self.border["color"] = (0, 0, 0)
@@ -457,23 +458,10 @@ class GridView:
     def render_lines_of_cells(self, context, cells, screen_xs, screen_ys):
         # lines
         """Render the lines that belong to a cell (top and left line)."""
-        def render_line(context, rx, ry, rdx, rdy, bar, border):
-            if bar:
-                context.set_line_width(self.properties.bar["width"])
-            if border:
-                color = [c / 65535.0 for c in self.properties.border["color"]]
-                context.set_source_rgb(*color)
-            context.move_to(rx, ry)
-            context.rel_line_to(rdx, rdy)
-            context.stroke()
-            if border:
-                color = [c / 65535.0 for c in self.properties.line["color"]]
-                context.set_source_rgb(*color)
-            if bar:
-                context.set_line_width(self.properties.line["width"])
         context.set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
         if not self.grid.lines:
             self.grid.lines = cView.compute_lines(self.grid)
+        the_lines = []
         for x, y in cells:
             lines = self.grid.lines[x, y]
             for p, q, ltype, side in lines:
@@ -507,25 +495,25 @@ class GridView:
                         start -= lwidth
                 
                 if ltype == "left":
-                    render_line(context, sx + start, sy, 0, cellsize, bar, border)
+                    the_lines.append((sx + start, sy, 0, cellsize, bar, border))
                 elif ltype == "top":
                     rx = sx
                     ry = sy + start
                     rdx = cellsize
                     
-                    def get_delta(x, y, side_no_extend, side_extend):
+                    def get_delta(i, j, side_no_extend, side_extend):
                         """
                         Determine the delta in pixels.
                         The delta is at least the normal line width.
                         """
-                        if ((x, y, "left", side_no_extend) in lines
-                            or (x, y - 1, "left", side_no_extend) in lines):
+                        if ((i, j, "left", side_no_extend) in lines
+                            or (i, j - 1, "left", side_no_extend) in lines):
                             return False, self.properties.line["width"]
-                        if ((x, y, "left", "normal") in lines
-                            or (x, y - 1, "left", "normal") in lines):
+                        if ((i, j, "left", "normal") in lines
+                            or (i, j - 1, "left", "normal") in lines):
                             return False, self.properties.line["width"]
-                        if ((x, y, "left", side_extend) in lines
-                            or (x, y - 1, "left", side_extend) in lines):
+                        if ((i, j, "left", side_extend) in lines
+                            or (i, j - 1, "left", side_extend) in lines):
                             return True, 0
                         return False, 0
                     is_lb, dxl = get_delta(x, y, "innerborder", "outerborder")
@@ -535,13 +523,38 @@ class GridView:
                     rx -= dxl
                     rdx += dxl
                     rdx += dxr
-                    render_line(context, rx, ry, rdx, 0, bar, border)
+                    the_lines.append((rx, ry, rdx, 0, bar, border))
                     if is_lb:
                         rx -= bwidth
-                        render_line(context, rx, ry, bwidth, 0, False, True)
+                        the_lines.append((rx, ry, bwidth, 0, False, True))
                     if is_rb:
                         rx += (cellsize + dxl)
-                        render_line(context, rx, ry, bwidth, 0, False, True)
+                        the_lines.append((rx, ry, bwidth, 0, False, True))
+        l_bars = [line for line in the_lines if line[4]]
+        l_borders = [line for line in the_lines if line[5]]
+        l_normal = [line for line in the_lines if not line[4] and not line[5]]
+        # TODO property bar width
+        if l_bars:
+            context.set_line_width(self.properties.bar["width"])
+            for rx, ry, rdx, rdy, bar, border in l_bars:
+                context.move_to(rx, ry)
+                context.rel_line_to(rdx, rdy)
+            context.stroke()
+            context.set_line_width(self.properties.line["width"])
+        if l_borders:
+            color = [c / 65535.0 for c in self.properties.border["color"]]
+            context.set_source_rgb(*color)
+            for rx, ry, rdx, rdy, bar, border in l_borders:
+                context.move_to(rx, ry)
+                context.rel_line_to(rdx, rdy)
+            context.stroke()
+            color = [c / 65535.0 for c in self.properties.line["color"]]
+            context.set_source_rgb(*color)
+        if l_normal:
+            for rx, ry, rdx, rdy, bar, border in l_normal:
+                context.move_to(rx, ry)
+                context.rel_line_to(rdx, rdy)
+            context.stroke()
         
     def render_warnings_of_cells(self, context, cells):
         """Determine undesired cells."""
