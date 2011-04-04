@@ -267,6 +267,26 @@ class GridView:
     def render_top(self, context, x=None, y=None):
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
+            
+        pcr = pangocairo.CairoContext(context)
+        pcr_layout = pcr.create_layout()
+        def _render_pango(r, s, font, content, rx=None, ry=None):
+            if rx is None and ry is None:
+                rx = self.properties.grid_to_screen_x(r, False) + 1
+                ry = self.properties.grid_to_screen_y(s, False)
+            pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
+            context.move_to(rx, ry)
+            pcr.show_layout(pcr_layout)
+        def _render_char(r, s, c):
+            xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
+            rx = (self.properties.border["width"] +
+                (r + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
+                width - self.properties.line["width"] / 2 - abs(xbearing) / 2)
+            ry = (self.properties.border["width"] +
+                (s + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
+                height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
+            _render_pango(r, s, self.properties.style(r, s).char["font"], c, rx, ry)
+
         cells = [(x, y)] if x is not None and y is not None else self.grid.cells()
         for p, q in cells:
             # char
@@ -274,7 +294,7 @@ class GridView:
                 context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).char["color"]])
                 c = self.grid.get_char(p, q)
                 if c != '':
-                    self._render_char(context, self.properties, p, q, c)
+                    _render_char(p, q, c)
                     
             # overlay char
             if self.settings["render_overlays"]:
@@ -282,7 +302,7 @@ class GridView:
                 context.set_source_rgb(*[c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)])
                 for r, s, c in self.overlay:
                     if (p, q) == (r, s):
-                        self._render_char(context, self.properties, p, q, c)
+                        _render_char(p, q, c)
             
             # highlights - TODO custom color
             context.set_source_rgb(*[c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)])
@@ -355,7 +375,8 @@ class GridView:
                 context.set_source_rgb(*[c / 65535.0 for c in self.style(p, q).number["color"]])
                 n = self.grid.cell(p, q)["number"]
                 if n > 0:
-                    self._render_number(context, self.properties, p, q, n)
+                    font = self.properties.style(p, q).number["font"]
+                    _render_pango(p, q, font, str(n))
                     
             # circle
             if self.style(p, q).circle:
@@ -483,60 +504,20 @@ class GridView:
         
     def render_location(self, context, x, y, r, g, b):
         """Render a cell."""
-        def render(context, grid, props):
-            # -0.5 for coordinates and +1 for size
-            # are needed to render seamlessly in PDF
-            bx = props.grid_to_screen_x(x, False) - 0.5
-            by = props.grid_to_screen_y(y, False) - 0.5
-            bsize = props.cell["size"] + 1
-            
-            context.rectangle(bx, by, bsize, bsize)
-            context.fill()
-        self._render(context, render, color=(r, g, b))
+        context.set_source_rgb(r, g, b)
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
-            self.render_all_lines_of_cell(context, x, y)
+        # -0.5 for coordinates and +1 for size
+        # are needed to render seamlessly in PDF
+        bx = self.properties.grid_to_screen_x(x, False) - 0.5
+        by = self.properties.grid_to_screen_y(y, False) - 0.5
+        bsize = self.properties.cell["size"] + 1
+        context.rectangle(bx, by, bsize, bsize)
+        context.fill()
+        self.render_all_lines_of_cell(context, x, y)
         if self.settings["has_padding"]:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
-    
-    def _render_pango(self, context, x, y, font, content):
-        """Render the content at (x, y) using the specified font description."""
-        pcr = pangocairo.CairoContext(context)
-        layout = pcr.create_layout()
-        layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
-        context.save()
-        context.move_to(x, y)
-        pcr.show_layout(layout)
-        context.restore()
         
-    def _render_char(self, context, props, x, y, c):
-        """Render a letter c at the specified coordinates (x, y)."""
-        xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
-                    
-        rx = (props.border["width"] +
-            (x + 0.55) * (props.cell["size"] + props.line["width"]) -
-            width - props.line["width"] / 2 - abs(xbearing) / 2)
-        ry = (props.border["width"] +
-            (y + 0.55) * (props.cell["size"] + props.line["width"]) -
-            height - props.line["width"] / 2 - abs(ybearing) / 2)
-        self._render_pango(context, rx, ry, props.style(x, y).char["font"], c)
-        
-    def _render_number(self, context, props, x, y, n):
-        """Render a number n at the specified coordinates (x, y)."""
-        rx = props.grid_to_screen_x(x, False) + 1
-        ry = props.grid_to_screen_y(y, False)
-        self._render_pango(context, rx, ry, props.style(x, y).number["font"], str(n))
-            
-    def _render(self, context, render, **args):
-        """Perform the rendering function render with the given arguments."""
-        context.set_source_rgb(*args["color"])
-        
-        if self.settings["has_padding"]:
-            context.translate(self.properties.margin_x, self.properties.margin_y)
-        render(context, self.grid, self.properties)
-        if self.settings["has_padding"]:
-            context.translate(-self.properties.margin_x, -self.properties.margin_y)
-            
     # needs manual queue_draw() on drawing_area afterwards
     def refresh_visual_size(self, drawing_area):
         """Recalculate the visual width and height and resize the drawing area."""
