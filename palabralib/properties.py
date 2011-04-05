@@ -216,13 +216,11 @@ class PropertiesWindow(gtk.Dialog):
                 if count == 0:
                     label = gtk.Label()
                     label.set_markup(''.join([char, u": <b>0</b>"]))
-                    eventbox = gtk.EventBox()
-                    eventbox.add(label)
-                    eventbox.connect("button-press-event", on_char_click, char)
                 else:
-                    eventbox = gtk.EventBox()
-                    eventbox.add(gtk.Label(''.join([char, u": ", str(count), u""])))
-                    eventbox.connect("button-press-event", on_char_click, char)
+                    label = gtk.Label(''.join([char, u": ", str(count), u""]))
+                eventbox = gtk.EventBox()
+                eventbox.add(label)
+                eventbox.connect("button-press-event", on_char_click, char)
                 table.attach(eventbox, x, x + 1, y / 6, y / 6 + 1)
         
         main = gtk.VBox(False, 0)
