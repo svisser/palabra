@@ -345,7 +345,7 @@ class GridView:
                 extents[c] = context.text_extents(c)
         if n_chars:
             for p, q, c in n_chars:
-                context.set_source_rgb(*[c / 65535.0 for c in styles[p, q].char["color"]])
+                context.set_source_rgb(*[cc / 65535.0 for cc in styles[p, q].char["color"]])
                 _render_char(p, q, c, extents)
         if o_chars:
             # TODO custom color
@@ -473,7 +473,16 @@ class GridView:
     def render_lines_of_cells(self, context, cells, screen_xs, screen_ys):
         # lines
         """Render the lines that belong to a cell (top and left line)."""
-        context.set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
+        ctx_move_to = context.move_to
+        ctx_rel_line_to = context.rel_line_to
+        ctx_stroke = context.stroke
+        ctx_set_line_width = context.set_line_width
+        ctx_set_source_rgb = context.set_source_rgb
+        props_line_width = self.properties.line["width"]
+        props_border_width = self.properties.border["width"]
+        props_bar_width = self.properties.bar["width"]
+        props_cell_size = self.properties.cell["size"]
+        
         if not self.grid.lines:
             self.grid.lines = cView.compute_lines(self.grid)
         def comp_lines():
@@ -482,39 +491,34 @@ class GridView:
                 for p, q, ltype, side in lines:
                     sx = screen_xs[p]
                     sy = screen_ys[q]
-                    
-                    lwidth = self.properties.line["width"]
-                    bwidth = self.properties.border["width"]
-                    cellsize = self.properties.cell["size"]
-                    
                     bar = (0 <= x < self.grid.width
                         and 0 <= y < self.grid.height
                         and self.grid.data[y][x]["bar"][ltype])
                     border = "border" in side
                     if side == "normal":
-                        context.set_line_width(lwidth)
+                        ctx_set_line_width(props_line_width)
                     elif border:
-                        context.set_line_width(bwidth)
+                        ctx_set_line_width(props_border_width)
                     
                     if side == "normal":
-                        start = -0.5 * lwidth
+                        start = -0.5 * props_line_width
                     elif side == "outerborder":
-                        start = -0.5 * bwidth
+                        start = -0.5 * props_border_width
                     elif side == "innerborder":
-                        start = 0.5 * bwidth
+                        start = 0.5 * props_border_width
                         if ltype == "top":
                             check = x, y + 1
                         elif ltype == "left":
                             check = x + 1, y
                         if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
-                            start -= lwidth
+                            start -= props_line_width
                     
                     if ltype == "left":
-                        yield sx + start, sy, 0, cellsize, bar, border
+                        yield sx + start, sy, 0, props_cell_size, bar, border
                     elif ltype == "top":
                         rx = sx
                         ry = sy + start
-                        rdx = cellsize
+                        rdx = props_cell_size
                         
                         def get_delta(i, j, side_no_extend, side_extend):
                             """
@@ -525,7 +529,7 @@ class GridView:
                                 or (i, j - 1, "left", side_no_extend) in lines
                                 or (i, j, "left", "normal") in lines
                                 or (i, j - 1, "left", "normal") in lines):
-                                return False, self.properties.line["width"]
+                                return False, props_line_width
                             if ((i, j, "left", side_extend) in lines
                                 or (i, j - 1, "left", side_extend) in lines):
                                 return True, 0
@@ -539,37 +543,35 @@ class GridView:
                         rdx += dxr
                         yield rx, ry, rdx, 0, bar, border
                         if is_lb:
-                            rx -= bwidth
-                            yield rx, ry, bwidth, 0, False, True
+                            rx -= props_border_width
+                            yield rx, ry, props_border_width, 0, False, True
                         if is_rb:
-                            rx += (cellsize + dxl)
-                            yield rx, ry, bwidth, 0, False, True
+                            rx += (props_cell_size + dxl)
+                            yield rx, ry, props_border_width, 0, False, True
         the_lines = list(comp_lines())
         l_bars = [line for line in the_lines if line[4]]
         l_borders = [line for line in the_lines if line[5]]
         l_normal = [line for line in the_lines if not line[4] and not line[5]]
         # TODO property bar width
         if l_bars:
-            context.set_line_width(self.properties.bar["width"])
+            ctx_set_line_width(props_bar_width)
             for rx, ry, rdx, rdy, bar, border in l_bars:
-                context.move_to(rx, ry)
-                context.rel_line_to(rdx, rdy)
-            context.stroke()
-            context.set_line_width(self.properties.line["width"])
-        if l_borders:
-            color = [c / 65535.0 for c in self.properties.border["color"]]
-            context.set_source_rgb(*color)
-            for rx, ry, rdx, rdy, bar, border in l_borders:
-                context.move_to(rx, ry)
-                context.rel_line_to(rdx, rdy)
-            context.stroke()
-            color = [c / 65535.0 for c in self.properties.line["color"]]
-            context.set_source_rgb(*color)
+                ctx_move_to(rx, ry)
+                ctx_rel_line_to(rdx, rdy)
+            ctx_stroke()
+            ctx_set_line_width(props_line_width)
         if l_normal:
+            ctx_set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
             for rx, ry, rdx, rdy, bar, border in l_normal:
-                context.move_to(rx, ry)
-                context.rel_line_to(rdx, rdy)
-            context.stroke()
+                ctx_move_to(rx, ry)
+                ctx_rel_line_to(rdx, rdy)
+            ctx_stroke()
+        if l_borders:
+            ctx_set_source_rgb(*[c / 65535.0 for c in self.properties.border["color"]])
+            for rx, ry, rdx, rdy, bar, border in l_borders:
+                ctx_move_to(rx, ry)
+                ctx_rel_line_to(rdx, rdy)
+            ctx_stroke()
         
     def render_warnings_of_cells(self, context, cells):
         """Determine undesired cells."""
@@ -629,7 +631,8 @@ class GridView:
         
     def render_locations(self, context, cells):
         """Render one or more cells."""
-        if self.settings["has_padding"]:
+        has_padding = self.settings["has_padding"]
+        if has_padding:
             context.translate(self.properties.margin_x, self.properties.margin_y)
         screen_xs = self.comp_screen_xs()
         screen_ys = self.comp_screen_ys()
@@ -637,13 +640,13 @@ class GridView:
             context.set_source_rgb(r, g, b)
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
-            bx = self.properties.grid_to_screen_x(x, False) - 0.5
-            by = self.properties.grid_to_screen_y(y, False) - 0.5
+            bx = screen_xs[x] - 0.5
+            by = screen_ys[y] - 0.5
             bsize = self.properties.cell["size"] + 1
             context.rectangle(bx, by, bsize, bsize)
             context.fill()
             self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
-        if self.settings["has_padding"]:
+        if has_padding:
             context.translate(-self.properties.margin_x, -self.properties.margin_y)
         
     # needs manual queue_draw() on drawing_area afterwards
