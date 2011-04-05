@@ -304,6 +304,10 @@ class GridView:
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
             
+        styles = {}
+        for x, y in cells:
+            styles[x, y] = self.properties.style(x, y)
+            
         pcr = pangocairo.CairoContext(context)
         pcr_layout = pcr.create_layout()
         def _render_pango(r, s, font, content, rx=None, ry=None):
@@ -321,13 +325,12 @@ class GridView:
             ry = (self.properties.border["width"] +
                 (s + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
                 height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
-            _render_pango(r, s, self.properties.style(r, s).char["font"], c, rx, ry)
+            _render_pango(r, s, styles[r, s].char["font"], c, rx, ry)
 
         # chars and overlay chars
         n_chars = []
         o_chars = []
         for p, q in cells:
-            style = self.properties.style(p, q)
             if self.settings["show_chars"]:
                 c = self.grid.data[q][p]["char"]
                 if c != '':
@@ -341,8 +344,8 @@ class GridView:
             if c not in extents:
                 extents[c] = context.text_extents(c)
         if n_chars:
-            context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
             for p, q, c in n_chars:
+                context.set_source_rgb(*[c / 65535.0 for c in styles[p, q].char["color"]])
                 _render_char(p, q, c, extents)
         if o_chars:
             # TODO custom color
@@ -354,7 +357,7 @@ class GridView:
         screen_ys = self.comp_screen_ys()
             
         for p, q in cells:
-            style = self.properties.style(p, q)
+            style = styles[p, q]
             # highlights - TODO custom color
             context.set_source_rgb(*[c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)])
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
@@ -418,7 +421,7 @@ class GridView:
         if self.settings["show_numbers"]:
             numbers = [(p, q) for p, q in cells if self.grid.data[q][p]["number"] > 0]
             for p, q in numbers:
-                style = self.properties.style(p, q)
+                style = styles[p, q]
                 context.set_source_rgb(*[c / 65535.0 for c in style.number["color"]])
                 n = self.grid.data[q][p]["number"]
                 font = style.number["font"]
@@ -426,7 +429,7 @@ class GridView:
 
         # circle
         for p, q in cells:
-            style = self.properties.style(p, q)
+            style = styles[p, q]
             if style.circle:
                 context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
                 rsize = self.properties.cell["size"]
@@ -541,7 +544,7 @@ class GridView:
                         if is_rb:
                             rx += (cellsize + dxl)
                             yield rx, ry, bwidth, 0, False, True
-        the_lines = [line for line in comp_lines()]
+        the_lines = list(comp_lines())
         l_bars = [line for line in the_lines if line[4]]
         l_borders = [line for line in the_lines if line[5]]
         l_normal = [line for line in the_lines if not line[4] and not line[5]]
