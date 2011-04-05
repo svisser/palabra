@@ -216,14 +216,20 @@ class PropertiesWindow(gtk.Dialog):
                 if count == 0:
                     label = gtk.Label()
                     label.set_markup(''.join([char, u": <b>0</b>"]))
+                    eventbox = gtk.EventBox()
+                    eventbox.add(label)
+                    eventbox.connect("button-press-event", on_char_click, char)
                 else:
-                    label = gtk.EventBox()
-                    label.add(gtk.Label(''.join([char, u": ", str(count), u""])))
-                    label.connect("button-press-event", on_char_click, char)
-                table.attach(label, x, x + 1, y / 6, y / 6 + 1)
+                    eventbox = gtk.EventBox()
+                    eventbox.add(gtk.Label(''.join([char, u": ", str(count), u""])))
+                    eventbox.connect("button-press-event", on_char_click, char)
+                table.attach(eventbox, x, x + 1, y / 6, y / 6 + 1)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
+        label = gtk.Label(u"Click on a character to see occurrences in the puzzle:")
+        label.set_alignment(0, 0.5)
+        main.pack_start(label, False, False, 0)
         main.pack_start(table, False, False, 0)
         
         def on_expose_event(drawing_area, event):
