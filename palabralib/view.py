@@ -542,22 +542,24 @@ class GridView:
                         ry = sy + start
                         rdx = props_cell_size
                         
-                        def get_delta(i, j, side_no_extend, side_extend):
-                            """
-                            Determine the delta in pixels.
-                            The delta is at least the normal line width.
-                            """
-                            if ((i, j, "left", side_no_extend) in lines
-                                or (i, j - 1, "left", side_no_extend) in lines
-                                or (i, j, "left", "normal") in lines
-                                or (i, j - 1, "left", "normal") in lines):
-                                return False, props_line_width
-                            if ((i, j, "left", side_extend) in lines
-                                or (i, j - 1, "left", side_extend) in lines):
-                                return True, 0
-                            return False, 0
-                        is_lb, dxl = get_delta(x, y, "innerborder", "outerborder")
-                        is_rb, dxr = get_delta(x + 1, y, "outerborder", "innerborder")
+                        is_lb, dxl = False, 0
+                        if ((x, y, "left", "outerborder") in lines
+                            or (x, y - 1, "left", "outerborder") in lines):
+                            is_lb, dxl = True, 0
+                        if ((x, y, "left", "innerborder") in lines
+                            or (x, y - 1, "left", "innerborder") in lines
+                            or (x, y, "left", "normal") in lines
+                            or (x, y - 1, "left", "normal") in lines):
+                            is_lb, dxl = False, props_line_width
+                        is_rb, dxr = False, 0
+                        if ((x + 1, y, "left", "innerborder") in lines
+                            or (x + 1, y - 1, "left", "innerborder") in lines):
+                            is_rb, dxr = True, 0
+                        if ((x + 1, y, "left", "outerborder") in lines
+                            or (x + 1, y - 1, "left", "outerborder") in lines
+                            or (x + 1, y, "left", "normal") in lines
+                            or (x + 1, y - 1, "left", "normal") in lines):
+                            is_rb, dxr = False, props_line_width
                         
                         # adjust horizontal lines to fill empty spaces in corners
                         rx -= dxl
