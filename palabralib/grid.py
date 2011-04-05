@@ -85,7 +85,9 @@ class Grid:
         
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
-        if not self.is_available(x, y):
+        if (not (0 <= x < self.width and 0 <= y < self.height)
+            or self.data[y][x]["block"]
+            or self.data[y][x]["void"]):
             return x, y
         dx = -1 if direction == "across" else 0
         dy = -1 if direction == "down" else 0
@@ -94,13 +96,11 @@ class Grid:
                 break
             if dy < 0 and (y + dy < 0 or self.data[y][x]["bar"]["top"]):
                 break
-            
-            is_valid = 0 <= x + dx < self.width and 0 <= y + dy < self.height
-            if not is_valid:
-                return False
-            is_block = self.data[y + dy][x + dx]["block"]
-            is_void = self.data[y + dy][x + dx]["void"]
-            if is_block or is_void:
+            if not (0 <= x + dx < self.width and 0 <= y + dy < self.height):
+                break
+            if self.data[y + dy][x + dx]["block"]:
+                break
+            if self.data[y + dy][x + dx]["void"]:
                 break
             x += dx
             y += dy
@@ -147,6 +147,8 @@ class Grid:
                 before = not (self.data[y][x - 1]["block"]
                 or self.data[y][x - 1]["void"]
                 or self.data[y][x]["bar"]["left"])
+            if before:
+                return True
             # after = self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left")
             after = True
             if x + 1 >= self.width:
@@ -155,6 +157,7 @@ class Grid:
                 after = not (self.data[y][x + 1]["block"]
                 or self.data[y][x + 1]["void"]
                 or self.data[y][x + 1]["bar"]["left"])
+            return after
         elif direction == "down":
             # before = self.is_available(x, y - 1) and not self.has_bar(x, y, "top")
             before = True
@@ -164,6 +167,8 @@ class Grid:
                 before = not (self.data[y - 1][x]["block"]
                 or self.data[y - 1][x]["void"]
                 or self.data[y][x]["bar"]["top"])
+            if before:
+                return True
             # after = self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top")
             after = True
             if y + 1 >= self.height:
@@ -172,7 +177,8 @@ class Grid:
                 after = not (self.data[y + 1][x]["block"]
                 or self.data[y + 1][x]["void"]
                 or self.data[y + 1][x]["bar"]["top"])
-        return before or after
+            return after
+        #return before or after
         
     def determine_status(self, full=False):
         """Return a dictionary with the grid's properties."""
