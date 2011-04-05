@@ -576,50 +576,56 @@ class GridView:
         lengths = {}
         starts = {}
         counts = {}
-        warnings = []
+        warn_unchecked = self.settings["warn_unchecked_cells"]
+        warn_consecutive = self.settings["warn_consecutive_unchecked"]
+        warn_two_letter = self.settings["warn_two_letter_words"]
+        check_count = self.grid.get_check_count
+        if warn_two_letter:
+            get_start_word = self.grid.get_start_word
+            in_direction = self.grid.in_direction
+            word_length = self.grid.word_length
         for p, q in cells:
             warn = False
             if (p, q) not in counts:
-                counts[p, q] = self.grid.get_check_count(p, q)
-            if self.settings["warn_unchecked_cells"]:
+                counts[p, q] = check_count(p, q)
+            if warn_unchecked:
                 # Color cells that are unchecked. Isolated cells are also colored.
                 if 0 <= counts[p, q] <= 1:
-                    warnings.append((p, q))
+                    yield p, q
                     continue
-            if self.settings["warn_consecutive_unchecked"]:
+            if warn_consecutive:
                 # Color consecutive (two or more) unchecked cells.
                 warn = False
                 if 0 <= count <= 1:
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                         if (p + dx, q + dy) not in counts:
-                            counts[p + dx, q + dy] = self.grid.get_check_count(p + dx, q + dy)
+                            counts[p + dx, q + dy] = check_count(p + dx, q + dy)
                         if 0 <= counts[p + dx, q + dy] <= 1:
                             warn = True
                             break
                 if warn:
-                    warnings.append((p, q))
+                    yield p, q
                     continue
-            if self.settings["warn_two_letter_words"]:
+            if warn_two_letter:
                 # Color words with length two.
                 warn = False
                 for d in ["across", "down"]:
                     if (p, q, d) in starts:
                         sx, sy = starts[p, q, d]
                     else:
-                        sx, sy = self.grid.get_start_word(p, q, d)
+                        sx, sy = get_start_word(p, q, d)
                         starts[p, q, d] = sx, sy
-                        for zx, zy in self.grid.in_direction(sx, sy, d):
+                        for zx, zy in in_direction(sx, sy, d):
                             starts[zx, zy, d] = sx, sy
                         # TODO why is next if needed?
                         if (sx, sy, d) not in lengths:
-                            lengths[sx, sy, d] = self.grid.word_length(sx, sy, d)
+                            lengths[sx, sy, d] = word_length(sx, sy, d)
                     if lengths[sx, sy, d] == 2:
                         warn = True
                         break
                 if warn:
-                    warnings.append((p, q))
+                    yield p, q
                     continue
-        return warnings
         
     def render_locations(self, context, cells):
         """Render one or more cells."""
