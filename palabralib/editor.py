@@ -622,8 +622,9 @@ class Editor(gtk.HBox):
     def highlight_chars(self, char):
         """Highlight all occurrences of the specified character."""
         new = []
-        for x, y in self.puzzle.grid.cells():
-            if self.puzzle.grid.get_char(x, y) == char:
+        grid = self.puzzle.grid
+        for x, y in grid.cells():
+            if grid.data[y][x]["char"] == char:
                 new.append((x, y, "across", 1))
         self._render_highlighted_words(new)
         
@@ -689,9 +690,10 @@ class Editor(gtk.HBox):
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
-        if self.puzzle.grid.is_available(x, y):
-            p, q = self.puzzle.grid.get_start_word(x, y, direction)
-            w = self.puzzle.grid.decompose_word(word, p, q, direction)
+        grid = self.puzzle.grid
+        if grid.is_available(x, y):
+            p, q = grid.get_start_word(x, y, direction)
+            w = grid.decompose_word(word, p, q, direction)
             self._insert_word(w)
             
     def set_overlay(self, word):
@@ -710,10 +712,11 @@ class Editor(gtk.HBox):
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
-        p, q = self.puzzle.grid.get_start_word(x, y, direction)
-        result = self.puzzle.grid.decompose_word(word, p, q, direction)
+        grid = self.puzzle.grid
+        p, q = grid.get_start_word(x, y, direction)
+        result = grid.decompose_word(word, p, q, direction)
         overlay = [(x, y, c.upper()) for x, y, c in result
-            if self.puzzle.grid.get_char(x, y) == ""]
+            if grid.data[y][x]["char"] == ""]
         render_overlay(overlay)
             
     def _insert_word(self, chars):
@@ -727,44 +730,48 @@ class Editor(gtk.HBox):
             
     def apply_symmetry(self, x, y):
         """Apply one or more symmetrical transforms to (x, y)."""
-        if not self.puzzle.grid.is_valid(x, y):
+        grid = self.puzzle.grid
+        if not grid.is_valid(x, y):
             return []
         cells = []
+        width = grid.width
+        height = grid.height
         symms = self.settings["symmetries"]
         if "horizontal" in symms:
-            cells.append((x, self.puzzle.grid.height - 1 - y))
+            cells.append((x, height - 1 - y))
         if "vertical" in symms:
-            cells.append((self.puzzle.grid.width - 1 - x, y))
+            cells.append((width - 1 - x, y))
         if (("horizontal" in symms and "vertical" in symms)
             or "180_degree" in symms
             or "90_degree" in symms
             or "diagonals" in symms):
-            p = self.puzzle.grid.width - 1 - x
-            q = self.puzzle.grid.height - 1 - y
+            p = width - 1 - x
+            q = height - 1 - y
             cells.append((p, q))
         if "diagonals" in symms:
-            p = int((y / float(self.puzzle.grid.height - 1)) * (self.puzzle.grid.width - 1))
-            q = int((x / float(self.puzzle.grid.width - 1)) * (self.puzzle.grid.height - 1))
+            p = int((y / float(height - 1)) * (width - 1))
+            q = int((x / float(width - 1)) * (height - 1))
             cells.append((p, q))
-            r = self.puzzle.grid.width - 1 - p
-            s = self.puzzle.grid.height - 1 - q
+            r = width - 1 - p
+            s = height - 1 - q
             cells.append((r, s))
         if "90_degree" in symms:
-            cells.append((self.puzzle.grid.width - 1 - y, x))
-            cells.append((y, self.puzzle.grid.height - 1 - x))
+            cells.append((width - 1 - y, x))
+            cells.append((y, height - 1 - x))
         return cells
 
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
-        if not self.puzzle.grid.is_valid(x, y):
+        grid = self.puzzle.grid
+        if not grid.is_valid(x, y):
             return []
         
         # determine blocks that need to be modified
         blocks = []
-        if status != self.puzzle.grid.is_block(x, y):
+        if status != grid.data[y][x]["block"]:
             blocks.append((x, y, status))
         for p, q in self.apply_symmetry(x, y):
-            if status != self.puzzle.grid.is_block(p, q):
+            if status != grid.data[q][p]["block"]:
                 blocks.append((p, q, status))
                 
         if len(blocks) > 0:
@@ -822,25 +829,24 @@ class Editor(gtk.HBox):
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
+        grid = self.puzzle.grid
+        transform_grid = self.palabra_window.transform_grid
+        modify_char = transform.modify_char
         
         # remove character in selected cell if it has one
-        if self.puzzle.grid.get_char(x, y) != "":
-            self.palabra_window.transform_grid(transform.modify_char
-                , x=x
-                , y=y
-                , next_char="")
+        if grid.data[y][x]["char"] != "":
+            transform_grid(modify_char, x=x, y=y, next_char="")
             self._check_blacklist_for_cell(x, y)
             self._render_cells([(x, y)])
         else:
             # remove character in previous cell if needed and move selection
-            x += (-1 if direction == "across" else 0)
-            y += (-1 if direction == "down" else 0)
-            if self.puzzle.grid.is_available(x, y):
-                if self.puzzle.grid.get_char(x, y) != "":
-                    self.palabra_window.transform_grid(transform.modify_char
-                        , x=x
-                        , y=y
-                        , next_char="")
+            if direction == "across":
+                x -= 1
+            elif direction == "down":
+                y -=1
+            if grid.is_available(x, y):
+                if grid.data[y][x]["char"] != "":
+                    transform_grid(modify_char, x=x, y=y, next_char="")
                 self._check_blacklist_for_cell(x, y)
                 self.set_selection(x, y)
             
@@ -856,10 +862,11 @@ class Editor(gtk.HBox):
         x = self.selection.x
         y = self.selection.y
         direction = self.selection.direction
+        grid = self.puzzle.grid
         if target == "start":
-            cell = self.puzzle.grid.get_start_word(x, y, direction)
+            cell = grid.get_start_word(x, y, direction)
         elif target == "end":
-            cell = self.puzzle.grid.get_end_word(x, y, direction)
+            cell = grid.get_end_word(x, y, direction)
         self.set_selection(*cell)
         
     def on_delete(self):
@@ -983,11 +990,13 @@ class Editor(gtk.HBox):
         ndir = direction if direction is not None else prev_dir
         
         # update the selection of the clue tool when the grid selection changes
-        if self.puzzle.grid.is_part_of_word(nx, ny, ndir):
-            p, q = self.puzzle.grid.get_start_word(nx, ny, ndir)
-            self.tools["clue"].select(p, q, ndir)
+        grid = self.puzzle.grid
+        clue_tool = self.tools["clue"]
+        if grid.is_part_of_word(nx, ny, ndir):
+            p, q = grid.get_start_word(nx, ny, ndir)
+            clue_tool.select(p, q, ndir)
         else:
-            self.tools["clue"].deselect()
+            clue_tool.deselect()
             
         self.set_overlay(None)
         self._clear_selection(prev_x, prev_y, prev_dir)
