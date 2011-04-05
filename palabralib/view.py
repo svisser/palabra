@@ -600,19 +600,17 @@ class GridView:
         """Determine undesired cells."""
         lengths = {}
         starts = {}
-        counts = {}
         warn_unchecked = self.settings["warn_unchecked_cells"]
         warn_consecutive = self.settings["warn_consecutive_unchecked"]
         warn_two_letter = self.settings["warn_two_letter_words"]
         check_count = self.grid.get_check_count
+        if warn_unchecked or warn_consecutive:
+            counts = self.grid.get_check_count_all()
         if warn_two_letter:
             get_start_word = self.grid.get_start_word
             in_direction = self.grid.in_direction
             word_length = self.grid.word_length
         for p, q in cells:
-            if warn_unchecked or warn_consecutive:
-                if (p, q) not in counts:
-                    counts[p, q] = check_count(p, q)
             if warn_unchecked:
                 # Color cells that are unchecked. Isolated cells are also colored.
                 if 0 <= counts[p, q] <= 1:
@@ -623,8 +621,6 @@ class GridView:
                 warn = False
                 if 0 <= counts[p, q] <= 1:
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                        if (p + dx, q + dy) not in counts:
-                            counts[p + dx, q + dy] = check_count(p + dx, q + dy)
                         if 0 <= counts[p + dx, q + dy] <= 1:
                             warn = True
                             break

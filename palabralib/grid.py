@@ -112,6 +112,45 @@ class Grid:
             return x, y
         return [(x, y) for x, y in self.in_direction(x, y, direction)][-1]
         
+    def get_check_count_all(self):
+        """Return the check count for all cells."""
+        counts = {}
+        hor_counts = {}
+        ver_counts = {}
+        for y in xrange(self.height):
+            length = 0
+            for x in xrange(self.width):
+                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+                    length += 1
+                if length >= 2:
+                    hor_counts[x - 1, y] = 1
+                if self.data[y][x]["block"] or self.data[y][x]["void"]:
+                    length = 0
+            if length >= 2:
+                hor_counts[x, y] = 1
+        for x in xrange(self.width):
+            length = 0
+            for y in xrange(self.height):
+                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+                    length += 1
+                if length >= 2:
+                    ver_counts[x, y - 1] = 1
+                if self.data[y][x]["block"] or self.data[y][x]["void"]:
+                    length = 0
+            if length >= 2:
+                ver_counts[x, y] = 1
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                if self.data[y][x]["block"] or self.data[y][x]["void"]:
+                    counts[x, y] = -1
+                    continue
+                counts[x, y] = 0
+                if (x, y) in hor_counts:
+                    counts[x, y] += 1
+                if (x, y) in ver_counts:
+                    counts[x, y] += 1
+        return counts
+        
     def get_check_count(self, x, y):
         """
         Return the number of words that contain the cell (x, y).
