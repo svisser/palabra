@@ -193,10 +193,8 @@ class NewWindow(gtk.Dialog):
         
         self.showing_pattern = False
         
-        self.set_size_request(706, 480)
-        
         self.preview = GridPreview()
-        self.preview.set_size_request(200, -1)
+        self.preview.set_size_request(240, 400)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
