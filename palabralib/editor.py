@@ -397,8 +397,11 @@ class Editor(gtk.HBox):
     # cells = 1 cell or all cells of grid
     def _render_editor_of_cell(self, context, cells):
         """Render everything editor related colors for cells."""
+        grid = self.puzzle.grid
+        view = self.puzzle.view
+        
         render = []
-        for wx, wy in self.puzzle.view.render_warnings_of_cells(context, cells):
+        for wx, wy in view.render_warnings_of_cells(context, cells):
             # warnings for undesired cells
             r = preferences.prefs["color_warning_red"] / 65535.0
             g = preferences.prefs["color_warning_green"] / 65535.0
@@ -407,7 +410,7 @@ class Editor(gtk.HBox):
         
         for p, q in cells:
             # blacklist
-            if self.puzzle.view.settings["warn_blacklist"] and False: # TODO until ready
+            if view.settings["warn_blacklist"] and False: # TODO until ready
                 for bx, by, direction, length in self.blacklist:
                     if direction == "across" and bx <= p < bx + length and by == q:
                         render.append((p, q, r, g, b))
@@ -421,12 +424,12 @@ class Editor(gtk.HBox):
         # selection line
         if len(cells) == 1:
             x, y = cells[0]
-            if self.puzzle.grid.is_available(x, y):
+            if grid.is_available(x, y):
                 r = preferences.prefs["color_current_word_red"] / 65535.0
                 g = preferences.prefs["color_current_word_green"] / 65535.0
                 b = preferences.prefs["color_current_word_blue"] / 65535.0
-                stx, sty = self.puzzle.grid.get_start_word(sx, sy, sdir)
-                for cell in self.puzzle.grid.in_direction(stx, sty, sdir):
+                stx, sty = grid.get_start_word(sx, sy, sdir)
+                for cell in grid.in_direction(stx, sty, sdir):
                     if (x, y) == cell:
                         render.append((x, y, r, g, b))
                         break
@@ -434,8 +437,8 @@ class Editor(gtk.HBox):
             r = preferences.prefs["color_current_word_red"] / 65535.0
             g = preferences.prefs["color_current_word_green"] / 65535.0
             b = preferences.prefs["color_current_word_blue"] / 65535.0
-            startx, starty = self.puzzle.grid.get_start_word(sx, sy, sdir)
-            for i, j in self.puzzle.grid.in_direction(startx, starty, sdir):
+            startx, starty = grid.get_start_word(sx, sy, sdir)
+            for i, j in grid.in_direction(startx, starty, sdir):
                 render.append((i, j, r, g, b))
         
         symms = list(self.apply_symmetry(*self.current))
@@ -449,7 +452,7 @@ class Editor(gtk.HBox):
                 
             # current cell and symmetrical cells
             cx, cy = self.current
-            if 0 <= cx < self.puzzle.grid.width and 0 <= cy < self.puzzle.grid.height:
+            if 0 <= cx < grid.width and 0 <= cy < grid.height:
                 r = preferences.prefs["color_secondary_active_red"] / 65535.0
                 g = preferences.prefs["color_secondary_active_green"] / 65535.0
                 b = preferences.prefs["color_secondary_active_blue"] / 65535.0
@@ -463,7 +466,7 @@ class Editor(gtk.HBox):
                 b = preferences.prefs["color_primary_active_blue"] / 65535.0
                 if (p, q) == self.current:
                     render.append((p, q, r, g, b))
-        self.puzzle.view.render_locations(context, render)
+        view.render_locations(context, render)
         
     def on_expose_event(self, drawing_area, event):
         """Render the main editing component."""

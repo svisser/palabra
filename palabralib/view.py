@@ -261,29 +261,32 @@ class GridView:
         self.render_top(context, cells)
 
     def render_bottom(self, context, cells):
+        has_padding = self.settings["has_padding"]
+        props = self.properties
         # background
         def render_rect(r, s):
-            context.set_source_rgb(*[c / 65535.0 for c in self.properties.style(r, s).cell["color"]])
-            rx = self.properties.grid_to_screen_x(r, False)
-            ry = self.properties.grid_to_screen_y(s, False)
-            rsize = self.properties.cell["size"]
+            context.set_source_rgb(*[c / 65535.0 for c in props.style(r, s).cell["color"]])
+            rx = props.grid_to_screen_x(r, False)
+            ry = props.grid_to_screen_y(s, False)
+            rsize = props.cell["size"]
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
             context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
-        if self.settings["has_padding"]:
-            context.translate(self.properties.margin_x, self.properties.margin_y)
+        if has_padding:
+            context.translate(props.margin_x, props.margin_y)
         if len(cells) == 1:
             render_rect(*cells[0])
         else:
-            style_default = self.properties.style()
+            style_default = props.style()
+            style = props.style
         
-            x0 = self.properties.grid_to_screen_x(0, False)
-            y0 = self.properties.grid_to_screen_y(0, False)
-            x1 = self.properties.grid_to_screen_x(self.grid.width - 1, False)
-            y1 = self.properties.grid_to_screen_y(self.grid.height - 1, False)
+            x0 = props.grid_to_screen_x(0, False)
+            y0 = props.grid_to_screen_y(0, False)
+            x1 = props.grid_to_screen_x(self.grid.width - 1, False)
+            y1 = props.grid_to_screen_y(self.grid.height - 1, False)
             context.set_source_rgb(*[c / 65535.0 for c in style_default.cell["color"]])
-            rsize = self.properties.cell["size"]
+            rsize = props.cell["size"]
             
             # rsize + 1, rsize + 1)
             rwidth = (x1 + rsize + 1) - x0
@@ -295,15 +298,15 @@ class GridView:
             context.fill()
             
             for p, q in cells:
-                if self.properties.style(p, q) != style_default:
+                if style(p, q) != style_default:
                     render_rect(p, q)
-        if self.settings["has_padding"]:
-            context.translate(-self.properties.margin_x, -self.properties.margin_y)
+        if has_padding:
+            context.translate(-props.margin_x, -props.margin_y)
         
     def render_top(self, context, cells):
         if self.settings["has_padding"]:
             context.translate(self.properties.margin_x, self.properties.margin_y)
-            
+        cur_color = None
         styles = {}
         for x, y in cells:
             styles[x, y] = self.properties.style(x, y)
@@ -345,21 +348,31 @@ class GridView:
                 extents[c] = context.text_extents(c)
         if n_chars:
             for p, q, c in n_chars:
-                context.set_source_rgb(*[cc / 65535.0 for cc in styles[p, q].char["color"]])
+                color = styles[p, q].char["color"]
+                if color != cur_color:
+                    cur_color = color
+                    context.set_source_rgb(*[cc / 65535.0 for cc in color])
                 _render_char(p, q, c, extents)
         if o_chars:
             # TODO custom color
-            context.set_source_rgb(*[c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)])
+            color = (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
+            if color != cur_color:
+                cur_color = color
+                context.set_source_rgb(*[c / 65535.0 for c in color])
             for p, q, c in o_chars:
                 _render_char(p, q, c, extents)
                 
         screen_xs = self.comp_screen_xs()
         screen_ys = self.comp_screen_ys()
-            
+        
+        # highlights
         for p, q in cells:
             style = styles[p, q]
-            # highlights - TODO custom color
-            context.set_source_rgb(*[c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)])
+            # TODO custom color
+            color = (65535.0, 65535.0, 65535.0 / 2)
+            if color != cur_color:
+                cur_color = color
+                context.set_source_rgb(*[c / 65535.0 for c in color])
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
                 sx = screen_xs[p]
                 sy = screen_ys[q]
@@ -400,8 +413,13 @@ class GridView:
                     top = q == s
                     bottom = q == (s + length - 1)
                     render_highlights_of_cell(context, p, q, top, bottom, left, right)
-            # block
-            context.set_source_rgb(*[c / 65535.0 for c in style.block["color"]])
+        # block
+        for p, q in cells:
+            style = styles[p, q]
+            color = style.block["color"]
+            if color != cur_color:
+                cur_color = color
+                context.set_source_rgb(*[c / 65535.0 for c in color])
             if self.grid.data[q][p]["block"]:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
@@ -422,7 +440,10 @@ class GridView:
             numbers = [(p, q) for p, q in cells if self.grid.data[q][p]["number"] > 0]
             for p, q in numbers:
                 style = styles[p, q]
-                context.set_source_rgb(*[c / 65535.0 for c in style.number["color"]])
+                color = style.number["color"]
+                if color != cur_color:
+                    cur_color = color
+                    context.set_source_rgb(*[c / 65535.0 for c in color])
                 n = self.grid.data[q][p]["number"]
                 font = style.number["font"]
                 _render_pango(p, q, font, str(n))
@@ -431,7 +452,10 @@ class GridView:
         for p, q in cells:
             style = styles[p, q]
             if style.circle:
-                context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
+                color = style.char["color"]
+                if color != cur_color:
+                    cur_color = color
+                    context.set_source_rgb(*[c / 65535.0 for c in color])
                 rsize = self.properties.cell["size"]
                 rx = screen_xs[p] + rsize / 2
                 ry = screen_ys[q] + rsize / 2
@@ -456,20 +480,22 @@ class GridView:
                 
     def comp_screen_xs(self):
         """Compute screen x-coordinates of cells."""
+        grid_to_screen_x = self.properties.grid_to_screen_x
         d = {}
         # +1 because we also use coords of invalid cells
         for x in xrange(self.grid.width + 1):
-            d[x] = self.properties.grid_to_screen_x(x, False)
+            d[x] = grid_to_screen_x(x, False)
         return d
-        
+
     def comp_screen_ys(self):
         """Compute screen y-coordinates of cells."""
+        grid_to_screen_y = self.properties.grid_to_screen_y
         d = {}
         # +1 because we also use coords of invalid cells
         for y in xrange(self.grid.height + 1):
-            d[y] = self.properties.grid_to_screen_y(y, False)
+            d[y] = grid_to_screen_y(y, False)
         return d
-        
+
     def render_lines_of_cells(self, context, cells, screen_xs, screen_ys):
         # lines
         """Render the lines that belong to a cell (top and left line)."""
@@ -495,10 +521,6 @@ class GridView:
                         and 0 <= y < self.grid.height
                         and self.grid.data[y][x]["bar"][ltype])
                     border = "border" in side
-                    if side == "normal":
-                        ctx_set_line_width(props_line_width)
-                    elif border:
-                        ctx_set_line_width(props_border_width)
                     
                     if side == "normal":
                         start = -0.5 * props_line_width
@@ -559,14 +581,15 @@ class GridView:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
             ctx_stroke()
-            ctx_set_line_width(props_line_width)
         if l_normal:
+            ctx_set_line_width(props_line_width)
             ctx_set_source_rgb(*[c / 65535.0 for c in self.properties.line["color"]])
             for rx, ry, rdx, rdy, bar, border in l_normal:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
             ctx_stroke()
         if l_borders:
+            ctx_set_line_width(props_border_width)
             ctx_set_source_rgb(*[c / 65535.0 for c in self.properties.border["color"]])
             for rx, ry, rdx, rdy, bar, border in l_borders:
                 ctx_move_to(rx, ry)
@@ -587,9 +610,9 @@ class GridView:
             in_direction = self.grid.in_direction
             word_length = self.grid.word_length
         for p, q in cells:
-            warn = False
-            if (p, q) not in counts:
-                counts[p, q] = check_count(p, q)
+            if warn_unchecked or warn_consecutive:
+                if (p, q) not in counts:
+                    counts[p, q] = check_count(p, q)
             if warn_unchecked:
                 # Color cells that are unchecked. Isolated cells are also colored.
                 if 0 <= counts[p, q] <= 1:
@@ -598,7 +621,7 @@ class GridView:
             if warn_consecutive:
                 # Color consecutive (two or more) unchecked cells.
                 warn = False
-                if 0 <= count <= 1:
+                if 0 <= counts[p, q] <= 1:
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                         if (p + dx, q + dy) not in counts:
                             counts[p + dx, q + dy] = check_count(p + dx, q + dy)
