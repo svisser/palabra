@@ -313,8 +313,8 @@ class GridView:
             pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
             context.move_to(rx, ry)
             pcr.show_layout(pcr_layout)
-        def _render_char(r, s, c):
-            xbearing, ybearing, width, height, xadvance, yadvance = context.text_extents(c)
+        def _render_char(r, s, c, extents):
+            xbearing, ybearing, width, height, xadvance, yadvance = extents[c]
             rx = (self.properties.border["width"] +
                 (r + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
                 width - self.properties.line["width"] / 2 - abs(xbearing) / 2)
@@ -323,29 +323,43 @@ class GridView:
                 height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
             _render_pango(r, s, self.properties.style(r, s).char["font"], c, rx, ry)
 
+        # chars and overlay chars
+        n_chars = []
+        o_chars = []
         for p, q in cells:
             style = self.properties.style(p, q)
-        
-            # char
             if self.settings["show_chars"]:
-                context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
                 c = self.grid.data[q][p]["char"]
                 if c != '':
-                    _render_char(p, q, c)
-                    
-            # overlay char
+                    n_chars.append((p, q, c))
             if self.settings["render_overlays"]:
-                # TODO custom color
-                context.set_source_rgb(*[c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)])
                 for r, s, c in self.overlay:
                     if (p, q) == (r, s):
-                        _render_char(p, q, c)
+                        o_chars.append((p, q, c))
+        extents = {}
+        for p, q, c in (n_chars + o_chars):
+            if c not in extents:
+                extents[c] = context.text_extents(c)
+        if n_chars:
+            context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
+            for p, q, c in n_chars:
+                _render_char(p, q, c, extents)
+        if o_chars:
+            # TODO custom color
+            context.set_source_rgb(*[c / 65535.0 for c in (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)])
+            for p, q, c in o_chars:
+                _render_char(p, q, c, extents)
+                
+        screen_xs = self.comp_screen_xs()
+        screen_ys = self.comp_screen_ys()
             
+        for p, q in cells:
+            style = self.properties.style(p, q)
             # highlights - TODO custom color
             context.set_source_rgb(*[c / 65535.0 for c in (65535.0, 65535.0, 65535.0 / 2)])
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
-                sx = self.properties.grid_to_screen_x(p, False)
-                sy = self.properties.grid_to_screen_y(q, False)
+                sx = screen_xs[p]
+                sy = screen_ys[q]
                 hwidth = int(self.properties.cell["size"] / 8)
                 lines = []
                 if top:
@@ -386,45 +400,43 @@ class GridView:
             # block
             context.set_source_rgb(*[c / 65535.0 for c in style.block["color"]])
             if self.grid.data[q][p]["block"]:
-                rx = self.properties.grid_to_screen_x(p, False)
-                ry = self.properties.grid_to_screen_y(q, False)
+                rx = screen_xs[p]
+                ry = screen_ys[q]
                 rsize = self.properties.cell["size"]
-                
-                if self.properties.style(p, q).block["margin"] != 0:
-                    offset = int((self.properties.style(p, q).block["margin"] / 100.0) * self.properties.cell["size"])
-                    rx += offset
-                    ry += offset
-                    rsize -= (2 * offset)
-                
-                if self.properties.style(p, q).block["margin"] == 0:
+                margin = style.block["margin"]
+                if margin == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
                     context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
-                else:                
-                    context.rectangle(rx, ry, rsize, rsize)
+                else:
+                    offset = int((margin / 100.0) * rsize)
+                    rsize -= (2 * offset)
+                    context.rectangle(rx + offset, ry + offset, rsize, rsize)
             context.fill()
-            
-            # number
-            if self.settings["show_numbers"]:
+        
+        # number
+        if self.settings["show_numbers"]:
+            numbers = [(p, q) for p, q in cells if self.grid.data[q][p]["number"] > 0]
+            for p, q in numbers:
+                style = self.properties.style(p, q)
                 context.set_source_rgb(*[c / 65535.0 for c in style.number["color"]])
                 n = self.grid.data[q][p]["number"]
-                if n > 0:
-                    font = self.properties.style(p, q).number["font"]
-                    _render_pango(p, q, font, str(n))
-                    
-            # circle
+                font = style.number["font"]
+                _render_pango(p, q, font, str(n))
+
+        # circle
+        for p, q in cells:
+            style = self.properties.style(p, q)
             if style.circle:
                 context.set_source_rgb(*[c / 65535.0 for c in style.char["color"]])
-                rx = self.properties.grid_to_screen_x(p, False)
-                ry = self.properties.grid_to_screen_y(q, False)
                 rsize = self.properties.cell["size"]
+                rx = screen_xs[p] + rsize / 2
+                ry = screen_ys[q] + rsize / 2
                 context.new_sub_path()
-                context.arc(rx + rsize / 2, ry + rsize / 2, rsize / 2, 0, 2 * math.pi)
+                context.arc(rx, ry, rsize / 2, 0, 2 * math.pi)
                 context.stroke()
         
         # lines
-        screen_xs = self.comp_screen_xs()
-        screen_ys = self.comp_screen_ys()
         if len(cells) == 1:
             x, y = cells[0]
             self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
