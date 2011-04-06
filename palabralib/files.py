@@ -300,7 +300,7 @@ def read_palabra(filename):
                 raise PalabraParserError(msg)
         width = parse_grid_size("width", u"Width")
         height = parse_grid_size("height", u"Height")
-        grid = Grid(width, height)
+        grid = Grid(width, height, initialize=False)
         VALID_CELL_TYPES = ["block", "letter", "void"]
         for cell in element:
             attribs = cell.attrib

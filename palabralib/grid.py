@@ -31,19 +31,19 @@ DEFAULT_CELL = {
 }
 
 class Grid:
-    def __init__(self, width, height):
+    def __init__(self, width, height, initialize=True):
         """Construct a grid with the given dimensions."""
-        self.initialize(width, height)
+        self.initialize(width, height, initialize)
         
-    def initialize(self, width, height):
+    def initialize(self, width, height, initialize=True):
         """Reset the grid to the given dimensions with all empty cells."""
         self.width = width
         self.height = height
         self.lines = {}
         self.data = [[DEFAULT_CELL for x in xrange(width)] for y in xrange(height)]
         # TODO modify when arbitrary number schemes are implemented
-        self.assign_numbers()
-        #self.compute_lines()
+        if initialize:
+            self.assign_numbers()
         
     def _default_cell(self):
         return DEFAULT_CELL
