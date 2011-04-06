@@ -433,6 +433,7 @@ class PropertiesWindow(gtk.Dialog):
     def create_notepad_tab(self, puzzle):
         label = gtk.Label(u"The text above will be stored with the puzzle.")
         textview = gtk.TextView()
+        textview.set_wrap_mode(gtk.WRAP_WORD)
         def on_notepad_changed(buffer):
             start = buffer.get_start_iter()
             end = buffer.get_end_iter()
