@@ -21,6 +21,15 @@ import cGrid
 import constants
 import cView
 
+DEFAULT_CELL = {
+    "bar": {"top": False, "left": False}
+    , "block": False
+    , "char": ""
+    , "clues": {}
+    , "number": 0
+    , "void": False
+}
+
 class Grid:
     def __init__(self, width, height):
         """Construct a grid with the given dimensions."""
@@ -31,20 +40,13 @@ class Grid:
         self.width = width
         self.height = height
         self.lines = {}
-        self.data = [[self._default_cell() for x in xrange(width)] for y in xrange(height)]
+        self.data = [[DEFAULT_CELL for x in xrange(width)] for y in xrange(height)]
         # TODO modify when arbitrary number schemes are implemented
         self.assign_numbers()
         #self.compute_lines()
         
     def _default_cell(self):
-        return {
-            "bar": {"top": False, "left": False}
-            , "block": False
-            , "char": ""
-            , "clues": {}
-            , "number": 0
-            , "void": False
-        }
+        return DEFAULT_CELL
         
     def __eq__(self, other):
         if other is None:

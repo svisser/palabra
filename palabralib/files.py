@@ -303,20 +303,21 @@ def read_palabra(filename):
         grid = Grid(width, height)
         VALID_CELL_TYPES = ["block", "letter", "void"]
         for cell in element:
+            attribs = cell.attrib
             tag = cell.tag
             text = cell.text
             if tag not in VALID_CELL_TYPES:
                 print u"Warning: skipping cell with invalid type."
                 continue
             try:
-                x = int(cell.get("x")) - 1
-                y = int(cell.get("y")) - 1
-            except TypeError, ValueError:
+                x = int(attribs["x"]) - 1
+                y = int(attribs["y"]) - 1
+            except (KeyError, TypeError, ValueError):
                 pass
             data = {
                 "bar": {
-                    "top": cell.get("top-bar") == "true"
-                    , "left": cell.get("left-bar") == "true"
+                    "top": (attribs["top-bar"] if "top-bar" in attribs else None) == "true"
+                    , "left": (attribs["left-bar"] if "left-bar" in attribs else None) == "true"
                 }
                 , "block": tag == "block"
                 , "char": text if text and tag == "letter" else ""
