@@ -26,7 +26,7 @@ APPLICATION_DIRECTORY = os.path.expanduser("~/.palabra")
 CONFIG_FILE_LOCATION = os.path.expanduser("~/.palabra/config.xml")
 
 # patterns
-STANDARD_PATTERN_FILES = ["xml/patterns.xml", "xml/american.xml"]
+STANDARD_PATTERN_FILES = ["xml/patterns.xml"]#, "xml/american.xml"]
 
 # used for displaying entries
 MISSING_CHAR = '?'
