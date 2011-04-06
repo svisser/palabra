@@ -98,12 +98,8 @@ class PalabraWindow(gtk.Window):
         self.main.pack_start(self.statusbar, False, False, 0)
         self.add(self.main)
         
-        # TODO fix
-        def test(widget):
-            self.on_quit()
-            return True
         self.connect("delete-event", self.on_delete)
-        self.connect("destroy", test)
+        self.connect("destroy", lambda widget: quit())
         
         self.wordlists = {}
         self.patterns = None
@@ -115,17 +111,13 @@ class PalabraWindow(gtk.Window):
         gobject.idle_add(read_wordlist_from_iter(callback, words).next)
         
     def on_delete(self, window, event):
-        print "delete"
         self.close_puzzle()
-        if not self.puzzle_manager.has_puzzle():
-            print "runs"
-            self.destroy()
-            #while gtk.events_pending():
-            #    gtk.main_iteration(False)
+        return self.puzzle_manager.has_puzzle()
         
     def on_quit(self):
-        print "destroy"
-        quit()
+        self.close_puzzle()
+        if not self.puzzle_manager.has_puzzle():
+            quit()
         
     def to_empty_panel(self):
         for widget in self.panel.get_children():
