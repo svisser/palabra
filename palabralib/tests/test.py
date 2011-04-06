@@ -22,14 +22,13 @@
 import unittest
 
 #from palabralib.tests.test_action import ActionTestCase, ActionStackTestCase
-from palabralib.tests.test_files import FilesTestCase
+#from palabralib.tests.test_files import FilesTestCase
 from palabralib.tests.test_grid import GridTestCase
 from palabralib.tests.test_transform import TransformTestCase
 from palabralib.tests.test_word import WordTestCase
 
-# ActionTestCase, ActionStackTestCase
-cases = [ FilesTestCase
-    , GridTestCase
+# ActionTestCase, ActionStackTestCase, FilesTestCase
+cases = [ GridTestCase
     , TransformTestCase
     , WordTestCase]
 suites = [unittest.TestLoader().loadTestsFromTestCase(c) for c in cases]

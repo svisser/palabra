@@ -108,20 +108,9 @@ def determine_file_type(filename):
     except etree.XMLSyntaxError:
         raise ParserError(u"ParserError", u"This is not an XML file.")
     root = doc.getroot()
-    #if root.tag == "palabra":
-    #    return "palabra"
     if root.tag == "Puzzles":
         return 'xpf'
     return None
-    
-def write_palabra(puzzle, backup=True):
-    root = etree.Element("palabra")
-    root.set("version", constants.VERSION)
-    
-    _write_crossword(root, puzzle)
-    
-    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    _write_puzzle(puzzle.filename, contents, backup)
     
 def read_pattern_file(filename):
     results = read_palabra(filename)
@@ -130,34 +119,6 @@ def read_pattern_file(filename):
     for i, p in enumerate(results):
         contents[str(i)] = p.grid
     return (filename, metadata, contents)
-    
-def write_patterns(filename, patterns):
-    root = etree.Element("palabra")
-    root.set("version", constants.VERSION)
-    
-    # TODO
-    for grid in patterns:
-        _write_crossword(root, Puzzle(grid))
-        
-    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    f = open(filename, "w")
-    f.write(contents)
-    f.close()
-    
-def write_pattern_file(filename, metadata, contents):
-    root = etree.Element("palabra")
-    root.set("version", constants.VERSION)
-
-    container = etree.SubElement(root, "container")
-    container.set("content", "grid")
-    _write_metadata(container, metadata)
-    for i, (j, grid) in enumerate(contents.items(), start=1):
-        _write_grid(container, grid, str(i))
-
-    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    f = open(filename, "w")
-    f.write(contents)
-    f.close()
     
 def read_containers(files):
     def load_container(f):
@@ -172,160 +133,6 @@ def read_containers(files):
             p.print_callers()
         return f, metadata, read_palabra(f)
     return [load_container(f) for f in files]
-    
-def write_container(filename, content, data):
-    root = etree.Element("palabra")
-    root.set("version", constants.VERSION)
-
-    container = etree.SubElement(root, "container")
-    container.set("content", content)
-    for d in data:
-        if content == "crossword":
-            _write_crossword(container, d)
-        elif content == "grid":
-            _write_grid(container, d)
-
-    contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    f = open(filename, "w")
-    f.write(contents)
-    f.close()
-
-def _write_crossword(parent, puzzle):
-    crossword = etree.SubElement(parent, "puzzle")
-    crossword.set("type", "crossword")
-    _write_metadata(crossword, puzzle.metadata)
-    _write_grid(crossword, puzzle.grid)
-    for d in ["across", "down"]:
-        _write_clues(crossword, puzzle.grid, d)
-    e = etree.SubElement(crossword, "notepad")
-    e.text = etree.CDATA(puzzle.notepad)
-
-def _read_metadata(metadata):
-    m = {}
-    for e in metadata:
-        m[e.tag[len("{%s}" % DC_NAMESPACE):]] = e.text
-    return m
-    
-def _write_metadata(parent, metadata):
-    e = etree.SubElement(parent, "metadata", nsmap={"dc": DC_NAMESPACE})
-    for m in DC_SIMPLE_TERMS:
-        if m in metadata:
-            prop = etree.SubElement(e, "".join(["{%s}" % DC_NAMESPACE, m]))
-            prop.text = metadata[m]
-    
-def _read_cell(e):
-    x = int(e.get("x")) - 1
-    y = int(e.get("y")) - 1
-    c = {}
-    c["block"] = e.tag == "block"
-    if e.tag == "letter" and e.text is not None:
-        c["char"] = e.text
-    else:
-        c["char"] = ""
-    c["clues"] = {}
-    c["bar"] = {}
-    c["bar"]["top"] = e.get("top-bar") == "true"
-    c["bar"]["left"] = e.get("left-bar") == "true"
-    c["number"] = 0
-    c["void"] = e.tag == "void"
-    return x, y, c
-    
-def _write_cell(parent, x, y, cell):
-    if cell["block"]:
-        e = etree.SubElement(parent, "block")
-    elif cell["void"]:
-        e = etree.SubElement(parent, "void")
-    else:
-        e = etree.SubElement(parent, "letter")
-        if len(cell["char"]) > 0:
-            e.text = cell["char"]
-    e.set("x", str(x + 1))
-    e.set("y", str(y + 1))
-    if cell["bar"]["top"]:
-        e.set("top-bar", "true")
-    if cell["bar"]["left"]:
-        e.set("left-bar", "true")
-    
-def _read_grid(e):
-    width = int(e.get("width"))
-    height = int(e.get("height"))
-    grid = Grid(width, height)
-    for c in e:
-        x, y, data = _read_cell(c)
-        if grid.is_valid(x, y):
-            grid.set_cell(x, y, data)
-        else:
-            print "".join(["Warning: Invalid cell encountered: ", str((x + 1, y + 1))])
-    return grid
-    
-def _write_grid(parent, grid, id=None):
-    e = etree.SubElement(parent, "grid")
-    if id:
-        e.set("id", id)
-    e.set("width", str(grid.width))
-    e.set("height", str(grid.height))
-    for x, y in grid.cells():
-        _write_cell(e, x, y, grid.cell(x, y))
-    
-def _read_clue(e):
-    x = int(e.get("x")) - 1
-    y = int(e.get("y")) - 1
-    c = {}
-    for prop in e:
-        if prop.text is not None:
-            c[prop.tag] = prop.text
-    return x, y, c
-    
-def _write_clue(parent, x, y, clue):
-    e = etree.SubElement(parent, "clue")
-    for prop in ["text", "explanation"]:
-        if prop in clue:
-            p = etree.SubElement(e, prop)
-            p.text = clue[prop]
-    e.set("x", str(x + 1))
-    e.set("y", str(y + 1))
-    
-def _read_clues(e):
-    return (e.get("direction"), [_read_clue(c) for c in e])
-
-def _write_clues(parent, grid, direction):
-    e = etree.SubElement(parent, "clues")
-    e.set("direction", direction)
-    for x, y in grid.cells():
-        clues = grid.cell(x, y)["clues"]
-        if direction in clues:
-            _write_clue(e, x, y, clues[direction])
-
-def _parse_statistics(e):
-    stats = {}
-    for prop in e:
-        if prop.tag == "block-count":
-            stats["block_count"] = int(prop.text)
-        elif prop.tag == "word-count":
-            stats["word_count"] = int(prop.text)
-    return stats
-        
-def export_grid(elem, grid, include_statistics=False):
-    grid_elem = etree.SubElement(elem, "grid")
-    grid_elem.set("width", str(grid.width))
-    grid_elem.set("height", str(grid.height))
-
-    if include_statistics:
-        stats_elem = etree.SubElement(grid_elem, "statistics")
-        prop = etree.SubElement(stats_elem, "block-count")
-        prop.text = str(grid.count_blocks())
-        prop = etree.SubElement(stats_elem, "word-count")
-        prop.text = str(grid.count_words())
-    
-    for y in range(grid.height):
-        for x in range(grid.width):
-            cell = etree.SubElement(grid_elem, "cell")
-            cell.set("x", str(x + 1))
-            cell.set("y", str(y + 1))
-            if grid.is_block(x, y):
-                cell.set("type", "block")
-            elif grid.get_char(x, y) != "":
-                cell.set("content", grid.get_char(x, y))
         
 def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
@@ -825,11 +632,6 @@ def _write_puzzle(filename, contents, backup=True):
     
 FILETYPES = {}
 FILETYPES['keys'] = [constants.PUZZLE_XPF]
-FILETYPES[constants.PUZZLE_PALABRA] = {
-    'description': u"Palabra puzzle files"
-    , 'pattern': u".xml"
-    , 'writer': write_palabra
-}
 FILETYPES[constants.PUZZLE_XPF] = {
     'description': u"XPF puzzle files"
     , 'pattern': u".xml"
