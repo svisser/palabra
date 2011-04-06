@@ -315,7 +315,7 @@ class PalabraWindow(gtk.Window):
             filters = {}
             for key in FILETYPES['keys']:
                 description = FILETYPES[key]['description']
-                pattern = FILETYPES[constants.PUZZLE_PALABRA]['pattern']
+                pattern = FILETYPES[key]['pattern']
                 f = gtk.FileFilter()
                 f.set_name(description + ' (*' + pattern + ')')
                 f.add_pattern('*' + pattern)
