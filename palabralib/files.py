@@ -288,9 +288,10 @@ def read_palabra(filename):
             meta[term] = m.text
         return meta
     def parse_grid(element):
+        attribs = element.attrib
         def parse_grid_size(attr, name):
             try:
-                dim = int(element.get(attr))
+                dim = int(attribs[attr] if attr in attribs else 0)
                 if dim < 3:
                     msg = name + u" attribute of grid must be at least 3."
                     raise PalabraParserError(msg)
@@ -333,7 +334,8 @@ def read_palabra(filename):
                 continue
         return grid
     def parse_clues(element, grid):
-        dir = element.get("direction")
+        attribs = element.attrib
+        dir = attribs["direction"] if "direction" in attribs else None
         if not dir:
             print u"Warning: skipping clues element with no direction specified."
             return
@@ -345,8 +347,8 @@ def read_palabra(filename):
                 print "Warning: skipping child of clues that is not a clue."
                 continue
             try:
-                x = int(clue.get("x")) - 1
-                y = int(clue.get("y")) - 1
+                x = int(attribs["x"] if "x" in attribs else None) - 1
+                y = int(attribs["y"] if "y" in attribs else None) - 1
             except TypeError, ValueError:
                 pass
             if not grid.is_valid(x, y):
