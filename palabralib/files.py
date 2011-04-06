@@ -799,6 +799,9 @@ def write_xpf(puzzle, backup=True):
         eclue.set("Ans", word)
         if clue:
             eclue.text = clue
+            
+    e = etree.SubElement(main, "Notepad")
+    e.text = etree.CDATA(puzzle.notepad)
     
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     _write_puzzle(puzzle.filename, contents, backup)
