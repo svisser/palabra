@@ -218,13 +218,15 @@ def read_wordlist(path):
     """Yield all words found in the specified file."""
     if not os.path.exists(path):
         print "Error: The file", path, "does not exist."
-        return
+        return []
+    words = []
     with open(path, "r") as f:
         ord_A = ord("A")
         ord_Z = ord("Z")
         ord_a = ord("a")
         ord_z = ord("z")
         ords = {}
+        lower = str.lower
         for line in f:
             line = line.strip("\n")
             if not line:
@@ -236,7 +238,8 @@ def read_wordlist(path):
                     or ord_a <= ords[c] <= ord_z):
                     break
             else:
-                yield line.lower()
+                words.append(lower(line))
+    return words
 
 def read_wordlist_from_iter(callback, words):
     wordlist = WordList()
@@ -251,7 +254,7 @@ def create_wordlists(word_files):
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlist = CWordList([w for w in read_wordlist(path)])
+        wordlist = CWordList(read_wordlist(path))
         wordlists[path] = {"list": wordlist}
     return wordlists
 
