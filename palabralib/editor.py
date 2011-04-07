@@ -578,21 +578,25 @@ class Editor(gtk.HBox):
             ex, ey, estate = event.window.get_pointer()
         else:
             ex, ey, estate = event.x, event.y, event.state
-        cx = self.puzzle.view.properties.screen_to_grid_x(ex)
-        cy = self.puzzle.view.properties.screen_to_grid_y(ey)
+        props = self.puzzle.view.properties
+        cx = props.screen_to_grid_x(ex)
+        cy = props.screen_to_grid_y(ey)
         prev_x, prev_y = self.current
         self.current = (cx, cy)
 
+        apply_symmetry = self.apply_symmetry
         if (prev_x, prev_y) != (cx, cy):
-            c0 = self.apply_symmetry(prev_x, prev_y)
-            c1 = self.apply_symmetry(cx, cy)
+            c0 = apply_symmetry(prev_x, prev_y)
+            c1 = apply_symmetry(cx, cy)
             self._render_cells(c0 + c1 + [(prev_x, prev_y), (cx, cy)])
         
+        mouse_buttons_down = self.mouse_buttons_down
+        transform_blocks = self.transform_blocks
         if (estate & gtk.gdk.SHIFT_MASK and not self.settings["locked_grid"]):
-            if self.mouse_buttons_down[0]:
-                self.transform_blocks(cx, cy, True)
-            elif self.mouse_buttons_down[2]:
-                self.transform_blocks(cx, cy, False)
+            if mouse_buttons_down[0]:
+                transform_blocks(cx, cy, True)
+            elif mouse_buttons_down[2]:
+                transform_blocks(cx, cy, False)
         return True
         
     def clear_slot_of(self, x, y, direction):
