@@ -640,9 +640,7 @@ class GridView:
                         starts[p, q, d] = sx, sy
                         for zx, zy in in_direction(sx, sy, d):
                             starts[zx, zy, d] = sx, sy
-                        # TODO why is next if needed?
-                        if (sx, sy, d) not in lengths:
-                            lengths[sx, sy, d] = word_length(sx, sy, d)
+                        lengths[sx, sy, d] = word_length(sx, sy, d)
                     if lengths[sx, sy, d] == 2:
                         warn = True
                         break
