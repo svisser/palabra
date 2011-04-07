@@ -219,24 +219,24 @@ def read_wordlist(path):
     if not os.path.exists(path):
         print "Error: The file", path, "does not exist."
         return
-    def process_word(line):
-        """Return a word that is ready for a word list or None."""
-        line = line.strip("\n")
-        if not line:
-            return None
+    with open(path, "r") as f:
         ord_A = ord("A")
         ord_Z = ord("Z")
         ord_a = ord("a")
         ord_z = ord("z")
-        for c in line:
-            if not (ord_A <= ord(c) <= ord_Z or ord_a <= ord(c) <= ord_z):
-                return None
-        return line.lower()
-    f = open(path, "r")
-    for line in f:
-        word = process_word(line)
-        if word:
-            yield word
+        ords = {}
+        for line in f:
+            line = line.strip("\n")
+            if not line:
+                continue
+            for c in line:
+                if c not in ords:
+                    ords[c] = ord(c)
+                if not (ord_A <= ords[c] <= ord_Z
+                    or ord_a <= ords[c] <= ord_z):
+                    break
+            else:
+                yield line.lower()
 
 def read_wordlist_from_iter(callback, words):
     wordlist = WordList()
