@@ -45,21 +45,6 @@ if __name__ == "__main__":
             splash.show()
             while gtk.events_pending():
                 gtk.main_iteration()
-        def start():
-            print "Reading configuration file..."
-            read_config_file()
-            print "Loading wordlists..."
-            wordlists = create_wordlists(preferences.prefs["word_files"])
-            print "Loading pattern files..."
-            patternfiles = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
-            patterns = read_containers(patternfiles)
-        import pstats
-        import cProfile
-        cProfile.runctx('start()', globals(), locals(), filename='fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('time').print_stats(20)
-        p.print_callers()
-        
         print "Reading configuration file..."
         read_config_file()
         print "Loading wordlists..."
