@@ -207,7 +207,7 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject *more_constraints;
     if (!PyArg_ParseTuple(args, "OiOO", &words, &length, &constraints, &more_constraints))
         return NULL;
-    char *cons_str = PyString_AsString(constraints);
+    char *cons_str = PyString_AS_STRING(constraints);
     
     // main word
     PyObject *mwords = PyList_New(0);
@@ -220,10 +220,10 @@ cWord_search(PyObject *self, PyObject *args) {
     int t;
     for (t = 0; t < length; t++) {
         PyObject *py_cons_str2;
-        PyObject* item = PyList_GetItem(more_constraints, (Py_ssize_t) t);
+        PyObject* item = PyList_GET_ITEM(more_constraints, (Py_ssize_t) t);
         if (!PyArg_ParseTuple(item, "iO", &offsets[t], &py_cons_str2))
             return NULL;
-        cs[t] = PyString_AsString(py_cons_str2);
+        cs[t] = PyString_AS_STRING(py_cons_str2);
     }
     int skipped[length];
     for (t = 0; t < length; t++) skipped[t] = 0;
@@ -274,8 +274,7 @@ cWord_search(PyObject *self, PyObject *args) {
     Py_ssize_t m;
     PyObject *result = PyList_New(0);
     for (m = 0; m < PyList_Size(mwords); m++) {
-        char *word = PyString_AsString(PyList_GetItem(mwords, m));
-        
+        char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
         int zero_slot = 0;
         int n_chars = 0;
         int c;
@@ -321,8 +320,8 @@ cWord_preprocess(PyObject *self, PyObject *args) {
     }
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
-        PyObject* word = PyList_GetItem(words, w);
-        PyObject* key = keys[(int) PyString_Size(word)];
+        PyObject* word = PyList_GET_ITEM(words, w);
+        PyObject* key = keys[(int) PyString_GET_SIZE(word)];
         PyList_Append(PyDict_GetItem(dict, key), word);
     }
     
@@ -332,7 +331,7 @@ cWord_preprocess(PyObject *self, PyObject *args) {
         Py_ssize_t w;
         PyObject *words = PyDict_GetItem(dict, Py_BuildValue("i", m));
         for (w = 0; w < PyList_Size(words); w++) {
-            char *word = PyString_AsString(PyList_GetItem(words, w));
+            char *word = PyString_AsString(PyList_GET_ITEM(words, w));
             trees[m] = insert1(trees[m], word, word);
         }
     }
