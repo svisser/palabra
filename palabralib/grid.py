@@ -404,7 +404,7 @@ class Grid:
         """Return the word starting at (x, y) in the given direction."""
         word = ""
         for p, q in self.in_direction(x, y, direction):
-            c = self.get_char(p, q)
+            c = self.data[q][p]["char"]
             word += (empty_char if c == "" else c)
         return word
         

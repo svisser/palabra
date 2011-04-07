@@ -282,7 +282,6 @@ class WordTool:
         
         self.tree.set_model(self.store)
         self.tree.thaw_child_notify()
-        self.tree.queue_draw()
         
     def get_selected_word(self):
         store, it = self.tree.get_selection().get_selected()
@@ -480,18 +479,10 @@ class Editor(gtk.HBox):
             # TODO should not be needed
             self.puzzle.view.grid = self.puzzle.grid
             cells = list(self.puzzle.grid.cells())
-            def _draw(context, cells):
-                self.puzzle.view.render_bottom(context, cells)
-                self._render_editor_of_cell(context, cells)
-                self.puzzle.view.render_top(context, cells)
             self.force_redraw = False
-            _draw(context, cells)
-            #import pstats
-            #import cProfile
-            #cProfile.runctx('_draw(context, cells)', globals(), locals(), filename='fooprof')
-            #p = pstats.Stats('fooprof')
-            #p.sort_stats('time').print_stats(20)
-            #p.print_callers()
+            self.puzzle.view.render_bottom(context, cells)
+            self._render_editor_of_cell(context, cells)
+            self.puzzle.view.render_top(context, cells)
         context = self.drawing_area.window.cairo_create()
         context.set_source(self.editor_pattern)
         context.paint()
