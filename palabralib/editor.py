@@ -485,12 +485,13 @@ class Editor(gtk.HBox):
                 self._render_editor_of_cell(context, cells)
                 self.puzzle.view.render_top(context, cells)
             self.force_redraw = False
-            import pstats
-            import cProfile
-            cProfile.runctx('_draw(context, cells)', globals(), locals(), filename='fooprof')
-            p = pstats.Stats('fooprof')
-            p.sort_stats('time').print_stats(20)
-            p.print_callers()
+            _draw(context, cells)
+            #import pstats
+            #import cProfile
+            #cProfile.runctx('_draw(context, cells)', globals(), locals(), filename='fooprof')
+            #p = pstats.Stats('fooprof')
+            #p.sort_stats('time').print_stats(20)
+            #p.print_callers()
         context = self.drawing_area.window.cairo_create()
         context.set_source(self.editor_pattern)
         context.paint()
