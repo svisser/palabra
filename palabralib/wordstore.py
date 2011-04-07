@@ -50,9 +50,11 @@ class WordStore(gtk.GenericTreeModel):
         return None
         
     def on_iter_next(self, node):
-        if self.view_length == 0 or (node[0] == self.view_length - 1):
+        l = self.view_length
+        n = node[0]
+        if l == 0 or (n == l - 1):
             return None
-        return (node[0] + 1,)
+        return (n + 1,)
         
     def on_iter_children(self, node):
         if node == None:
