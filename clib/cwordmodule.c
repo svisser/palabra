@@ -264,7 +264,8 @@ int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
             n += analyze(params, result, p->eqkid, s + 1, cs);
     if (*s == 0 && p->splitchar == 0) {
         n += 1;
-        if (*(cs + params->offset) == '.') {
+        char intersect_char = *(cs + params->offset);
+        if (intersect_char == '.') {
             char c = *(p->word + params->offset);
             int m;
             for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
@@ -275,6 +276,8 @@ int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
                     break;
                 }
             }
+        } else {
+            result->chars[0] = intersect_char;
         }
     }
     if (*s == '.' || *s > p->splitchar)
@@ -347,7 +350,7 @@ cWord_search2(PyObject *self, PyObject *args) {
                 result->chars[c] = ' ';
             }
             intersections[t] = analyze(params, result, trees[strlen(cs[t])], cs[t], cs[t]);
-            printf("%s %i %i ", cs[t], intersections[t], offsets[t]);
+            printf("%i %s %i %i ", t, cs[t], intersections[t], offsets[t]);
             printf(">>>");
             for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
                 printf("%c", result->chars[c]);
