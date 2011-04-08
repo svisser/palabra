@@ -30,7 +30,7 @@ class WordStore(gtk.GenericTreeModel):
         self.set_view(data)
         
     def on_get_flags(self):
-        return gtk.TREE_MODEL_LIST_ONLY
+        return gtk.TREE_MODEL_LIST_ONLY | gtk.TREE_MODEL_ITERS_PERSIST
         
     def on_get_n_columns(self):
         return len(self.columns)
@@ -39,26 +39,26 @@ class WordStore(gtk.GenericTreeModel):
         return self.columns[index]
         
     def on_get_path(self, node):
-        return node
+        return tuple(node)
         
     def on_get_iter(self, path):
-        return path
+        return path[0]
         
     def on_get_value(self, node, column):
-        if node[0] < self.view_length:
-            return self.view[node[0]][column]
+        if node < self.view_length:
+            return self.view[node][column]
         return None
         
     def on_iter_next(self, node):
         l = self.view_length
-        n = node[0]
+        n = node
         if l == 0 or (n == l - 1):
             return None
-        return (n + 1,)
+        return n + 1
         
     def on_iter_children(self, node):
         if node == None:
-            return (0,)
+            return 0
         return None
         
     def on_iter_has_child(self, node):
@@ -69,7 +69,7 @@ class WordStore(gtk.GenericTreeModel):
         
     def on_iter_nth_child(self, node, n):
         if node == None:
-            return (n,)
+            return n
         return None
         
     def on_iter_parent(self, node):
