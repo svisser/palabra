@@ -192,7 +192,7 @@ class WordTool:
         self._perform_overlay_callback(store, it)
         
     def on_tree_clicked(self, tree, event):
-        if event.button in [1, 3]:
+        if event.button in [1]:
             item = tree.get_path_at_pos(int(event.x), int(event.y))
             if item is not None:
                 path, col, cellx, celly = item
