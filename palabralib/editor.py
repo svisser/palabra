@@ -149,10 +149,14 @@ class WordTool:
         self.tree.set_headers_visible(False)
         
         cell = gtk.CellRendererText()
+        cell.set_property('family', 'Monospace')
+        cell.set_fixed_size(100, 20)
+        cell.set_fixed_height_from_font(1)
         column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
         column.set_attributes(cell, markup=3)
         column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        column.set_fixed_width(100)
         self.tree.append_column(column)
         
         tree_window = gtk.ScrolledWindow(None, None)
