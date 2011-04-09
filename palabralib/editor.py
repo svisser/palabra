@@ -277,22 +277,24 @@ class WordTool:
     def store_words(self, words, length):
         if not words:
             return
-        self.main.remove(self.windows[self.index])
+        main = self.main
+        windows = self.windows
+        main.remove(windows[self.index])
         row_n = 0
         self.index = length
         store = self.stores[self.index]
-        for n, row in enumerate(store):
+        n = 0
+        for row in store:
             w = row[0]
+            item = store[n]
             if w in words:
-                store[n][2] = True
-                store[n][1] = "black" if words[w][0] else "gray"
+                item[2] = True
+                item[1] = "black" if words[w][0] else "gray"
             else:
-                store[n][2] = False
-        self.main.pack_start(self.windows[self.index], True, True, 0)
-        self.main.show_all()
-        return
-        self.store.set_data(data)
-        self.display_data()
+                item[2] = False
+            n += 1
+        main.pack_start(windows[length], True, True, 0)
+        main.show_all()
         
     def display_data(self):
         self.tree.freeze_child_notify()
