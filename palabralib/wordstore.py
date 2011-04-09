@@ -89,6 +89,5 @@ class WordStore(gtk.GenericTreeModel):
         
     def set_data(self, data):
         # bit ugly but needed for speed
-        self.data = [(word, has_intersections, indicator, '<span color="'
-            + {True: "black", False: "gray"}[has_intersections] + '">' + word + "</span>")
+        self.data = [(word, has_intersections, indicator, {True: "black", False: "gray"}[has_intersections])
             for word, has_intersections, indicator in data]
