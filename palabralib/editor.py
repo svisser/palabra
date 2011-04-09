@@ -137,33 +137,11 @@ class WordTool:
         self.settings["show_used_words"] = True
     
     def create(self):
-        # word has_intersecting displayed_string
-        self.store = WordStore()
-        self.tree = gtk.TreeView(self.store)
-        # use fixed size cells for speed
-        self.tree.set_fixed_height_mode(True)
-        
-        self.tree.connect("row-activated", self.on_row_activated)
-        self.tree.get_selection().connect("changed", self.on_selection_changed)
-        self.tree.connect("button_press_event", self.on_tree_clicked)
-        self.tree.set_headers_visible(False)
-        
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("")
-        column.pack_start(cell, False)
-        column.set_attributes(cell, text=0, foreground=3)
-        cell.set_property('family', 'Monospace')
-        cell.set_fixed_size(100, 20)
-        cell.set_fixed_height_from_font(1)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
-        column.set_fixed_width(100)
-        self.tree.append_column(column)
-        
-        tree_window = gtk.ScrolledWindow(None, None)
-        tree_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        tree_window.add(self.tree)
-        tree_window.set_size_request(192, -1)
-        
+        self.stores = {}
+        self.trees = {}
+        self.windows = {}
+        self.index = None
+                
         img = gtk.Image()
         img.set_from_file("resources/icon1.png")
         toggle_button = gtk.ToggleButton()
@@ -183,15 +161,14 @@ class WordTool:
         buttons.add(toggle_button)
         buttons.add(toggle_button2)
         
-        main = gtk.VBox(False, 0)
-        main.set_spacing(9)
-        main.pack_start(buttons, False, False, 0)
-        main.pack_start(tree_window, True, True, 0)
+        self.main = gtk.VBox(False, 0)
+        self.main.set_spacing(9)
+        self.main.pack_start(buttons, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
         hbox.set_spacing(6)
-        hbox.pack_start(main, True, True, 0)
+        hbox.pack_start(self.main, True, True, 0)
         return hbox
         
     def on_button_toggled(self, button):
@@ -205,7 +182,7 @@ class WordTool:
         self.display_data()
         
     def on_row_activated(self, tree, path, column):
-        store, it = self.tree.get_selection().get_selected()
+        store, it = self.trees[self.index].get_selection().get_selected()
         self.editor.insert(store[it][0])
         
     def on_selection_changed(self, selection):
@@ -263,10 +240,61 @@ class WordTool:
         menu.popup(None, None, None, event.button, event.time)
                     
     def _perform_overlay_callback(self, it):
-        word = self.store[it][0] if it is not None else None
+        word = self.stores[self.index][it][0] if it is not None else None
         self.editor.set_overlay(word)
         
-    def store_words(self, data):
+    def store_all_words(self, wordlists):
+        # TODO fix for multiple wordlists
+        for path, item in wordlists.items():
+            wordlist = item["list"]
+            if wordlist is not None:
+                for l, words in wordlist.words.items():
+                    # word foreground-color visibility
+                    self.stores[l] = gtk.ListStore(str, str, bool)
+                    self.trees[l] = gtk.TreeView(self.stores[l])
+                    for w in words:
+                        self.stores[l].append((w, "black", True))
+                    self.trees[l].connect("row-activated", self.on_row_activated)
+                    self.trees[l].get_selection().connect("changed", self.on_selection_changed)
+                    self.trees[l].connect("button_press_event", self.on_tree_clicked)
+                    self.trees[l].set_headers_visible(False)
+                    cell = gtk.CellRendererText()
+                    column = gtk.TreeViewColumn("")
+                    column.pack_start(cell, False)
+                    column.set_attributes(cell, text=0, foreground=1)
+                    cell.set_property('family', 'Monospace')
+                    cell.set_fixed_size(100, 20)
+                    cell.set_fixed_height_from_font(1)
+                    column.set_fixed_width(100)
+                    column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+                    self.trees[l].append_column(column)
+                    
+                    self.windows[l] = gtk.ScrolledWindow(None, None)
+                    self.windows[l].set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+                    self.windows[l].add(self.trees[l])
+                    self.windows[l].set_size_request(192, -1)
+        self.index = 2
+        self.main.pack_start(self.windows[self.index], True, True, 0)
+        
+    def store_words(self, words, length):
+        if not words:
+            return
+        self.main.remove(self.windows[self.index])
+        words = {}
+        row_n = 0
+        self.index = length
+        tree = self.stores[self.index]
+        for n, row in enumerate(tree):
+            item = tree[n]
+            w = row[0]
+            if w in words:
+                item[2] = True
+                item[1] = "black" if words[w][0] else "gray"
+            else:
+                item[2] = False
+        self.main.pack_start(self.windows[self.index], True, True, 0)
+        self.main.show_all()
+        return
         self.store.set_data(data)
         self.display_data()
         
@@ -288,12 +316,12 @@ class WordTool:
         self.tree.thaw_child_notify()
         
     def get_selected_word(self):
-        store, it = self.tree.get_selection().get_selected()
-        word = self.store[it][0] if it is not None else None
+        store, it = self.trees[self.index].get_selection().get_selected()
+        word = self.stores[self.index][it][0] if it is not None else None
         return word
         
     def display_overlay(self):
-        store, it = self.tree.get_selection().get_selected()
+        store, it = self.trees[self.index].get_selection().get_selected()
         self._perform_overlay_callback(it)
 
 class Selection:
@@ -661,7 +689,13 @@ class Editor(gtk.HBox):
         """
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        self.tools["word"].store_words(result)
+        words = {}
+        length = None
+        for w, h, i in result:
+            words[w] = (h, i)
+            if not length:
+                length = len(w)
+        self.tools["word"].store_words(words, length)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
