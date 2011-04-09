@@ -189,7 +189,7 @@ class WordTool:
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
-        self._perform_overlay_callback(it)
+        self._perform_overlay_callback(store, it)
         
     def on_tree_clicked(self, tree, event):
         if event.button in [1, 3]:
@@ -199,7 +199,7 @@ class WordTool:
                 it = tree.get_model().get_iter(path)
                 if event.button == 1:
                     if tree.get_selection().path_is_selected(path):
-                        self._perform_overlay_callback(it)
+                        self._perform_overlay_callback(tree.get_model(), it)
                 elif event.button == 3:
                     self._create_popup_menu(it, event)
                         
@@ -241,15 +241,17 @@ class WordTool:
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
                     
-    def _perform_overlay_callback(self, it):
-        word = self.stores[self.index][it][0] if it is not None else None
+    def _perform_overlay_callback(self, store, it):
+        word = store[it][0] if it is not None else None
         self.editor.set_overlay(word)
         
     def store_all_words(self):
         # TODO fix for multiple wordlists
         for l, store in self.stores.items():
             self.trees[l] = gtk.TreeView()
-            self.trees[l].set_model(self.stores[l])
+            filt = self.stores[l].filter_new()
+            filt.set_visible_column(2)
+            self.trees[l].set_model(filt)
             self.trees[l].connect("row-activated", self.on_row_activated)
             self.trees[l].get_selection().connect("changed", self.on_selection_changed)
             self.trees[l].connect("button_press_event", self.on_tree_clicked)
@@ -276,18 +278,16 @@ class WordTool:
         if not words:
             return
         self.main.remove(self.windows[self.index])
-        words = {}
         row_n = 0
         self.index = length
-        tree = self.stores[self.index]
-        for n, row in enumerate(tree):
-            item = tree[n]
+        store = self.stores[self.index]
+        for n, row in enumerate(store):
             w = row[0]
             if w in words:
-                item[2] = True
-                item[1] = "black" if words[w][0] else "gray"
+                store[n][2] = True
+                store[n][1] = "black" if words[w][0] else "gray"
             else:
-                item[2] = False
+                store[n][2] = False
         self.main.pack_start(self.windows[self.index], True, True, 0)
         self.main.show_all()
         return
@@ -318,7 +318,7 @@ class WordTool:
         
     def display_overlay(self):
         store, it = self.trees[self.index].get_selection().get_selected()
-        self._perform_overlay_callback(it)
+        self._perform_overlay_callback(store, it)
 
 class Selection:
     def __init__(self, x, y, direction):
