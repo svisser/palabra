@@ -55,6 +55,7 @@ if __name__ == "__main__":
         
         palabra = PalabraWindow()
         palabra.wordlists.update(wordlists)
+        palabra.stores = palabra.construct_list_stores()
         palabra.patterns = patterns
         palabra.show_all()
         if has_splash:

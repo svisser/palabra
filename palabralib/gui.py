@@ -167,7 +167,7 @@ class PalabraWindow(gtk.Window):
         tabs.set_show_border(False)
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
-        tool = self.editor.tools["word"].create()
+        tool = self.editor.tools["word"].create(self.stores)
         tabs.append_page(tool, gtk.Label(u"Word"))
         tool = self.editor.tools["fill"].create()
         #tabs.append_page(tool, gtk.Label(u"Fill"))
@@ -177,8 +177,6 @@ class PalabraWindow(gtk.Window):
             word = self.editor.tools["word"].get_selected_word() if num == 0 else None
             self.editor.set_overlay(word)
         tabs.connect("switch-page", on_switch_page)
-        
-        self.editor.tools["word"].store_all_words(self.wordlists)
         
         paned = gtk.HPaned()
         paned.pack1(main, True, False)
@@ -377,6 +375,18 @@ class PalabraWindow(gtk.Window):
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)
         self.to_edit_panel()
         self.update_window(True)
+        
+    def construct_list_stores(self):
+        stores = {}
+        for path, item in self.wordlists.items():
+            wordlist = item["list"]
+            if wordlist is not None:
+                for l, words in wordlist.words.items():
+                    # word foreground-color visibility
+                    stores[l] = gtk.ListStore(str, str, bool)
+                    for w in words:
+                        stores[l].append((w, "black", True))
+        return stores
     
     def close_puzzle(self):
         need_to_close, need_to_save = self.check_close_puzzle()
