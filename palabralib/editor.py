@@ -274,7 +274,7 @@ class WordTool:
         self.index = 2
         self.main.pack_start(self.windows[self.index], True, True, 0)
         
-    def store_words(self, words, length):
+    def store_words(self, lwords, words, length):
         if not words:
             return
         main = self.main
@@ -284,15 +284,23 @@ class WordTool:
         self.index = length
         store = self.stores[self.index]
         n = 0
+        i = 0
         for row in store:
-            w = row[0]
             item = store[n]
-            if w in words:
+            item[2] = False
+            w = row[0]
+            w2 = lwords[i]
+            #print w, w2
+            if w < w2:
+                n += 1
+                continue
+            elif w == w2:
                 item[2] = True
                 item[1] = "black" if words[w][0] else "gray"
-            else:
-                item[2] = False
-            n += 1
+                i += 1
+                n += 1
+            elif w > w2:
+                pass
         main.pack_start(windows[length], True, True, 0)
         main.show_all()
         
@@ -693,7 +701,7 @@ class Editor(gtk.HBox):
             words[w] = (h, i)
             if not length:
                 length = len(w)
-        self.tools["word"].store_words(words, length)
+        self.tools["word"].store_words([w for w, h, i in result], words, length)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
