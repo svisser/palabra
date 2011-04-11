@@ -136,7 +136,7 @@ class WordTool:
         self.settings["show_intersecting_words"] = False
         self.settings["show_used_words"] = True
     
-    def create(self, stores):
+    def create(self, stores, lengths):
         img = gtk.Image()
         img.set_from_file("resources/icon1.png")
         toggle_button = gtk.ToggleButton()
@@ -165,6 +165,7 @@ class WordTool:
         hbox.set_spacing(6)
         hbox.pack_start(self.main, True, True, 0)
         
+        self.lengths = lengths
         self.stores = stores
         self.trees = {}
         self.windows = {}
@@ -285,22 +286,29 @@ class WordTool:
         store = self.stores[self.index]
         n = 0
         i = 0
-        for row in store:
-            item = store[n]
-            item[2] = False
-            w = row[0]
-            w2 = lwords[i]
-            #print w, w2
-            if w < w2:
-                n += 1
-                continue
-            elif w == w2:
-                item[2] = True
-                item[1] = "black" if words[w][0] else "gray"
-                i += 1
-                n += 1
-            elif w > w2:
-                pass
+        mmm = self.trees[self.index].get_model()
+        self.trees[self.index].set_model(None)
+        self.trees[self.index].freeze_child_notify()
+        if len(lwords) == self.lengths[self.index]:
+            for row in store:
+                row[2] = True
+        else:
+            pass
+            for n in xrange(0):
+                try:
+                    w = store[n][0]
+                    w2 = lwords[i]
+                    if w < w2 or w > w2:
+                        continue
+                    if w == w2:
+                        store[n][2] = True
+                        store[n][1] = "black" if words[w][0] else "gray"
+                        i += 1
+                except IndexError:
+                    break
+            print n
+        self.trees[self.index].set_model(mmm)
+        self.trees[self.index].thaw_child_notify()
         main.pack_start(windows[length], True, True, 0)
         main.show_all()
         

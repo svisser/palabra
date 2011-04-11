@@ -167,7 +167,7 @@ class PalabraWindow(gtk.Window):
         tabs.set_show_border(False)
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
-        tool = self.editor.tools["word"].create(self.stores)
+        tool = self.editor.tools["word"].create(*self.stores)
         tabs.append_page(tool, gtk.Label(u"Word"))
         tool = self.editor.tools["fill"].create()
         #tabs.append_page(tool, gtk.Label(u"Fill"))
@@ -378,15 +378,18 @@ class PalabraWindow(gtk.Window):
         
     def construct_list_stores(self):
         stores = {}
+        lengths = {}
         for path, item in self.wordlists.items():
             wordlist = item["list"]
             if wordlist is not None:
                 for l, words in wordlist.words.items():
                     # word foreground-color visibility
                     stores[l] = gtk.ListStore(str, str, bool)
+                    words.sort()
                     for w in words:
                         stores[l].append((w, "black", True))
-        return stores
+                    lengths[l] = len(words)
+        return stores, lengths
     
     def close_puzzle(self):
         need_to_close, need_to_save = self.check_close_puzzle()
