@@ -26,7 +26,6 @@ import constants
 import preferences
 import transform
 from word import search_wordlists
-from wordstore import WordStore
 
 class CellPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
