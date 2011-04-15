@@ -202,7 +202,7 @@ class WordTool:
         self.show_intersect = False
         self.show_used = True
     
-    def create(self, stores, lengths):
+    def create(self):
         img = gtk.Image()
         img.set_from_file("resources/icon1.png")
         def on_button_toggled(self, button):
