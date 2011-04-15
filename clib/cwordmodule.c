@@ -295,7 +295,7 @@ cWord_search(PyObject *self, PyObject *args) {
             }
         }
         PyObject* py_intersect = PyBool_FromLong(!zero_slot && (n_chars == length));
-        PyList_Append(result, Py_BuildValue("(sOi)", word, py_intersect, 0));
+        PyList_Append(result, Py_BuildValue("(sO)", word, py_intersect));
     }
     for (t = 0; t < length; t++) {
         if (skipped[t] == 0)

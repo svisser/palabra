@@ -622,8 +622,7 @@ class Editor(gtk.HBox):
         """
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        fix = [row[0:2] for row in result]
-        self.tools["word"].display_words(fix)
+        self.tools["word"].display_words(result)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
