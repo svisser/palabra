@@ -131,11 +131,12 @@ class FillTool:
         return gtk.Label(u"Not yet implemented.")
 
 class WordWidget(gtk.DrawingArea):
-    def __init__(self, editor, words):
+    def __init__(self, editor):
         super(WordWidget, self).__init__()
         self.STEP = 24
+        self.selection = None
         self.editor = editor
-        self.set_words([(w, True) for w in words])
+        self.set_words([])
         self.set_flags(gtk.CAN_FOCUS)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect('expose_event', self.expose)
@@ -143,19 +144,30 @@ class WordWidget(gtk.DrawingArea):
         
     def set_words(self, words):
         self.words = words
+        self.selection = None
         self.set_size_request(-1, self.STEP * len(self.words))
+        self.queue_draw()
         
     def on_button_press(self, widget, event):
         offset = self.get_word_offset(event.y)
         if offset >= len(self.words):
+            self.selection = None
             self.editor.set_overlay(None)
             return
         word = self.words[offset][0]
         if event.type == gtk.gdk._2BUTTON_PRESS:
             self.editor.insert(word)
+            self.selection = None
             self.editor.set_overlay(None)
         else:
+            self.selection = offset
             self.editor.set_overlay(word)
+        self.queue_draw()
+            
+    def get_selected_word(self):
+        if self.selection is None:
+            return None
+        return self.words[self.selection][0]
         
     def get_word_offset(self, y):
         return max(0, int(y / self.STEP)) 
@@ -172,36 +184,43 @@ class WordWidget(gtk.DrawingArea):
         offset = self.get_word_offset(y)
         n_rows = (height / self.STEP) + 1
         for i, (w, h) in enumerate(self.words[offset:offset + n_rows]):
-            if h:
-                ctx.set_source_rgb(0, 0, 0)
-            else:
-                color = (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
-                ctx.set_source_rgb(*[c / 65535.0 for c in color])
-            pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Monospace 12", w))
-            ctx.move_to(5, (offset + i) * self.STEP)
+            n = offset + i
+            color = (0, 0, 0) if h else (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
+            ctx.set_source_rgb(*[c / 65535.0 for c in color])
+            markup = ['''<span font_desc="Monospace 12"''']
+            if n == self.selection:
+                ctx.set_source_rgb(65535, 0, 0)
+                markup += [''' underline="double"''']
+            markup += [">", w, "</span>"]
+            pcr_layout.set_markup(''.join(markup))
+            ctx.move_to(5, n * self.STEP)
             pcr.show_layout(pcr_layout)
 
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
-        self.settings = {}
-        self.settings["show_intersecting_words"] = False
-        self.settings["show_used_words"] = True
+        self.settings = {"show_intersect": False, "show_used": True}
     
     def create(self, stores, lengths):
         img = gtk.Image()
         img.set_from_file("resources/icon1.png")
+        def on_button_toggled(self, button):
+            self.settings["show_intersect"] = button.get_active()
+            self.display_words()
         toggle_button = gtk.ToggleButton()
         toggle_button.set_property("image", img)
         toggle_button.set_tooltip_text(u"Show only words with intersecting words")
-        toggle_button.connect("toggled", self.on_button_toggled)
+        toggle_button.connect("toggled", lambda b: on_button_toggled(self, b))
         
         img = gtk.Image()
         img.set_from_file("resources/icon2.png")
+        def on_button2_toggled(self, button):
+            self.settings["show_used"] = not button.get_active()
+            self.display_words()
         toggle_button2 = gtk.ToggleButton()
         toggle_button2.set_property("image", img)
         toggle_button2.set_tooltip_text(u"Show only unused words")
-        toggle_button2.connect("toggled", self.on_button2_toggled)
+        toggle_button2.connect("toggled", lambda b: on_button2_toggled(self, b))
         
         buttons = gtk.HButtonBox()
         buttons.set_layout(gtk.BUTTONBOX_START)
@@ -212,133 +231,33 @@ class WordTool:
         self.main.set_spacing(9)
         self.main.pack_start(buttons, False, False, 0)
         
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(6)
-        hbox.set_spacing(6)
-        hbox.pack_start(self.main, True, True, 0)
-
-        self.lengths = lengths
-        self.stores = stores
-        
-        words = []
-        for l, store in self.stores.items():
-            words += [row[0] for row in store]
-        self.view = WordWidget(self.editor, words)
+        self.view = WordWidget(self.editor)
         sw = gtk.ScrolledWindow(None, None)
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.add_with_viewport(self.view)
         self.main.pack_start(sw, True, True, 0)
         
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(6)
+        hbox.set_spacing(6)
+        hbox.pack_start(self.main, True, True, 0)
+        
         return hbox
         
-    def on_button_toggled(self, button):
-        status = button.get_active()
-        self.settings["show_intersecting_words"] = status
-        self.display_data()
-        
-    def on_button2_toggled(self, button):
-        status = not button.get_active()
-        self.settings["show_used_words"] = status
-        self.display_data()
-        
-    def on_row_activated(self, tree, path, column):
-        store, it = self.trees[self.index].get_selection().get_selected()
-        self.editor.insert(store[it][0])
-        
-    def on_selection_changed(self, selection):
-        store, it = selection.get_selected()
-        self._perform_overlay_callback(store, it)
-        
-    def on_tree_clicked(self, tree, event):
-        if event.button in [1]:
-            item = tree.get_path_at_pos(int(event.x), int(event.y))
-            if item is not None:
-                path, col, cellx, celly = item
-                it = tree.get_model().get_iter(path)
-                if event.button == 1:
-                    if tree.get_selection().path_is_selected(path):
-                        self._perform_overlay_callback(tree.get_model(), it)
-                elif event.button == 3:
-                    self._create_popup_menu(it, event)
-                        
-    def _create_popup_menu(self, it, event):
-        word = self.store[it][0] if it is not None else None
-        if not word:
-            return
-        menu = gtk.Menu()
-        
-        # TODO ugly coupling        
-        def on_search_web_select(item):
-            self.editor.palabra_window.update_status(constants.STATUS_MENU, "Search the web for this word")
-        def on_search_web_deselect(item):
-            self.editor.palabra_window.pop_status(constants.STATUS_MENU)
-        def on_search_web(item):
-            link = ''.join(['http://google.com/search?q="', word, '"']) 
-            webbrowser.open(link)
-        
-        item = gtk.MenuItem("Search the web")
-        item.connect("activate", on_search_web)
-        item.connect("select", on_search_web_select)
-        item.connect("deselect", on_search_web_deselect)
-        menu.append(item)
-        
-        #menu.append(gtk.SeparatorMenuItem())
-        
-        def on_word_properties(item):
-            props = {}
-            props["word"] = word
-            window = WordPropertiesDialog(self.editor.palabra_window, props)
-            window.show_all()
-            window.run()
-            window.destroy()
-        
-        item = gtk.MenuItem("Properties")
-        item.connect("activate", on_word_properties)
-        #menu.append(item)
-        
-        menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
-                    
-    def _perform_overlay_callback(self, store, it):
-        word = store[it][0] if it is not None else None
-        self.editor.set_overlay(word)
-        
-    def store_words(self, words):
-        show_intersections = self.settings["show_intersecting_words"]
-        show_used = self.settings["show_used_words"]
+    def display_words(self, words=None):
+        if words is not None:
+            self.words = words
+        show_intersections = self.settings["show_intersect"]
+        show_used = self.settings["show_used"]
         entries = []
         if not show_used:
             entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
-        # bit ugly but needed for speed
-        shown = [row[0:2] for row in words if 
+        shown = [row for row in self.words if 
             not ( (show_intersections and not row[1]) or (not show_used and row[0] in entries) ) ]
         self.view.set_words(shown)
         
-    def display_data(self):
-        self.tree.freeze_child_notify()
-        self.tree.set_model(None)
-        
-        show_intersections = self.settings["show_intersecting_words"]
-        show_used = self.settings["show_used_words"]
-        entries = []
-        if not show_used:
-            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
-        # bit ugly but needed for speed
-        shown = [row for row in self.store.data if 
-            not ( (show_intersections and not row[1]) or (not show_used and row[0] in entries) ) ]
-        self.store.set_view(shown)
-        
-        self.tree.set_model(self.store)
-        self.tree.thaw_child_notify()
-        
     def get_selected_word(self):
-        store, it = self.trees[self.index].get_selection().get_selected()
-        word = self.stores[self.index][it][0] if it is not None else None
-        return word
-        
-    def display_overlay(self):
-        store, it = self.trees[self.index].get_selection().get_selected()
-        self._perform_overlay_callback(store, it)
+        return self.view.get_selected_word()
 
 class Selection:
     def __init__(self, x, y, direction):
@@ -705,7 +624,8 @@ class Editor(gtk.HBox):
         """
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        self.tools["word"].store_words(result)
+        fix = [row[0:2] for row in result]
+        self.tools["word"].display_words(fix)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
