@@ -77,8 +77,8 @@ class Grid:
             elif d == "down":
                 bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
             
-            before = not self.is_available(x + bdx, y + bdy) or self.has_bar(x, y, bar_side)
-            after = self.is_available(x + adx, y + ady) and not self.has_bar(x + adx, y + ady, bar_side)
+            before = not self.is_available(x + bdx, y + bdy) or self.data[y][x]["bar"][bar_side]
+            after = self.is_available(x + adx, y + ady) and not self.data[y + ady][x + adx]["bar"][bar_side]
             if before and after:
                 return True
         return False
@@ -295,9 +295,10 @@ class Grid:
         
     def words_by_direction(self, direction):
         """Iterate over the words in the grid by direction."""
-        for x, y in self.cells():
-            if self.is_start_word(x, y, direction):
-                yield self.cell(x, y)["number"], x, y
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                if self.is_start_word(x, y, direction):
+                    yield self.data[y][x]["number"], x, y
 
     def horizontal_clues(self):
         """Iterate over the horizontal clues of the grid."""
@@ -451,12 +452,13 @@ class Grid:
         """Iterate over the word data in the given direction."""
         for d in ([direction] if direction else ["across", "down"]):
             for n, x, y in self.words_by_direction(d):
+                clues = self.data[y][x]["clues"]
                 try:
-                    clue = self.cell(x, y)["clues"][d]["text"]
+                    clue = clues[d]["text"]
                 except KeyError:
                     clue = ""
                 try:
-                    explanation = self.cell(x, y)["clues"][d]["explanation"]
+                    explanation = clues[d]["explanation"]
                 except KeyError:
                     explanation = ""
                     
@@ -510,7 +512,12 @@ class Grid:
             
     def count_blocks(self):
         """Return the number of blocks in the grid."""
-        return sum([1 for x, y in self.cells() if self.is_block(x, y)])
+        total = 0
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                if self.data[y][x]["block"]:
+                    total += 1
+        return total
         
     def neighbors(self, x, y, diagonals=False):
         """
@@ -579,23 +586,31 @@ class Grid:
         
     def count_voids(self):
         """Return the number of voids in the grid."""
-        return sum([1 for x, y in self.cells() if self.is_void(x, y)])
+        total = 0
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                if self.data[y][x]["void"]:
+                    total += 1
+        return total
         
     def count_words(self):
         """Return the number of words in the grid."""
         total = 0
-        for x, y in self.cells():
-            for d in ["across", "down"]:
-                if self.is_start_word(x, y, d):
-                    total += 1
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                for d in ["across", "down"]:
+                    if self.is_start_word(x, y, d):
+                        total += 1
         return total
         
     def count_chars(self, include_blanks=True):
         """Return the number of chars in the grid."""
         count = 0
-        for x, y in self.availables():
-            if include_blanks or self.get_char(x, y) != '':
-                count += 1
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                if (not self.data[y][x]["block"] and not self.data[y][x]["void"]):
+                    if include_blanks or self.data[y][x]["char"] != '':
+                        count += 1
         return count
             
     def mean_word_length(self):
