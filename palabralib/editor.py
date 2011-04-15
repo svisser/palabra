@@ -199,13 +199,14 @@ class WordWidget(gtk.DrawingArea):
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
-        self.settings = {"show_intersect": False, "show_used": True}
+        self.show_intersect = False
+        self.show_used = True
     
     def create(self, stores, lengths):
         img = gtk.Image()
         img.set_from_file("resources/icon1.png")
         def on_button_toggled(self, button):
-            self.settings["show_intersect"] = button.get_active()
+            self.show_intersect = button.get_active()
             self.display_words()
         toggle_button = gtk.ToggleButton()
         toggle_button.set_property("image", img)
@@ -215,7 +216,7 @@ class WordTool:
         img = gtk.Image()
         img.set_from_file("resources/icon2.png")
         def on_button2_toggled(self, button):
-            self.settings["show_used"] = not button.get_active()
+            self.show_used = not button.get_active()
             self.display_words()
         toggle_button2 = gtk.ToggleButton()
         toggle_button2.set_property("image", img)
@@ -241,19 +242,16 @@ class WordTool:
         hbox.set_border_width(6)
         hbox.set_spacing(6)
         hbox.pack_start(self.main, True, True, 0)
-        
         return hbox
         
     def display_words(self, words=None):
         if words is not None:
             self.words = words
-        show_intersections = self.settings["show_intersect"]
-        show_used = self.settings["show_used"]
         entries = []
-        if not show_used:
+        if not self.show_used:
             entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
         shown = [row for row in self.words if 
-            not ( (show_intersections and not row[1]) or (not show_used and row[0] in entries) ) ]
+            not ( (self.show_intersect and not row[1]) or (not self.show_used and row[0] in entries) ) ]
         self.view.set_words(shown)
         
     def get_selected_word(self):
