@@ -218,56 +218,63 @@ cWord_search(PyObject *self, PyObject *args) {
     char *cs[length];
     int intersections[length];
     int t;
-    for (t = 0; t < length; t++) {
-        PyObject *py_cons_str2;
-        PyObject* item = PyList_GET_ITEM(more_constraints, (Py_ssize_t) t);
-        if (!PyArg_ParseTuple(item, "iO", &offsets[t], &py_cons_str2))
-            return NULL;
-        cs[t] = PyString_AS_STRING(py_cons_str2);
-    }
     int skipped[length];
     for (t = 0; t < length; t++) skipped[t] = 0;
     Sptr results[length];
-    for (t = 0; t < length; t++) {
-        int skip = -1;
-        int s;
-        for (s = 0; s < t; s++) {
-            if (strcmp(cs[s], cs[t]) == 0) {
-                skip = s;
-                break;
-            }
+    if (more_constraints != Py_None) {
+        for (t = 0; t < length; t++) {
+            PyObject *py_cons_str2;
+            PyObject* item = PyList_GET_ITEM(more_constraints, (Py_ssize_t) t);
+            if (!PyArg_ParseTuple(item, "iO", &offsets[t], &py_cons_str2))
+                return NULL;
+            cs[t] = PyString_AS_STRING(py_cons_str2);
         }
-        
-        if (skip < 0) {
-            SPPtr params;
-            params = (SPPtr) malloc(sizeof(SearchParams));
-            if (!params)
-                return NULL;
-            params->length = length;
-            params->offset = offsets[t];
+        for (t = 0; t < length; t++) {
+            int skip = -1;
+            int s;
+            for (s = 0; s < t; s++) {
+                if (strcmp(cs[s], cs[t]) == 0) {
+                    skip = s;
+                    break;
+                }
+            }
+            
+            if (skip < 0) {
+                SPPtr params;
+                params = (SPPtr) malloc(sizeof(SearchParams));
+                if (!params)
+                    return NULL;
+                params->length = length;
+                params->offset = offsets[t];
 
-            Sptr result;
-            result = (Sptr) malloc(sizeof(SearchResult));
-            if (!result) {
-                free(params);
-                return NULL;
+                Sptr result;
+                result = (Sptr) malloc(sizeof(SearchResult));
+                if (!result) {
+                    free(params);
+                    return NULL;
+                }
+                result->chars = malloc(MAX_ALPHABET_SIZE * sizeof(char));
+                if (!result->chars) {
+                    free(result);
+                    free(params);
+                    return NULL;
+                }
+                int c;
+                for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
+                    result->chars[c] = ' ';
+                }
+                if (!trees[strlen(cs[t])]) {
+                    intersections[t] = 0;
+                    results[t] = NULL;
+                } else {
+                    intersections[t] = analyze(params, result, trees[strlen(cs[t])], cs[t], cs[t]);
+                    results[t] = result;
+                }
+            } else {
+                skipped[t] = 1;
+                intersections[t] = intersections[skip];
+                results[t] = results[skip];
             }
-            result->chars = malloc(MAX_ALPHABET_SIZE * sizeof(char));
-            if (!result->chars) {
-                free(result);
-                free(params);
-                return NULL;
-            }
-            int c;
-            for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
-                result->chars[c] = ' ';
-            }
-            intersections[t] = analyze(params, result, trees[strlen(cs[t])], cs[t], cs[t]);
-            results[t] = result;
-        } else {
-            skipped[t] = 1;
-            intersections[t] = intersections[skip];
-            results[t] = results[skip];
         }
     }
     
@@ -275,31 +282,37 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject *result = PyList_New(0);
     for (m = 0; m < PyList_Size(mwords); m++) {
         char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
-        int zero_slot = 0;
-        int n_chars = 0;
-        int c;
-        for (c = 0; c < length; c++) {
-            zero_slot = 0 == intersections[c];
-            if (zero_slot) break;
-            if (strchr(cs[c], '.') == NULL) {
-                n_chars += 1;
-                continue;
-            }
-            int m;
-            for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-                if (results[c]->chars[m] == ' ') break;
-                if (results[c]->chars[m] == *(word + c)) {
+        int valid = 1;
+        if (more_constraints != Py_None) {
+            int zero_slot = 0;
+            int n_chars = 0;
+            int c;
+            for (c = 0; c < length; c++) {
+                zero_slot = 0 == intersections[c];
+                if (zero_slot) break;
+                if (strchr(cs[c], '.') == NULL) {
                     n_chars += 1;
-                    break;
+                    continue;
+                }
+                int m;
+                for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
+                    if (results[c]->chars[m] == ' ') break;
+                    if (results[c]->chars[m] == *(word + c)) {
+                        n_chars += 1;
+                        break;
+                    }
                 }
             }
+            valid = !zero_slot && (n_chars == length);
         }
-        PyObject* py_intersect = PyBool_FromLong(!zero_slot && (n_chars == length));
+        PyObject* py_intersect = PyBool_FromLong(valid);
         PyList_Append(result, Py_BuildValue("(sO)", word, py_intersect));
     }
-    for (t = 0; t < length; t++) {
-        if (skipped[t] == 0)
-            free(results[t]);
+    if (more_constraints != Py_None) {
+        for (t = 0; t < length; t++) {
+            if (skipped[t] == 0)
+                free(results[t]);
+        }
     }
     return result;
 }
@@ -328,9 +341,12 @@ cWord_preprocess(PyObject *self, PyObject *args) {
     // build ternary search trees per word length
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
-        Py_ssize_t w;
         PyObject *words = PyDict_GetItem(dict, Py_BuildValue("i", m));
-        for (w = 0; w < PyList_Size(words); w++) {
+        const Py_ssize_t len_m = PyList_Size(words);
+        if (len_m == 0)
+            trees[m] = NULL;
+        Py_ssize_t w;
+        for (w = 0; w < len_m; w++) {
             char *word = PyString_AsString(PyList_GET_ITEM(words, w));
             trees[m] = insert1(trees[m], word, word);
         }

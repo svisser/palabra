@@ -30,8 +30,6 @@ class WordTestCase(unittest.TestCase):
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
         
-        self.basic = CWordList(["koala", "kangaroo"])
-        
     def testHasMatchesEmpty(self):
         for x in xrange(35):
             self.assertEquals(self.wordlist.has_matches(x, []), False)
@@ -117,51 +115,70 @@ class WordTestCase(unittest.TestCase):
                 
     #####
     
-    def testHasMatches(self):
+    def testBasic(self):
+        self.basic = CWordList(["koala", "kangaroo", "aardvark", "loophole", "outgoing"])
         for l in xrange(64):
             self.assertEquals(self.basic.has_matches(l, []), l in [5, 8])
         self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'a')]), True)
         self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'b')]), False)
-        
-    def testSearch(self):
         self.assertEquals([w for w in self.basic.search(5, [], None)], [("koala", True)])
         self.assertEquals([w for w in self.basic.search(6, [], None)], [])
-        self.assertEquals([w for w in self.basic.search(5, [], [(0, 8, [])])], [("koala", True)])
-        self.assertEquals([w for w in self.basic.search(5, [], [(0, 7, [])])], [("koala", False)])
-        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [])])], [("koala", True)])
-        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 7, [])])], [("koala", False)])
-        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'o')])])], [("koala", True)])
-        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], [(0, 8, [(7, 'p')])])], [("koala", False)])
+        css_eight = [(0, 8, []), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
+        css_seven = [(0, 7, []), (0, 7, []), (0, 7, []), (0, 7, []), (0, 7, [])]
+        css_eight_t = [(0, 8, [(7, 'o')]), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
+        css_eight_f = [(0, 8, [(7, 'p')]), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
+        self.assertEquals([w for w in self.basic.search(5, [], css_eight)], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(5, [], css_seven)], [("koala", False)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_eight)], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_seven)], [("koala", False)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_eight_t)], [("koala", True)])
+        self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_eight_f)], [("koala", False)])
+        self.basic.postprocess()
         
     def testIntersecting(self):
         clist = CWordList(["aaaa", "bbbb", "abbb"])
         
-        # 4 chars, starts with 'a', 4 chars at intersection 0
-        self.assertEquals([w for w in clist.search(4, [(0, 'a')], [(0, 4, [])])], [("aaaa", True), ("abbb", True)])
-        
+        # 4 chars, starts with 'a', 4 chars at all intersections
+        css = [(0, 4, []), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(0, 'a')], css)], [("aaaa", True), ("abbb", True)])
+
         # 4 chars, starts with 'a', 4 chars at intersection 0 that ends with 'b'
-        self.assertEquals([w for w in clist.search(4, [(0, 'a')], [(0, 4, [(3, 'b')])])], [("aaaa", True), ("abbb", True)])
+        css = [(0, 4, [(3, 'b')]), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(0, 'a')], css)], [("aaaa", True), ("abbb", True)])
         
-        # 4 chars, starts with 'b', 4 chars at intersection 0
-        self.assertEquals([w for w in clist.search(4, [(0, 'b')], [(0, 4, [])])], [("bbbb", True)])
+        # 4 chars, starts with 'b', 4 chars at all intersections
+        css = [(0, 4, []), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(0, 'b')], css)], [("bbbb", True)])
         
         # 4 chars, starts with 'a', 4 chars at intersection 0 that starts with 'ab'
-        self.assertEquals([w for w in clist.search(4, [(0, 'a')], [(0, 4, [(0, 'a'), (1, 'b')])])], [("aaaa", True), ("abbb", True)])
+        css = [(0, 4, [(0, 'a'), (1, 'b')]), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(0, 'a')], css)], [("aaaa", True), ("abbb", True)])
         
         # 4 chars, starts with 'b', 4 chars at intersection 0 that starts with 'aba'
-        self.assertEquals([w for w in clist.search(4, [(0, 'b')], [(0, 4, [(0, 'a'), (1, 'b'), (2, 'a')])])], [("bbbb", False)])
+        css = [(0, 4, [(0, 'a'), (1, 'b'), (2, 'a')]), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(0, 'b')], css)], [("bbbb", False)])
         
         # 4 chars, starts with 'b', 4 chars at intersection 0 that ends with 'a'
-        self.assertEquals([w for w in clist.search(4, [(0, 'b')], [(0, 4, [(3, 'a')])])], [("bbbb", False)])
+        css = [(0, 4, [(3, 'a')]), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(0, 'b')], css)], [("bbbb", False)])
         
         # 4 chars, ends with 'b', 4 chars at intersection 0 that ends with 'a'
-        self.assertEquals([w for w in clist.search(4, [(3, 'b')], [(0, 4, [(3, 'a')])])], [("bbbb", False), ("abbb", True)])
+        css = [(0, 4, [(3, 'a')]), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [(3, 'b')], css)], [("abbb", True), ("bbbb", False)])
         
         # 4 chars, 5 chars at intersection 0
-        self.assertEquals([w for w in clist.search(4, [], [(0, 5, [])])], [("aaaa", False), ("bbbb", False), ("abbb", False)])
+        css = [(0, 5, []), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [], css)], [("aaaa", False), ("abbb", False), ("bbbb", False)])
         
         # 4 chars, 4 chars at intersection 0 that ends with 'c'
-        self.assertEquals([w for w in clist.search(4, [], [(0, 4, [(3, 'c')])])], [("aaaa", False), ("bbbb", False), ("abbb", False)])
-        
+        css = [(0, 4, [(3, 'c')]), (0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(4, [], css)], [("aaaa", False), ("abbb", False), ("bbbb", False)])
+
         # 3 chars, no further constraints
-        self.assertEquals([w for w in clist.search(3, [], [])], [])
+        self.assertEquals([w for w in clist.search(3, [], None)], [])
+        
+        # 3 chars, no further constraints, 4 chars at all intersections
+        css = [(0, 4, []), (0, 4, []), (0, 4, [])]
+        self.assertEquals([w for w in clist.search(3, [], css)], [])
+        
+        clist.postprocess()

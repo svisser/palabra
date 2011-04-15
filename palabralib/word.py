@@ -289,12 +289,25 @@ class CWordList:
         more_constraints argument is specified.
         If more_constraints is not specified, the second value
         in a tuple is True.
+        
+        If more_constraints is specified, then constraints must be
+        specified for ALL intersecting words.
+        
+        Words are returned in alphabetical order.
         """
         def cs_to_str(l, cs):
             result = ['.' for i in xrange(l)]
             for (i, c) in cs:
                 result[i] = c
             return ''.join(result)
-        css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more_constraints]
+        if more_constraints:
+            css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more_constraints]
+        else:
+            css_str = None
         return cWord.search(self.words, length, cs_to_str(length, constraints), css_str)
+        
+    # needed for tests
+    @staticmethod
+    def postprocess():
+        cWord.postprocess()
 
