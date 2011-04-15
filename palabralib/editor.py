@@ -18,6 +18,7 @@
 import cairo
 import gobject
 import gtk
+import pangocairo
 import webbrowser
 
 import action
@@ -129,6 +130,57 @@ class FillTool:
     def create(self):
         return gtk.Label(u"Not yet implemented.")
 
+class WordWidget(gtk.DrawingArea):
+    def __init__(self, editor, words):
+        super(WordWidget, self).__init__()
+        self.STEP = 24
+        self.editor = editor
+        self.set_words([(w, True) for w in words])
+        self.set_flags(gtk.CAN_FOCUS)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.connect('expose_event', self.expose)
+        self.connect("button_press_event", self.on_button_press)
+        
+    def set_words(self, words):
+        self.words = words
+        self.set_size_request(-1, self.STEP * len(self.words))
+        
+    def on_button_press(self, widget, event):
+        offset = self.get_word_offset(event.y)
+        if offset >= len(self.words):
+            self.editor.set_overlay(None)
+            return
+        word = self.words[offset][0]
+        if event.type == gtk.gdk._2BUTTON_PRESS:
+            self.editor.insert(word)
+            self.editor.set_overlay(None)
+        else:
+            self.editor.set_overlay(word)
+        
+    def get_word_offset(self, y):
+        return max(0, int(y / self.STEP)) 
+        
+    def expose(self, widget, event):
+        ctx = widget.window.cairo_create()
+        pcr = pangocairo.CairoContext(ctx)
+        pcr_layout = pcr.create_layout()
+        x, y, width, height = event.area
+        ctx.set_source_rgb(65535, 65535, 65535)
+        ctx.rectangle(*event.area)
+        ctx.fill()
+        ctx.set_source_rgb(0, 0, 0)
+        offset = self.get_word_offset(y)
+        n_rows = (height / self.STEP) + 1
+        for i, (w, h) in enumerate(self.words[offset:offset + n_rows]):
+            if h:
+                ctx.set_source_rgb(0, 0, 0)
+            else:
+                color = (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
+                ctx.set_source_rgb(*[c / 65535.0 for c in color])
+            pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % ("Monospace 12", w))
+            ctx.move_to(5, (offset + i) * self.STEP)
+            pcr.show_layout(pcr_layout)
+
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
@@ -164,13 +216,18 @@ class WordTool:
         hbox.set_border_width(6)
         hbox.set_spacing(6)
         hbox.pack_start(self.main, True, True, 0)
-        
+
         self.lengths = lengths
         self.stores = stores
-        self.trees = {}
-        self.windows = {}
-        self.index = None
-        self.store_all_words()
+        
+        words = []
+        for l, store in self.stores.items():
+            words += [row[0] for row in store]
+        self.view = WordWidget(self.editor, words)
+        sw = gtk.ScrolledWindow(None, None)
+        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        sw.add_with_viewport(self.view)
+        self.main.pack_start(sw, True, True, 0)
         
         return hbox
         
@@ -246,71 +303,16 @@ class WordTool:
         word = store[it][0] if it is not None else None
         self.editor.set_overlay(word)
         
-    def store_all_words(self):
-        # TODO fix for multiple wordlists
-        for l, store in self.stores.items():
-            self.trees[l] = gtk.TreeView()
-            filt = self.stores[l].filter_new()
-            filt.set_visible_column(2)
-            self.trees[l].set_model(filt)
-            self.trees[l].connect("row-activated", self.on_row_activated)
-            self.trees[l].get_selection().connect("changed", self.on_selection_changed)
-            self.trees[l].connect("button_press_event", self.on_tree_clicked)
-            self.trees[l].set_headers_visible(False)
-            cell = gtk.CellRendererText()
-            column = gtk.TreeViewColumn("")
-            column.pack_start(cell, False)
-            column.set_attributes(cell, text=0, foreground=1)
-            cell.set_property('family', 'Monospace')
-            cell.set_fixed_size(100, 20)
-            cell.set_fixed_height_from_font(1)
-            column.set_fixed_width(100)
-            column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
-            self.trees[l].append_column(column)
-            
-            self.windows[l] = gtk.ScrolledWindow(None, None)
-            self.windows[l].set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-            self.windows[l].add(self.trees[l])
-            self.windows[l].set_size_request(192, -1)
-        self.index = 2
-        self.main.pack_start(self.windows[self.index], True, True, 0)
-        
-    def store_words(self, lwords, words, length):
-        if not words:
-            return
-        main = self.main
-        windows = self.windows
-        main.remove(windows[self.index])
-        row_n = 0
-        self.index = length
-        store = self.stores[self.index]
-        n = 0
-        i = 0
-        mmm = self.trees[self.index].get_model()
-        self.trees[self.index].set_model(None)
-        self.trees[self.index].freeze_child_notify()
-        if len(lwords) == self.lengths[self.index]:
-            for row in store:
-                row[2] = True
-        else:
-            pass
-            for n in xrange(0):
-                try:
-                    w = store[n][0]
-                    w2 = lwords[i]
-                    if w < w2 or w > w2:
-                        continue
-                    if w == w2:
-                        store[n][2] = True
-                        store[n][1] = "black" if words[w][0] else "gray"
-                        i += 1
-                except IndexError:
-                    break
-            print n
-        self.trees[self.index].set_model(mmm)
-        self.trees[self.index].thaw_child_notify()
-        main.pack_start(windows[length], True, True, 0)
-        main.show_all()
+    def store_words(self, words):
+        show_intersections = self.settings["show_intersecting_words"]
+        show_used = self.settings["show_used_words"]
+        entries = []
+        if not show_used:
+            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
+        # bit ugly but needed for speed
+        shown = [row[0:2] for row in words if 
+            not ( (show_intersections and not row[1]) or (not show_used and row[0] in entries) ) ]
+        self.view.set_words(shown)
         
     def display_data(self):
         self.tree.freeze_child_notify()
@@ -703,13 +705,7 @@ class Editor(gtk.HBox):
         """
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
-        words = {}
-        length = None
-        for w, h, i in result:
-            words[w] = (h, i)
-            if not length:
-                length = len(w)
-        self.tools["word"].store_words([w for w, h, i in result], words, length)
+        self.tools["word"].store_words(result)
             
     def select(self, x, y, direction):
         """Select the word at (x, y, direction) in the grid."""
