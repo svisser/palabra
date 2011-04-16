@@ -106,6 +106,10 @@ def read_containers(files):
     def load_container(f):
         return f, {}, read_xpf(f)
     return [load_container(f) for f in files]
+    
+def write_containers(patterns):
+    for f, meta, puzzles in patterns:
+        write_xpf(puzzles, filename=f, compact=True)
 
 def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
@@ -378,7 +382,7 @@ def read_xpf(filename):
         results.append(p)
     return results
     
-def write_xpf(content, backup=True, filename=None):
+def write_xpf(content, backup=True, filename=None, compact=False):
     """Accepts a Puzzle object or a list of Puzzle objects."""
     root = etree.Element("Puzzles")
     root.set("Version", "1.0")
@@ -387,11 +391,11 @@ def write_xpf(content, backup=True, filename=None):
         _write_puzzle(content.filename, contents, backup)
     elif isinstance(content, list):
         for p in content:
-            _write_xpf_xml(root, p)
+            _write_xpf_xml(root, p, compact)
         contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
         _write_puzzle(filename, contents, backup)
 
-def _write_xpf_xml(root, puzzle):
+def _write_xpf_xml(root, puzzle, compact=False):
     main = etree.SubElement(root, "Puzzle")
     
     for dc, e in XPF_META_ELEMS_LIST:
@@ -419,45 +423,42 @@ def _write_xpf_xml(root, puzzle):
         chars = [calc_char(x, y) for x in xrange(puzzle.grid.width)]
         erow.text = ''.join(chars)
     
-    default = puzzle.view.properties.default    
-    styles = puzzle.view.properties.styles
-    circles = [cell for cell in styles if styles[cell].circle != default.circle]
-    if circles:
-        circles.sort(key=itemgetter(0, 1))
-        ecircles = etree.SubElement(main, "Circles")
-        for x, y in circles:
-            ecircle = etree.SubElement(ecircles, "Circle")
-            ecircle.set("Row", str(y + 1))
-            ecircle.set("Col", str(x + 1))
-            
-    shades = [cell for cell in styles if styles[cell].cell["color"] != default.cell["color"]]
-    if shades:
-        shades.sort(key=itemgetter(0, 1))
-        eshades = etree.SubElement(main, "Shades")
-        for x, y in shades:
-            eshade = etree.SubElement(eshades, "Shade")
-            eshade.set("Row", str(y + 1))
-            eshade.set("Col", str(x + 1))
-            def to_hex(value):
-                hv = hex(int(value / 65535.0 * 255))[2:]
-                return hv if len(hv) == 2 else '0' + hv
-            text = '#' + ''.join([to_hex(v) for v in styles[x, y].cell["color"]])
-            eshade.text = text
-        
-    clues = etree.SubElement(main, "Clues")
-    for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
-        eclue = etree.SubElement(clues, "Clue")
-        eclue.set("Row", str(y + 1))
-        eclue.set("Col", str(x + 1))
-        eclue.set("Num", str(n))
-        eclue.set("Dir", {"across": "Across", "down": "Down"}[d])
-        eclue.set("Ans", word)
-        if clue:
-            eclue.text = clue
-            
-    e = etree.SubElement(main, "Notepad")
-    e.text = etree.CDATA(puzzle.notepad)
-    
+    if not compact:
+        default = puzzle.view.properties.default    
+        styles = puzzle.view.properties.styles
+        circles = [cell for cell in styles if styles[cell].circle != default.circle]
+        if circles:
+            circles.sort(key=itemgetter(0, 1))
+            ecircles = etree.SubElement(main, "Circles")
+            for x, y in circles:
+                ecircle = etree.SubElement(ecircles, "Circle")
+                ecircle.set("Row", str(y + 1))
+                ecircle.set("Col", str(x + 1))
+        shades = [cell for cell in styles if styles[cell].cell["color"] != default.cell["color"]]
+        if shades:
+            shades.sort(key=itemgetter(0, 1))
+            eshades = etree.SubElement(main, "Shades")
+            for x, y in shades:
+                eshade = etree.SubElement(eshades, "Shade")
+                eshade.set("Row", str(y + 1))
+                eshade.set("Col", str(x + 1))
+                def to_hex(value):
+                    hv = hex(int(value / 65535.0 * 255))[2:]
+                    return hv if len(hv) == 2 else '0' + hv
+                text = '#' + ''.join([to_hex(v) for v in styles[x, y].cell["color"]])
+                eshade.text = text
+        clues = etree.SubElement(main, "Clues")
+        for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
+            eclue = etree.SubElement(clues, "Clue")
+            eclue.set("Row", str(y + 1))
+            eclue.set("Col", str(x + 1))
+            eclue.set("Num", str(n))
+            eclue.set("Dir", {"across": "Across", "down": "Down"}[d])
+            eclue.set("Ans", word)
+            if clue:
+                eclue.text = clue
+        e = etree.SubElement(main, "Notepad")
+        e.text = etree.CDATA(puzzle.notepad)
     return etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     
 def _write_puzzle(filename, contents, backup=True):
