@@ -218,11 +218,13 @@ def export_to_pdf(puzzle, filename, output, settings):
             content = []
             for caption, direction in [("Across", "across"), ("Down", "down")]:
                 content += ['''<span font_desc="Sans 10">%s</span>\n<span font_desc="Sans 8">''' % caption]
-                for n, x, y, d, w, clue, e in puzzle.grid.gather_words(direction):
-                    if clue == "":
-                        clue = '''<span color="#ff0000">(missing clue)</span>'''
-                    clue = clue.replace("&", "&amp;")
-                    content += [''' <b>%s</b> %s''' % (str(n), clue)]
+                for n, x, y, clue in puzzle.grid.clues(direction):
+                    try:
+                        txt = clue["text"]
+                    except KeyError:
+                        txt = '''<span color="#ff0000">(missing clue)</span>'''
+                    txt = txt.replace("&", "&amp;")
+                    content += [''' <b>%s</b> %s''' % (str(n), txt)]
                 content += ["</span>\n\n"]
             rx, ry = 20, 20
             pcr = pangocairo.CairoContext(context)

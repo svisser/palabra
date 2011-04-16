@@ -30,7 +30,7 @@ class Grid:
         """Reset the grid to the given dimensions with all empty cells."""
         self.width = width
         self.height = height
-        self.lines = {}
+        self.lines = None
         self.data = [[self._default_cell() for x in xrange(width)] for y in xrange(height)]
         # TODO modify when arbitrary number schemes are implemented
         if initialize:
@@ -62,9 +62,6 @@ class Grid:
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
         cGrid.assign_numbers(self)
-            
-    def _store_lines_of_cell(self, x, y):
-        self.lines[x, y] = self.lines_of_cell(x, y)
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
@@ -100,8 +97,6 @@ class Grid:
             if dx < 0 and (x + dx < 0 or data[y][x]["bar"]["left"]):
                 break
             if dy < 0 and (y + dy < 0 or data[y][x]["bar"]["top"]):
-                break
-            if not (0 <= x + dx < width and 0 <= y + dy < height):
                 break
             if data[y + dy][x + dx]["block"]:
                 break
@@ -304,20 +299,12 @@ class Grid:
             for x in xrange(self.width):
                 if self.is_start_word(x, y, direction):
                     yield self.data[y][x]["number"], x, y
-
-    def horizontal_clues(self):
-        """Iterate over the horizontal clues of the grid."""
-        for n, x, y in self.words_by_direction("across"):
+                    
+    def clues(self, direction):
+        """Iterate over the clues of the grid by direction."""
+        for n, x, y in self.words_by_direction(direction):
             try:
-                yield n, x, y, self.cell(x, y)["clues"]["across"]
-            except KeyError:
-                yield n, x, y, {}
-                
-    def vertical_clues(self):
-        """Iterate over the vertical clues of the grid."""
-        for n, x, y in self.words_by_direction("down"):
-            try:
-                yield n, x, y, self.cell(x, y)["clues"]["down"]
+                yield n, x, y, self.data[y][x]["clues"][direction]
             except KeyError:
                 yield n, x, y, {}
     
@@ -371,39 +358,6 @@ class Grid:
             if self.is_available(x, y):
                 yield x, y
                 
-    def lines_of_cell(self, x, y):
-        """Return the lines of a cell (uses nonexistent cells for outer lines)."""
-        lines = []
-        for edge, (dx, dy) in [("left", (-1, 0)), ("top", (0, -1))]:
-            if self.is_valid(x + dx, y + dy):
-                v0 = self.is_void(x, y)
-                v1 = self.is_void(x + dx, y + dy)
-                if not (v0 and v1):
-                    side = "normal"
-                    if v0 and not v1:
-                        side = "innerborder"
-                    elif not v0 and v1:
-                        side = "outerborder"
-                    lines.append((x, y, edge, side))
-            elif not self.is_void(x, y):
-                lines.append((x, y, edge, "outerborder"))
-                
-        # also include lines at the bottom and the right
-        if y == self.height - 1:
-            if not self.is_void(x, self.height - 1):
-                lines.append((x, self.height, "top", "innerborder"))
-        if x == self.width - 1:
-            if not self.is_void(self.width - 1, y):
-                lines.append((self.width, y, "left", "innerborder"))
-        return lines
-                
-    def lines(self):
-        """Return the lines of the grid (uses nonexistent cells for outer lines)."""
-        lines = []
-        for x, y in self.cells():
-            lines.extend(self.lines_of_cell(x, y))
-        return lines
-                    
     def gather_word(self, x, y, direction, empty_char=constants.MISSING_CHAR):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
@@ -437,19 +391,20 @@ class Grid:
         (x, y, direction) intersects the intersecting word, the length
         of the intersecting word and the constraints.
         """
+        get_start_word = self.get_start_word
+        word_length = self.word_length
+        gather_constraints = self.gather_constraints
         result = []
         other = {"across": "down", "down": "across"}[direction]
-        sx, sy = self.get_start_word(x, y, direction)
+        sx, sy = get_start_word(x, y, direction)
         for s, t in self.in_direction(sx, sy, direction):
-            p, q = self.get_start_word(s, t, other)
-            length = self.word_length(p, q, other)
-            
+            p, q = get_start_word(s, t, other)
+            length = word_length(p, q, other)
             if other == "across":
                 index = x - p
             elif other == "down":
                 index = y - q
-            
-            constraints = self.gather_constraints(p, q, other)
+            constraints = gather_constraints(p, q, other)
             result.append((index, length, constraints))
         return result
                 
@@ -479,8 +434,6 @@ class Grid:
         width = self.width
         height = self.height
         while True:
-            if not (0 <= x < width and 0 <= y < height):
-                break
             if data[y][x]["block"] or data[y][x]["void"]:
                 break
             count += 1
@@ -579,21 +532,6 @@ class Grid:
                 if self.is_available(p, q):
                     check.append((p, q))
         return len(avs) == len(done)
-        
-    # TODO incorrect
-    def count_cheaters(self):
-        """Return the number of cheating blocks in the grid."""
-        def is_cheater(x, y):
-            if not self.is_block(x, y):
-                return False
-            if self.is_start_word(x + 1, y, "across") and self.is_part_of_word(x - 1, y, "across"):
-                return False
-            if self.is_start_word(x, y + 1, "down") and self.is_part_of_word(x, y - 1, "down"):
-                return False
-            return True
-        cells = [(x, y) for x, y in self.cells() if is_cheater(x, y)]
-        print cells
-        return len(cells)
         
     def count_voids(self):
         """Return the number of voids in the grid."""
@@ -958,9 +896,6 @@ class Grid:
     def cell(self, x, y):
         return self.data[y][x]
     
-    def set_cell(self, x, y, cell):
-        self.data[y][x] = cell
-        
     def get_clues(self, x, y):
         return self.data[y][x]["clues"]
         
@@ -1008,8 +943,6 @@ class Grid:
     def set_void(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["void"] = status
-        # TODO not correct
-        #self._store_lines_of_cell(x, y)
         
     def _on_cell_type_change(self, x, y, status):
         if status:
