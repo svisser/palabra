@@ -141,83 +141,9 @@ class WordListEditor(gtk.Dialog):
             path = p["path"]["value"]
             self.store.append([name, path])
 
-class WordList:
-    def __init__(self):
-        self.lengths = {}
-        self.combinations = {}
-        self.size = 0
-        
-    def add_word(self, word):
-        length = len(word)
-        try:
-            self.lengths[length].append(word)
-        except KeyError:
-            self.lengths[length] = [word]
-        if length not in self.combinations:
-            self.combinations[length] = {}
-        for x in xrange(length):
-            if x not in self.combinations[length]:
-                self.combinations[length][x] = {}
-        for i, c in enumerate(word):
-            try:
-                self.combinations[length][i][c].add(self.size)
-            except KeyError:
-                self.combinations[length][i][c] = set([self.size])
-        self.size += 1
-        
-    def get_substring_matches(self, word):
-        result = []
-        for length in self.lengths.keys():
-            result += [x for x in self.lengths[length] if x in word]
-        return result
-            
-    def has_matches(self, length, constraints):
-        if length not in self.lengths:
-            return False
-
-        # check whether for each constraint at least one word exists
-        for i, c in constraints:
-            try:
-                if not self.combinations[length][i][c]:
-                    return False
-            except KeyError:
-                return False
-        
-        if not constraints:
-            return True
-                
-        # check whether all constraints are satisfied for at least one word
-        words = [self.combinations[length][i][c] for i, c in constraints]
-        return len(reduce(set.intersection, words)) > 0
-    
-    # yields word and whether all positions of the word have a matching word
-    def search(self, length, constraints, more_constraints=None):
-        if length in self.lengths.keys():
-            for word in self.lengths[length]:
-                if self._predicate(constraints, word):
-                    if more_constraints is not None:
-                        filled_constraints = [(l, cs + [(i, word[j])]) for j, (i, l, cs) in enumerate(more_constraints)]
-                        
-                        for args in filled_constraints:
-                            if not self.has_matches(*args):
-                                yield word, False
-                                break
-                        else:
-                            yield word, True
-                    else:
-                        yield word, True
-        
-    @staticmethod
-    def _predicate(constraints, word):
-        for position, letter in constraints:
-            if not word[position] == letter:
-                return False
-        return True
-
 def read_wordlist(path):
     """Yield all words found in the specified file."""
     if not os.path.exists(path):
-        print "Error: The file", path, "does not exist."
         return []
     words = []
     with open(path, "r") as f:
@@ -231,6 +157,8 @@ def read_wordlist(path):
             line = line.strip("\n")
             if not line:
                 continue
+            if len(line) > constants.MAX_WORD_LENGTH:
+                continue
             for c in line:
                 if c not in ords:
                     ords[c] = ord(c)
@@ -240,14 +168,6 @@ def read_wordlist(path):
             else:
                 words.append(lower(line))
     return words
-
-def read_wordlist_from_iter(callback, words):
-    wordlist = WordList()
-    for word in words:
-        wordlist.add_word(word.lower())
-        yield True
-    callback(wordlist)
-    yield False
 
 def create_wordlists(word_files):
     wordlists = {}
@@ -269,7 +189,12 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     return result
 
 class CWordList:
-    def __init__(self, words):
+    def __init__(self, content):
+        """Accepts either a filepath or a list of words."""
+        if isinstance(content, str):
+            words = read_wordlist(content)
+        else:
+            words = content
         self.words = cWord.preprocess(words)
         
     def has_matches(self, length, constraints, words=None):
@@ -292,6 +217,10 @@ class CWordList:
         
         If more_constraints is specified, then constraints must be
         specified for ALL intersecting words.
+        
+        constraints and more_constraints must match with each other
+        (i.e., if intersecting word at position 0 starts with 'a' then
+        main word must also have a constraint 'a' at position 0).
         
         Words are returned in alphabetical order.
         """

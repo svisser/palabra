@@ -46,7 +46,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import WordListEditor, read_wordlist_from_iter
+from word import WordListEditor
 
 def create_splash():
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -105,10 +105,6 @@ class PalabraWindow(gtk.Window):
         self.patterns = None
         
         self.blacklist = None
-        def callback(wordlist):
-            self.blacklist = wordlist
-        words = ["cunt", "whore"]
-        gobject.idle_add(read_wordlist_from_iter(callback, words).next)
         
     def on_delete(self, window, event):
         self.close_puzzle()

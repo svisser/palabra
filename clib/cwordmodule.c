@@ -207,6 +207,8 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject *more_constraints;
     if (!PyArg_ParseTuple(args, "OiOO", &words, &length, &constraints, &more_constraints))
         return NULL;
+    if (length < 0 || length > MAX_WORD_LENGTH)
+        return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
     // main word
     PyObject *mwords = PyList_New(0);

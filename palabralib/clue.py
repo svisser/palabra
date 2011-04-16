@@ -50,8 +50,9 @@ class ClueTool:
         self.explanation_entry = gtk.Entry()
         self.explanation_changed_id = self.explanation_entry.connect("changed", changed)
         self.explanation_entry.set_sensitive(False)
-        vbox.pack_start(label, False, False, 3)
-        vbox.pack_start(self.explanation_entry, False, False, 0)
+        # disable for release
+        #vbox.pack_start(label, False, False, 3)
+        #vbox.pack_start(self.explanation_entry, False, False, 0)
         
         # number x y direction word clue explanation displayed_string
         self.store = gtk.ListStore(int, int, int, str, str, str, str, str)

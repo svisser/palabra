@@ -15,14 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import string
 import unittest
-from palabralib.word import WordList, CWordList, read_wordlist
+
+from palabralib.constants import MAX_WORD_LENGTH
+from palabralib.word import CWordList
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
-        self.wordlist = WordList()
-        
         self.word = "palabra"
         self.length = len(self.word)
         self.constraints = [(i, self.word[i]) for i in xrange(self.length)]
@@ -31,88 +32,74 @@ class WordTestCase(unittest.TestCase):
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
         
-    def testHasMatchesEmpty(self):
-        for x in xrange(35):
-            self.assertEquals(self.wordlist.has_matches(x, []), False)
-            for y in xrange(26):
-                c = chr(ord("a") + y)
-                self.assertEquals(self.wordlist.has_matches(x, [(0, c)]), False)
-        
     def testHasMatchesOneWord(self):
-        self.wordlist.add_word(self.word)
-        check = self.wordlist.has_matches(self.length, self.constraints)
-        
+        clist = CWordList([self.word])
+        check = clist.has_matches(self.length, self.constraints)
         self.assertEquals(check, True)
-        check = self.wordlist.has_matches(self.length, [])
+        check = clist.has_matches(self.length, [])
         self.assertEquals(check, True)
-        
         for i in xrange(self.length):
             for j in xrange(i, self.length):
-                check = self.wordlist.has_matches(self.length, self.constraints[i:j])
+                check = clist.has_matches(self.length, self.constraints[i:j])
                 self.assertEquals(check, True)
+        clist.postprocess()
                 
     def testHasMatchesMultiple(self):
-        self.wordlist.add_word(self.word)
-        self.wordlist.add_word(self.word2)
+        clist = CWordList([self.word, self.word2])
         cs = [(0, "p"), (1, "a")]
-        self.assertEquals(self.wordlist.has_matches(self.length, []), True)
-        self.assertEquals(self.wordlist.has_matches(self.length2, []), True)
-        self.assertEquals(self.wordlist.has_matches(self.length, cs), True)
-        self.assertEquals(self.wordlist.has_matches(self.length2, cs), True)
+        self.assertEquals(clist.has_matches(self.length, []), True)
+        self.assertEquals(clist.has_matches(self.length2, []), True)
+        self.assertEquals(clist.has_matches(self.length, cs), True)
+        self.assertEquals(clist.has_matches(self.length2, cs), True)
+        clist.postprocess()
     
     def testSearchBasic(self):
-        self.wordlist.add_word(self.word)
-        for w in self.wordlist.search(self.length, []):
+        clist = CWordList([self.word])
+        for w in clist.search(self.length, []):
             self.assertEquals(w[0], self.word)
-        for w in self.wordlist.search(self.length, self.constraints):
+        for w in clist.search(self.length, self.constraints):
             self.assertEquals(w[0], self.word)
+        clist.postprocess()
         
+    def testSearchBasicTwo(self):
+        clist = CWordList([self.word, self.word2])
         cs = [(0, "p"), (1, "a")]
-        self.wordlist.add_word(self.word2)
-        for w in self.wordlist.search(self.length, cs):
+        for w in clist.search(self.length, cs):
             self.assertEquals(w[0], self.word)
-        for w in self.wordlist.search(self.length2, cs):
+        for w in clist.search(self.length2, cs):
             self.assertEquals(w[0], self.word2)
+        clist.postprocess()
         
     def testSearchMore(self):
-        self.wordlist.add_word(self.word)
-        self.wordlist.add_word(self.word2)
-        self.wordlist.add_word("peach")
-        self.wordlist.add_word("azure")
-        self.wordlist.add_word("roast")
-        self.wordlist.add_word("reach")
-        self.wordlist.add_word("oasis")
-        self.wordlist.add_word("trunk")
-        
-        for w in self.wordlist.search(5, [(0, "p")]):
+        clist = CWordList([self.word, self.word2, "peach", "azure", "roast", "reach", "oasis", "trunk"])
+        for w in clist.search(5, [(0, "p")]):
             self.assertEquals(w[0], "peach")
-        for w in self.wordlist.search(5, [(0, "a")]):
+        for w in clist.search(5, [(0, "a")]):
             self.assertEquals(w[0], "azure")
-        rs = self.wordlist.search(5, [(0, "r")])
+        rs = clist.search(5, [(0, "r")])
         rss = [w for w, x in rs]
         self.assertEquals("reach" in rss, True)
         self.assertEquals("roast" in rss, True)
-        for w in self.wordlist.search(5, [(0, "o")]):
+        for w in clist.search(5, [(0, "o")]):
             self.assertEquals(w[0], "oasis")
-        for w in self.wordlist.search(5, [(0, "t")]):
+        for w in clist.search(5, [(0, "t")]):
             self.assertEquals(w[0], "trunk")
         
         # all first characters
         css = [(0, 5, [(0, c)]) for c in "parrot"]
-        for w in self.wordlist.search(self.length2, [], css):
+        for w in clist.search(self.length2, [], css):
             self.assertEquals(w[0], self.word2)
+        clist.postprocess()
         
+    def testSearchMoreTwo(self):
+        clist = CWordList([self.word, self.word2, "peach", "azure", "roast", "reach", "oasis", "trunk"
+            , "cabin", "cargo", "beard", "amino", "adrift"])
         # diagonal
-        self.wordlist.add_word("cabin")
-        self.wordlist.add_word("cargo")
-        self.wordlist.add_word("beard")
-        self.wordlist.add_word("amino")
-        self.wordlist.add_word("adrift")
-        
         css = [(i, 5, [(i, self.word2[i])]) for i in xrange(5)] + [(5, 6, [(5, "t")])]
-        for i, w in enumerate(self.wordlist.search(self.length2, [], css)):
-            if i ==  0:
-                self.assertEquals(w[0], self.word2)
+        results = clist.search(self.length2, [(0, 'p')], css)
+        self.assertEquals(len(results), 1)
+        self.assertEquals(results[0][0], self.word2)
+        clist.postprocess()
                 
     #####
     
@@ -189,13 +176,41 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len([w for w in clist.search(4, [], None)]), 0)
         css = [(0, 4, []), (0, 5, []), (0, 6, []), (0, 7, [])]
         self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
+        for x in xrange(35):
+            self.assertEquals(clist.has_matches(x, []), False)
+            for y in xrange(26):
+                c = chr(ord("a") + y)
+                self.assertEquals(clist.has_matches(x, [(0, c)]), False)
         clist.postprocess()
         
     def testScale(self):
-        clist = CWordList(read_wordlist('/usr/share/dict/words'))
+        clist = CWordList('/usr/share/dict/words')
         total4 = len(clist.search(4, [], None))
         totals = {}
         for c in string.ascii_lowercase:
             totals[c] = len(clist.search(4, [(0, c)], None))
         self.assertEquals(total4, sum(totals.values()))
+        clist.postprocess()
+        
+    def testMaxWordLength(self):
+        l = MAX_WORD_LENGTH + 10
+        clist = CWordList(['a' for i in xrange(l)])
+        self.assertEquals(clist.search(l, []), [])
+        clist.postprocess()
+        
+    def testMaxWordLengthTwo(self):
+        l = MAX_WORD_LENGTH + 10
+        LOC = "palabralib/tests/test_wordlist.txt"
+        f = open(LOC, 'w')
+        f.write(''.join(['a' for i in xrange(l)]))
+        f.close()
+        clist = CWordList(LOC)
+        self.assertEquals(clist.search(l, []), [])
+        clist.postprocess()
+        if os.path.exists(LOC):
+            os.remove(LOC)
+            
+    def testFileDoesNotExist(self):
+        clist = CWordList('/does/not/exist/file')
+        self.assertEquals(clist.search(5, [], None), [])
         clist.postprocess()
