@@ -63,16 +63,12 @@ XPF_META_ELEMS_LIST = [("type", "Type")
     , ("date", "Date")]
 
 class ParserError(Exception):
-    def __init__(self, prefix, message):
-        self.message = ''.join([prefix, ": ", message])
+    def __init__(self, message):
+        self.message = message
 
 class XPFParserError(ParserError):
     def __init__(self, message=""):
-        ParserError.__init__(self, "XPFParserError", message)
-
-class PalabraParserError(ParserError):
-    def __init__(self, message):
-        ParserError.__init__(self, "PalabraParserError", message)
+        ParserError.__init__(self, "XPFParserError: " + message)
 
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])
@@ -87,7 +83,7 @@ def export_puzzle(puzzle, filename, options):
 def read_crossword(filename):
     t = determine_file_type(filename)
     if t is None:
-        raise PalabraParserError("Palabra was unable to open: " + filename)
+        raise ParserError("Palabra was unable to open: " + filename)
     if t == "xpf":
         results = read_xpf(filename)
         if not results:
@@ -100,7 +96,7 @@ def determine_file_type(filename):
     try:
         doc = etree.parse(filename)
     except etree.XMLSyntaxError:
-        raise ParserError(u"ParserError", u"This is not an XML file.")
+        raise ParserError(u"This is not an XML file.")
     root = doc.getroot()
     if root.tag == "Puzzles":
         return 'xpf'
@@ -390,7 +386,6 @@ def write_xpf(content, backup=True, filename=None):
         contents = _write_xpf_xml(root, content)
         _write_puzzle(content.filename, contents, backup)
     elif isinstance(content, list):
-        #contents = ''
         for p in content:
             _write_xpf_xml(root, p)
         contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")

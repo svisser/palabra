@@ -22,8 +22,11 @@ from lxml import etree
 
 import palabralib.constants as constants
 from palabralib.files import (
+    read_crossword,
     write_xpf,
     read_xpf,
+    determine_file_type,
+    ParserError,
     XPFParserError,
 )
 from palabralib.grid import Grid
@@ -103,3 +106,19 @@ class FilesTestCase(unittest.TestCase):
             text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>", "<Size><Rows>15</Rows></Size>")
             f.write(text)
         self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        
+    def testReadCrossword(self):
+        write_xpf(self.puzzle)
+        p = read_crossword(self.LOCATION)
+        self.assertEquals(self.puzzle, p)
+        
+    def testReadCrosswordErrors(self):
+        with open(self.LOCATION, 'w') as f:
+            f.write("This is not XML")
+        self.assertRaises(ParserError, read_crossword, self.LOCATION)
+        
+    def testDetermineFileType(self):
+        with open(self.LOCATION, 'w') as f:
+            f.write('<NotQuitePuzzles></NotQuitePuzzles>')
+        self.assertEquals(determine_file_type(self.LOCATION), None)
+        self.assertRaises(ParserError, read_crossword, self.LOCATION)
