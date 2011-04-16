@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import string
 import unittest
-from palabralib.word import WordList, CWordList
+from palabralib.word import WordList, CWordList, read_wordlist
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
@@ -181,4 +182,20 @@ class WordTestCase(unittest.TestCase):
         css = [(0, 4, []), (0, 4, []), (0, 4, [])]
         self.assertEquals([w for w in clist.search(3, [], css)], [])
         
+        clist.postprocess()
+        
+    def testEmpty(self):
+        clist = CWordList([])
+        self.assertEquals(len([w for w in clist.search(4, [], None)]), 0)
+        css = [(0, 4, []), (0, 5, []), (0, 6, []), (0, 7, [])]
+        self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
+        clist.postprocess()
+        
+    def testScale(self):
+        clist = CWordList(read_wordlist('/usr/share/dict/words'))
+        total4 = len(clist.search(4, [], None))
+        totals = {}
+        for c in string.ascii_lowercase:
+            totals[c] = len(clist.search(4, [(0, c)], None))
+        self.assertEquals(total4, sum(totals.values()))
         clist.postprocess()

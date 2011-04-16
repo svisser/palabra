@@ -133,7 +133,7 @@ void print(Tptr p, int indent)
 // TODO check malloc
 Tptr insert1(Tptr p, char *s, char *word)
 {
-    if (p == 0) {
+    if (p == NULL) {
         p = (Tptr) malloc(sizeof(Tnode));
         p->splitchar = *s;
         p->word = word;
@@ -208,7 +208,6 @@ cWord_search(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "OiOO", &words, &length, &constraints, &more_constraints))
         return NULL;
     char *cons_str = PyString_AS_STRING(constraints);
-    
     // main word
     PyObject *mwords = PyList_New(0);
     mwords = find_matches(mwords, trees[strlen(cons_str)], cons_str);
@@ -337,14 +336,13 @@ cWord_preprocess(PyObject *self, PyObject *args) {
         PyObject* key = keys[(int) PyString_GET_SIZE(word)];
         PyList_Append(PyDict_GetItem(dict, key), word);
     }
-    
+
     // build ternary search trees per word length
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
+        trees[m] = NULL;
         PyObject *words = PyDict_GetItem(dict, Py_BuildValue("i", m));
         const Py_ssize_t len_m = PyList_Size(words);
-        if (len_m == 0)
-            trees[m] = NULL;
         Py_ssize_t w;
         for (w = 0; w < len_m; w++) {
             char *word = PyString_AsString(PyList_GET_ITEM(words, w));
