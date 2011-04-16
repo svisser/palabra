@@ -242,11 +242,12 @@ class Grid:
             status["char_counts"] = {}
             for x, y in self.cells():
                 c = self.data[y][x]["char"]
-                if c:
-                    try:
-                        status["char_counts"][c] += 1
-                    except KeyError:
-                        status["char_counts"][c] = 1
+                if not c:
+                    continue
+                try:
+                    status["char_counts"][c] += 1
+                except KeyError:
+                    status["char_counts"][c] = 1
             status["char_counts_total"] = []
             for c in string.ascii_uppercase:
                 try:
@@ -254,16 +255,15 @@ class Grid:
                 except KeyError:
                     count = 0
                 status["char_counts_total"].append((c, count))
+            counts = self.get_check_count_all()
             status["checked_count"] = 0
             status["unchecked_count"] = 0
-            for x, y in self.cells():
-                check_count = self.get_check_count(x, y)
-                if 0 <= check_count <= 1:
-                    status["unchecked_count"] += 1
-                elif check_count == 2:
-                    status["checked_count"] += 1
             status["clue_count"] = 0
             for x, y in self.cells():
+                if 0 <= counts[x, y] <= 1:
+                    status["unchecked_count"] += 1
+                elif counts[x, y] == 2:
+                    status["checked_count"] += 1
                 status["clue_count"] += len(self.data[y][x]["clues"])
             status["open_count"] = self.count_open_squares()
             status["connected"] = self.is_connected()
@@ -489,13 +489,15 @@ class Grid:
         
         If diagonals is True, the diagonal neighbors will be included as well.
         """
+        width = self.width
+        height = self.height
         if diagonals:
             neighbors = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1]]
             neighbors.remove((0, 0))
         else:
             neighbors = [(0, -1), (1, 0), (0, 1), (-1, 0)]
         for dx, dy in neighbors:
-            if self.is_valid(x + dx, y + dy):
+            if 0 <= x + dx < width and 0 <= y + dy < height:
                 yield x + dx, y + dy
         
     def count_open_squares(self):
@@ -504,12 +506,18 @@ class Grid:
         
         A square is open if it does not touch a block, including diagonally.
         """
-        def is_open(x, y):
-            for p, q in self.neighbors(x, y, diagonals=True):
-                if self.is_block(p, q):
-                    return False
-            return True
-        return sum([1 for x, y in self.availables() if is_open(x, y)])
+        data = self.data
+        neighbors = self.neighbors
+        count = 0
+        for x, y in self.cells():
+            if data[y][x]["block"] or data[y][x]["void"]:
+                continue
+            for p, q in neighbors(x, y, diagonals=True):
+                if data[q][p]["block"]:
+                    break
+            else:
+                count += 1
+        return count
         
     def is_connected(self):
         """
