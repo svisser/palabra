@@ -68,39 +68,44 @@ class Grid:
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
-        
-        if not self.is_available(x, y):
+        is_available = self.is_available
+        data = self.data
+        if not is_available(x, y):
             return False
         for d in ([direction] if direction else ["across", "down"]):
             if d == "across":
                 bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
             elif d == "down":
                 bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
-            
-            before = not self.is_available(x + bdx, y + bdy) or self.data[y][x]["bar"][bar_side]
-            after = self.is_available(x + adx, y + ady) and not self.data[y + ady][x + adx]["bar"][bar_side]
-            if before and after:
+            before = not is_available(x + bdx, y + bdy) or data[y][x]["bar"][bar_side]
+            if not before:
+                continue
+            after = is_available(x + adx, y + ady) and not data[y + ady][x + adx]["bar"][bar_side]
+            if after:
                 return True
         return False
         
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
-        if (not (0 <= x < self.width and 0 <= y < self.height)
-            or self.data[y][x]["block"]
-            or self.data[y][x]["void"]):
+        data = self.data
+        width = self.width
+        height = self.height
+        if (not (0 <= x < width and 0 <= y < height)
+            or data[y][x]["block"]
+            or data[y][x]["void"]):
             return x, y
         dx = -1 if direction == "across" else 0
         dy = -1 if direction == "down" else 0
         while True:
-            if dx < 0 and (x + dx < 0 or self.data[y][x]["bar"]["left"]):
+            if dx < 0 and (x + dx < 0 or data[y][x]["bar"]["left"]):
                 break
-            if dy < 0 and (y + dy < 0 or self.data[y][x]["bar"]["top"]):
+            if dy < 0 and (y + dy < 0 or data[y][x]["bar"]["top"]):
                 break
-            if not (0 <= x + dx < self.width and 0 <= y + dy < self.height):
+            if not (0 <= x + dx < width and 0 <= y + dy < height):
                 break
-            if self.data[y + dy][x + dx]["block"]:
+            if data[y + dy][x + dx]["block"]:
                 break
-            if self.data[y + dy][x + dx]["void"]:
+            if data[y + dy][x + dx]["void"]:
                 break
             x += dx
             y += dy
@@ -114,34 +119,37 @@ class Grid:
         
     def get_check_count_all(self):
         """Return the check count for all cells."""
+        data = self.data
+        width = self.width
+        height = self.height
         counts = {}
         hor_counts = {}
         ver_counts = {}
-        for y in xrange(self.height):
+        for y in xrange(height):
             length = 0
-            for x in xrange(self.width):
-                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+            for x in xrange(width):
+                if not data[y][x]["block"] and not data[y][x]["void"]:
                     length += 1
                 if length >= 2:
                     hor_counts[x - 1, y] = 1
-                if self.data[y][x]["block"] or self.data[y][x]["void"]:
+                if data[y][x]["block"] or data[y][x]["void"]:
                     length = 0
             if length >= 2:
                 hor_counts[x, y] = 1
-        for x in xrange(self.width):
+        for x in xrange(width):
             length = 0
-            for y in xrange(self.height):
-                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+            for y in xrange(height):
+                if not data[y][x]["block"] and not data[y][x]["void"]:
                     length += 1
                 if length >= 2:
                     ver_counts[x, y - 1] = 1
-                if self.data[y][x]["block"] or self.data[y][x]["void"]:
+                if data[y][x]["block"] or data[y][x]["void"]:
                     length = 0
             if length >= 2:
                 ver_counts[x, y] = 1
-        for y in xrange(self.height):
-            for x in xrange(self.width):
-                if self.data[y][x]["block"] or self.data[y][x]["void"]:
+        for y in xrange(height):
+            for x in xrange(width):
+                if data[y][x]["block"] or data[y][x]["void"]:
                     counts[x, y] = -1
                     continue
                 counts[x, y] = 0
@@ -173,9 +181,12 @@ class Grid:
         
     def is_part_of_word(self, x, y, direction):
         """Return True if the specified (x, y, direction) is part of a word (2+ letters)."""
-        if not (0 <= x < self.width and 0 <= y < self.height):
+        data = self.data
+        width = self.width
+        height = self.height
+        if not (0 <= x < width and 0 <= y < height):
             return False
-        if self.data[y][x]["block"] or self.data[y][x]["void"]:
+        if data[y][x]["block"] or data[y][x]["void"]:
             return False
         if direction == "across":
             # before = self.is_available(x - 1, y) and not self.has_bar(x, y, "left")
@@ -183,19 +194,19 @@ class Grid:
             if x - 1 < 0:
                 before = False
             else:
-                before = not (self.data[y][x - 1]["block"]
-                or self.data[y][x - 1]["void"]
-                or self.data[y][x]["bar"]["left"])
+                before = not (data[y][x - 1]["block"]
+                or data[y][x - 1]["void"]
+                or data[y][x]["bar"]["left"])
             if before:
                 return True
             # after = self.is_available(x + 1, y) and not self.has_bar(x + 1, y, "left")
             after = True
-            if x + 1 >= self.width:
+            if x + 1 >= width:
                 after = False
             else:
-                after = not (self.data[y][x + 1]["block"]
-                or self.data[y][x + 1]["void"]
-                or self.data[y][x + 1]["bar"]["left"])
+                after = not (data[y][x + 1]["block"]
+                or data[y][x + 1]["void"]
+                or data[y][x + 1]["bar"]["left"])
             return after
         elif direction == "down":
             # before = self.is_available(x, y - 1) and not self.has_bar(x, y, "top")
@@ -203,19 +214,19 @@ class Grid:
             if y - 1 < 0:
                 before = False
             else:
-                before = not (self.data[y - 1][x]["block"]
-                or self.data[y - 1][x]["void"]
-                or self.data[y][x]["bar"]["top"])
+                before = not (data[y - 1][x]["block"]
+                or data[y - 1][x]["void"]
+                or data[y][x]["bar"]["top"])
             if before:
                 return True
             # after = self.is_available(x, y + 1) and not self.has_bar(x, y + 1, "top")
             after = True
-            if y + 1 >= self.height:
+            if y + 1 >= height:
                 after = False
             else:
-                after = not (self.data[y + 1][x]["block"]
-                or self.data[y + 1][x]["void"]
-                or self.data[y + 1][x]["bar"]["top"])
+                after = not (data[y + 1][x]["block"]
+                or data[y + 1][x]["void"]
+                or data[y + 1][x]["bar"]["top"])
             return after
         #return before or after
         
@@ -232,18 +243,15 @@ class Grid:
         if full:
             status["mean_word_length"] = self.mean_word_length()
             status["blank_count"] = status["char_count"] - status["actual_char_count"]
-            
             status["word_counts"] = self.determine_word_counts()
-                    
             status["char_counts"] = {}
             for x, y in self.cells():
-                c = self.get_char(x, y)
+                c = self.data[y][x]["char"]
                 if c:
                     try:
                         status["char_counts"][c] += 1
                     except KeyError:
                         status["char_counts"][c] = 1
-                            
             status["char_counts_total"] = []
             for c in string.ascii_uppercase:
                 try:
@@ -251,20 +259,17 @@ class Grid:
                 except KeyError:
                     count = 0
                 status["char_counts_total"].append((c, count))
-                            
             status["checked_count"] = 0
             status["unchecked_count"] = 0
             for x, y in self.cells():
                 check_count = self.get_check_count(x, y)
                 if 0 <= check_count <= 1:
                     status["unchecked_count"] += 1
-                if check_count == 2:
+                elif check_count == 2:
                     status["checked_count"] += 1
-                        
             status["clue_count"] = 0
             for x, y in self.cells():
                 status["clue_count"] += len(self.data[y][x]["clues"])
-                
             status["open_count"] = self.count_open_squares()
             status["connected"] = self.is_connected()
         return status
@@ -470,15 +475,18 @@ class Grid:
         dx = 1 if direction == "across" else 0
         dy = 1 if direction == "down" else 0
         count = 0
+        data = self.data
+        width = self.width
+        height = self.height
         while True:
-            if not (0 <= x < self.width and 0 <= y < self.height):
+            if not (0 <= x < width and 0 <= y < height):
                 break
-            if self.data[y][x]["block"] or self.data[y][x]["void"]:
+            if data[y][x]["block"] or data[y][x]["void"]:
                 break
             count += 1
-            if dx and (x + dx >= self.width or self.data[y][x + dx]["bar"]["left"]):
+            if dx and (x + dx >= width or data[y][x + dx]["bar"]["left"]):
                 break
-            if dy and (y + dy >= self.height or self.data[y + dy][x]["bar"]["top"]):
+            if dy and (y + dy >= height or data[y + dy][x]["bar"]["top"]):
                 break
             x += dx
             y += dy
@@ -491,21 +499,24 @@ class Grid:
         if reverse:
             dx *= -1
             dy *= -1
-        while (0 <= x < self.width and 0 <= y < self.height
-            and not self.data[y][x]["block"]
-            and not self.data[y][x]["void"]):
+        data = self.data
+        width = self.width
+        height = self.height
+        while (0 <= x < width and 0 <= y < height
+            and not data[y][x]["block"]
+            and not data[y][x]["void"]):
             yield x, y
-            if not (0 <= x + dx < self.width and 0 <= y < self.height):
+            if not (0 <= x + dx < width and 0 <= y < height):
                 break
-            if dx == 1 and self.data[y][x + dx]["bar"]["left"]:
+            if dx == 1 and data[y][x + dx]["bar"]["left"]:
                 break
-            if dx == -1 and self.data[y][x]["bar"]["left"]:
+            if dx == -1 and data[y][x]["bar"]["left"]:
                 break
-            if not (0 <= x < self.width and 0 <= y + dy < self.height):
+            if not (0 <= x < width and 0 <= y + dy < height):
                 break
-            if dy == 1 and self.data[y + dy][x]["bar"]["top"]:
+            if dy == 1 and data[y + dy][x]["bar"]["top"]:
                 break
-            if dy == -1 and self.data[y][x]["bar"]["top"]:
+            if dy == -1 and data[y][x]["bar"]["top"]:
                 break
             x += dx
             y += dy
@@ -596,25 +607,28 @@ class Grid:
     def count_words(self):
         """Return the number of words in the grid."""
         count = 0
-        for y in xrange(self.height):
+        data = self.data
+        width = self.width
+        height = self.height
+        for y in xrange(height):
             length = 0
-            for x in xrange(self.width):
-                if (self.data[y][x]["bar"]["left"] or
-                    self.data[y][x]["block"] or
-                    self.data[y][x]["void"]):
+            for x in xrange(width):
+                if (data[y][x]["bar"]["left"] or
+                    data[y][x]["block"] or
+                    data[y][x]["void"]):
                     length = 0
-                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+                if not data[y][x]["block"] and not data[y][x]["void"]:
                     length += 1
                 if length == 2:
                     count += 1
-        for x in xrange(self.width):
+        for x in xrange(width):
             length = 0
-            for y in xrange(self.height):
-                if (self.data[y][x]["bar"]["top"] or
-                    self.data[y][x]["block"] or
-                    self.data[y][x]["void"]):
+            for y in xrange(height):
+                if (data[y][x]["bar"]["top"] or
+                    data[y][x]["block"] or
+                    data[y][x]["void"]):
                     length = 0
-                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+                if not data[y][x]["block"] and not data[y][x]["void"]:
                     length += 1
                 if length == 2:
                     count += 1
