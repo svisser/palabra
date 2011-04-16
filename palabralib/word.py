@@ -174,18 +174,13 @@ def create_wordlists(word_files):
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlist = CWordList(read_wordlist(path))
-        wordlists[path] = {"list": wordlist}
+        wordlists[path] = CWordList(read_wordlist(path))
     return wordlists
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
     result = []
     for path, item in wordlists.items():
-        wordlist = item["list"]
-        if wordlist is not None:
-            result += wordlist.search(length, constraints, more_constraints)
-    # TODO need more intelligent way of merging
-    #result.sort()
+        result += item.search(length, constraints, more_constraints)
     return result
 
 class CWordList:
