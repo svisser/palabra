@@ -164,7 +164,13 @@ class ClueTool:
             self.settings["use_scrolling"] = False
             self.editor.select(x, y, direction)
             self.settings["use_scrolling"] = True
-        self.perform_while_locked(selection, locked)
+        import pstats
+        import cProfile
+        cProfile.runctx('self.perform_while_locked(selection, locked)', globals(), locals(), filename='fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('time').print_stats(20)
+        p.print_callers()    
+        #self.perform_while_locked(selection, locked)
         
     def select(self, x, y, direction):
         """Select the word starting at the given (x, y, direction)."""
