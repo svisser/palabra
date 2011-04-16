@@ -24,7 +24,7 @@ from view import GridView
 
 class Puzzle:
     def __init__(self, grid, styles=None):
-        self.type = constants.PUZZLE_PALABRA
+        self.type = constants.PUZZLE_XPF
         self.grid = grid
         self.view = GridView(grid, styles)
         self.filename = None

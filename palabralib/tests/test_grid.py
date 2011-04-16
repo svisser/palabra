@@ -18,6 +18,45 @@
 import unittest
 
 from palabralib.grid import Grid
+from palabralib.puzzle import Puzzle
+
+class PuzzleTestCase(unittest.TestCase):
+    def setUp(self):
+        self.puzzle = Puzzle(Grid(14, 14))
+        
+    def testEquality(self):
+        self.assertEquals(self.puzzle, Puzzle(Grid(14, 14)))
+        self.assertNotEquals(self.puzzle, None)
+        self.assertEquals(self.puzzle != None, True)
+        
+    def testEquality2(self):
+        p = Puzzle(Grid(14, 14))
+        self.puzzle.type = "FOO"
+        p.type = "FOO2"
+        self.assertNotEquals(self.puzzle, p)
+        
+    def testEquality3(self):
+        p = Puzzle(Grid(14, 14))
+        self.puzzle.filename = "BLA"
+        p.filename = "BLA2"
+        self.assertNotEquals(self.puzzle, p)
+    
+    def testEquality4(self):
+        p = Puzzle(Grid(14, 14))
+        self.puzzle.metadata["title"] = "This is the title"
+        p.metadata["title"] = "This is a different title"
+        self.assertNotEquals(self.puzzle, p)
+        
+    def testEquality5(self):
+        p = Puzzle(Grid(14, 14))
+        self.puzzle.notepad = "BAR"
+        p.notepad = "BAR2"
+        self.assertNotEquals(self.puzzle, p)
+        
+    def testEquality6(self):
+        p = Puzzle(Grid(14, 14))
+        p.grid = Grid(30, 30)
+        self.assertNotEquals(self.puzzle, p)
 
 class GridTestCase(unittest.TestCase):
     def setUp(self):
@@ -400,14 +439,14 @@ class GridTestCase(unittest.TestCase):
         cells = [(0, x) for x in xrange(5)]
         indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "down")]
         self.assertEqual(cells, indir)
-        
+
     def testInDirectionBlocksReverse(self):
-        self.grid.set_block(5, 0, True)
+        self.grid.set_void(5, 0, True)
         cells = [(x, 0) for x in xrange(self.grid.width - 1, 5, -1)]
         indir = [(x, y) for x, y
             in self.grid.in_direction(self.grid.width - 1, 0, "across", True)]
         self.assertEqual(cells, indir)
-        self.grid.set_block(0, 5, True)
+        self.grid.set_void(0, 5, True)
         cells = [(0, x) for x in xrange(self.grid.height - 1, 5, -1)]
         indir = [(x, y) for x, y
             in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
@@ -443,18 +482,6 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_void(0, 5, True)
         cells = [(0, x) for x in xrange(5)]
         indir = [(x, y) for x, y in self.grid.in_direction(0, 0, "down")]
-        self.assertEqual(cells, indir)
-        
-    def testInDirectionBlocksReverse(self):
-        self.grid.set_void(5, 0, True)
-        cells = [(x, 0) for x in xrange(self.grid.width - 1, 5, -1)]
-        indir = [(x, y) for x, y
-            in self.grid.in_direction(self.grid.width - 1, 0, "across", True)]
-        self.assertEqual(cells, indir)
-        self.grid.set_void(0, 5, True)
-        cells = [(0, x) for x in xrange(self.grid.height - 1, 5, -1)]
-        indir = [(x, y) for x, y
-            in self.grid.in_direction(0, self.grid.height - 1, "down", True)]
         self.assertEqual(cells, indir)
         
     def testWordCounts(self):

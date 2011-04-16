@@ -565,6 +565,8 @@ def write_xpf(puzzle, backup=True):
         cell = puzzle.grid.cell(x, y)
         if cell["block"]:
             return '.'
+        if cell["void"]:
+            return '~'
         c = cell["char"]
         return c if c else ' '
 
@@ -593,11 +595,9 @@ def write_xpf(puzzle, backup=True):
             eshade = etree.SubElement(eshades, "Shade")
             eshade.set("Row", str(y + 1))
             eshade.set("Col", str(x + 1))
-            
             def to_hex(value):
                 hv = hex(int(value / 65535.0 * 255))[2:]
                 return hv if len(hv) == 2 else '0' + hv
-            
             text = '#' + ''.join([to_hex(v) for v in styles[x, y].cell["color"]])
             eshade.text = text
         
@@ -631,9 +631,8 @@ def _write_puzzle(filename, contents, backup=True):
                 shutil.copy2(filename, "".join([filename, "~"]))
         except IOError:
             print "Warning: Failed to create a backup copy before saving."
-    f = open(filename, "w")
-    f.write(contents)
-    f.close()
+    with open(filename, "w") as f:
+        f.write(contents)
     
 FILETYPES = {}
 FILETYPES['keys'] = [constants.PUZZLE_XPF]
