@@ -329,13 +329,15 @@ class GridView:
                 (s + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
                 height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
             _render_pango(r, s, styles[r, s].char["font"], c, rx, ry)
+            
+        data = self.grid.data
 
         # chars and overlay chars
         n_chars = []
         o_chars = []
         for p, q in cells:
             if self.settings["show_chars"]:
-                c = self.grid.data[q][p]["char"]
+                c = data[q][p]["char"]
                 if c != '':
                     n_chars.append((p, q, c))
             if self.settings["render_overlays"]:
@@ -420,7 +422,7 @@ class GridView:
             if color != cur_color:
                 cur_color = color
                 context.set_source_rgb(*[c / 65535.0 for c in color])
-            if self.grid.data[q][p]["block"]:
+            if data[q][p]["block"]:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
                 rsize = self.properties.cell["size"]
@@ -437,14 +439,14 @@ class GridView:
         
         # number
         if self.settings["show_numbers"]:
-            numbers = [(p, q) for p, q in cells if self.grid.data[q][p]["number"] > 0]
+            numbers = [(p, q) for p, q in cells if data[q][p]["number"] > 0]
             for p, q in numbers:
                 style = styles[p, q]
                 color = style.number["color"]
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
-                n = self.grid.data[q][p]["number"]
+                n = data[q][p]["number"]
                 font = style.number["font"]
                 _render_pango(p, q, font, str(n))
 
