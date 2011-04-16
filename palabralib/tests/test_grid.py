@@ -532,7 +532,13 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_bar(4, 4, "top", True)
         count = self.grid.width + self.grid.height + 3
         self.assertEquals(self.grid.count_words(), count)
+        self.grid.set_bar(4, 5, "top", True)
+        count = self.grid.width + self.grid.height + 3
+        self.assertEquals(self.grid.count_words(), count)
         self.grid.set_bar(4, 4, "left", True)
+        count = self.grid.width + self.grid.height + 4
+        self.assertEquals(self.grid.count_words(), count)
+        self.grid.set_bar(5, 4, "left", True)
         count = self.grid.width + self.grid.height + 4
         self.assertEquals(self.grid.count_words(), count)
         

@@ -595,13 +595,30 @@ class Grid:
         
     def count_words(self):
         """Return the number of words in the grid."""
-        total = 0
+        count = 0
         for y in xrange(self.height):
+            length = 0
             for x in xrange(self.width):
-                for d in ["across", "down"]:
-                    if self.is_start_word(x, y, d):
-                        total += 1
-        return total
+                if (self.data[y][x]["bar"]["left"] or
+                    self.data[y][x]["block"] or
+                    self.data[y][x]["void"]):
+                    length = 0
+                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+                    length += 1
+                if length == 2:
+                    count += 1
+        for x in xrange(self.width):
+            length = 0
+            for y in xrange(self.height):
+                if (self.data[y][x]["bar"]["top"] or
+                    self.data[y][x]["block"] or
+                    self.data[y][x]["void"]):
+                    length = 0
+                if not self.data[y][x]["block"] and not self.data[y][x]["void"]:
+                    length += 1
+                if length == 2:
+                    count += 1
+        return count
         
     def count_chars(self, include_blanks=True):
         """Return the number of chars in the grid."""
@@ -653,7 +670,7 @@ class Grid:
         for x, y, direction in dirty_cells:
             p, q = self.get_start_word(x, y, direction)
             try:
-                del self.cell(p, q)["clues"][direction]
+                del self.data[q][p]["clues"][direction]
             except KeyError:
                 pass
                     

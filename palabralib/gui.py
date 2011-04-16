@@ -762,8 +762,16 @@ class PalabraWindow(gtk.Window):
         if selection is not None:
             sel_x, sel_y = selection
             self.transform_grid(transform, x=sel_x, y=sel_y)
-        
+    
     def transform_grid(self, transform, **args):
+        import pstats
+        import cProfile
+        cProfile.runctx('self._transform_grid(transform, **args)', globals(), locals(), filename='fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('time').print_stats(20)
+        p.print_callers()    
+    
+    def _transform_grid(self, transform, **args):
         puzzle = self.puzzle_manager.current_puzzle
         transform(puzzle, **args)
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
