@@ -181,7 +181,7 @@ class WordWidget(gtk.DrawingArea):
         ctx.fill()
         ctx.set_source_rgb(0, 0, 0)
         offset = self.get_word_offset(y)
-        n_rows = (height / self.STEP) + 1
+        n_rows = 30 #(height / self.STEP) + 1
         for i, (w, h) in enumerate(self.words[offset:offset + n_rows]):
             n = offset + i
             color = (0, 0, 0) if h else (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
