@@ -18,7 +18,7 @@
 import gobject
 import gtk
 
-from files import PalabraParserError, read_pattern_file
+from files import PalabraParserError
 from grid import Grid
 import preferences
 from view import GridPreview
