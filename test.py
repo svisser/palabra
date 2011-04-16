@@ -17,7 +17,12 @@
 
 # In the project directory, run:
 #
-# python -m palabralib.tests.test
+# python test.py
+#
+# To run coverage tests, run:
+#
+# coverage run test.py
+# coverage html
 
 import unittest
 
