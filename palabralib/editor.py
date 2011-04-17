@@ -162,6 +162,7 @@ class WordWidget(gtk.DrawingArea):
             self.selection = offset
             self.editor.set_overlay(word)
         self.queue_draw()
+        return True
             
     def get_selected_word(self):
         if self.selection is None:
