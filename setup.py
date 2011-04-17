@@ -1,5 +1,5 @@
 
-IS_DEVELOPMENT = True
+IS_DEVELOPMENT = False
 
 import sys
 
@@ -11,7 +11,7 @@ import palabralib.constants as constants
 
 def create_ext(e):
     name = 'c' + e.capitalize()
-    sources = ['clib/c' + e + 'module.c', 'clib/cpalabra.c']
+    sources = ['palabralib/c' + e + 'module.c', 'palabralib/cpalabra.c']
     return name, sources
 EXTS = [create_ext(e) for e in ['grid', 'view', 'word']]
 ext_modules = [Extension(n, sources=s) for n, s in EXTS]
