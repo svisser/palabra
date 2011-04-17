@@ -130,11 +130,10 @@ void print(Tptr p, int indent)
     if (p->hikid != NULL) print(p->hikid, indent + 2);
 }
 
-// TODO check malloc
 Tptr insert1(Tptr p, char *s, char *word)
 {
     if (p == NULL) {
-        p = (Tptr) malloc(sizeof(Tnode));
+        p = (Tptr) PyMem_Malloc(sizeof(Tnode));
         p->splitchar = *s;
         p->word = word;
         p->lokid = p->eqkid = p->hikid = 0;
@@ -242,23 +241,23 @@ cWord_search(PyObject *self, PyObject *args) {
             
             if (skip < 0) {
                 SPPtr params;
-                params = (SPPtr) malloc(sizeof(SearchParams));
+                params = (SPPtr) PyMem_Malloc(sizeof(SearchParams));
                 if (!params)
-                    return NULL;
+                    return PyErr_NoMemory();
                 params->length = length;
                 params->offset = offsets[t];
 
                 Sptr result;
-                result = (Sptr) malloc(sizeof(SearchResult));
+                result = (Sptr) PyMem_Malloc(sizeof(SearchResult));
                 if (!result) {
-                    free(params);
-                    return NULL;
+                    PyMem_Free(params);
+                    return PyErr_NoMemory();
                 }
-                result->chars = malloc(MAX_ALPHABET_SIZE * sizeof(char));
+                result->chars = PyMem_Malloc(MAX_ALPHABET_SIZE * sizeof(char));
                 if (!result->chars) {
-                    free(result);
-                    free(params);
-                    return NULL;
+                    PyMem_Free(result);
+                    PyMem_Free(params);
+                    return PyErr_NoMemory();
                 }
                 int c;
                 for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
@@ -271,6 +270,7 @@ cWord_search(PyObject *self, PyObject *args) {
                     intersections[t] = analyze(params, result, trees[strlen(cs[t])], cs[t], cs[t]);
                     results[t] = result;
                 }
+                PyMem_Free(params);
             } else {
                 skipped[t] = 1;
                 intersections[t] = intersections[skip];
@@ -311,8 +311,10 @@ cWord_search(PyObject *self, PyObject *args) {
     }
     if (more_constraints != Py_None) {
         for (t = 0; t < length; t++) {
-            if (skipped[t] == 0)
-                free(results[t]);
+            if (skipped[t] == 0) {
+                PyMem_Free(results[t]->chars);
+                PyMem_Free(results[t]);
+            }
         }
     }
     return result;
@@ -358,17 +360,17 @@ void free_tree(Tptr p) {
     if (!p) return;
     if (p->lokid != NULL) {
         free_tree(p->lokid);
-        free(p->lokid);
+        PyMem_Free(p->lokid);
         p->lokid = NULL;
     }
     if (p->eqkid != NULL) {
         free_tree(p->eqkid);
-        free(p->eqkid);
+        PyMem_Free(p->eqkid);
         p->eqkid = NULL;
     }
     if (p->hikid != NULL) {
         free_tree(p->hikid);
-        free(p->hikid);
+        PyMem_Free(p->hikid);
         p->hikid = NULL;
     }
 }
