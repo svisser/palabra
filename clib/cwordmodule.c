@@ -307,7 +307,10 @@ cWord_search(PyObject *self, PyObject *args) {
             valid = !zero_slot && (n_chars == length);
         }
         PyObject* py_intersect = PyBool_FromLong(valid);
-        PyList_Append(result, Py_BuildValue("(sO)", word, py_intersect));
+        PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
+        Py_DECREF(py_intersect);
+        PyList_Append(result, item);
+        Py_DECREF(item);
     }
     if (more_constraints != Py_None) {
         for (t = 0; t < length; t++) {
@@ -332,12 +335,16 @@ cWord_preprocess(PyObject *self, PyObject *args) {
     int l;
     for (l = 0; l < MAX_WORD_LENGTH; l++) {
         keys[l] = Py_BuildValue("i", l);
-        PyDict_SetItem(dict, keys[l], PyList_New(0));
+        PyObject *words = PyList_New(0);
+        PyDict_SetItem(dict, keys[l], words);
+        Py_DECREF(words);
+        Py_DECREF(keys[l]);
     }
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
         PyObject* word = PyList_GET_ITEM(words, w);
         PyObject* key = keys[(int) PyString_GET_SIZE(word)];
+        // PyDict_GetItem eats ref
         PyList_Append(PyDict_GetItem(dict, key), word);
     }
 
@@ -345,7 +352,8 @@ cWord_preprocess(PyObject *self, PyObject *args) {
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
         trees[m] = NULL;
-        PyObject *words = PyDict_GetItem(dict, Py_BuildValue("i", m));
+        PyObject *key = Py_BuildValue("i", m);
+        PyObject *words = PyDict_GetItem(dict, key);
         const Py_ssize_t len_m = PyList_Size(words);
         Py_ssize_t w;
         for (w = 0; w < len_m; w++) {
