@@ -16,8 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gobject
-import gtk
+#import pstats
+#import cProfile
+#cProfile.runctx('self.update_window(True)', globals(), locals(), filename='fooprof')
+#p = pstats.Stats('fooprof')
+#p.sort_stats('time').print_stats(20)
+
+try:
+    import pygtk
+    pygtk.require("2.0")
+    import gtk
+    import gobject
+except (ImportError, AssertionError):
+    print "PyGTK 2.8 or higher is required for this application."
+    raise SystemExit
+
 import os
 import webbrowser
 
@@ -35,18 +48,23 @@ from files import (
     ParserError,
     read_crossword,
     export_puzzle,
+    read_containers,
 )
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow
 from pattern import PatternFileEditor, PatternEditor
 import preferences
-from preferences import PreferencesWindow, write_config_file
+from preferences import (
+    PreferencesWindow,
+    write_config_file,
+    read_config_file,
+)
 from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import WordListEditor
+from word import create_wordlists, WordListEditor
 
 def create_splash():
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -1245,3 +1263,30 @@ def quit():
     gtk.main_quit()
     cWord.postprocess()
     write_config_file()
+    
+def main(argv=None):
+    try:
+        has_splash = False
+        if has_splash:
+            splash = create_splash()
+            splash.show()
+            while gtk.events_pending():
+                gtk.main_iteration()
+        print "Reading configuration file..."
+        read_config_file()
+        print "Loading wordlists..."
+        wordlists = create_wordlists(preferences.prefs["word_files"])
+        print "Loading pattern files..."
+        patternfiles = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
+        patterns = read_containers(patternfiles)
+        
+        palabra = PalabraWindow()
+        palabra.wordlists.update(wordlists)
+        palabra.patterns = patterns
+        palabra.show_all()
+        if has_splash:
+            splash.destroy()
+        gtk.main()
+    except KeyboardInterrupt:
+        import sys
+        sys.exit("ERROR: Interrupted by user")
