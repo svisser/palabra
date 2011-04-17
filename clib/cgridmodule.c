@@ -146,8 +146,12 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     PyObject *grid;
     if (!PyArg_ParseTuple(args, "O", &grid))
         return NULL;
-    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
-    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    PyObject *py_width = PyObject_GetAttrString(grid, "width");
+    int width = (int) PyInt_AsLong(py_width);
+    Py_DECREF(py_width);
+    PyObject *py_height = PyObject_GetAttrString(grid, "height");
+    int height = (int) PyInt_AsLong(py_height);
+    Py_DECREF(py_height);
     
     PyObject* data = PyObject_GetAttrString(grid, "data");
     
@@ -156,18 +160,28 @@ cGrid_assign_numbers(PyObject *self, PyObject *args) {
     int y;
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
-            PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
+            PyObject *py_y = PyInt_FromLong(y);
+            PyObject* col = PyObject_GetItem(data, py_y);
+            Py_DECREF(py_y);
+            PyObject *py_x = PyInt_FromLong(x);
+            PyObject* cell = PyObject_GetItem(col, py_x);
+            Py_DECREF(py_x);
             
             PyObject* key = PyString_FromString("number");
             if (calc_is_start_word(grid, x, y) == 1) {
-                PyDict_SetItem(cell, key, PyInt_FromLong(n));
+                PyObject *py_n = PyInt_FromLong(n);
+                PyDict_SetItem(cell, key, py_n);
+                Py_DECREF(py_n);
                 n++;
             } else {
-                PyDict_SetItem(cell, key, PyInt_FromLong(0));
+                PyObject *py_zero = PyInt_FromLong(0);
+                PyDict_SetItem(cell, key, py_zero);
+                Py_DECREF(py_zero);
             }
+            Py_DECREF(key);
         }
     }
+    Py_DECREF(data);
     Py_RETURN_NONE;
 }
 
