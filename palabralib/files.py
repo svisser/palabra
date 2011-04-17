@@ -104,7 +104,12 @@ def determine_file_type(filename):
     
 def read_containers(files):
     def load_container(f):
-        return f, {}, read_xpf(f)
+        import os
+        if os.path.isfile(f):
+            return f, {}, read_xpf(f)
+        else:
+            # return None as f to indicate 'failure'
+            return None, {}, []
     return [load_container(f) for f in files]
     
 def write_containers(patterns):

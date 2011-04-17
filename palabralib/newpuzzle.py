@@ -237,10 +237,10 @@ class NewWindow(gtk.Dialog):
         
         self.files = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
         
-        # TODO ?
         self.patterns = []
         for f, meta, data in palabra_window.patterns:
-            self.patterns.append((f, meta, [p.grid for p in data]))
+            if f is not None:
+                self.patterns.append((f, meta, [p.grid for p in data]))
         self._load_pattern_list(self.files)
         
         file_combo = gtk.combo_box_new_text()
@@ -290,7 +290,7 @@ class NewWindow(gtk.Dialog):
             
     def _load_pattern_list(self, files):
         data = [d for (f, _, d) in self.patterns if f in files]
-        grids = reduce(operator.add, data)
+        grids = reduce(operator.add, data) if data else []
         stats = [(g.count_words(), g.count_blocks(), g) for g in grids]
         stats.sort()
         self.grids = [grid for (_, _, grid) in stats]
