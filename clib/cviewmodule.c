@@ -25,12 +25,18 @@ cView_compute_lines(PyObject *self, PyObject *args) {
     PyObject *grid;
     if (!PyArg_ParseTuple(args, "O", &grid))
         return NULL;
-    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
-    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    PyObject *py_width = PyObject_GetAttrString(grid, "width");
+    int width = (int) PyInt_AsLong(py_width);
+    Py_DECREF(py_width);
+    PyObject *py_height = PyObject_GetAttrString(grid, "height");
+    int height = (int) PyInt_AsLong(py_height);
+    Py_DECREF(py_height);
     
     PyObject* lines = PyDict_New();
     
-    PyObject* data = PyObject_GetAttr(grid, PyString_FromString("data"));
+    PyObject* str_data = PyString_FromString("data");
+    PyObject* data = PyObject_GetAttr(grid, str_data);
+    Py_DECREF(str_data);
     int x = 0;
     int y = 0;
     int e = 0;
@@ -39,9 +45,17 @@ cView_compute_lines(PyObject *self, PyObject *args) {
             PyObject *result = PyList_New(0);
             
             // is_void
-            PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
-            PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
-            int v0 = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+            PyObject* py_y = PyInt_FromLong(y);
+            PyObject* col = PyObject_GetItem(data, py_y);
+            Py_DECREF(py_y);
+            PyObject* py_x = PyInt_FromLong(x);
+            PyObject* cell = PyObject_GetItem(col, py_x);
+            Py_DECREF(py_x);
+            PyObject *py_void = PyString_FromString("void");
+            PyObject *item = PyObject_GetItem(cell, py_void);
+            int v0 = PyObject_IsTrue(item);
+            Py_DECREF(item);
+            Py_DECREF(py_void);
             
             for (e = 0; e < 2; e++) {
                 int dx = e == 0 ? -1 : 0;
@@ -51,9 +65,19 @@ cView_compute_lines(PyObject *self, PyObject *args) {
                 int ny = y + dy;
                 if (0 <= nx && nx < width && 0 <= ny && ny < height) {
                     // is_void
-                    PyObject* col = PyObject_GetItem(data, PyInt_FromLong(ny));
-                    PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(nx));
-                    int v1 = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+                    PyObject *py_ny = PyInt_FromLong(ny);
+                    PyObject* col = PyObject_GetItem(data, py_ny);
+                    Py_DECREF(py_ny);
+                    PyObject *py_nx = PyInt_FromLong(nx);
+                    PyObject* cell = PyObject_GetItem(col, py_nx);
+                    Py_DECREF(py_nx);
+                    PyObject *py_void = PyString_FromString("void");
+                    PyObject *item = PyObject_GetItem(cell, py_void);
+                    Py_DECREF(py_void);
+                    Py_DECREF(cell);
+                    Py_DECREF(col);
+                    int v1 = PyObject_IsTrue(item);
+                    Py_DECREF(item);
                     if (v0 == 0 || v1 == 0) {
                         PyObject* r = NULL;
                         if (v0 == 1 && v0 == 0) {
@@ -64,35 +88,60 @@ cView_compute_lines(PyObject *self, PyObject *args) {
                             r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "normal");
                         }
                         PyList_Append(result, r);
+                        Py_DECREF(r);
                     }
                 } else if (v0 == 0) {
                     PyObject* r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "outerborder");
                     PyList_Append(result, r);
+                    Py_DECREF(r);
                 }
             }
             if (y == height - 1) {
                 // is_void
-                PyObject* col = PyObject_GetItem(data, PyInt_FromLong(height - 1));
-                PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
-                int v = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+                PyObject *py_y = PyInt_FromLong(height - 1);
+                PyObject* col = PyObject_GetItem(data, py_y);
+                Py_DECREF(py_y);
+                PyObject *py_x = PyInt_FromLong(x);
+                PyObject* cell = PyObject_GetItem(col, py_x);
+                Py_DECREF(py_x);
+                PyObject *py_void = PyString_FromString("void");
+                PyObject *item = PyObject_GetItem(cell, py_void);
+                Py_DECREF(py_void);
+                Py_DECREF(cell);
+                Py_DECREF(col);
+                int v = PyObject_IsTrue(item);
+                Py_DECREF(item);
                 if (v == 0) {
                     PyObject* r = Py_BuildValue("(iiss)",  x, height, "top", "innerborder");
                     PyList_Append(result, r);
+                    Py_DECREF(r);
                 }
             }
             if (x == width - 1) {
                 // is_void
-                PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
-                PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(width - 1));
-                int v = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+                PyObject *py_y = PyInt_FromLong(y);
+                PyObject* col = PyObject_GetItem(data, py_y);
+                Py_DECREF(py_y);
+                PyObject *py_x = PyInt_FromLong(width - 1);
+                PyObject* cell = PyObject_GetItem(col, py_x);
+                Py_DECREF(py_x);
+                PyObject *py_void = PyString_FromString("void");
+                PyObject *item = PyObject_GetItem(cell, py_void);
+                Py_DECREF(py_void);
+                Py_DECREF(cell);
+                Py_DECREF(col);
+                int v = PyObject_IsTrue(item);
+                Py_DECREF(item);
                 if (v == 0) {
                     PyObject* r = Py_BuildValue("(iiss)",  width, y, "left", "innerborder");
                     PyList_Append(result, r);
+                    Py_DECREF(r);
                 }
             }
-            
             PyObject* key = Py_BuildValue("(ii)", x, y);
             PyDict_SetItem(lines, key, result);
+            Py_DECREF(key);
+            Py_DECREF(result);
         }
     }
     
