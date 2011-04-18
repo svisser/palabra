@@ -529,9 +529,9 @@ class Editor(gtk.HBox):
             , self.selection, force_refresh)
         self.tools["word"].display_words(result)
             
-    def select(self, x, y, direction):
+    def select(self, x, y, direction, full_update=True):
         """Select the word at (x, y, direction) in the grid."""
-        self._set_full_selection(x, y, direction)
+        self._set_full_selection(x, y, direction, full_update)
         
     def clue(self, x, y, direction, key, value):
         """
@@ -846,7 +846,7 @@ class Editor(gtk.HBox):
         """
         self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
        
-    def _set_full_selection(self, x=None, y=None, direction=None):
+    def _set_full_selection(self, x=None, y=None, direction=None, full_update=True):
         """Select (x, y), the direction or both."""
         prev_x = self.selection.x
         prev_y = self.selection.y
@@ -882,7 +882,8 @@ class Editor(gtk.HBox):
         self.selection.y = ny
         self.selection.direction = ndir
         self._render_selection(nx, ny, ndir)
-        self.palabra_window.update_window()
+        if full_update:
+            self.palabra_window.update_window()
         
     def set_selection(self, x, y):
         """Select the specified cell (x, y)."""

@@ -188,6 +188,8 @@ class PalabraWindow(gtk.Window):
         def on_switch_page(tabs, do_not_use, num):
             word = self.editor.tools["word"].get_selected_word() if num == 0 else None
             self.editor.set_overlay(word)
+            if num == 0:
+                self.update_window()
         tabs.connect("switch-page", on_switch_page)
         
         paned = gtk.HPaned()
