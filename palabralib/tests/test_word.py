@@ -169,6 +169,10 @@ class WordTestCase(unittest.TestCase):
         css = [(0, 4, []), (0, 4, []), (0, 4, [])]
         self.assertEquals([w for w in clist.search(3, [], css)], [])
         
+        # 0 chars and MAX_WORD_LENGTH chars
+        self.assertEquals([w for w in clist.search(0, [], None)], [])
+        self.assertEquals([w for w in clist.search(MAX_WORD_LENGTH, [], None)], [])
+        
         clist.postprocess()
         
     def testEmpty(self):
@@ -178,9 +182,11 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
         for x in xrange(35):
             self.assertEquals(clist.has_matches(x, []), False)
-            for y in xrange(26):
-                c = chr(ord("a") + y)
+            for c in string.ascii_lowercase:
                 self.assertEquals(clist.has_matches(x, [(0, c)]), False)
+        # identical css, for testing skipping in C code
+        css = [(0, 4, []), (0, 5, []), (0, 4, []), (0, 5, [])]
+        self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
         clist.postprocess()
         
     def testScale(self):
@@ -194,18 +200,24 @@ class WordTestCase(unittest.TestCase):
         
     def testMaxWordLength(self):
         l = MAX_WORD_LENGTH + 10
-        clist = CWordList(['a' for i in xrange(l)])
+        words = ['a' * l, 'a' * MAX_WORD_LENGTH, 'a' * (MAX_WORD_LENGTH - 1)]
+        clist = CWordList(words)
         self.assertEquals(clist.search(l, []), [])
+        self.assertEquals(clist.search(MAX_WORD_LENGTH, []), [])
+        self.assertEquals(len(clist.search(MAX_WORD_LENGTH - 1, [])), 1)
         clist.postprocess()
         
     def testMaxWordLengthTwo(self):
         l = MAX_WORD_LENGTH + 10
         LOC = "palabralib/tests/test_wordlist.txt"
         f = open(LOC, 'w')
-        f.write(''.join(['a' for i in xrange(l)]))
+        words = ['a' * l, '\n', 'a' * MAX_WORD_LENGTH, '\n', 'a' * (MAX_WORD_LENGTH - 1), '\n']
+        f.write(''.join(words))
         f.close()
         clist = CWordList(LOC)
         self.assertEquals(clist.search(l, []), [])
+        self.assertEquals(clist.search(MAX_WORD_LENGTH, []), [])
+        self.assertEquals(len(clist.search(MAX_WORD_LENGTH - 1, [])), 1)
         clist.postprocess()
         if os.path.exists(LOC):
             os.remove(LOC)

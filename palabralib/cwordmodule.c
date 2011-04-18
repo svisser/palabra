@@ -206,7 +206,7 @@ cWord_search(PyObject *self, PyObject *args) {
     PyObject *more_constraints;
     if (!PyArg_ParseTuple(args, "OiOO", &words, &length, &constraints, &more_constraints))
         return NULL;
-    if (length < 0 || length > MAX_WORD_LENGTH)
+    if (length <= 0 || length >= MAX_WORD_LENGTH)
         return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
     // main word
@@ -345,7 +345,10 @@ cWord_preprocess(PyObject *self, PyObject *args) {
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
         PyObject* word = PyList_GET_ITEM(words, w);
-        PyObject* key = keys[(int) PyString_GET_SIZE(word)];
+        int length = (int) PyString_GET_SIZE(word);
+        if (length <= 0 || length >= MAX_WORD_LENGTH)
+            continue;
+        PyObject* key = keys[length];
         // PyDict_GetItem eats ref
         PyList_Append(PyDict_GetItem(dict, key), word);
     }
