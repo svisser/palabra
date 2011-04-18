@@ -52,6 +52,18 @@ class FilesTestCase(unittest.TestCase):
         results = read_xpf(self.LOCATION + "~")
         results[0].filename = self.LOCATION
         self.assertEquals(self.puzzle, results[0])
+        
+    def testXPFMeta(self):
+        self.puzzle.metadata['title'] = "TestTitle"
+        self.puzzle.metadata['creator'] = "TestCreator"
+        self.puzzle.metadata['contributor'] = "TestContributor"
+        self.puzzle.metadata['rights'] = "TestRights"
+        self.puzzle.metadata['publisher'] = "TestPublisher"
+        self.puzzle.metadata['date'] = "TestDate"
+        write_xpf(self.puzzle, False)
+        results = read_xpf(self.LOCATION)
+        self.assertEquals(len(results), 1)
+        self.assertEquals(results[0], self.puzzle)
             
     def testXPFOne(self):
         self.puzzle.grid.set_block(0, 0, True)
