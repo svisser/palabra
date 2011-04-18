@@ -308,12 +308,14 @@ class Editor(gtk.HBox):
         self.mouse_buttons_down = [False, False, False]
         
         self.drawing_area.set_flags(gtk.CAN_FOCUS)
-        self.id_expose = self.drawing_area.connect("expose_event", self.on_expose_event)
-        self.id_bpress = self.drawing_area.connect("button_press_event", self.on_button_press_event)
-        self.id_brelease = self.drawing_area.connect("button_release_event", self.on_button_release_event)
-        self.id_motion = self.drawing_area.connect("motion_notify_event", self.on_motion_notify_event)
-        self.id_key_press = self.drawing_area.connect("key_press_event", self.on_key_press_event)
-        self.id_key_release = self.drawing_area.connect("key_release_event", self.on_key_release_event)
+        events = {"expose_event": self.on_expose_event
+            , "button_press_event": self.on_button_press_event
+            , "button_release_event": self.on_button_release_event
+            , "motion_notify_event": self.on_motion_notify_event
+            , "key_press_event": self.on_key_press_event
+            , "key_release_event": self.on_key_release_event
+        }
+        self.ids = [self.drawing_area.connect(*e) for e in events.items()]
         self.drawing_area.add_events(gtk.gdk.POINTER_MOTION_HINT_MASK)
         
     def get_puzzle(self):
@@ -323,12 +325,8 @@ class Editor(gtk.HBox):
                 
     def cleanup(self):
         self.drawing_area.unset_flags(gtk.CAN_FOCUS)
-        self.drawing_area.disconnect(self.id_expose)
-        self.drawing_area.disconnect(self.id_bpress)
-        self.drawing_area.disconnect(self.id_brelease)
-        self.drawing_area.disconnect(self.id_motion)
-        self.drawing_area.disconnect(self.id_key_press)
-        self.drawing_area.disconnect(self.id_key_release)
+        for i in self.ids:
+            self.drawing_area.disconnect(i)
     
     def _render_cells(self, cells, editor=True):
         if not cells:
@@ -336,7 +334,7 @@ class Editor(gtk.HBox):
         self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
         if self.editor_surface:
             context = cairo.Context(self.editor_surface)
-            cs = [(p, q) for p, q in cells if self.puzzle.grid.is_valid(p, q)]
+            cs = [c for c in cells if self.puzzle.grid.is_valid(*c)]
             for x, y in cs:
                 self.puzzle.view.render_bottom(context, [(x, y)])
                 if editor:
