@@ -338,8 +338,7 @@ class Editor(gtk.HBox):
             self.puzzle.view.render_bottom(context, cs)
             if editor:
                 self._render_editor_of_cell(context, cs)
-            for x, y in cs:
-                self.puzzle.view.render_top(context, [(x, y)])
+            self.puzzle.view.render_top(context, cs)
             context = self.drawing_area.window.cairo_create()
             context.set_source(self.editor_pattern)
             context.paint()

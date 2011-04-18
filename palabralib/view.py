@@ -467,9 +467,9 @@ class GridView:
                 context.stroke()
         
         # lines
-        if len(cells) == 1:
-            x, y = cells[0]
-            self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
+        if len(cells) < self.grid.width * self.grid.height:
+            for x, y in cells:
+                self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
         else:
             self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
         if self.settings["has_padding"]:
