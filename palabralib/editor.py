@@ -256,6 +256,9 @@ class WordTool:
         
     def get_selected_word(self):
         return self.view.get_selected_word()
+        
+    def deselect(self):
+        self.view.selection = None
 
 class Selection:
     def __init__(self, x, y, direction):
