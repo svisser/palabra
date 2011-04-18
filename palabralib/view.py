@@ -630,6 +630,9 @@ class GridView:
                 warn = False
                 if 0 <= counts[p, q] <= 1:
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        if not (0 <= p + dx < self.grid.width
+                            and 0 <= q + dy < self.grid.height):
+                            continue
                         if 0 <= counts[p + dx, q + dy] <= 1:
                             warn = True
                             break
