@@ -290,7 +290,9 @@ cWord_search(PyObject *self, PyObject *args) {
             int c;
             for (c = 0; c < length; c++) {
                 zero_slot = 0 == intersections[c];
-                if (zero_slot) break;
+                if (zero_slot) {
+                    break;
+                }
                 if (strchr(cs[c], '.') == NULL) {
                     n_chars += 1;
                     continue;
@@ -314,7 +316,7 @@ cWord_search(PyObject *self, PyObject *args) {
     }
     if (more_constraints != Py_None) {
         for (t = 0; t < length; t++) {
-            if (skipped[t] == 0) {
+            if (skipped[t] == 0 && results[t] != NULL) {
                 PyMem_Free(results[t]->chars);
                 PyMem_Free(results[t]);
             }
