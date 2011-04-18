@@ -84,10 +84,8 @@ class FilesTestCase(unittest.TestCase):
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION)
         self.assertEquals(len(results), 1)
-        for x, y in self.puzzle.grid.cells():
-            if self.puzzle.grid.cell(x, y) != results[0].grid.cell(x, y):
-                print self.puzzle.grid.cell(x, y),  results[0].grid.cell(x, y)
         self.assertEquals(self.puzzle.grid, results[0].grid)
+        self.assertEquals(self.puzzle, results[0])
         
     def testXPFErrors(self):
         with open(self.LOCATION2, 'w') as f:
