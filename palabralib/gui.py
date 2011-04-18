@@ -147,16 +147,11 @@ class PalabraWindow(gtk.Window):
             | gtk.gdk.KEY_PRESS_MASK
             | gtk.gdk.KEY_RELEASE_MASK
             )
-        scrolled_window = gtk.ScrolledWindow(None, None)
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add_with_viewport(drawing_area)
-        
         puzzle = self.puzzle_manager.current_puzzle
-        
         puzzle.view.refresh_visual_size(drawing_area)
         drawing_area.queue_draw()
         
-        self.editor = Editor(self, drawing_area, puzzle)
+        self.editor = Editor(self, drawing_area)
         self.editor.tools["clue"] = ClueTool(self.editor)
         self.editor.tools["fill"] = FillTool(self.editor)
         self.editor.tools["word"] = WordTool(self.editor)
@@ -172,6 +167,9 @@ class PalabraWindow(gtk.Window):
         options = gtk.VBox(False, 0)
         options_vbox.pack_start(options, True, True, 0)
         
+        scrolled_window = gtk.ScrolledWindow(None, None)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add_with_viewport(drawing_area)
         main = gtk.VBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
         

@@ -280,33 +280,24 @@ def search(wordlists, grid, selection, force_refresh):
     return search_wordlists(wordlists, length, constraints, more)
 
 class Editor(gtk.HBox):
-    def __init__(self, palabra_window, drawing_area, puzzle):
+    def __init__(self, palabra_window, drawing_area):
         gtk.HBox.__init__(self)
         self.palabra_window = palabra_window
         self.drawing_area = drawing_area
-        #self.puzzle = puzzle
-        
         self.tools = {}
-        
         self.editor_surface = None
         self.editor_pattern = None
-        
         self.blacklist = []
-        
         self.force_redraw = True
-        
         if not palabra_window.editor_settings:
             sett = {}
             sett["symmetries"] = ["180_degree"]
             sett["locked_grid"] = False
             palabra_window.editor_settings = sett
         self.settings = palabra_window.editor_settings
-        
         self.current = (-1, -1)
         self.selection = Selection(-1, -1, "across")
-        
         self.mouse_buttons_down = [False, False, False]
-        
         self.drawing_area.set_flags(gtk.CAN_FOCUS)
         events = {"expose_event": self.on_expose_event
             , "button_press_event": self.on_button_press_event
@@ -343,18 +334,6 @@ class Editor(gtk.HBox):
             context.set_source(self.editor_pattern)
             context.paint()
         
-    def _clear_selection(self, x, y, direction):
-        """
-        Clear the selection containing (x, y) in the specified direction.
-        """
-        self._render_selection(x, y, direction, editor=False)
-        
-    def _render_selection(self, x, y, direction, editor=True):
-        """
-        Render the selected cells containing (x, y) in the specified direction.
-        """
-        self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
-    
     # cells = 1 cell or all cells of grid
     def _render_editor_of_cell(self, context, cells):
         """Render everything editor related colors for cells."""
@@ -423,17 +402,11 @@ class Editor(gtk.HBox):
         if not self.editor_surface or self.force_redraw:
             width, height = self.puzzle.view.properties.visual_size(True)
             self.editor_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-            
             self.editor_pattern = cairo.SurfacePattern(self.editor_surface)
-            self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
-            context = cairo.Context(self.editor_surface)
             # TODO should not be needed
             self.puzzle.view.grid = self.puzzle.grid
-            cells = list(self.puzzle.grid.cells())
             self.force_redraw = False
-            self.puzzle.view.render_bottom(context, cells)
-            self._render_editor_of_cell(context, cells)
-            self.puzzle.view.render_top(context, cells)
+            self._render_cells(list(self.puzzle.grid.cells()), editor=True)
         context = self.drawing_area.window.cairo_create()
         context.set_source(self.editor_pattern)
         context.paint()
@@ -860,6 +833,18 @@ class Editor(gtk.HBox):
         self.puzzle.view.properties.grid = self.puzzle.grid
         size = self.puzzle.view.properties.visual_size()
         self.drawing_area.set_size_request(*size)
+
+    def _clear_selection(self, x, y, direction):
+        """
+        Clear the selection containing (x, y) in the specified direction.
+        """
+        self._render_selection(x, y, direction, editor=False)
+        
+    def _render_selection(self, x, y, direction, editor=True):
+        """
+        Render the selected cells containing (x, y) in the specified direction.
+        """
+        self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
        
     def _set_full_selection(self, x=None, y=None, direction=None):
         """Select (x, y), the direction or both."""
