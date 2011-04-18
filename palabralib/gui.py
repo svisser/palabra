@@ -798,8 +798,10 @@ class PalabraWindow(gtk.Window):
         self.update_window(True, transform=t)        
         
     def transform_clues(self, transform, **args):
-        transform(self.puzzle_manager.current_puzzle, **args)
-        action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
+        puzzle = self.puzzle_manager.current_puzzle
+        transform(puzzle, **args)
+        s = State(puzzle.grid, clue_state=True, clue_cell=(args['x'], args['y']))
+        action.stack.push(s)
         self.update_undo_redo()
     
     def update_undo_redo(self):
