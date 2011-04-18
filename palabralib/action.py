@@ -21,11 +21,10 @@ from grid import Grid
 import preferences
 
 class State:
-    def __init__(self, source, clue_state=False, clue_cell=None):
+    def __init__(self, source, clue_slot=None):
         self.grid = cPickle.dumps(source)
         # needed for clues
-        self.clue_state = clue_state
-        self.clue_cell = clue_cell
+        self.clue_slot = clue_slot
         
 class StateStack():
     def __init__(self):
@@ -41,9 +40,9 @@ class StateStack():
     
     def push(self, state, initial=False):
         # clue modifications are merged with previous ones if needed
-        if state.clue_state:
+        if state.clue_slot is not None:
             s = self.peek()
-            if s is not None and s.clue_state and s.clue_cell == state.clue_cell:
+            if (s is not None and s.clue_slot == state.clue_slot):
                 self.undo_stack.pop()
                 self.undo_stack.append(state)
                 return
@@ -59,12 +58,14 @@ class StateStack():
         puzzle.grid = cPickle.loads(prev.grid)
         self.undo_stack.append(prev)
         self.distance_from_saved -= 1
+        return state
         
     def redo(self, puzzle):
         state = self.redo_stack.pop()
         self.undo_stack.append(state)
         puzzle.grid = cPickle.loads(state.grid)
         self.distance_from_saved += 1
+        return state
         
     def peek(self):
         return self.undo_stack[-1] if len(self.undo_stack) > 0 else None

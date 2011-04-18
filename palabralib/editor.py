@@ -881,9 +881,9 @@ class Editor(gtk.HBox):
         if full_update:
             self.palabra_window.update_window()
         
-    def set_selection(self, x, y):
+    def set_selection(self, x, y, direction=None):
         """Select the specified cell (x, y)."""
-        self._set_full_selection(x=x, y=y)
+        self._set_full_selection(x=x, y=y, direction=direction)
         
     def get_selection(self):
         """Return the (x, y) of the selected cell."""

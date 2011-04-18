@@ -209,9 +209,9 @@ class PalabraWindow(gtk.Window):
         except AttributeError:
             return None
             
-    def set_selection(self, x, y):
+    def set_selection(self, x, y, direction=None):
         try:
-            self.editor.set_selection(x, y)
+            self.editor.set_selection(x, y, direction)
         except AttributeError:
             pass
         
@@ -637,12 +637,16 @@ class PalabraWindow(gtk.Window):
         self.update_window()
         
     def undo_action(self):
-        action.stack.undo(self.puzzle_manager.current_puzzle)
+        s = action.stack.undo(self.puzzle_manager.current_puzzle)
         self.update_window(True)
+        if s.clue_slot:
+            self.set_selection(*s.clue_slot)
         
     def redo_action(self):
-        action.stack.redo(self.puzzle_manager.current_puzzle)
+        s = action.stack.redo(self.puzzle_manager.current_puzzle)
         self.update_window(True)
+        if s.clue_slot:
+            self.set_selection(*s.clue_slot)
         
     def create_edit_menu(self):
         menu = gtk.Menu()
@@ -800,7 +804,7 @@ class PalabraWindow(gtk.Window):
     def transform_clues(self, transform, **args):
         puzzle = self.puzzle_manager.current_puzzle
         transform(puzzle, **args)
-        s = State(puzzle.grid, clue_state=True, clue_cell=(args['x'], args['y']))
+        s = State(puzzle.grid, clue_slot=(args['x'], args['y'], args['direction']))
         action.stack.push(s)
         self.update_undo_redo()
     
