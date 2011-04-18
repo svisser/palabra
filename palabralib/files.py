@@ -372,7 +372,7 @@ def read_xpf(filename):
                         print "Warning: skipping a clue with a direction that is not across or down."
                         continue
                     if not clue.text:
-                        print "Warning: skipping clue without text."
+                        #print "Warning: skipping clue without text."
                         continue
                     r_grid.store_clue(x, y, dirs[a_dir], "text", clue.text)
             elif child.tag == "Notepad":
