@@ -335,10 +335,10 @@ class Editor(gtk.HBox):
         if self.editor_surface:
             context = cairo.Context(self.editor_surface)
             cs = [c for c in cells if self.puzzle.grid.is_valid(*c)]
+            self.puzzle.view.render_bottom(context, cs)
+            if editor:
+                self._render_editor_of_cell(context, cs)
             for x, y in cs:
-                self.puzzle.view.render_bottom(context, [(x, y)])
-                if editor:
-                    self._render_editor_of_cell(context, [(x, y)])
                 self.puzzle.view.render_top(context, [(x, y)])
             context = self.drawing_area.window.cairo_create()
             context.set_source(self.editor_pattern)
@@ -384,23 +384,12 @@ class Editor(gtk.HBox):
         sdir = self.selection.direction
         
         # selection line
-        if len(cells) == 1:
-            x, y = cells[0]
-            if grid.is_available(x, y):
-                r = preferences.prefs["color_current_word_red"] / 65535.0
-                g = preferences.prefs["color_current_word_green"] / 65535.0
-                b = preferences.prefs["color_current_word_blue"] / 65535.0
-                stx, sty = grid.get_start_word(sx, sy, sdir)
-                for cell in grid.in_direction(stx, sty, sdir):
-                    if (x, y) == cell:
-                        render.append((x, y, r, g, b))
-                        break
-        else:
-            r = preferences.prefs["color_current_word_red"] / 65535.0
-            g = preferences.prefs["color_current_word_green"] / 65535.0
-            b = preferences.prefs["color_current_word_blue"] / 65535.0
-            startx, starty = grid.get_start_word(sx, sy, sdir)
-            for i, j in grid.in_direction(startx, starty, sdir):
+        r = preferences.prefs["color_current_word_red"] / 65535.0
+        g = preferences.prefs["color_current_word_green"] / 65535.0
+        b = preferences.prefs["color_current_word_blue"] / 65535.0
+        startx, starty = grid.get_start_word(sx, sy, sdir)
+        for i, j in grid.in_direction(startx, starty, sdir):
+            if (i, j) in cells:
                 render.append((i, j, r, g, b))
         
         symms = list(self.apply_symmetry(*self.current))

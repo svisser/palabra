@@ -275,8 +275,9 @@ class GridView:
             context.fill()
         if has_padding:
             context.translate(props.margin_x, props.margin_y)
-        if len(cells) == 1:
-            render_rect(*cells[0])
+        if len(cells) < self.grid.width * self.grid.height:
+            for p, q in cells:
+                render_rect(p, q)
         else:
             style_default = props.style()
             style = props.style
