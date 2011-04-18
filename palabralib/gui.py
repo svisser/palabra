@@ -1111,11 +1111,11 @@ class PalabraWindow(gtk.Window):
             , u"Flip the content of the grid vertically and clear the clues"
             , title=u"Flip _vertically"
             , is_puzzle_sensitive=True))
-        menu.append(self._create_menu_item(
-            lambda item: self.transform_grid(transform.diagonal_flip)
-            , u"Flip the content of the grid diagonally"
-            , title=u"Flip _diagonally"
-            , is_puzzle_sensitive=True))
+        #menu.append(self._create_menu_item(
+        #    lambda item: self.transform_grid(transform.diagonal_flip)
+        #    , u"Flip the content of the grid diagonally"
+        #    , title=u"Flip _diagonally"
+        #    , is_puzzle_sensitive=True))
         
         flip_menu = gtk.MenuItem(u"_Transform", True)
         flip_menu.set_submenu(menu)
