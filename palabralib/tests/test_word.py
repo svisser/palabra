@@ -169,7 +169,8 @@ class WordTestCase(unittest.TestCase):
         css = [(0, 4, []), (0, 4, []), (0, 4, [])]
         self.assertEquals([w for w in clist.search(3, [], css)], [])
         
-        # 0 chars and MAX_WORD_LENGTH chars
+        # negative, zero chars and MAX_WORD_LENGTH chars
+        self.assertEquals([w for w in clist.search(-1, [], None)], [])
         self.assertEquals([w for w in clist.search(0, [], None)], [])
         self.assertEquals([w for w in clist.search(MAX_WORD_LENGTH, [], None)], [])
         
