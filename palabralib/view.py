@@ -326,12 +326,15 @@ class GridView:
             pcr.show_layout(pcr_layout)
         def _render_char(r, s, c, extents):
             xbearing, ybearing, width, height, xadvance, yadvance = extents[c]
-            rx = (props.border["width"] +
-                (r + 0.55) * (props.cell["size"] + props.line["width"]) -
-                width - props.line["width"] / 2 - abs(xbearing) / 2)
-            ry = (props.border["width"] +
-                (s + 0.55) * (props.cell["size"] + props.line["width"]) -
-                height - props.line["width"] / 2 - abs(ybearing) / 2)
+            border_width = props.border["width"]
+            size = props.cell["size"]
+            line_width = props.line["width"]
+            rx = (border_width +
+                (r + 0.55) * (size + line_width) -
+                width - line_width / 2 - abs(xbearing) / 2)
+            ry = (border_width +
+                (s + 0.55) * (size + line_width) -
+                height - line_width / 2 - abs(ybearing) / 2)
             _render_pango(r, s, styles[r, s].char["font"], c, rx, ry)
 
         # chars and overlay chars
