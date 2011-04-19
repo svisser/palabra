@@ -127,11 +127,23 @@ class FilesTestCase(unittest.TestCase):
         with open(self.LOCATION, 'r') as f:
             xml_text = f.read()
         with open(self.LOCATION, 'w') as f:
-            text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>", "<Size><Cols>15</Cols></Size>")
+            text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
+                , "<Size><Cols>15</Cols></Size>")
             f.write(text)
         self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
         with open(self.LOCATION, 'w') as f:
-            text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>", "<Size><Rows>15</Rows></Size>")
+            text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
+                , "<Size><Rows>15</Rows></Size>")
+            f.write(text)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
+                , "<Size><Rows>noNumber</Rows><Cols>15</Cols></Size>")
+            f.write(text)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
+                , "<Size><Rows>15</Rows><Cols>noNumber</Cols></Size>")
             f.write(text)
         self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
         

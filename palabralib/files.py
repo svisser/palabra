@@ -244,7 +244,6 @@ def export_to_png(puzzle, filename, output, settings):
 
 # http://www.xwordinfo.com/XPF/
 def read_xpf(filename):
-    # TODO check validity coordinates
     results = []
     try:
         doc = etree.parse(filename)
@@ -277,10 +276,13 @@ def read_xpf(filename):
                 r_meta[XPF_META_ELEMS[child.tag]] = child.text
             elif child.tag == "Size":
                 for d in child:
-                    if d.tag == "Rows":
-                        r_height = int(d.text)
-                    elif d.tag == "Cols":
-                        r_width = int(d.text)
+                    try:
+                        if d.tag == "Rows":
+                            r_height = int(d.text)
+                        elif d.tag == "Cols":
+                            r_width = int(d.text)
+                    except ValueError:
+                        raise XPFParserError(u"Invalid grid dimensions were specified.")
             elif child.tag == "Grid":
                 if r_width is None:
                     raise XPFParserError(u"The number of columns was not specified.")
@@ -315,8 +317,12 @@ def read_xpf(filename):
                     if not (a_row and a_col):
                         print "Warning: skipping a child of Circles with missing content."
                         continue
-                    x = int(a_col) - 1
-                    y = int(a_row) - 1
+                    try:
+                        x = int(a_col) - 1
+                        y = int(a_row) - 1
+                    except ValueError:
+                        print "Warning: skipping child of Circles with invalid coordinates."
+                        continue
                     if (x, y) not in r_styles:
                         r_styles[x, y] = CellStyle()
                     r_styles[x, y].circle = True
@@ -332,8 +338,12 @@ def read_xpf(filename):
                     if not (a_row and a_row and a_short and content):
                         print "Warning: skipping a child of RebusEntries with missing content."
                         continue
-                    x = int(a_col) - 1
-                    y = int(a_row) - 1
+                    try:
+                        x = int(a_col) - 1
+                        y = int(a_row) - 1
+                    except ValueError:
+                        print "Warning: skipping child of RebusEntries with invalid coordinates."
+                        continue
                     r_grid.set_rebus(x, y, a_short, content)
             elif child.tag == "Shades":
                 for shade in child:
@@ -345,8 +355,12 @@ def read_xpf(filename):
                     if not (a_row and a_col and shade.text):
                         print "Warning: skipping a child of Shades with missing content."
                         continue
-                    x = int(a_col) - 1
-                    y = int(a_row) - 1
+                    try:
+                        x = int(a_col) - 1
+                        y = int(a_row) - 1
+                    except ValueError:
+                        print "Warning: skipping a child of Shades with invalid coordinates."
+                        continue
                     if (x, y) not in r_styles:
                         r_styles[x, y] = CellStyle()
                     if shade.text == "gray":
@@ -369,8 +383,12 @@ def read_xpf(filename):
                     if not (a_row and a_col and a_dir):
                         print "Warning: skipping a child of Clues with missing content."
                         continue
-                    x = int(a_col) - 1
-                    y = int(a_row) - 1
+                    try:
+                        x = int(a_col) - 1
+                        y = int(a_row) - 1
+                    except ValueError:
+                        print "Warning: skipping a child of Clues with invalid coordinates."
+                        continue
                     dirs = {"Across": "across", "Down": "down"}
                     if a_dir not in dirs:
                         print "Warning: skipping a clue with a direction that is not across or down."
@@ -392,13 +410,17 @@ def read_xpf(filename):
                         a_col = c.get("Col")
                         a_dir = c.get("Dir")
                         if not (a_row and a_col and a_dir):
-                            print "Warning: Skipping explanation with missing content"
+                            print "Warning: skipping Explanation with missing content"
                             continue
-                        x = int(a_col) - 1
-                        y = int(a_row) - 1
+                        try:
+                            x = int(a_col) - 1
+                            y = int(a_row) - 1
+                        except ValueError:
+                            print "Warning: skipping Explanation with invalid coordinates."
+                            continue
                         dirs = {"Across": "across", "Down": "down"}
                         if a_dir not in dirs:
-                            print "Warning: skipping an explanation with a direction that is not across or down."
+                            print "Warning: skipping Explanation with a direction that is not across or down."
                             continue
                         if not c.text:
                             #print "Warning: skipping explanation without text."
