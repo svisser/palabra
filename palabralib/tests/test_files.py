@@ -70,6 +70,7 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.set_void(5, 5, True)
         self.puzzle.grid.set_char(3, 3, "A")
         self.puzzle.grid.store_clue(1, 0, "across", "text", "This is a clue")
+        self.puzzle.grid.store_clue(5, 6, "down", "explanation", "This is an explanation")
         self.puzzle.grid.assign_numbers()
         self.puzzle.metadata['title'] = "This is the title"
         self.puzzle.notepad = '''\"Notepad with weird chars < > & " \"'''
