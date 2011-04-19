@@ -49,7 +49,7 @@ class FilesTestCase(unittest.TestCase):
     def testXPFBackup(self):
         write_xpf(self.puzzle, backup=False)
         write_xpf(self.puzzle, backup=True)
-        results = read_xpf(self.LOCATION + "~")
+        results = read_xpf(self.LOCATION + "~", warnings=False)
         results[0].filename = self.LOCATION
         self.assertEquals(self.puzzle, results[0])
         
@@ -61,7 +61,7 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.metadata['publisher'] = "TestPublisher"
         self.puzzle.metadata['date'] = "TestDate"
         write_xpf(self.puzzle, False)
-        results = read_xpf(self.LOCATION)
+        results = read_xpf(self.LOCATION, warnings=False)
         self.assertEquals(len(results), 1)
         self.assertEquals(results[0], self.puzzle)
             
@@ -76,7 +76,7 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.metadata['title'] = "This is the title"
         self.puzzle.notepad = '''\"Notepad with weird chars < > & " \"'''
         write_xpf(self.puzzle, False)
-        results = read_xpf(self.LOCATION)
+        results = read_xpf(self.LOCATION, warnings=False)
         self.assertEquals(len(results), 1)
         self.assertEquals(self.puzzle.grid, results[0].grid)
         self.assertEquals(self.puzzle, results[0])
@@ -89,7 +89,7 @@ class FilesTestCase(unittest.TestCase):
         style.cell["color"] = (65535, 0, 0)
         self.puzzle.view.properties.styles[4, 4] = style
         write_xpf(self.puzzle, False)
-        results = read_xpf(self.LOCATION)
+        results = read_xpf(self.LOCATION, warnings=False)
         self.assertEquals(self.puzzle, results[0])
         
         # test 'gray' as shade color
@@ -99,7 +99,7 @@ class FilesTestCase(unittest.TestCase):
             text = xml_text.replace("<Shade Row=\"5\" Col=\"5\">#ff0000</Shade>"
                 , "<Shade Row=\"5\" Col=\"5\">gray</Shade>")
             f.write(text)
-        results = read_xpf(self.LOCATION)
+        results = read_xpf(self.LOCATION, warnings=False)
         self.puzzle.view.properties.styles[4, 4].cell["color"] = (32767, 32767, 32767)
         s1 = self.puzzle.view.properties.styles[4, 4]
         s2 = results[0].view.properties.styles[4, 4]
@@ -108,19 +108,19 @@ class FilesTestCase(unittest.TestCase):
     def testXPFErrors(self):
         with open(self.LOCATION2, 'w') as f:
             f.write("THIS IS NOT XML")
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2, warnings=False)
         with open(self.LOCATION2, 'w') as f:
             f.write("<NotPuzzlesElement></NotPuzzlesElement>")
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2, warnings=False)
         with open(self.LOCATION2, 'w') as f:
             f.write("<Puzzles></Puzzles>")
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2, warnings=False)
         with open(self.LOCATION2, 'w') as f:
             f.write("<Puzzles Version=\"not_a_number\"></Puzzles>")
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2, warnings=False)
         with open(self.LOCATION2, 'w') as f:
             f.write("<Puzzles Version=\"0.99\"></Puzzles>")
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION2, warnings=False)
         
     def testXPFErrors2(self):
         write_xpf(self.puzzle, False)
@@ -130,22 +130,22 @@ class FilesTestCase(unittest.TestCase):
             text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
                 , "<Size><Cols>15</Cols></Size>")
             f.write(text)
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
                 , "<Size><Rows>15</Rows></Size>")
             f.write(text)
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
                 , "<Size><Rows>noNumber</Rows><Cols>15</Cols></Size>")
             f.write(text)
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Size><Rows>15</Rows><Cols>15</Cols></Size>"
                 , "<Size><Rows>15</Rows><Cols>noNumber</Cols></Size>")
             f.write(text)
-        self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
+        self.assertRaises(XPFParserError, read_xpf, self.LOCATION, warnings=False)
         
     # the following tests are just to make sure the parser doesn't stop somewhere
     def testXPFCanComplete1(self):
@@ -156,17 +156,17 @@ class FilesTestCase(unittest.TestCase):
             text = xml_text.replace("<Row>               </Row>"
                 , "<Row></Row>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Row>               </Row>"
                 , "<Row>TOO.SHORT</Row>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Row>               </Row>"
                 , "<NotRow>               </NotRow>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         
     def testXPFCanComplete2(self):
         style = CellStyle()
@@ -179,40 +179,40 @@ class FilesTestCase(unittest.TestCase):
             text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
                 , "<Circle Row=\"1\"/>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
                 , "<Circle Col=\"1\"/>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
                 , "<NotQuiteACircle/>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
                 , "<Circle Row=\"noNumber\" Col=\"1\"/>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         with open(self.LOCATION, 'w') as f:
             text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
                 , "<Circle Row=\"1\" Col=\"noNumber\"/>")
             f.write(text)
-        read_xpf(self.LOCATION)
+        read_xpf(self.LOCATION, warnings=False)
         
     def testReadCrossword(self):
         write_xpf(self.puzzle)
-        p = read_crossword(self.LOCATION)
+        p = read_crossword(self.LOCATION, warnings=False)
         self.assertEquals(self.puzzle, p)
         
     def testReadCrosswordErrors(self):
         with open(self.LOCATION, 'w') as f:
             f.write("This is not XML")
-        self.assertRaises(ParserError, read_crossword, self.LOCATION)
+        self.assertRaises(ParserError, read_crossword, self.LOCATION, warnings=False)
         
     def testDetermineFileType(self):
         with open(self.LOCATION, 'w') as f:
             f.write('<NotQuitePuzzles></NotQuitePuzzles>')
         self.assertEquals(determine_file_type(self.LOCATION), None)
-        self.assertRaises(ParserError, read_crossword, self.LOCATION)
+        self.assertRaises(ParserError, read_crossword, self.LOCATION, warnings=False)

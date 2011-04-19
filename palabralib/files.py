@@ -84,12 +84,12 @@ def export_puzzle(puzzle, filename, options):
     elif options["format"] == "png":
         export_to_png(puzzle, filename, outputs[0], settings)
 
-def read_crossword(filename):
+def read_crossword(filename, warnings=True):
     t = determine_file_type(filename)
     if t is None:
         raise ParserError("Palabra was unable to open: " + filename)
     if t == "xpf":
-        results = read_xpf(filename)
+        results = read_xpf(filename, warnings)
         if not results:
             raise XPFParserError(u"No puzzle was found in this file.")
         if len(results) > 1:
@@ -243,7 +243,7 @@ def export_to_png(puzzle, filename, output, settings):
     surface.finish()
 
 # http://www.xwordinfo.com/XPF/
-def read_xpf(filename):
+def read_xpf(filename, warnings=True):
     results = []
     try:
         doc = etree.parse(filename)
@@ -263,7 +263,8 @@ def read_xpf(filename):
         raise XPFParserError("uXPF versions older than 1.0 are not supported.")
     for puzzle in puzzles:
         if puzzle.tag != "Puzzle":
-            print "Warning: skipping a child of Puzzles that is not a Puzzle."
+            if warnings:
+                print "Warning: skipping a child of Puzzles that is not a Puzzle."
             continue
         r_meta = {}
         r_width = None
@@ -294,10 +295,12 @@ def read_xpf(filename):
                 y = 0
                 for row in child:
                     if row.tag != "Row":
-                        print "Warning: skipping a child of Grid that is not a Row."
+                        if warnings:
+                            print "Warning: skipping a child of Grid that is not a Row."
                         continue
                     if not row.text or len(row.text) < r_width:
-                        print "Warning: skipping a row with missing content."
+                        if warnings:
+                            print "Warning: skipping a row with missing content."
                         continue
                     for x, c in enumerate(row.text):
                         if c == '.':
@@ -310,18 +313,21 @@ def read_xpf(filename):
             elif child.tag == "Circles":
                 for circle in child:
                     if circle.tag != "Circle":
-                        print "Warning: skipping a child of Circles that is not a Circle."
+                        if warnings:
+                            print "Warning: skipping a child of Circles that is not a Circle."
                         continue
                     a_row = circle.get("Row")
                     a_col = circle.get("Col")
                     if not (a_row and a_col):
-                        print "Warning: skipping a child of Circles with missing content."
+                        if warnings:
+                            print "Warning: skipping a child of Circles with missing content."
                         continue
                     try:
                         x = int(a_col) - 1
                         y = int(a_row) - 1
                     except ValueError:
-                        print "Warning: skipping child of Circles with invalid coordinates."
+                        if warnings:
+                            print "Warning: skipping child of Circles with invalid coordinates."
                         continue
                     if (x, y) not in r_styles:
                         r_styles[x, y] = CellStyle()
@@ -329,37 +335,43 @@ def read_xpf(filename):
             elif child.tag == "RebusEntries":
                 for rebus in child:
                     if rebus.tag != "Rebus":
-                        print "Warning: skipping a child of RebusEntries that is not a Rebus."
+                        if warnings:
+                            print "Warning: skipping a child of RebusEntries that is not a Rebus."
                         continue
                     a_row = rebus.get("Row")
                     a_col = rebus.get("Col")
                     a_short = rebus.get("Short")
                     content = rebus.text
                     if not (a_row and a_row and a_short and content):
-                        print "Warning: skipping a child of RebusEntries with missing content."
+                        if warnings:
+                            print "Warning: skipping a child of RebusEntries with missing content."
                         continue
                     try:
                         x = int(a_col) - 1
                         y = int(a_row) - 1
                     except ValueError:
-                        print "Warning: skipping child of RebusEntries with invalid coordinates."
+                        if warnings:
+                            print "Warning: skipping child of RebusEntries with invalid coordinates."
                         continue
                     r_grid.set_rebus(x, y, a_short, content)
             elif child.tag == "Shades":
                 for shade in child:
                     if shade.tag != "Shade":
-                        print "Warning: skipping a child of Shades that is not a Shade."
+                        if warnings:
+                            print "Warning: skipping a child of Shades that is not a Shade."
                         continue
                     a_row = shade.get("Row")
                     a_col = shade.get("Col")
                     if not (a_row and a_col and shade.text):
-                        print "Warning: skipping a child of Shades with missing content."
+                        if warnings:
+                            print "Warning: skipping a child of Shades with missing content."
                         continue
                     try:
                         x = int(a_col) - 1
                         y = int(a_row) - 1
                     except ValueError:
-                        print "Warning: skipping a child of Shades with invalid coordinates."
+                        if warnings:
+                            print "Warning: skipping a child of Shades with invalid coordinates."
                         continue
                     if (x, y) not in r_styles:
                         r_styles[x, y] = CellStyle()
@@ -373,7 +385,8 @@ def read_xpf(filename):
             elif child.tag == "Clues":
                 for clue in child:
                     if clue.tag != "Clue":
-                        print "Warning: skipping a child of Clues that is not a Clue."
+                        if warnings:
+                            print "Warning: skipping a child of Clues that is not a Clue."
                         continue
                     a_row = clue.get("Row")
                     a_col = clue.get("Col")
@@ -381,20 +394,24 @@ def read_xpf(filename):
                     a_dir = clue.get("Dir")
                     a_ans = clue.get("Ans")
                     if not (a_row and a_col and a_dir):
-                        print "Warning: skipping a child of Clues with missing content."
+                        if warnings:
+                            print "Warning: skipping a child of Clues with missing content."
                         continue
                     try:
                         x = int(a_col) - 1
                         y = int(a_row) - 1
                     except ValueError:
-                        print "Warning: skipping a child of Clues with invalid coordinates."
+                        if warnings:
+                            print "Warning: skipping a child of Clues with invalid coordinates."
                         continue
                     dirs = {"Across": "across", "Down": "down"}
                     if a_dir not in dirs:
-                        print "Warning: skipping a clue with a direction that is not across or down."
+                        if warnings:
+                            print "Warning: skipping a clue with a direction that is not across or down."
                         continue
                     if not clue.text:
-                        #print "Warning: skipping clue without text."
+                        if warnings:
+                            print "Warning: skipping clue without text."
                         continue
                     r_grid.store_clue(x, y, dirs[a_dir], "text", clue.text)
             elif child.tag == "Notepad":
@@ -403,7 +420,8 @@ def read_xpf(filename):
                 version = child.get("Version")
                 if version > constants.VERSION:
                     # for now, don't try
-                    print "Warning: Palabra-specific puzzle content was not loaded as it was made in a newer version of Palabra."
+                    if warnings:
+                        print "Warning: Palabra-specific puzzle content was not loaded as it was made in a newer version of Palabra."
                     continue
                 for c in child:
                     if c.tag == "Explanation":
@@ -411,20 +429,24 @@ def read_xpf(filename):
                         a_col = c.get("Col")
                         a_dir = c.get("Dir")
                         if not (a_row and a_col and a_dir):
-                            print "Warning: skipping Explanation with missing content"
+                            if warnings:
+                                print "Warning: skipping Explanation with missing content"
                             continue
                         try:
                             x = int(a_col) - 1
                             y = int(a_row) - 1
                         except ValueError:
-                            print "Warning: skipping Explanation with invalid coordinates."
+                            if warnings:
+                                print "Warning: skipping Explanation with invalid coordinates."
                             continue
                         dirs = {"Across": "across", "Down": "down"}
                         if a_dir not in dirs:
-                            print "Warning: skipping Explanation with a direction that is not across or down."
+                            if warnings:
+                                print "Warning: skipping Explanation with a direction that is not across or down."
                             continue
                         if not c.text:
-                            #print "Warning: skipping explanation without text."
+                            if warnings:
+                                print "Warning: skipping explanation without text."
                             continue
                         r_grid.store_clue(x, y, dirs[a_dir], "explanation", c.text)
         # TODO modify when arbitrary number schemes are implemented
