@@ -403,6 +403,7 @@ def read_xpf(filename):
                 version = child.get("Version")
                 if version > constants.VERSION:
                     # for now, don't try
+                    print "Warning: Palabra-specific puzzle content was not loaded as it was made in a newer version of Palabra."
                     continue
                 for c in child:
                     if c.tag == "Explanation":

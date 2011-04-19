@@ -147,6 +147,60 @@ class FilesTestCase(unittest.TestCase):
             f.write(text)
         self.assertRaises(XPFParserError, read_xpf, self.LOCATION)
         
+    # the following tests are just to make sure the parser doesn't stop somewhere
+    def testXPFCanComplete1(self):
+        write_xpf(self.puzzle, False)
+        with open(self.LOCATION, 'r') as f:
+            xml_text = f.read()
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Row>               </Row>"
+                , "<Row></Row>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Row>               </Row>"
+                , "<Row>TOO.SHORT</Row>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Row>               </Row>"
+                , "<NotRow>               </NotRow>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        
+    def testXPFCanComplete2(self):
+        style = CellStyle()
+        style.circle = True
+        self.puzzle.view.properties.styles[0, 0] = style
+        write_xpf(self.puzzle, False)
+        with open(self.LOCATION, 'r') as f:
+            xml_text = f.read()
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
+                , "<Circle Row=\"1\"/>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
+                , "<Circle Col=\"1\"/>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
+                , "<NotQuiteACircle/>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
+                , "<Circle Row=\"noNumber\" Col=\"1\"/>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Circle Row=\"1\" Col=\"1\"/>"
+                , "<Circle Row=\"1\" Col=\"noNumber\"/>")
+            f.write(text)
+        read_xpf(self.LOCATION)
+        
     def testReadCrossword(self):
         write_xpf(self.puzzle)
         p = read_crossword(self.LOCATION)
