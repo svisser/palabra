@@ -2,14 +2,12 @@
 This is a list of changes since the initial release of Palabra.
 
 0.1.5 (unreleased)
+* XPF 1.0 is supported (except right-to-left editing)
+* Disabled a variety of features for this release.
+* Added export to PDF and PNG.
 * Speed improvements to XML parser.
 * Speed improvements to displaying list of words.
-* Most common features of XPF 1.0 are supported.
-* Added indicator of word quality in search.
-* Added ability to sort search results by likelihood of fill.
-* Added combo control to main window to specify word sorting.
-* Disabled a variety of features for this release.
-* Added export to PDF.
+* Various other speed improvements
 
 0.1.4 (June 13, 2010)
 * Disabled various features for future release.
