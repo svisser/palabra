@@ -23,6 +23,7 @@ import webbrowser
 
 import action
 import constants
+from files import get_real_filename
 import preferences
 import transform
 from word import search_wordlists
@@ -204,7 +205,7 @@ class WordTool:
     
     def create(self):
         img = gtk.Image()
-        img.set_from_file("resources/icon1.png")
+        img.set_from_file(get_real_filename("resources/icon1.png"))
         def on_button_toggled(self, button):
             self.show_intersect = button.get_active()
             self.display_words()
@@ -214,7 +215,7 @@ class WordTool:
         toggle_button.connect("toggled", lambda b: on_button_toggled(self, b))
         
         img = gtk.Image()
-        img.set_from_file("resources/icon2.png")
+        img.set_from_file(get_real_filename("resources/icon2.png"))
         def on_button2_toggled(self, button):
             self.show_used = not button.get_active()
             self.display_words()

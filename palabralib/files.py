@@ -20,6 +20,7 @@ import gtk
 import pango
 import pangocairo
 from operator import itemgetter
+import os
 
 from lxml import etree
 
@@ -70,6 +71,9 @@ class XPFParserError(ParserError):
     def __init__(self, message=""):
         ParserError.__init__(self, "XPFParserError: " + message)
 
+def get_real_filename(f):
+    return os.path.join(os.path.split(__file__)[0], f)
+
 def export_puzzle(puzzle, filename, options):
     outputs = filter(lambda key: options["output"][key], options["output"])
     settings = options["settings"]
@@ -104,14 +108,14 @@ def determine_file_type(filename):
     
 def read_containers(files):
     def load_container(f):
-        import os
+        f = get_real_filename(f)
         if os.path.isfile(f):
             return f, {}, read_xpf(f)
         else:
             # return None as f to indicate 'failure'
             return None, {}, []
     return [load_container(f) for f in files]
-    
+
 def write_containers(patterns):
     for f, meta, puzzles in patterns:
         write_xpf(puzzles, filename=f, compact=True)
@@ -473,7 +477,6 @@ def _write_puzzle(filename, contents, backup=True):
     """
     if backup:
         try:
-            import os
             if os.path.isfile(filename):
                 import shutil
                 shutil.copy2(filename, "".join([filename, "~"]))

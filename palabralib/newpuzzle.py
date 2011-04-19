@@ -23,7 +23,7 @@ import operator
 import os
 
 import constants
-from files import read_containers
+from files import read_containers, get_real_filename
 import grid
 from grid import Grid
 from pattern import PatternEditor
@@ -235,7 +235,9 @@ class NewWindow(gtk.Dialog):
         self.clear_button = gtk.Button("Clear pattern")
         self.clear_button.connect("clicked", self.clear_pattern)
         
-        self.files = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
+        self.files = []
+        for f in constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]:
+            self.files.append(get_real_filename(f))
         
         self.patterns = []
         for f, meta, data in palabra_window.patterns:

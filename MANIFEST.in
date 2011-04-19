@@ -1,9 +1,9 @@
-include palabra
 include README
 include CHANGES
 include COPYING
-include xml/patterns.xml
 include ez_setup.py
 include palabralib/cpalabra.h
+include palabralib/xml/patterns.xml
+include palabralib/resources/icon*.png
 exclude palabralib/tests/*
 exclude MANIFEST.in

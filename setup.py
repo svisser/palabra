@@ -19,7 +19,7 @@ EXTS = [create_ext(e) for e in ['grid', 'view', 'word']]
 ext_modules = [Extension(n, sources=s) for n, s in EXTS]
 
 # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
-classifiers = [ 
+CLASSIFIERS = [ 
 "Development Status :: 5 - Production/Stable"
 , "Environment :: X11 Applications :: GTK"
 , "Intended Audience :: End Users/Desktop"
@@ -31,6 +31,12 @@ classifiers = [
 , "Topic :: Games/Entertainment :: Puzzle Games"
 ]
 
+PACKAGE_DATA = [
+'xml/patterns.xml',
+'resources/icon1.png',
+'resources/icon2.png'
+]
+
 setup(name="palabra"
     , version=constants.VERSION
     , license="GNU General Public License (GPL)"
@@ -40,8 +46,10 @@ setup(name="palabra"
     , url=constants.WEBSITE
     , requires=['lxml']
     , packages=['palabralib']
-    , package_data={'': ['xml/patterns.xml']}
+    , package_dir={'palabralib': 'palabralib'}
+    , package_data={'palabralib': PACKAGE_DATA}
     , entry_points={'console_scripts':['palabra = palabralib.gui:main']}
-    , classifiers=classifiers
+    , classifiers=CLASSIFIERS
     , include_dirs=['palabralib']
+    , zip_safe=False
     , ext_modules=ext_modules)
