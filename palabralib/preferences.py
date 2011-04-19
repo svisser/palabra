@@ -166,7 +166,7 @@ class PreferencesWindow(gtk.Dialog):
         buttons = (gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         gtk.Dialog.__init__(self, u"Palabra preferences"
             , palabra_window, flags, buttons)
-        self.set_size_request(480, 420)
+        self.set_size_request(640, 420)
         self.current_item = None
         
         vbox = gtk.VBox(False, 0)
