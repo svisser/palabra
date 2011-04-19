@@ -75,19 +75,35 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.grid.assign_numbers()
         self.puzzle.metadata['title'] = "This is the title"
         self.puzzle.notepad = '''\"Notepad with weird chars < > & " \"'''
+        write_xpf(self.puzzle, False)
+        results = read_xpf(self.LOCATION)
+        self.assertEquals(len(results), 1)
+        self.assertEquals(self.puzzle.grid, results[0].grid)
+        self.assertEquals(self.puzzle, results[0])
         
+    def testXPFTwo(self):
         style = CellStyle()
         style.circle = True
         self.puzzle.view.properties.styles[2, 2] = style
         style = CellStyle()
         style.cell["color"] = (65535, 0, 0)
         self.puzzle.view.properties.styles[4, 4] = style
-        
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION)
-        self.assertEquals(len(results), 1)
-        self.assertEquals(self.puzzle.grid, results[0].grid)
         self.assertEquals(self.puzzle, results[0])
+        
+        # test 'gray' as shade color
+        with open(self.LOCATION, 'r') as f:
+            xml_text = f.read()
+        with open(self.LOCATION, 'w') as f:
+            text = xml_text.replace("<Shade Row=\"5\" Col=\"5\">#ff0000</Shade>"
+                , "<Shade Row=\"5\" Col=\"5\">gray</Shade>")
+            f.write(text)
+        results = read_xpf(self.LOCATION)
+        self.puzzle.view.properties.styles[4, 4].cell["color"] = (32767, 32767, 32767)
+        s1 = self.puzzle.view.properties.styles[4, 4]
+        s2 = results[0].view.properties.styles[4, 4]
+        self.assertEquals(s1, s2)
         
     def testXPFErrors(self):
         with open(self.LOCATION2, 'w') as f:

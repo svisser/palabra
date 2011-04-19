@@ -32,19 +32,13 @@ class Puzzle:
         self.notepad = ""
         
     def __eq__(self, other):
-        if other is None:
+        if (other is None
+            or self.type != other.type
+            or self.filename != other.filename
+            or self.metadata != other.metadata
+            or self.notepad != other.notepad
+            or self.grid != other.grid):
             return False
-        if self.type != other.type:
-            return False
-        if self.filename != other.filename:
-            return False
-        if self.metadata != other.metadata:
-            return False
-        if self.notepad != other.notepad:
-            return False
-        if self.grid != other.grid:
-            return False
-        # TODO view/styles
         return True
         
     def __ne__(self, other):
