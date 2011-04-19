@@ -305,33 +305,34 @@ class GridView:
             context.translate(-props.margin_x, -props.margin_y)
         
     def render_top(self, context, cells):
+        data = self.grid.data
+        props = self.properties
         if self.settings["has_padding"]:
-            context.translate(self.properties.margin_x, self.properties.margin_y)
+            context.translate(props.margin_x, props.margin_y)
         cur_color = None
         styles = {}
         for x, y in cells:
-            styles[x, y] = self.properties.style(x, y)
-            
+            styles[x, y] = props.style(x, y)
+        screen_xs = self.comp_screen_xs()
+        screen_ys = self.comp_screen_ys()
         pcr = pangocairo.CairoContext(context)
         pcr_layout = pcr.create_layout()
         def _render_pango(r, s, font, content, rx=None, ry=None):
             if rx is None and ry is None:
-                rx = self.properties.grid_to_screen_x(r, False) + 1
-                ry = self.properties.grid_to_screen_y(s, False)
+                rx = screen_xs[r] + 1
+                ry = screen_ys[s]
             pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
             context.move_to(rx, ry)
             pcr.show_layout(pcr_layout)
         def _render_char(r, s, c, extents):
             xbearing, ybearing, width, height, xadvance, yadvance = extents[c]
-            rx = (self.properties.border["width"] +
-                (r + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
-                width - self.properties.line["width"] / 2 - abs(xbearing) / 2)
-            ry = (self.properties.border["width"] +
-                (s + 0.55) * (self.properties.cell["size"] + self.properties.line["width"]) -
-                height - self.properties.line["width"] / 2 - abs(ybearing) / 2)
+            rx = (props.border["width"] +
+                (r + 0.55) * (props.cell["size"] + props.line["width"]) -
+                width - props.line["width"] / 2 - abs(xbearing) / 2)
+            ry = (props.border["width"] +
+                (s + 0.55) * (props.cell["size"] + props.line["width"]) -
+                height - props.line["width"] / 2 - abs(ybearing) / 2)
             _render_pango(r, s, styles[r, s].char["font"], c, rx, ry)
-            
-        data = self.grid.data
 
         # chars and overlay chars
         n_chars = []
@@ -364,9 +365,6 @@ class GridView:
                 context.set_source_rgb(*[c / 65535.0 for c in color])
             for p, q, c in o_chars:
                 _render_char(p, q, c, extents)
-                
-        screen_xs = self.comp_screen_xs()
-        screen_ys = self.comp_screen_ys()
         
         # highlights
         for p, q in cells:
@@ -379,23 +377,23 @@ class GridView:
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
                 sx = screen_xs[p]
                 sy = screen_ys[q]
-                hwidth = int(self.properties.cell["size"] / 8)
+                hwidth = int(props.cell["size"] / 8)
                 lines = []
                 if top:
                     ry = sy + 0.5 * hwidth
-                    rdx = self.properties.cell["size"]
+                    rdx = props.cell["size"]
                     lines.append((sx, ry, rdx, 0))
                 if bottom:
-                    ry = sy + self.properties.cell["size"] - 0.5 * hwidth
-                    rdx = self.properties.cell["size"]
+                    ry = sy + props.cell["size"] - 0.5 * hwidth
+                    rdx = props.cell["size"]
                     lines.append((sx, ry, rdx, 0))
                 if left:
                     rx = sx + 0.5 * hwidth
-                    rdy = self.properties.cell["size"]
+                    rdy = props.cell["size"]
                     lines.append((rx, sy, 0, rdy))
                 if right:
-                    rx = sx + self.properties.cell["size"] - 0.5 * hwidth
-                    rdy = self.properties.cell["size"]
+                    rx = sx + props.cell["size"] - 0.5 * hwidth
+                    rdy = props.cell["size"]
                     lines.append((rx, sy, 0, rdy))
                 
                 context.set_line_width(hwidth)
@@ -403,7 +401,7 @@ class GridView:
                     context.move_to(rx, ry)
                     context.rel_line_to(rdx, rdy)
                     context.stroke()
-                context.set_line_width(self.properties.line["width"])
+                context.set_line_width(props.line["width"])
                 
             for r, s, direction, length in self.highlights:
                 if direction == "across" and r <= p < r + length and s == q:
@@ -426,7 +424,7 @@ class GridView:
             if data[q][p]["block"]:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
-                rsize = self.properties.cell["size"]
+                rsize = props.cell["size"]
                 margin = style.block["margin"]
                 if margin == 0:
                     # -0.5 for coordinates and +1 for size
@@ -459,8 +457,8 @@ class GridView:
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
-                context.set_line_width(self.properties.line["width"])
-                rsize = self.properties.cell["size"]
+                context.set_line_width(props.line["width"])
+                rsize = props.cell["size"]
                 rx = screen_xs[p] + rsize / 2
                 ry = screen_ys[q] + rsize / 2
                 context.new_sub_path()
@@ -478,7 +476,7 @@ class GridView:
         else:
             self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
         if self.settings["has_padding"]:
-            context.translate(-self.properties.margin_x, -self.properties.margin_y)
+            context.translate(-props.margin_x, -props.margin_y)
     
     def render_all_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         """Render the lines that surround a cell (all four sides)."""
