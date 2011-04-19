@@ -381,6 +381,29 @@ def read_xpf(filename):
                     r_grid.store_clue(x, y, dirs[a_dir], "text", clue.text)
             elif child.tag == "Notepad":
                 r_notepad = child.text
+            elif child.tag == "Palabra":
+                version = child.get("Version")
+                if version > constants.VERSION:
+                    # for now, don't try
+                    continue
+                for c in child:
+                    if c.tag == "Explanation":
+                        a_row = c.get("Row")
+                        a_col = c.get("Col")
+                        a_dir = c.get("Dir")
+                        if not (a_row and a_col and a_dir):
+                            print "Warning: Skipping explanation with missing content"
+                            continue
+                        x = int(a_col) - 1
+                        y = int(a_row) - 1
+                        dirs = {"Across": "across", "Down": "down"}
+                        if a_dir not in dirs:
+                            print "Warning: skipping an explanation with a direction that is not across or down."
+                            continue
+                        if not c.text:
+                            #print "Warning: skipping explanation without text."
+                            continue
+                        r_grid.store_clue(x, y, dirs[a_dir], "explanation", c.text)
         # TODO modify when arbitrary number schemes are implemented
         r_grid.assign_numbers()
         p = Puzzle(r_grid, r_styles)
@@ -468,6 +491,17 @@ def _write_xpf_xml(root, puzzle, compact=False):
                 eclue.text = clue
         e = etree.SubElement(main, "Notepad")
         e.text = etree.CDATA(puzzle.notepad)
+        
+        e = etree.SubElement(main, "Palabra")
+        e.set("Version", constants.VERSION)
+        for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
+            if explanation:
+                eexp = etree.SubElement(e, "Explanation")
+                eexp.set("Row", str(y + 1))
+                eexp.set("Col", str(x + 1))
+                eexp.set("Num", str(n))
+                eexp.set("Dir", {"across": "Across", "down": "Down"}[d])
+                eexp.text = explanation
     return etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     
 def _write_puzzle(filename, contents, backup=True):
