@@ -11,6 +11,8 @@ Requirements
 
 - Python 2.6
 - PyGTK 2.8
+- lxml package, also known as python-lxml in repositories.
+  It can also be found here: http://pypi.python.org/pypi/lxml.
 
 Palabra should work with the above versions of the software packages but they
 may need to be refined further (please contact me). In any case,
@@ -20,9 +22,6 @@ Palabra is known to work with:
 - Python 2.6.4
 - GTK+ 2.18.3
 - PyGTK 2.16.0
-
-You need the lxml package, called python-lxml in repositories.
-It can also be found here: http://pypi.python.org/pypi/lxml.
 
 How to install/run
 ==================
