@@ -111,6 +111,9 @@ class CellStyle:
             or self.circle != other.circle):
             return False
         return True
+        
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class GridViewProperties:
     def __init__(self, grid, styles=None):
