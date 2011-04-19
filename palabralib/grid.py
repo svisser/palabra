@@ -60,6 +60,20 @@ class Grid:
     def __ne__(self, other):
         return not self.__eq__(other)
         
+    def __str__(self):
+        s = []
+        for y in xrange(self.height):
+            for x in xrange(self.width):
+                if self.data[y][x]["block"]:
+                    s.append('.')
+                elif self.data[y][x]["void"]:
+                    s.append('~')
+                else:
+                    c = self.data[y][x]["char"]
+                    s.append(c if c else ' ')
+            s.append('\n')
+        return ''.join(s)
+        
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
         cGrid.assign_numbers(self)
