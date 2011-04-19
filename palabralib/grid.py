@@ -44,6 +44,7 @@ class Grid:
             , "clues": {}
             , "number": 0
             , "void": False
+            , "rebus": None
         }
         
     def __eq__(self, other):
@@ -951,6 +952,12 @@ class Grid:
     def set_void(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["void"] = status
+        
+    def has_rebus(self, x, y):
+        return self.data[y][x]["rebus"] is not None
+        
+    def set_rebus(self, x, y, short, full):
+        self.data[y][x]["rebus"] = (short, full)
         
     def _on_cell_type_change(self, x, y, status):
         if status:

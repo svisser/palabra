@@ -334,7 +334,7 @@ def read_xpf(filename):
                         continue
                     x = int(a_col) - 1
                     y = int(a_row) - 1
-                    print "TODO - rebus found:", x, y, a_short, content
+                    r_grid.set_rebus(x, y, a_short, content)
             elif child.tag == "Shades":
                 for shade in child:
                     if shade.tag != "Shade":
@@ -479,6 +479,16 @@ def _write_xpf_xml(root, puzzle, compact=False):
                     return hv if len(hv) == 2 else '0' + hv
                 text = '#' + ''.join([to_hex(v) for v in styles[x, y].cell["color"]])
                 eshade.text = text
+        rebus = [cell for cell in puzzle.grid.cells() if puzzle.grid.has_rebus(*cell)]
+        if rebus:
+            entries = etree.SubElement(main, "RebusEntries")
+            for x, y in rebus:
+                erebus = etree.SubElement(entries, "Rebus")
+                erebus.set("Row", str(y + 1))
+                erebus.set("Col", str(x + 1))
+                item = puzzle.grid.cell(x, y)["rebus"]
+                erebus.set("Short", item[0])
+                erebus.text = item[1]
         clues = etree.SubElement(main, "Clues")
         for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
             eclue = etree.SubElement(clues, "Clue")
