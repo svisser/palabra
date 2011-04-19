@@ -1,8 +1,8 @@
 
 import sys
 
-if sys.version_info < (2, 4):
-    sys.exit("ERROR: Python 2.4 is required to run Palabra.")
+if sys.version_info < (2, 6):
+    sys.exit("ERROR: Python 2.6 is required to run Palabra.")
 
 from ez_setup import use_setuptools
 use_setuptools()
@@ -20,7 +20,7 @@ ext_modules = [Extension(n, sources=s) for n, s in EXTS]
 
 # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
 classifiers = [ 
-"Development Status :: 4 - Beta"
+"Development Status :: 5 - Production/Stable"
 , "Environment :: X11 Applications :: GTK"
 , "Intended Audience :: End Users/Desktop"
 , "License :: OSI Approved :: GNU General Public License (GPL)"
@@ -41,7 +41,7 @@ setup(name="palabra"
     , requires=['lxml']
     , packages=['palabralib']
     , package_data={'': ['xml/patterns.xml']}
-    , entry_points={'console_scripts':['palabra = palabra']}
+    , entry_points={'console_scripts':['palabra = palabralib.gui:main']}
     , classifiers=classifiers
     , include_dirs=['palabralib']
     , ext_modules=ext_modules)

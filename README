@@ -9,7 +9,7 @@ version.
 Requirements
 ============
 
-- Python 2.4
+- Python 2.6
 - PyGTK 2.8
 
 Palabra should work with the above versions of the software packages but they
@@ -31,24 +31,42 @@ How to install/run
 
   python setup.py build
   
-- You can now run Palabra using:
+- You can now install Palabra using:
 
-  python palabra
+  python setup.py install
   
-The install command (sudo python setup.py install) should not be used yet
-as it's better to wait until a version of Palabra is available
-that is more suitable for daily use. For now, I recommend running Palabra
-from the directory itself using the command above.
+- After that, you can run palabra using:
 
-If you do want to install, edit setup.py and set IS_DEVELOPMENT to False
-and run the build and install commands.
+  palabra
 
 Getting started
 ===============
 
-Please see the Palabra manual (needs to be updated):
+Placing a block:
+    - Left-click on a cell and press '.', or
+    - Hold SHIFT and left-click on a cell
 
-  http://bitbucket.org/svisser/palabra/wiki/Manual
+Removing a block:
+    - Hold SHIFT and right-click on a cell
+
+Change typing direction:
+    - Press TAB.
+
+Entering a character in a cell:
+    - Left-click on the cell and type the character.
+
+Move the selection to a nearby cell:
+    - Use the ARROW KEYS for left, right, up, and down.
+
+Deleting a character:
+    - Left-click on a cell and press BACKSPACE or DELETE.
+    - You can also press BACKSPACE repeatedly to remove the whole slot.
+
+Jump to the first cell of a slot:
+    - Press HOME.
+    
+Jump to the last cell of a slot:
+    - Press END.
   
 Contact
 =======
