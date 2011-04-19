@@ -18,7 +18,7 @@
 import os
 
 # application data
-VERSION = "0.1.5"
+VERSION = "0.1.6"
 WEBSITE = "http://bitbucket.org/svisser/palabra"
 
 # configuration file
