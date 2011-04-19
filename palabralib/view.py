@@ -459,6 +459,7 @@ class GridView:
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
+                context.set_line_width(self.properties.line["width"])
                 rsize = self.properties.cell["size"]
                 rx = screen_xs[p] + rsize / 2
                 ry = screen_ys[q] + rsize / 2
