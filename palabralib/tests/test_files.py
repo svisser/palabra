@@ -221,7 +221,7 @@ class FilesTestCase(unittest.TestCase):
         props["cell", "color"] = (4444, 5555, 6666)
         props["number", "color"] = (7777, 8888, 9999)
         write_xpf(self.puzzle)
-        results = read_xpf(self.LOCATION)
+        results = read_xpf(self.LOCATION, warnings=False)
         propsL = results[0].view.properties
         def process(c):
             return hex_to_color(color_to_hex(c))
