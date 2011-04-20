@@ -82,14 +82,14 @@ class AppearanceDialog(gtk.Dialog):
         
         # border
         label = create_label(u"Border:")
-        self.border_color_button = create_color_button(properties.border["color"])
-        self.border_width_spinner = create_width_spinner(properties.border["width"])
+        self.border_color_button = create_color_button(properties["border", "color"])
+        self.border_width_spinner = create_width_spinner(properties["border", "width"])
         create_row(table, 1, label, self.border_color_button, self.border_width_spinner)
         
         # lines
         label = create_label(u"Line:")
-        self.line_color_button = create_color_button(properties.line["color"])
-        self.line_width_spinner = create_width_spinner(properties.line["width"])
+        self.line_color_button = create_color_button(properties["line", "color"])
+        self.line_width_spinner = create_width_spinner(properties["line", "width"])
         create_row(table, 2, label, self.line_color_button, self.line_width_spinner)
         
         # cells
@@ -100,7 +100,7 @@ class AppearanceDialog(gtk.Dialog):
         
         label = create_label(u"Cell:")
         self.cell_color_button = create_color_button(properties.default.cell["color"])
-        adj = gtk.Adjustment(properties.cell["size"], 32, 128, 1, 0, 0)
+        adj = gtk.Adjustment(properties["cell", "size"], 32, 128, 1, 0, 0)
         self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
         create_row_two(table, 1, label, self.cell_color_button, self.cell_size_spinner)
         
