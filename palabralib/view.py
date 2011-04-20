@@ -87,18 +87,33 @@ SETTINGS_EXPORT_PDF_SOLUTION = {
 }
 custom_settings = {}
 
-DEFAULT_BAR_WIDTH = 3
-DEFAULT_BORDER_WIDTH = 1
-DEFAULT_BORDER_COLOR = (0, 0, 0)
-DEFAULT_CELL_SIZE = 32
-DEFAULT_LINE_WIDTH = 1
-DEFAULT_LINE_COLOR = (0, 0, 0)
-
 DEFAULT_BLOCK_COLOR = (0, 0, 0)
 DEFAULT_BLOCK_MARGIN = 0
 DEFAULT_CELL_COLOR = (65535, 65535, 65535)
 DEFAULT_CHAR_COLOR = (0, 0, 0)
 DEFAULT_NUMBER_COLOR = (0, 0, 0)
+
+DEFAULTS = {
+    ("bar", "width"): 3,
+    ("border", "width"): 1,
+    ("border", "color"): (0, 0, 0),
+    ("cell", "size"): 32,
+    ("line", "width"): 1,
+    ("line", "color"): (0, 0, 0),
+    ("block", "color"): DEFAULT_BLOCK_COLOR,
+    ("block", "margin"): DEFAULT_BLOCK_MARGIN,
+    ("char", "color"): DEFAULT_CHAR_COLOR,
+    ("cell", "color"): DEFAULT_CELL_COLOR,
+    ("number", "color"): DEFAULT_NUMBER_COLOR
+}
+
+CELL_KEYS = [
+    ("cell", "color")
+    , ("block", "color")
+    , ("block", "margin")
+    , ("char", "color")
+    , ("number", "color")
+]
 
 class CellStyle:
     def __init__(self):
@@ -114,6 +129,18 @@ class CellStyle:
         self.number["color"] = DEFAULT_NUMBER_COLOR
         self.number["font"] = "Sans 7"
         self.circle = False
+        
+    def __getitem__(self, key):
+        if key == ("cell", "color"):
+            return self.cell["color"]
+        elif key == ("block", "color"):
+            return self.block["color"]
+        elif key == ("block", "margin"):
+            return self.block["margin"]
+        elif key == ("char", "color"):
+            return self.char["color"]
+        elif key == ("number", "color"):
+            return self.number["color"]
         
     def __setitem__(self, key, value):
         if key == ("cell", "color"):
@@ -153,21 +180,21 @@ class GridViewProperties:
         self.default = CellStyle()
         self.styles = styles if styles else {}
         self._data = {}
-        self["bar", "width"] = DEFAULT_BAR_WIDTH
-        self["border", "width"] = DEFAULT_BORDER_WIDTH
-        self["border", "color"] = DEFAULT_BORDER_COLOR
-        self["cell", "size"] = DEFAULT_CELL_SIZE
-        self["line", "width"] = DEFAULT_LINE_WIDTH
-        self["line", "color"] = DEFAULT_LINE_COLOR
+        self._data.update(DEFAULTS)
         if gstyles:
+            # note: also modifies self.default if needed
             for key, value in gstyles.items():
-                self.default[key] = value
                 self[key] = value
                 
     def __setitem__(self, key, value):
-        self._data[key] = value
+        if key in CELL_KEYS:
+            self.default[key] = value
+        else:
+            self._data[key] = value
             
     def __getitem__(self, key):
+        if key in CELL_KEYS:
+            return self.default[key]
         return self._data[key]
         
     def style(self, x=None, y=None):
@@ -176,21 +203,22 @@ class GridViewProperties:
         return self.default
         
     def get_non_defaults(self):
-        props = [("Bar", "Width", self["bar", "width"], DEFAULT_BAR_WIDTH)
-            , ("Border", "Width", self["border", "width"], DEFAULT_BORDER_WIDTH)
-            , ("Border", "Color", self["border", "color"], DEFAULT_BORDER_COLOR)
-            , ("Cell", "Size", self["cell", "size"], DEFAULT_CELL_SIZE)
-            , ("Line", "Width", self["line", "width"], DEFAULT_LINE_WIDTH)
-            , ("Line", "Color", self["line", "color"], DEFAULT_LINE_COLOR)
-            , ("Block", "Color", self.default.block["color"], DEFAULT_BLOCK_COLOR)
-            , ("Block", "Margin", self.default.block["margin"], DEFAULT_BLOCK_MARGIN)
-            , ("Char", "Color", self.default.char["color"], DEFAULT_CHAR_COLOR)
-            , ("Cell", "Color", self.default.cell["color"], DEFAULT_CELL_COLOR)
-            , ("Number", "Color", self.default.number["color"], DEFAULT_NUMBER_COLOR)
+        props = [("Bar", "Width", ("bar", "width"))
+            , ("Border", "Width", ("border", "width"))
+            , ("Border", "Color", ("border", "color"))
+            , ("Cell", "Size", ("cell", "size"))
+            , ("Line", "Width", ("line", "width"))
+            , ("Line", "Color", ("line", "color"))
+            , ("Block", "Color", ("block", "color"))
+            , ("Block", "Margin", ("block", "margin"))
+            , ("Char", "Color", ("char", "color"))
+            , ("Cell", "Color", ("cell", "color"))
+            , ("Number", "Color", ("number", "color"))
         ]
         visuals = {}
-        for elem, attr, value, default in props:
-            if value != default:
+        for elem, attr, key in props:
+            value = self[key]
+            if value != DEFAULTS[key]:
                 if elem not in visuals:
                     visuals[elem] = [(attr, value)]
                 else:
@@ -198,16 +226,16 @@ class GridViewProperties:
         return visuals
     
     def apply_appearance(self, appearance):
-        self.default.block["color"] = appearance["block"]["color"]
+        self["block", "color"] = appearance["block"]["color"]
         self["border", "color"] = appearance["border"]["color"]
-        self.default.char["color"] = appearance["char"]["color"]
-        self.default.cell["color"] = appearance["cell"]["color"]
+        self["char", "color"] = appearance["char"]["color"]
+        self["cell", "color"] = appearance["cell"]["color"]
         self["line", "color"] = appearance["line"]["color"]
-        self.default.number["color"] = appearance["number"]["color"]
+        self["number", "color"] = appearance["number"]["color"]
         
         self["border", "width"] = appearance["border"]["width"]
         self["line", "width"] = appearance["line"]["width"]
-        self.default.block["margin"] = appearance["block"]["margin"]
+        self["block", "margin"] = appearance["block"]["margin"]
         self["cell", "size"] = appearance["cell"]["size"]
     
     def grid_to_screen_x(self, x, include_padding=True):
@@ -317,7 +345,7 @@ class GridView:
         props = self.properties
         # background
         def render_rect(r, s):
-            context.set_source_rgb(*[c / 65535.0 for c in props.style(r, s).cell["color"]])
+            context.set_source_rgb(*[c / 65535.0 for c in props.style(r, s)["cell", "color"]])
             rx = props.grid_to_screen_x(r, False)
             ry = props.grid_to_screen_y(s, False)
             rsize = props["cell", "size"]
@@ -338,7 +366,7 @@ class GridView:
             y0 = props.grid_to_screen_y(0, False)
             x1 = props.grid_to_screen_x(self.grid.width - 1, False)
             y1 = props.grid_to_screen_y(self.grid.height - 1, False)
-            context.set_source_rgb(*[c / 65535.0 for c in style_default.cell["color"]])
+            context.set_source_rgb(*[c / 65535.0 for c in style_default["cell", "color"]])
             rsize = props["cell", "size"]
             
             # rsize + 1, rsize + 1)
@@ -407,7 +435,7 @@ class GridView:
                 extents[c] = context.text_extents(c)
         if n_chars:
             for p, q, c in n_chars:
-                color = styles[p, q].char["color"]
+                color = styles[p, q]["char", "color"]
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[cc / 65535.0 for cc in color])
@@ -472,7 +500,7 @@ class GridView:
         # block
         for p, q in cells:
             style = styles[p, q]
-            color = style.block["color"]
+            color = style["block", "color"]
             if color != cur_color:
                 cur_color = color
                 context.set_source_rgb(*[c / 65535.0 for c in color])
@@ -480,7 +508,7 @@ class GridView:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
                 rsize = props["cell", "size"]
-                margin = style.block["margin"]
+                margin = style["block", "margin"]
                 if margin == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
@@ -496,7 +524,7 @@ class GridView:
             numbers = [(p, q) for p, q in cells if data[q][p]["number"] > 0]
             for p, q in numbers:
                 style = styles[p, q]
-                color = style.number["color"]
+                color = style["number", "color"]
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
@@ -508,7 +536,7 @@ class GridView:
         for p, q in cells:
             style = styles[p, q]
             if style.circle:
-                color = style.char["color"]
+                color = style["char", "color"]
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])

@@ -112,7 +112,7 @@ class AppearanceDialog(gtk.Dialog):
         
         current = properties.default.block["margin"]
         label = create_label(u"Block:")
-        self.block_color_button = create_color_button(properties.default.block["color"])
+        self.block_color_button = create_color_button(properties["block", "color"])
         adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
         self.block_margin_spinner = gtk.SpinButton(adj, 0.0, 0)
         create_row_two(table, 3, label, self.block_color_button, self.block_margin_spinner)

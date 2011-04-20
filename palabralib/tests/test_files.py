@@ -215,11 +215,11 @@ class FilesTestCase(unittest.TestCase):
         props["cell", "size"] = 64
         props["line", "width"] = 3
         props["line", "color"] = (4567, 5678, 6789)
-        props.default.block["color"] = (7890, 8901, 9012)
-        props.default.block["margin"] = 20
-        props.default.char["color"] = (1111, 2222, 3333)
-        props.default.cell["color"] = (4444, 5555, 6666)
-        props.default.number["color"] = (7777, 8888, 9999)
+        props["block", "color"] = (7890, 8901, 9012)
+        props["block", "margin"] = 20
+        props["char", "color"] = (1111, 2222, 3333)
+        props["cell", "color"] = (4444, 5555, 6666)
+        props["number", "color"] = (7777, 8888, 9999)
         write_xpf(self.puzzle)
         results = read_xpf(self.LOCATION)
         propsL = results[0].view.properties
@@ -231,11 +231,11 @@ class FilesTestCase(unittest.TestCase):
         self.assertEquals(propsL["cell", "size"], 64)
         self.assertEquals(propsL["line", "width"], 3)
         self.assertEquals(propsL["line", "color"], process((4567, 5678, 6789)))
-        self.assertEquals(propsL.default.block["color"], process((7890, 8901, 9012)))
-        self.assertEquals(propsL.default.block["margin"], 20)
-        self.assertEquals(propsL.default.char["color"], process((1111, 2222, 3333)))
-        self.assertEquals(propsL.default.cell["color"], process((4444, 5555, 6666)))
-        self.assertEquals(propsL.default.number["color"], process((7777, 8888, 9999)))
+        self.assertEquals(propsL["block", "color"], process((7890, 8901, 9012)))
+        self.assertEquals(propsL["block", "margin"], 20)
+        self.assertEquals(propsL["char", "color"], process((1111, 2222, 3333)))
+        self.assertEquals(propsL["cell", "color"], process((4444, 5555, 6666)))
+        self.assertEquals(propsL["number", "color"], process((7777, 8888, 9999)))
         
     def testReadCrossword(self):
         write_xpf(self.puzzle)
