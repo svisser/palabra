@@ -522,7 +522,7 @@ def color_to_hex(color):
     
 def hex_to_color(colorhex):
     split = (colorhex[1:3], colorhex[3:5], colorhex[5:7])
-    return tuple([int((int(d, 16) / 256.0) * 65535) for d in split])
+    return tuple([int((int(d, 16) / 255.0) * 65535) for d in split])
 
 def _write_xpf_xml(root, puzzle, compact=False):
     main = etree.SubElement(root, "Puzzle")
