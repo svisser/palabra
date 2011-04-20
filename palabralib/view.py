@@ -228,48 +228,40 @@ class GridViewProperties:
                     visuals[elem].append((attr, value))
         return visuals
     
-    # TODO refactor
-    def grid_to_screen_x(self, x, include_padding=True):
-        """Return the x-coordinate of the cell's upper-left corner."""
-        result = self["border", "width"] + x * (self["cell", "size"] + self["line", "width"])
-        if include_padding:
-            result += self.margin_x
-        return result
-        
-    def grid_to_screen_y(self, y, include_padding=True):
-        """Return the y-coordinate of the cell's upper-left corner."""
-        result = self["border", "width"] + y * (self["cell", "size"] + self["line", "width"])
-        if include_padding:
-            result += self.margin_y
-        return result
-        
-    def grid_to_screen(self, x, y, include_padding=True):
+    def grid_to_screen(self, x=None, y=None, include_padding=True):
+        """
+        Return the x-coordinate and/or y-coordinate of the cell's upper-left corner.
+        """
         border_width = self["border", "width"]
         cell_size = self["cell", "size"]
         line_width = self["line", "width"]
-        dsize = (cell_size + line_width)
-        sx = border_width + x * dsize
-        sy = border_width + y * dsize
-        if include_padding:
-            sx += self.margin_x
-            sy += self.margin_y
-        return sx, sy
+        dsize = cell_size + line_width
+        if x is not None:
+            sx = border_width + x * dsize + (self.margin_x if include_padding else 0)
+        if y is not None:
+            sy = border_width + y * dsize + (self.margin_y if include_padding else 0)
+        if x is not None and y is not None:
+            return sx, sy
+        elif x is not None:
+            return sx
+        elif y is not None:
+            return sy
+        return None
         
     def screen_to_grid(self, screen_x, screen_y):
         """
         Return the coordinates of the cell based on the coordinates on screen.
         """
         i, j = -1, -1
-        to_screen_x = self.grid_to_screen_x
-        to_screen_y = self.grid_to_screen_y
+        to_screen = self.grid_to_screen
         size = self["cell", "size"]
         for x in xrange(self.grid.width):
-            sx = to_screen_x(x)
+            sx = to_screen(x=x)
             if sx <= screen_x < sx + size:
                 i = x
                 break
         for y in xrange(self.grid.height):
-            sy = to_screen_y(y)
+            sy = to_screen(y=y)
             if sy <= screen_y < sy + size:
                 j = y
                 break
@@ -279,17 +271,16 @@ class GridViewProperties:
         """
         Return the visual size, possibly including padding, as shown on screen.
         """
-        width = 2 * self["border", "width"]
-        width += self.grid.width * self["cell", "size"]
-        width += (self.grid.width - 1) * self["line", "width"]
+        border_width = self["border", "width"]
+        cell_size = self["cell", "size"]
+        line_width = self["line", "width"]
+        g_w, g_h = self.grid.size
+        w = 2 * border_width + (g_w * cell_size) + (g_w - 1) * line_width
+        h = 2 * border_width + (g_h * cell_size) + (g_h - 1) * line_width
         if include_padding:
-            width += (2 * self.margin_x)
-        height = 2 * self["border", "width"]
-        height += self.grid.height * self["cell", "size"]
-        height += (self.grid.height - 1) * self["line", "width"]
-        if include_padding:
-            height += (2 * self.margin_y)
-        return width, height
+            w += (2 * self.margin_x)
+            h += (2 * self.margin_y)
+        return w, h
 
 class GridView:
     def __init__(self, grid, styles=None, gstyles=None):
@@ -567,14 +558,13 @@ class GridView:
                 
     def comp_screen(self):
         """Compute screen coordinates of cells."""
-        to_screen_x = self.properties.grid_to_screen_x
-        to_screen_y = self.properties.grid_to_screen_y        
+        to_screen = self.properties.grid_to_screen
         xx, yy = {}, {}
         # +1 because we also use coords of invalid cells
         for x in xrange(self.grid.width + 1):
-            xx[x] = to_screen_x(x, False)
+            xx[x] = to_screen(x=x, include_padding=False)
         for y in xrange(self.grid.height + 1):
-            yy[y] = to_screen_y(y, False)
+            yy[y] = to_screen(y=y, include_padding=False)
         return xx, yy
 
     def render_lines_of_cells(self, context, cells, screen_xs, screen_ys):
