@@ -444,6 +444,7 @@ class GridView:
             hwidth = int(cell_size / 8)
             context.set_line_width(hwidth)
             for r, s, direction, length in self.highlights:
+                top, bottom, left, right = None, None, None, None
                 if direction == "across" and r <= p < r + length and s == q:
                     top = bottom = True
                     right = p == (r + length - 1)
