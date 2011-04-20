@@ -30,6 +30,7 @@ import unittest
 from palabralib.tests.test_files import FilesTestCase
 from palabralib.tests.test_grid import GridTestCase, PuzzleTestCase
 from palabralib.tests.test_transform import TransformTestCase
+from palabralib.tests.test_view import ViewTestCase
 from palabralib.tests.test_word import WordTestCase
 
 # ActionTestCase, ActionStackTestCase, FilesTestCase
@@ -37,6 +38,7 @@ cases = [ GridTestCase
     , PuzzleTestCase
     , FilesTestCase
     , TransformTestCase
+    , ViewTestCase
     , WordTestCase]
 suites = [unittest.TestLoader().loadTestsFromTestCase(c) for c in cases]
 
