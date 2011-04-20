@@ -454,29 +454,19 @@ class GridView:
                 hwidth = int(cell_size / 8)
                 lines = []
                 if top:
-                    ry = sy + 0.5 * hwidth
-                    rdx = cell_size
-                    lines.append((sx, ry, rdx, 0))
+                    lines.append((sx, sy + 0.5 * hwidth, cell_size, 0))
                 if bottom:
-                    ry = sy + cell_size - 0.5 * hwidth
-                    rdx = cell_size
-                    lines.append((sx, ry, rdx, 0))
+                    lines.append((sx, sy + cell_size - 0.5 * hwidth, cell_size, 0))
                 if left:
-                    rx = sx + 0.5 * hwidth
-                    rdy = cell_size
-                    lines.append((rx, sy, 0, rdy))
+                    lines.append((sx + 0.5 * hwidth, sy, 0, cell_size))
                 if right:
-                    rx = sx + cell_size - 0.5 * hwidth
-                    rdy = cell_size
-                    lines.append((rx, sy, 0, rdy))
-                
+                    lines.append((sx + cell_size - 0.5 * hwidth, sy, 0, cell_size))
                 context.set_line_width(hwidth)
                 for rx, ry, rdx, rdy in lines:
                     context.move_to(rx, ry)
                     context.rel_line_to(rdx, rdy)
                     context.stroke()
                 context.set_line_width(props["line", "width"])
-                
             for r, s, direction, length in self.highlights:
                 if direction == "across" and r <= p < r + length and s == q:
                     top = bottom = True
