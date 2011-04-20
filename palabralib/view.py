@@ -448,25 +448,26 @@ class GridView:
                 cur_color = color
                 context.set_source_rgb(*[c / 65535.0 for c in color])
             def render_highlights_of_cell(context, p, q, top, bottom, left, right):
+                cell_size = props["cell", "size"]
                 sx = screen_xs[p]
                 sy = screen_ys[q]
-                hwidth = int(props["cell", "size"] / 8)
+                hwidth = int(cell_size / 8)
                 lines = []
                 if top:
                     ry = sy + 0.5 * hwidth
-                    rdx = props["cell", "size"]
+                    rdx = cell_size
                     lines.append((sx, ry, rdx, 0))
                 if bottom:
-                    ry = sy + props["cell", "size"] - 0.5 * hwidth
-                    rdx = props["cell", "size"]
+                    ry = sy + cell_size - 0.5 * hwidth
+                    rdx = cell_size
                     lines.append((sx, ry, rdx, 0))
                 if left:
                     rx = sx + 0.5 * hwidth
-                    rdy = props["cell", "size"]
+                    rdy = cell_size
                     lines.append((rx, sy, 0, rdy))
                 if right:
-                    rx = sx + props["cell", "size"] - 0.5 * hwidth
-                    rdy = props["cell", "size"]
+                    rx = sx + cell_size - 0.5 * hwidth
+                    rdy = cell_size
                     lines.append((rx, sy, 0, rdy))
                 
                 context.set_line_width(hwidth)
@@ -579,6 +580,8 @@ class GridView:
         props_border_width = self.properties["border", "width"]
         props_bar_width = self.properties["bar", "width"]
         props_cell_size = self.properties["cell", "size"]
+        props_line_color = self.properties["line", "color"]
+        props_border_color = self.properties["border", "color"]
         
         if not self.grid.lines:
             self.grid.lines = cView.compute_lines(self.grid)
@@ -656,14 +659,14 @@ class GridView:
             ctx_stroke()
         if l_normal:
             ctx_set_line_width(props_line_width)
-            ctx_set_source_rgb(*[c / 65535.0 for c in self.properties["line", "color"]])
+            ctx_set_source_rgb(*[c / 65535.0 for c in props_line_color])
             for rx, ry, rdx, rdy, bar, border in l_normal:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
             ctx_stroke()
         if l_borders:
             ctx_set_line_width(props_border_width)
-            ctx_set_source_rgb(*[c / 65535.0 for c in self.properties["border", "color"]])
+            ctx_set_source_rgb(*[c / 65535.0 for c in props_border_color])
             for rx, ry, rdx, rdy, bar, border in l_borders:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
