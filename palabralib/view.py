@@ -228,6 +228,7 @@ class GridViewProperties:
                     visuals[elem].append((attr, value))
         return visuals
     
+    # TODO refactor
     def grid_to_screen_x(self, x, include_padding=True):
         """Return the x-coordinate of the cell's upper-left corner."""
         result = self["border", "width"] + x * (self["cell", "size"] + self["line", "width"])
@@ -241,6 +242,18 @@ class GridViewProperties:
         if include_padding:
             result += self.margin_y
         return result
+        
+    def grid_to_screen(self, x, y, include_padding=True):
+        border_width = self["border", "width"]
+        cell_size = self["cell", "size"]
+        line_width = self["line", "width"]
+        dsize = (cell_size + line_width)
+        sx = border_width + x * dsize
+        sy = border_width + y * dsize
+        if include_padding:
+            sx += self.margin_x
+            sy += self.margin_y
+        return sx, sy
         
     def screen_to_grid(self, screen_x, screen_y):
         """
@@ -336,8 +349,7 @@ class GridView:
         # background
         def render_rect(r, s):
             context.set_source_rgb(*[c / 65535.0 for c in props.style(r, s)["cell", "color"]])
-            rx = props.grid_to_screen_x(r, False)
-            ry = props.grid_to_screen_y(s, False)
+            rx, ry = props.grid_to_screen(r, s, False)
             rsize = props["cell", "size"]
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
@@ -352,10 +364,8 @@ class GridView:
             style_default = props.style()
             style = props.style
         
-            x0 = props.grid_to_screen_x(0, False)
-            y0 = props.grid_to_screen_y(0, False)
-            x1 = props.grid_to_screen_x(self.grid.width - 1, False)
-            y1 = props.grid_to_screen_y(self.grid.height - 1, False)
+            x0, y0 = props.grid_to_screen(0, 0, False)
+            x1, y1 = props.grid_to_screen(self.grid.width - 1, self.grid.height - 1, False)
             context.set_source_rgb(*[c / 65535.0 for c in style_default["cell", "color"]])
             rsize = props["cell", "size"]
             
@@ -383,8 +393,7 @@ class GridView:
         styles = {}
         for x, y in cells:
             styles[x, y] = props.style(x, y)
-        screen_xs = self.comp_screen_xs()
-        screen_ys = self.comp_screen_ys()
+        screen_xs, screen_ys = self.comp_screen()
         pcr = pangocairo.CairoContext(context)
         pcr_layout = pcr.create_layout()
         def _render_pango(r, s, font, content, rx=None, ry=None):
@@ -556,23 +565,17 @@ class GridView:
         cells = ([(x, y)] + [(p, q) for p, q in ns if self.grid.is_valid(p, q)])
         self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
                 
-    def comp_screen_xs(self):
-        """Compute screen x-coordinates of cells."""
-        grid_to_screen_x = self.properties.grid_to_screen_x
-        d = {}
+    def comp_screen(self):
+        """Compute screen coordinates of cells."""
+        to_screen_x = self.properties.grid_to_screen_x
+        to_screen_y = self.properties.grid_to_screen_y        
+        xx, yy = {}, {}
         # +1 because we also use coords of invalid cells
         for x in xrange(self.grid.width + 1):
-            d[x] = grid_to_screen_x(x, False)
-        return d
-
-    def comp_screen_ys(self):
-        """Compute screen y-coordinates of cells."""
-        grid_to_screen_y = self.properties.grid_to_screen_y
-        d = {}
-        # +1 because we also use coords of invalid cells
+            xx[x] = to_screen_x(x, False)
         for y in xrange(self.grid.height + 1):
-            d[y] = grid_to_screen_y(y, False)
-        return d
+            yy[y] = to_screen_y(y, False)
+        return xx, yy
 
     def render_lines_of_cells(self, context, cells, screen_xs, screen_ys):
         # lines
@@ -734,8 +737,7 @@ class GridView:
         has_padding = self.settings["has_padding"]
         if has_padding:
             context.translate(self.properties.margin_x, self.properties.margin_y)
-        screen_xs = self.comp_screen_xs()
-        screen_ys = self.comp_screen_ys()
+        screen_xs, screen_ys = self.comp_screen()
         for x, y, r, g, b in cells:
             context.set_source_rgb(r, g, b)
             # -0.5 for coordinates and +1 for size
