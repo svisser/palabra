@@ -439,6 +439,9 @@ class GridView:
             for p, q, c in o_chars:
                 _render_char(p, q, c, extents)
         
+        cell_size = props["cell", "size"]
+        line_width = props["line", "width"]
+        
         # highlights
         for p, q in cells:
             style = styles[p, q]
@@ -448,7 +451,6 @@ class GridView:
                 cur_color = color
                 context.set_source_rgb(*[c / 65535.0 for c in color])
             hwidth = int(cell_size / 8)
-            cell_size = props["cell", "size"]
             context.set_line_width(hwidth)
             for r, s, direction, length in self.highlights:
                 if direction == "across" and r <= p < r + length and s == q:
@@ -474,7 +476,7 @@ class GridView:
                     context.move_to(rx, ry)
                     context.rel_line_to(rdx, rdy)
                     context.stroke()
-            context.set_line_width(props["line", "width"])
+            context.set_line_width(line_width)
         # block
         for p, q in cells:
             style = styles[p, q]
@@ -485,7 +487,7 @@ class GridView:
             if data[q][p]["block"]:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
-                rsize = props["cell", "size"]
+                rsize = cell_size
                 margin = style["block", "margin"]
                 if margin == 0:
                     # -0.5 for coordinates and +1 for size
@@ -517,8 +519,8 @@ class GridView:
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
-                context.set_line_width(props["line", "width"])
-                rsize = props["cell", "size"]
+                context.set_line_width(line_width)
+                rsize = cell_size
                 rx = screen_xs[p] + rsize / 2
                 ry = screen_ys[q] + rsize / 2
                 context.new_sub_path()
