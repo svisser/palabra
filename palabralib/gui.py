@@ -983,7 +983,9 @@ class PalabraWindow(gtk.Window):
         editor = AppearanceDialog(self, puzzle.view.properties)
         editor.show_all()
         if editor.run() == gtk.RESPONSE_OK:
-            puzzle.view.properties.apply_appearance(editor.gather_appearance())
+            app = editor.gather_appearance()
+            for key, value in app.items():
+                puzzle.view.properties[key] = value
             try:
                 self.editor.force_redraw = True
                 self.editor.refresh_visual_size()

@@ -228,10 +228,6 @@ class GridViewProperties:
                     visuals[elem].append((attr, value))
         return visuals
     
-    def apply_appearance(self, appearance):
-        for key, value in appearance.items():
-            self[key] = value
-    
     def grid_to_screen_x(self, x, include_padding=True):
         """Return the x-coordinate of the cell's upper-left corner."""
         result = self["border", "width"] + x * (self["cell", "size"] + self["line", "width"])
@@ -246,25 +242,25 @@ class GridViewProperties:
             result += self.margin_y
         return result
         
-    def screen_to_grid_x(self, screen_x):
+    def screen_to_grid(self, screen_x, screen_y):
         """
-        Return the x-coordinate of the cell based on the x-coordinate on screen.
+        Return the coordinates of the cell based on the coordinates on screen.
         """
+        i, j = -1, -1
+        to_screen_x = self.grid_to_screen_x
+        to_screen_y = self.grid_to_screen_y
+        size = self["cell", "size"]
         for x in xrange(self.grid.width):
-            sx = self.grid_to_screen_x(x)
-            if sx <= screen_x < sx + self["cell", "size"]:
-                return x
-        return -1
-        
-    def screen_to_grid_y(self, screen_y):
-        """
-        Return the y-coordinate of the cell based on the y-coordinate on screen.
-        """
+            sx = to_screen_x(x)
+            if sx <= screen_x < sx + size:
+                i = x
+                break
         for y in xrange(self.grid.height):
-            sy = self.grid_to_screen_y(y)
-            if sy <= screen_y < sy + self["cell", "size"]:
-                return y
-        return -1
+            sy = to_screen_y(y)
+            if sy <= screen_y < sy + size:
+                j = y
+                break
+        return i, j
         
     def visual_size(self, include_padding=True):
         """

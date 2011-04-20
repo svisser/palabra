@@ -422,8 +422,7 @@ class Editor(gtk.HBox):
         drawing_area.grab_focus()
         prev_x = self.selection.x
         prev_y = self.selection.y
-        x = self.puzzle.view.properties.screen_to_grid_x(event.x)
-        y = self.puzzle.view.properties.screen_to_grid_y(event.y)
+        x, y = self.puzzle.view.properties.screen_to_grid(event.x, event.y)
         
         if not self.puzzle.grid.is_valid(x, y):
             self.set_selection(-1, -1)
@@ -453,8 +452,7 @@ class Editor(gtk.HBox):
         else:
             ex, ey, estate = event.x, event.y, event.state
         props = self.puzzle.view.properties
-        cx = props.screen_to_grid_x(ex)
-        cy = props.screen_to_grid_y(ey)
+        cx, cy = props.screen_to_grid(ex, ey)
         prev_x, prev_y = self.current
         self.current = (cx, cy)
 
