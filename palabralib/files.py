@@ -273,6 +273,7 @@ def read_xpf(filename, warnings=True):
         r_grid = None
         r_notepad = ""
         r_styles = {}
+        r_gstyles = {}
         for child in puzzle:
             if child.tag in XPF_META_ELEMS:
                 r_meta[XPF_META_ELEMS[child.tag]] = child.text
@@ -378,11 +379,9 @@ def read_xpf(filename, warnings=True):
                         r_styles[x, y] = CellStyle()
                     if shade.text == "gray":
                         rgb = (32767, 32767, 32767)
-                    if shade.text[0] == '#':
-                        colorhex = shade.text[1:]
-                        split = (colorhex[0:2], colorhex[2:4], colorhex[4:6])
-                        rgb = [int((int(d, 16) / 256.0) * 65535) for d in split]
-                    r_styles[x, y].cell["color"] = tuple(rgb)
+                    elif shade.text[0] == '#':
+                        rgb = hex_to_color(shade.text)
+                    r_styles[x, y].cell["color"] = rgb
             elif child.tag == "Clues":
                 for clue in child:
                     if clue.tag != "Clue":
@@ -450,9 +449,51 @@ def read_xpf(filename, warnings=True):
                                 print "Warning: skipping explanation without text."
                             continue
                         r_grid.store_clue(x, y, dirs[a_dir], "explanation", c.text)
+                    elif c.tag == "Style":
+                        for s in c:
+                            if s.tag == "Bar":
+                                width = s.get("Width")
+                                if width is not None:
+                                    r_gstyles["bar", "width"] = int(width)
+                            elif s.tag == "Border":
+                                width = s.get("Width")
+                                if width is not None:
+                                    r_gstyles["border", "width"] = int(width)
+                                color = s.get("Color")
+                                if color is not None:
+                                    r_gstyles["border", "color"] = hex_to_color(color)
+                            elif s.tag == "Cell":
+                                size = s.get("Size")
+                                if size is not None:
+                                    r_gstyles["cell", "size"] = int(size)
+                                color = s.get("Color")
+                                if color is not None:
+                                    r_gstyles["cell", "color"] = hex_to_color(color)
+                            elif s.tag == "Line":
+                                width = s.get("Width")
+                                if width is not None:
+                                    r_gstyles["line", "width"] = int(width)
+                                color = s.get("Color")
+                                if color is not None:
+                                    r_gstyles["line", "color"] = hex_to_color(color)
+                            elif s.tag == "Block":
+                                color = s.get("Color")
+                                if color is not None:
+                                    r_gstyles["block", "color"] = hex_to_color(color)
+                                margin = s.get("Margin")
+                                if margin is not None:
+                                    r_gstyles["block", "margin"] = int(margin)
+                            elif s.tag == "Char":
+                                color = s.get("Color")
+                                if color is not None:
+                                    r_gstyles["char", "color"] = hex_to_color(color)
+                            elif s.tag == "Number":
+                                color = s.get("Color")
+                                if color is not None:
+                                    r_gstyles["number", "color"] = hex_to_color(color)
         # TODO modify when arbitrary number schemes are implemented
         r_grid.assign_numbers()
-        p = Puzzle(r_grid, r_styles)
+        p = Puzzle(r_grid, r_styles, r_gstyles)
         p.metadata = r_meta
         p.type = constants.PUZZLE_XPF
         p.filename = filename
@@ -478,6 +519,10 @@ def color_to_hex(color):
         hv = hex(int(value / 65535.0 * 255))[2:]
         return hv if len(hv) == 2 else '0' + hv
     return '#' + ''.join([to_hex(v) for v in color])
+    
+def hex_to_color(colorhex):
+    split = (colorhex[1:3], colorhex[3:5], colorhex[5:7])
+    return tuple([int((int(d, 16) / 256.0) * 65535) for d in split])
 
 def _write_xpf_xml(root, puzzle, compact=False):
     main = etree.SubElement(root, "Puzzle")

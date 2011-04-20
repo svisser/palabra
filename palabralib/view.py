@@ -129,7 +129,7 @@ class CellStyle:
         return not self.__eq__(other)
 
 class GridViewProperties:
-    def __init__(self, grid, styles=None):
+    def __init__(self, grid, styles=None, gstyles=None):
         self.grid = grid
         
         # 0.5 for sharp lines
@@ -139,18 +139,28 @@ class GridViewProperties:
         self.margin_y = 10
         
         self.default = CellStyle()
+        if ("cell", "color") in gstyles:
+            self.default.cell["color"] = gstyles["cell", "color"]
+        if ("block", "color") in gstyles:
+            self.default.block["color"] = gstyles["block", "color"]
+        if ("block", "margin") in gstyles:
+            self.default.block["margin"] = gstyles["block", "margin"]
+        if ("char", "color") in gstyles:
+            self.default.char["color"] = gstyles["char", "color"]
+        if ("number", "color") in gstyles:
+            self.default.number["color"] = gstyles["number", "color"]
         self.styles = styles if styles else {}
 
         self.bar = {}
-        self.bar["width"] = DEFAULT_BAR_WIDTH
+        self.bar["width"] = gstyles["bar", "width"] if ("bar", "width") in gstyles else DEFAULT_BAR_WIDTH
         self.border = {}
-        self.border["width"] = DEFAULT_BORDER_WIDTH
-        self.border["color"] = DEFAULT_BORDER_COLOR
+        self.border["width"] = gstyles["border", "width"] if ("border", "width") in gstyles else DEFAULT_BORDER_WIDTH
+        self.border["color"] = gstyles["border", "color"] if ("border", "color") in gstyles else DEFAULT_BORDER_COLOR
         self.cell = {}
-        self.cell["size"] = DEFAULT_CELL_SIZE
+        self.cell["size"] = gstyles["cell", "size"] if ("cell", "size") in gstyles else DEFAULT_CELL_SIZE
         self.line = {}
-        self.line["width"] = DEFAULT_LINE_WIDTH
-        self.line["color"] = DEFAULT_LINE_COLOR
+        self.line["width"] = gstyles["line", "width"] if ("line", "width") in gstyles else DEFAULT_LINE_WIDTH
+        self.line["color"] = gstyles["line", "color"] if ("line", "color") in gstyles else DEFAULT_LINE_COLOR
         
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
@@ -243,9 +253,9 @@ class GridViewProperties:
         return width, height
 
 class GridView:
-    def __init__(self, grid, styles=None):
+    def __init__(self, grid, styles=None, gstyles=None):
         self.grid = grid
-        self.properties = GridViewProperties(grid, styles)
+        self.properties = GridViewProperties(grid, styles, gstyles)
         self.select_mode(constants.VIEW_MODE_EDITOR)
         
         self.overlay = []

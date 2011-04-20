@@ -23,10 +23,10 @@ from grid import Grid
 from view import GridView
 
 class Puzzle:
-    def __init__(self, grid, styles=None):
+    def __init__(self, grid, styles=None, gstyles=None):
         self.type = constants.PUZZLE_XPF
         self.grid = grid
-        self.view = GridView(grid, styles)
+        self.view = GridView(grid, styles, gstyles)
         self.filename = None
         self.metadata = {}
         self.notepad = ""
