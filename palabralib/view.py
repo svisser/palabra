@@ -115,6 +115,18 @@ class CellStyle:
         self.number["font"] = "Sans 7"
         self.circle = False
         
+    def __setitem__(self, key, value):
+        if key == ("cell", "color"):
+            self.cell["color"] = value
+        elif key == ("block", "color"):
+            self.block["color"] = value
+        elif key == ("block", "margin"):
+            self.block["margin"] = value
+        elif key == ("char", "color"):
+            self.char["color"] = value
+        elif key == ("number", "color"):
+            self.number["color"] = value
+        
     def __eq__(self, other):
         if (other is None
             or self.block != other.block
@@ -139,19 +151,7 @@ class GridViewProperties:
         self.margin_y = 10
         
         self.default = CellStyle()
-        if gstyles:
-            if ("cell", "color") in gstyles:
-                self.default.cell["color"] = gstyles["cell", "color"]
-            if ("block", "color") in gstyles:
-                self.default.block["color"] = gstyles["block", "color"]
-            if ("block", "margin") in gstyles:
-                self.default.block["margin"] = gstyles["block", "margin"]
-            if ("char", "color") in gstyles:
-                self.default.char["color"] = gstyles["char", "color"]
-            if ("number", "color") in gstyles:
-                self.default.number["color"] = gstyles["number", "color"]
         self.styles = styles if styles else {}
-        
         self.bar = {}
         self.bar["width"] = DEFAULT_BAR_WIDTH
         self.border = {}
@@ -163,18 +163,23 @@ class GridViewProperties:
         self.line["width"] = DEFAULT_LINE_WIDTH
         self.line["color"] = DEFAULT_LINE_COLOR
         if gstyles:
-            if ("bar", "width") in gstyles:
-                self.bar["width"] = gstyles["bar", "width"]
-            if ("border", "width") in gstyles:
-                self.border["width"] = gstyles["border", "width"]
-            if ("border", "color") in gstyles:
-                self.border["color"] = gstyles["border", "color"]
-            if ("cell", "size") in gstyles:
-                self.cell["size"] = gstyles["cell", "size"]
-            if ("line", "width") in gstyles:
-                self.line["width"] = gstyles["line", "width"]
-            if ("line", "color") in gstyles:
-                self.line["color"] = gstyles["line", "color"]
+            for key, value in gstyles.items():
+                self.default[key] = value
+                self[key] = value
+                
+    def __setitem__(self, key, value):
+        if key == ("bar", "width"):
+            self.bar["width"] = value
+        elif key == ("border", "width"):
+            self.border["width"] = value
+        elif key == ("border", "color"):
+            self.border["color"] = value
+        elif key == ("cell", "size"):
+            self.cell["size"] = value
+        elif key == ("line", "width"):
+            self.line["width"] = value
+        elif key == ("line", "color"):
+            self.line["color"] = value
         
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
