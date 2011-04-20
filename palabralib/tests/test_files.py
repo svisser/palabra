@@ -28,6 +28,8 @@ from palabralib.files import (
     determine_file_type,
     ParserError,
     XPFParserError,
+    color_to_hex,
+    hex_to_color,
 )
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
@@ -52,6 +54,10 @@ class FilesTestCase(unittest.TestCase):
         results = read_xpf(self.LOCATION + "~", warnings=False)
         results[0].filename = self.LOCATION
         self.assertEquals(self.puzzle, results[0])
+        
+    def textHexColor(self):
+        c = "#abcdef"
+        self.assertEquals(c, hex_to_color(color_to_hex(c)))
         
     def testXPFMeta(self):
         self.puzzle.metadata['title'] = "TestTitle"
@@ -200,6 +206,36 @@ class FilesTestCase(unittest.TestCase):
                 , "<Circle Row=\"1\" Col=\"noNumber\"/>")
             f.write(text)
         read_xpf(self.LOCATION, warnings=False)
+        
+    def testXPFAppearance(self):
+        props = self.puzzle.view.properties
+        props.bar["width"] = 5
+        props.border["width"] = 4
+        props.border["color"] = (1234, 2345, 3456)
+        props.cell["size"] = 64
+        props.line["width"] = 3
+        props.line["color"] = (4567, 5678, 6789)
+        props.default.block["color"] = (7890, 8901, 9012)
+        props.default.block["margin"] = 20
+        props.default.char["color"] = (1111, 2222, 3333)
+        props.default.cell["color"] = (4444, 5555, 6666)
+        props.default.number["color"] = (7777, 8888, 9999)
+        write_xpf(self.puzzle)
+        results = read_xpf(self.LOCATION)
+        propsL = results[0].view.properties
+        def process(c):
+            return hex_to_color(color_to_hex(c))
+        self.assertEquals(propsL.bar["width"], 5)
+        self.assertEquals(propsL.border["width"], 4)
+        self.assertEquals(propsL.border["color"], process((1234, 2345, 3456)))
+        self.assertEquals(propsL.cell["size"], 64)
+        self.assertEquals(propsL.line["width"], 3)
+        self.assertEquals(propsL.line["color"], process((4567, 5678, 6789)))
+        self.assertEquals(propsL.default.block["color"], process((7890, 8901, 9012)))
+        self.assertEquals(propsL.default.block["margin"], 20)
+        self.assertEquals(propsL.default.char["color"], process((1111, 2222, 3333)))
+        self.assertEquals(propsL.default.cell["color"], process((4444, 5555, 6666)))
+        self.assertEquals(propsL.default.number["color"], process((7777, 8888, 9999)))
         
     def testReadCrossword(self):
         write_xpf(self.puzzle)
