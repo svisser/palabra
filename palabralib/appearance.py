@@ -24,7 +24,7 @@ class AppearanceDialog(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Appearance"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
-        self.set_size_request(480, 240)
+        self.set_size_request(512, 240)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)

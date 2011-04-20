@@ -87,18 +87,31 @@ SETTINGS_EXPORT_PDF_SOLUTION = {
 }
 custom_settings = {}
 
+DEFAULT_BAR_WIDTH = 3
+DEFAULT_BORDER_WIDTH = 1
+DEFAULT_BORDER_COLOR = (0, 0, 0)
+DEFAULT_CELL_SIZE = 32
+DEFAULT_LINE_WIDTH = 1
+DEFAULT_LINE_COLOR = (0, 0, 0)
+
+DEFAULT_BLOCK_COLOR = (0, 0, 0)
+DEFAULT_BLOCK_MARGIN = 0
+DEFAULT_CELL_COLOR = (65535, 65535, 65535)
+DEFAULT_CHAR_COLOR = (0, 0, 0)
+DEFAULT_NUMBER_COLOR = (0, 0, 0)
+
 class CellStyle:
     def __init__(self):
         self.block = {}
-        self.block["color"] = (0, 0, 0)
-        self.block["margin"] = 0
+        self.block["color"] = DEFAULT_BLOCK_COLOR
+        self.block["margin"] = DEFAULT_BLOCK_MARGIN
         self.cell = {}
-        self.cell["color"] = (65535, 65535, 65535)
+        self.cell["color"] = DEFAULT_CELL_COLOR
         self.char = {}
-        self.char["color"] = (0, 0, 0)
+        self.char["color"] = DEFAULT_CHAR_COLOR
         self.char["font"] = "Sans 12"
         self.number = {}
-        self.number["color"] = (0, 0, 0)
+        self.number["color"] = DEFAULT_NUMBER_COLOR
         self.number["font"] = "Sans 7"
         self.circle = False
         
@@ -127,26 +140,44 @@ class GridViewProperties:
         
         self.default = CellStyle()
         self.styles = styles if styles else {}
-        
-        #self.styles[5, 5] = CellStyle()
-        #self.styles[5, 5].cell["color"] = (65535.0, 0, 0)
-        
-        # TODO needed?
+
         self.bar = {}
-        self.bar["width"] = 3
+        self.bar["width"] = DEFAULT_BAR_WIDTH
         self.border = {}
-        self.border["width"] = 1
-        self.border["color"] = (0, 0, 0)
+        self.border["width"] = DEFAULT_BORDER_WIDTH
+        self.border["color"] = DEFAULT_BORDER_COLOR
         self.cell = {}
-        self.cell["size"] = 32
+        self.cell["size"] = DEFAULT_CELL_SIZE
         self.line = {}
-        self.line["width"] = 1
-        self.line["color"] = (0, 0, 0)
+        self.line["width"] = DEFAULT_LINE_WIDTH
+        self.line["color"] = DEFAULT_LINE_COLOR
         
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
             return self.styles[x, y]
         return self.default
+        
+    def get_non_defaults(self):
+        props = [("Bar", "Width", self.bar["width"], DEFAULT_BAR_WIDTH)
+            , ("Border", "Width", self.border["width"], DEFAULT_BORDER_WIDTH)
+            , ("Border", "Color", self.border["color"], DEFAULT_BORDER_COLOR)
+            , ("Cell", "Size", self.cell["size"], DEFAULT_CELL_SIZE)
+            , ("Line", "Width", self.line["width"], DEFAULT_LINE_WIDTH)
+            , ("Line", "Color", self.line["color"], DEFAULT_LINE_COLOR)
+            , ("Block", "Color", self.default.block["color"], DEFAULT_BLOCK_COLOR)
+            , ("Block", "Margin", self.default.block["margin"], DEFAULT_BLOCK_MARGIN)
+            , ("Char", "Color", self.default.char["color"], DEFAULT_CHAR_COLOR)
+            , ("Cell", "Color", self.default.cell["color"], DEFAULT_CELL_COLOR)
+            , ("Number", "Color", self.default.number["color"], DEFAULT_NUMBER_COLOR)
+        ]
+        visuals = {}
+        for elem, attr, value, default in props:
+            if value != default:
+                if elem not in visuals:
+                    visuals[elem] = [(attr, value)]
+                else:
+                    visuals[elem].append((attr, value))
+        return visuals
     
     def apply_appearance(self, appearance):
         self.default.block["color"] = appearance["block"]["color"]

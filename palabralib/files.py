@@ -30,6 +30,7 @@ import grid
 from grid import Grid
 from puzzle import Puzzle
 from view import CellStyle, GridView
+import view
 
 DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
 DC_SIMPLE_TERMS = ["title"
@@ -472,6 +473,12 @@ def write_xpf(content, backup=True, filename=None, compact=False):
         contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
         _write_puzzle(filename, contents, backup)
 
+def color_to_hex(color):
+    def to_hex(value):
+        hv = hex(int(value / 65535.0 * 255))[2:]
+        return hv if len(hv) == 2 else '0' + hv
+    return '#' + ''.join([to_hex(v) for v in color])
+
 def _write_xpf_xml(root, puzzle, compact=False):
     main = etree.SubElement(root, "Puzzle")
     
@@ -519,11 +526,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
                 eshade = etree.SubElement(eshades, "Shade")
                 eshade.set("Row", str(y + 1))
                 eshade.set("Col", str(x + 1))
-                def to_hex(value):
-                    hv = hex(int(value / 65535.0 * 255))[2:]
-                    return hv if len(hv) == 2 else '0' + hv
-                text = '#' + ''.join([to_hex(v) for v in styles[x, y].cell["color"]])
-                eshade.text = text
+                eshade.text = color_to_hex(styles[x, y].cell["color"])
         rebus = [cell for cell in puzzle.grid.cells() if puzzle.grid.has_rebus(*cell)]
         if rebus:
             entries = etree.SubElement(main, "RebusEntries")
@@ -547,16 +550,26 @@ def _write_xpf_xml(root, puzzle, compact=False):
         e = etree.SubElement(main, "Notepad")
         e.text = etree.CDATA(puzzle.notepad)
         
-        e = etree.SubElement(main, "Palabra")
-        e.set("Version", constants.VERSION)
+        epal = etree.SubElement(main, "Palabra")
+        epal.set("Version", constants.VERSION)
         for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
             if explanation:
-                eexp = etree.SubElement(e, "Explanation")
+                eexp = etree.SubElement(epal, "Explanation")
                 eexp.set("Row", str(y + 1))
                 eexp.set("Col", str(x + 1))
                 eexp.set("Num", str(n))
                 eexp.set("Dir", {"across": "Across", "down": "Down"}[d])
                 eexp.text = explanation
+        visuals = puzzle.view.properties.get_non_defaults()
+        if visuals:
+            estyle = etree.SubElement(epal, "Style")
+            for i, items in visuals.items():
+                evisual = etree.SubElement(estyle, i)
+                for attr, value in items:
+                    text = str(value)
+                    if attr == "Color":
+                        text = color_to_hex(value)
+                    evisual.set(attr, text)
     return etree.tostring(root, xml_declaration=True, encoding="UTF-8")
     
 def _write_puzzle(filename, contents, backup=True):
