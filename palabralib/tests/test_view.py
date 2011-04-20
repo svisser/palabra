@@ -23,7 +23,7 @@ from palabralib.view import GridView, DEFAULTS
 
 class ViewTestCase(unittest.TestCase):
     def setUp(self):
-        self.puzzle = Puzzle(Grid(15, 15))
+        self.puzzle = Puzzle(Grid(13, 14))
         
     def testGetSet(self):
         props = self.puzzle.view.properties
@@ -52,3 +52,10 @@ class ViewTestCase(unittest.TestCase):
             + 7 * (props["cell", "size"] + props["line", "width"])
             + props["cell", "size"] / 2)
         self.assertEquals(props.screen_to_grid(sx, sy), (5, 7))
+        
+    def testCompScreen(self):
+        xs, ys = self.puzzle.view.comp_screen()
+        xxs = [x for x in xrange(self.puzzle.grid.width + 1)]
+        yys = [y for y in xrange(self.puzzle.grid.height + 1)]
+        self.assertEquals(all([p in xxs for p in xs]), True)
+        self.assertEquals(all([q in yys for q in ys]), True)
