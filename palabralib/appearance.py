@@ -99,7 +99,7 @@ class AppearanceDialog(gtk.Dialog):
         table.attach(label, 5, 6, 0, 1, gtk.FILL, gtk.FILL)
         
         label = create_label(u"Cell:")
-        self.cell_color_button = create_color_button(properties.default.cell["color"])
+        self.cell_color_button = create_color_button(properties["cell", "color"])
         adj = gtk.Adjustment(properties["cell", "size"], 32, 128, 1, 0, 0)
         self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
         create_row_two(table, 1, label, self.cell_color_button, self.cell_size_spinner)
@@ -110,7 +110,7 @@ class AppearanceDialog(gtk.Dialog):
         label = create_label(u"Margin (%)")
         table.attach(label, 5, 6, 2, 3, gtk.FILL, gtk.FILL)
         
-        current = properties.default.block["margin"]
+        current = properties["block", "margin"]
         label = create_label(u"Block:")
         self.block_color_button = create_color_button(properties["block", "color"])
         adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
@@ -119,40 +119,32 @@ class AppearanceDialog(gtk.Dialog):
         
         # letters
         label = create_label(u"Letter:")
-        self.char_color_button = create_color_button(properties.default.char["color"])
+        self.char_color_button = create_color_button(properties["char", "color"])
         create_row(table, 3, label, self.char_color_button)
         
         # numbers
         label = create_label(u"Number:")
-        self.number_color_button = create_color_button(properties.default.number["color"])
+        self.number_color_button = create_color_button(properties["number", "color"])
         create_row(table, 4, label, self.number_color_button)
         
         return main
         
     def gather_appearance(self):
         appearance = {}
-        appearance["block"] = {}
-        appearance["block"]["margin"] = self.block_margin_spinner.get_value_as_int()
-        appearance["border"] = {}
-        appearance["border"]["width"] = self.border_width_spinner.get_value_as_int()
-        appearance["char"] = {}
-        appearance["cell"] = {}
-        appearance["cell"]["size"] = self.cell_size_spinner.get_value_as_int()
-        appearance["line"] = {}
-        appearance["line"]["width"] = self.line_width_spinner.get_value_as_int()
-        appearance["number"] = {}
-        
+        appearance["block", "margin"] = self.block_margin_spinner.get_value_as_int()
+        appearance["border", "width"] = self.border_width_spinner.get_value_as_int()
+        appearance["cell", "size"] = self.cell_size_spinner.get_value_as_int()
+        appearance["line", "width"] = self.line_width_spinner.get_value_as_int()
         color = self.cell_color_button.get_color()
-        appearance["cell"]["color"] = (color.red, color.green, color.blue)
+        appearance["cell", "color"] = (color.red, color.green, color.blue)
         color = self.line_color_button.get_color()
-        appearance["line"]["color"] = (color.red, color.green, color.blue)
+        appearance["line", "color"] = (color.red, color.green, color.blue)
         color = self.border_color_button.get_color()
-        appearance["border"]["color"] = (color.red, color.green, color.blue)
+        appearance["border", "color"] = (color.red, color.green, color.blue)
         color = self.block_color_button.get_color()
-        appearance["block"]["color"] = (color.red, color.green, color.blue)
+        appearance["block", "color"] = (color.red, color.green, color.blue)
         color = self.char_color_button.get_color()
-        appearance["char"]["color"] = (color.red, color.green, color.blue)
+        appearance["char", "color"] = (color.red, color.green, color.blue)
         color = self.number_color_button.get_color()
-        appearance["number"]["color"] = (color.red, color.green, color.blue)
-        
+        appearance["number", "color"] = (color.red, color.green, color.blue)
         return appearance

@@ -199,7 +199,11 @@ class GridViewProperties:
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
             return self.styles[x, y]
-        return CellStyle() # TODO fix
+        # TODO ugly
+        default = CellStyle()
+        for key, value in self._data.items():
+            default[key] = value
+        return default
         
     def get_non_defaults(self):
         props = [("Bar", "Width", ("bar", "width"))
@@ -225,17 +229,8 @@ class GridViewProperties:
         return visuals
     
     def apply_appearance(self, appearance):
-        self["block", "color"] = appearance["block"]["color"]
-        self["border", "color"] = appearance["border"]["color"]
-        self["char", "color"] = appearance["char"]["color"]
-        self["cell", "color"] = appearance["cell"]["color"]
-        self["line", "color"] = appearance["line"]["color"]
-        self["number", "color"] = appearance["number"]["color"]
-        
-        self["border", "width"] = appearance["border"]["width"]
-        self["line", "width"] = appearance["line"]["width"]
-        self["block", "margin"] = appearance["block"]["margin"]
-        self["cell", "size"] = appearance["cell"]["size"]
+        for key, value in appearance.items():
+            self[key] = value
     
     def grid_to_screen_x(self, x, include_padding=True):
         """Return the x-coordinate of the cell's upper-left corner."""
