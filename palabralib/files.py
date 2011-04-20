@@ -553,9 +553,9 @@ def _write_xpf_xml(root, puzzle, compact=False):
         erow.text = ''.join(chars)
     
     if not compact:
-        default = puzzle.view.properties.default    
+        props = puzzle.view.properties
         styles = puzzle.view.properties.styles
-        circles = [cell for cell in styles if styles[cell].circle != default.circle]
+        circles = [cell for cell in styles if styles[cell].circle != props["circle"]]
         if circles:
             circles.sort(key=itemgetter(0, 1))
             ecircles = etree.SubElement(main, "Circles")
@@ -563,7 +563,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
                 ecircle = etree.SubElement(ecircles, "Circle")
                 ecircle.set("Row", str(y + 1))
                 ecircle.set("Col", str(x + 1))
-        shades = [cell for cell in styles if styles[cell].cell["color"] != default.cell["color"]]
+        shades = [cell for cell in styles if styles[cell].cell["color"] != props["cell", "color"]]
         if shades:
             shades.sort(key=itemgetter(0, 1))
             eshades = etree.SubElement(main, "Shades")

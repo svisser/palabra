@@ -92,6 +92,9 @@ DEFAULT_BLOCK_MARGIN = 0
 DEFAULT_CELL_COLOR = (65535, 65535, 65535)
 DEFAULT_CHAR_COLOR = (0, 0, 0)
 DEFAULT_NUMBER_COLOR = (0, 0, 0)
+DEFAULT_CIRCLE = False
+DEFAULT_CHAR_FONT = "Sans 12"
+DEFAULT_NUMBER_FONT = "Sans 7"
 
 DEFAULTS = {
     ("bar", "width"): 3,
@@ -103,17 +106,12 @@ DEFAULTS = {
     ("block", "color"): DEFAULT_BLOCK_COLOR,
     ("block", "margin"): DEFAULT_BLOCK_MARGIN,
     ("char", "color"): DEFAULT_CHAR_COLOR,
+    ("char", "font"): DEFAULT_CHAR_FONT,
     ("cell", "color"): DEFAULT_CELL_COLOR,
-    ("number", "color"): DEFAULT_NUMBER_COLOR
+    ("number", "color"): DEFAULT_NUMBER_COLOR,
+    ("number", "font"): DEFAULT_NUMBER_FONT,
+    "circle": DEFAULT_CIRCLE
 }
-
-CELL_KEYS = [
-    ("cell", "color")
-    , ("block", "color")
-    , ("block", "margin")
-    , ("char", "color")
-    , ("number", "color")
-]
 
 class CellStyle:
     def __init__(self):
@@ -124,11 +122,11 @@ class CellStyle:
         self.cell["color"] = DEFAULT_CELL_COLOR
         self.char = {}
         self.char["color"] = DEFAULT_CHAR_COLOR
-        self.char["font"] = "Sans 12"
+        self.char["font"] = DEFAULT_CHAR_FONT
         self.number = {}
         self.number["color"] = DEFAULT_NUMBER_COLOR
-        self.number["font"] = "Sans 7"
-        self.circle = False
+        self.number["font"] = DEFAULT_NUMBER_FONT
+        self.circle = DEFAULT_CIRCLE
         
     def __getitem__(self, key):
         if key == ("cell", "color"):
@@ -141,6 +139,12 @@ class CellStyle:
             return self.char["color"]
         elif key == ("number", "color"):
             return self.number["color"]
+        elif key == "circle":
+            return self.circle
+        elif key == ("char", "font"):
+            return self.char["font"]
+        elif key == ("number", "font"):
+            return self.number["font"]
         
     def __setitem__(self, key, value):
         if key == ("cell", "color"):
@@ -153,6 +157,8 @@ class CellStyle:
             self.char["color"] = value
         elif key == ("number", "color"):
             self.number["color"] = value
+        elif key == "circle":
+            self.circle = value
         
     def __eq__(self, other):
         if (other is None
@@ -177,30 +183,23 @@ class GridViewProperties:
         self.margin_x = 10
         self.margin_y = 10
         
-        self.default = CellStyle()
         self.styles = styles if styles else {}
         self._data = {}
         self._data.update(DEFAULTS)
         if gstyles:
-            # note: also modifies self.default if needed
             for key, value in gstyles.items():
                 self[key] = value
                 
     def __setitem__(self, key, value):
-        if key in CELL_KEYS:
-            self.default[key] = value
-        else:
-            self._data[key] = value
+        self._data[key] = value
             
     def __getitem__(self, key):
-        if key in CELL_KEYS:
-            return self.default[key]
         return self._data[key]
         
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
             return self.styles[x, y]
-        return self.default
+        return CellStyle() # TODO fix
         
     def get_non_defaults(self):
         props = [("Bar", "Width", ("bar", "width"))
@@ -415,7 +414,7 @@ class GridView:
             ry = (border_width +
                 (s + 0.55) * (size + line_width) -
                 height - line_width / 2 - abs(ybearing) / 2)
-            _render_pango(r, s, styles[r, s].char["font"], c, rx, ry)
+            _render_pango(r, s, styles[r, s]["char", "font"], c, rx, ry)
 
         # chars and overlay chars
         n_chars = []
@@ -529,13 +528,12 @@ class GridView:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
                 n = data[q][p]["number"]
-                font = style.number["font"]
-                _render_pango(p, q, font, str(n))
+                _render_pango(p, q, style["number", "font"], str(n))
 
         # circle
         for p, q in cells:
             style = styles[p, q]
-            if style.circle:
+            if style["circle"]:
                 color = style["char", "color"]
                 if color != cur_color:
                     cur_color = color
