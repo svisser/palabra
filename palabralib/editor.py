@@ -510,7 +510,7 @@ class Editor(gtk.HBox):
                 cells += [(x, y) for x in xrange(x, x + l)]
             elif d == "down":
                 cells += [(x, y) for y in xrange(y, y + l)]
-        self._render_cells(cells)
+        self._render_cells(list(set(cells)))
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
