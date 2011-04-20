@@ -155,7 +155,7 @@ class WordWidget(gtk.DrawingArea):
             self.editor.set_overlay(None)
             return
         word = self.words[offset][0]
-        if event.type == gtk.gdk._2BUTTON_PRESS:
+        if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
             self.editor.insert(word)
             self.selection = None
             self.editor.set_overlay(None)
