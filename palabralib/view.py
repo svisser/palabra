@@ -139,28 +139,42 @@ class GridViewProperties:
         self.margin_y = 10
         
         self.default = CellStyle()
-        if ("cell", "color") in gstyles:
-            self.default.cell["color"] = gstyles["cell", "color"]
-        if ("block", "color") in gstyles:
-            self.default.block["color"] = gstyles["block", "color"]
-        if ("block", "margin") in gstyles:
-            self.default.block["margin"] = gstyles["block", "margin"]
-        if ("char", "color") in gstyles:
-            self.default.char["color"] = gstyles["char", "color"]
-        if ("number", "color") in gstyles:
-            self.default.number["color"] = gstyles["number", "color"]
+        if gstyles:
+            if ("cell", "color") in gstyles:
+                self.default.cell["color"] = gstyles["cell", "color"]
+            if ("block", "color") in gstyles:
+                self.default.block["color"] = gstyles["block", "color"]
+            if ("block", "margin") in gstyles:
+                self.default.block["margin"] = gstyles["block", "margin"]
+            if ("char", "color") in gstyles:
+                self.default.char["color"] = gstyles["char", "color"]
+            if ("number", "color") in gstyles:
+                self.default.number["color"] = gstyles["number", "color"]
         self.styles = styles if styles else {}
-
+        
         self.bar = {}
-        self.bar["width"] = gstyles["bar", "width"] if ("bar", "width") in gstyles else DEFAULT_BAR_WIDTH
+        self.bar["width"] = DEFAULT_BAR_WIDTH
         self.border = {}
-        self.border["width"] = gstyles["border", "width"] if ("border", "width") in gstyles else DEFAULT_BORDER_WIDTH
-        self.border["color"] = gstyles["border", "color"] if ("border", "color") in gstyles else DEFAULT_BORDER_COLOR
+        self.border["width"] = DEFAULT_BORDER_WIDTH
+        self.border["color"] = DEFAULT_BORDER_COLOR
         self.cell = {}
-        self.cell["size"] = gstyles["cell", "size"] if ("cell", "size") in gstyles else DEFAULT_CELL_SIZE
+        self.cell["size"] = DEFAULT_CELL_SIZE
         self.line = {}
-        self.line["width"] = gstyles["line", "width"] if ("line", "width") in gstyles else DEFAULT_LINE_WIDTH
-        self.line["color"] = gstyles["line", "color"] if ("line", "color") in gstyles else DEFAULT_LINE_COLOR
+        self.line["width"] = DEFAULT_LINE_WIDTH
+        self.line["color"] = DEFAULT_LINE_COLOR
+        if gstyles:
+            if ("bar", "width") in gstyles:
+                self.bar["width"] = gstyles["bar", "width"]
+            if ("border", "width") in gstyles:
+                self.border["width"] = gstyles["border", "width"]
+            if ("border", "color") in gstyles:
+                self.border["color"] = gstyles["border", "color"]
+            if ("cell", "size") in gstyles:
+                self.cell["size"] = gstyles["cell", "size"]
+            if ("line", "width") in gstyles:
+                self.line["width"] = gstyles["line", "width"]
+            if ("line", "color") in gstyles:
+                self.line["color"] = gstyles["line", "color"]
         
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
