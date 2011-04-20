@@ -447,11 +447,20 @@ class GridView:
             if color != cur_color:
                 cur_color = color
                 context.set_source_rgb(*[c / 65535.0 for c in color])
-            def render_highlights_of_cell(context, p, q, top, bottom, left, right):
-                cell_size = props["cell", "size"]
+            hwidth = int(cell_size / 8)
+            cell_size = props["cell", "size"]
+            context.set_line_width(hwidth)
+            for r, s, direction, length in self.highlights:
+                if direction == "across" and r <= p < r + length and s == q:
+                    top = bottom = True
+                    right = p == (r + length - 1)
+                    left = p == r
+                elif direction == "down" and s <= q < s + length and r == p:
+                    left = right = True
+                    top = q == s
+                    bottom = q == (s + length - 1)
                 sx = screen_xs[p]
                 sy = screen_ys[q]
-                hwidth = int(cell_size / 8)
                 lines = []
                 if top:
                     lines.append((sx, sy + 0.5 * hwidth, cell_size, 0))
@@ -461,23 +470,11 @@ class GridView:
                     lines.append((sx + 0.5 * hwidth, sy, 0, cell_size))
                 if right:
                     lines.append((sx + cell_size - 0.5 * hwidth, sy, 0, cell_size))
-                context.set_line_width(hwidth)
                 for rx, ry, rdx, rdy in lines:
                     context.move_to(rx, ry)
                     context.rel_line_to(rdx, rdy)
                     context.stroke()
-                context.set_line_width(props["line", "width"])
-            for r, s, direction, length in self.highlights:
-                if direction == "across" and r <= p < r + length and s == q:
-                    top = bottom = True
-                    right = p == (r + length - 1)
-                    left = p == r
-                    render_highlights_of_cell(context, p, q, top, bottom, left, right)
-                elif direction == "down" and s <= q < s + length and r == p:
-                    left = right = True
-                    top = q == s
-                    bottom = q == (s + length - 1)
-                    render_highlights_of_cell(context, p, q, top, bottom, left, right)
+            context.set_line_width(props["line", "width"])
         # block
         for p, q in cells:
             style = styles[p, q]
