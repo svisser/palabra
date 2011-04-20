@@ -17,7 +17,6 @@
 
 import cairo
 import gtk
-from itertools import *
 import math
 import pango
 import pangocairo
@@ -408,36 +407,28 @@ class GridView:
             _render_pango(r, s, styles[r, s]["char", "font"], c, rx, ry)
 
         # chars and overlay chars
-        n_chars = []
-        o_chars = []
-        for p, q in cells:
-            if self.settings["show_chars"]:
-                c = data[q][p]["char"]
-                if c != '':
-                    n_chars.append((p, q, c))
-            if self.settings["render_overlays"]:
-                for r, s, c in self.overlay:
-                    if (p, q) == (r, s):
-                        o_chars.append((p, q, c))
+        n_chars, o_chars = [], []
+        if self.settings["show_chars"]:
+            n_chars = [(p, q, data[q][p]["char"]) for p, q in cells if data[q][p]["char"] != '']
+        if self.settings["render_overlays"]:
+            o_chars = [(p, q, c) for p, q in cells for r, s, c in self.overlay if (p, q) == (r, s)]
         extents = {}
         for p, q, c in (n_chars + o_chars):
             if c not in extents:
                 extents[c] = context.text_extents(c)
-        if n_chars:
-            for p, q, c in n_chars:
-                color = styles[p, q]["char", "color"]
-                if color != cur_color:
-                    cur_color = color
-                    context.set_source_rgb(*[cc / 65535.0 for cc in color])
-                _render_char(p, q, c, extents)
-        if o_chars:
+        for p, q, c in n_chars:
+            color = styles[p, q]["char", "color"]
+            if color != cur_color:
+                cur_color = color
+                context.set_source_rgb(*[cc / 65535.0 for cc in color])
+            _render_char(p, q, c, extents)
+        for p, q, c in o_chars:
             # TODO custom color
             color = (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
             if color != cur_color:
                 cur_color = color
-                context.set_source_rgb(*[c / 65535.0 for c in color])
-            for p, q, c in o_chars:
-                _render_char(p, q, c, extents)
+                context.set_source_rgb(*[cc / 65535.0 for cc in color])
+            _render_char(p, q, c, extents)
         
         cell_size = props["cell", "size"]
         line_width = props["line", "width"]
