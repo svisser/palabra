@@ -19,7 +19,7 @@ import unittest
 
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
-from palabralib.view import GridView, DEFAULTS
+from palabralib.view import GridView, DEFAULTS, CellStyle
 
 class ViewTestCase(unittest.TestCase):
     def setUp(self):
@@ -45,13 +45,23 @@ class ViewTestCase(unittest.TestCase):
         
     def testScreenToGrid(self):
         props = self.puzzle.view.properties
-        sx = (props.margin_x + props["border", "width"]
-            + 5 * (props["cell", "size"] + props["line", "width"])
-            + props["cell", "size"] / 2)
-        sy = (props.margin_x + props["border", "width"]
-            + 7 * (props["cell", "size"] + props["line", "width"])
-            + props["cell", "size"] / 2)
-        self.assertEquals(props.screen_to_grid(sx, sy), (5, 7))
+        props.margin = 12, 21
+        props["border", "width"] = 7
+        props["cell", "size"] = 33
+        props["line", "width"] = 2
+        def get_sxy(x, y):
+            sx = (props.margin[0] + props["border", "width"]
+                + x * (props["cell", "size"] + props["line", "width"])
+                + props["cell", "size"] / 2)
+            sy = (props.margin[1] + props["border", "width"]
+                + y * (props["cell", "size"] + props["line", "width"])
+                + props["cell", "size"] / 2)
+            return sx, sy
+        for cell in [(0, 0), (5, 5), (5, 7)]:
+            sx, sy = get_sxy(*cell)
+            self.assertEquals(props.screen_to_grid(sx, sy), cell)
+        sx, sy = get_sxy(*self.puzzle.grid.size)
+        self.assertEquals(props.screen_to_grid(sx, sy), (-1, -1))
         
     def testCompScreen(self):
         xs, ys = self.puzzle.view.comp_screen()
@@ -59,3 +69,18 @@ class ViewTestCase(unittest.TestCase):
         yys = [y for y in xrange(self.puzzle.grid.height + 1)]
         self.assertEquals(all([p in xxs for p in xs]), True)
         self.assertEquals(all([q in yys for q in ys]), True)
+        
+    def testCellStyle(self):
+        items = [(("block", "color"), "bla")
+            , (("block", "margin"), 23)
+            , (("cell", "color"), "foo")
+            , (("char", "color"), "bar")
+            , (("char", "font"), "Sans 13")
+            , (("number", "color"), "foofoo")
+            , (("number", "font"), "Sans 15")
+            , ("circle", True)
+        ]
+        s = CellStyle()
+        for k, v in items:
+            s[k] = v
+            self.assertEquals(s[k], v)

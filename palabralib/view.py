@@ -158,6 +158,10 @@ class CellStyle:
             self.number["color"] = value
         elif key == "circle":
             self.circle = value
+        elif key == ("char", "font"):
+            self.char["font"] = value
+        elif key == ("number", "font"):
+            self.number["font"] = value
         
     def __eq__(self, other):
         if (other is None
@@ -175,12 +179,7 @@ class CellStyle:
 class GridViewProperties:
     def __init__(self, grid, styles=None, gstyles=None):
         self.grid = grid
-        
-        # 0.5 for sharp lines
-        self.origin_x = 0.5
-        self.origin_y = 0.5
-        self.margin_x = 10
-        self.margin_y = 10
+        self.margin = 10, 10
         
         self.styles = styles if styles else {}
         self._data = {}
@@ -236,9 +235,9 @@ class GridViewProperties:
         line_width = self["line", "width"]
         dsize = cell_size + line_width
         if x is not None:
-            sx = border_width + x * dsize + (self.margin_x if include_padding else 0)
+            sx = border_width + x * dsize + (self.margin[0] if include_padding else 0)
         if y is not None:
-            sy = border_width + y * dsize + (self.margin_y if include_padding else 0)
+            sy = border_width + y * dsize + (self.margin[1] if include_padding else 0)
         if x is not None and y is not None:
             return sx, sy
         elif x is not None:
@@ -277,8 +276,8 @@ class GridViewProperties:
         w = 2 * border_width + (g_w * cell_size) + (g_w - 1) * line_width
         h = 2 * border_width + (g_h * cell_size) + (g_h - 1) * line_width
         if include_padding:
-            w += (2 * self.margin_x)
-            h += (2 * self.margin_y)
+            w += (2 * self.margin[0])
+            h += (2 * self.margin[1])
         return w, h
 
 class GridView:
