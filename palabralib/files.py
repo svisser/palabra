@@ -333,7 +333,6 @@ def read_ipuz(filename, warnings=True):
                                 if "cell" in c:
                                     c = c["cell"]
                                     # fall-through
-                                    print "falling", c
                             if c == None:
                                 r_grid.set_void(x, y, True)
                             elif c == c_block:
@@ -374,21 +373,18 @@ def read_ipuz(filename, warnings=True):
 
 def write_ipuz(puzzle, backup=True):
     contents = {}
-    contents["origin"] = ''.join(["Palabra ", constants.VERSION])
+    contents["origin"] = "Palabra " + constants.VERSION
     contents["version"] = "http://ipuz.org/v1"
     contents["kind"] = ["http://ipuz.org/crossword#1"]
+    meta = puzzle.metadata
     for dc, e in [(b, a) for a, b in IPUZ_MY_META_ELEMS.items()]:
-        if dc in puzzle.metadata:
-            contents[e] = puzzle.metadata[dc]
-    c_block = IPUZ_BLOCK_CHAR
-    c_empty = IPUZ_EMPTY_CHAR
+        if dc in meta:
+            contents[e] = meta[dc]
+    c_block = meta["block"] if "block" in meta else IPUZ_BLOCK_CHAR
+    c_empty = meta["empty"] if "empty" in meta else IPUZ_EMPTY_CHAR
     for e in IPUZ_META_ELEMS:
-        if e in puzzle.metadata:
-            contents[e] = puzzle.metadata[e]
-            if e == 'block':
-                c_block = contents[e]
-            if e == 'empty':
-                c_empty = contents[e]
+        if e in meta:
+            contents[e] = meta[e]
     props = puzzle.view.properties
     styles = props.styles
     circles = [cell for cell in styles if styles[cell]["circle"] != props["circle"]]
@@ -410,7 +406,7 @@ def write_ipuz(puzzle, backup=True):
             if (x, y) in circles:
                 style["shapebg"] = "circle"
             if (x, y) in shades:
-                color = color_to_hex(styles[x, y]["cell", "color"])[1:]
+                color = color_to_hex(styles[x, y]["cell", "color"], include=False)
                 style["color"] = color
             if style:
                 row.append({"cell": cell, "style": style})
@@ -715,14 +711,18 @@ def write_xpf(content, backup=True, filename=None, compact=False):
         contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
         _write_puzzle(filename, contents, backup)
 
-def color_to_hex(color):
+def color_to_hex(color, include=True):
     def to_hex(value):
         hv = hex(int(value / 65535.0 * 255))[2:]
         return hv if len(hv) == 2 else '0' + hv
-    return '#' + ''.join([to_hex(v) for v in color])
+    hx = ''.join([to_hex(v) for v in color])
+    if include:
+        return '#' + hx
+    return hx
     
 def hex_to_color(colorhex):
-    split = (colorhex[1:3], colorhex[3:5], colorhex[5:7])
+    o = 0 if len(colorhex) == 6 else 1 # len = 6 or 7
+    split = (colorhex[o:o + 2], colorhex[o + 2:o + 4], colorhex[o + 4:o + 6])
     return tuple([int((int(d, 16) / 255.0) * 65535) for d in split])
 
 def _write_xpf_xml(root, puzzle, compact=False):

@@ -58,6 +58,8 @@ class FilesTestCase(unittest.TestCase):
     def textHexColor(self):
         c = "#abcdef"
         self.assertEquals(c, hex_to_color(color_to_hex(c)))
+        c = "abcdef"
+        self.assertEquals(c, hex_to_color(color_to_hex(c)))
         
     def testXPFMeta(self):
         self.puzzle.metadata['title'] = "TestTitle"
