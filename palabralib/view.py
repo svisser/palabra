@@ -131,9 +131,7 @@ class CellStyle:
         self._data[key] = value
         
     def __eq__(self, other):
-        if (other is None or self._data != other._data):
-            return False
-        return True
+        return other is not None and self._data == other._data
         
     def __ne__(self, other):
         return not self.__eq__(other)

@@ -84,3 +84,8 @@ class ViewTestCase(unittest.TestCase):
         for k, v in items:
             s[k] = v
             self.assertEquals(s[k], v)
+        s = CellStyle()
+        t = CellStyle()
+        self.assertEquals(s, t)
+        s["circle"] = True
+        self.assertNotEquals(s, t)
