@@ -114,62 +114,24 @@ DEFAULTS = {
 
 class CellStyle:
     def __init__(self):
-        self.block = {}
-        self.block["color"] = DEFAULT_BLOCK_COLOR
-        self.block["margin"] = DEFAULT_BLOCK_MARGIN
-        self.cell = {}
-        self.cell["color"] = DEFAULT_CELL_COLOR
-        self.char = {}
-        self.char["color"] = DEFAULT_CHAR_COLOR
-        self.char["font"] = DEFAULT_CHAR_FONT
-        self.number = {}
-        self.number["color"] = DEFAULT_NUMBER_COLOR
-        self.number["font"] = DEFAULT_NUMBER_FONT
-        self.circle = DEFAULT_CIRCLE
+        self._data = {}
+        self["block", "color"] = DEFAULT_BLOCK_COLOR
+        self["block", "margin"] = DEFAULT_BLOCK_MARGIN
+        self["cell", "color"] = DEFAULT_CELL_COLOR
+        self["char", "color"] = DEFAULT_CHAR_COLOR
+        self["char", "font"] = DEFAULT_CHAR_FONT
+        self["number", "color"] = DEFAULT_NUMBER_COLOR
+        self["number", "font"] = DEFAULT_NUMBER_FONT
+        self["circle"] = DEFAULT_CIRCLE
         
     def __getitem__(self, key):
-        if key == ("cell", "color"):
-            return self.cell["color"]
-        elif key == ("block", "color"):
-            return self.block["color"]
-        elif key == ("block", "margin"):
-            return self.block["margin"]
-        elif key == ("char", "color"):
-            return self.char["color"]
-        elif key == ("number", "color"):
-            return self.number["color"]
-        elif key == "circle":
-            return self.circle
-        elif key == ("char", "font"):
-            return self.char["font"]
-        elif key == ("number", "font"):
-            return self.number["font"]
+        return self._data[key]
         
     def __setitem__(self, key, value):
-        if key == ("cell", "color"):
-            self.cell["color"] = value
-        elif key == ("block", "color"):
-            self.block["color"] = value
-        elif key == ("block", "margin"):
-            self.block["margin"] = value
-        elif key == ("char", "color"):
-            self.char["color"] = value
-        elif key == ("number", "color"):
-            self.number["color"] = value
-        elif key == "circle":
-            self.circle = value
-        elif key == ("char", "font"):
-            self.char["font"] = value
-        elif key == ("number", "font"):
-            self.number["font"] = value
+        self._data[key] = value
         
     def __eq__(self, other):
-        if (other is None
-            or self.block != other.block
-            or self.cell != other.cell
-            or self.char != other.char
-            or self.number != other.number
-            or self.circle != other.circle):
+        if (other is None or self._data != other._data):
             return False
         return True
         
@@ -311,13 +273,11 @@ class GridView:
         # 595 = PDF width
         size = (595 - ((self.grid.width + 1) * self.properties["line", "width"]) - (2 * 24)) / self.grid.width
         self.properties["cell", "size"] = min(32, size)
-        self.properties.margin_x = 24
-        self.properties.margin_y = 24
+        self.properties.margin = 24, 24
         
     def pdf_reset(self):
         self.properties["cell", "size"] = 32
-        self.properties.margin_x = 10
-        self.properties.margin_y = 10
+        self.properties.margin = 10, 10
         
     def render(self, context, mode=None):
         """
@@ -345,7 +305,7 @@ class GridView:
             context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
             context.fill()
         if has_padding:
-            context.translate(props.margin_x, props.margin_y)
+            context.translate(*props.margin)
         if len(cells) < self.grid.width * self.grid.height:
             for p, q in cells:
                 render_rect(p, q)
@@ -371,13 +331,14 @@ class GridView:
                 if style(p, q) != style_default:
                     render_rect(p, q)
         if has_padding:
-            context.translate(-props.margin_x, -props.margin_y)
+            mx, my = props.margin
+            context.translate(-1 * mx, -1 * my)
         
     def render_top(self, context, cells):
         data = self.grid.data
         props = self.properties
         if self.settings["has_padding"]:
-            context.translate(props.margin_x, props.margin_y)
+            context.translate(*props.margin)
         cur_color = None
         styles = {}
         for x, y in cells:
@@ -529,7 +490,8 @@ class GridView:
         else:
             self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
         if self.settings["has_padding"]:
-            context.translate(-props.margin_x, -props.margin_y)
+            mx, my = props.margin
+            context.translate(-1 * mx, -1 * my)
     
     def render_all_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         """Render the lines that surround a cell (all four sides)."""
@@ -709,7 +671,7 @@ class GridView:
         """Render one or more cells."""
         has_padding = self.settings["has_padding"]
         if has_padding:
-            context.translate(self.properties.margin_x, self.properties.margin_y)
+            context.translate(*self.properties.margin)
         screen_xs, screen_ys = self.comp_screen()
         for x, y, r, g, b in cells:
             context.set_source_rgb(r, g, b)
@@ -722,7 +684,8 @@ class GridView:
             context.fill()
             self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
         if has_padding:
-            context.translate(-self.properties.margin_x, -self.properties.margin_y)
+            mx, my = self.properties.margin
+            context.translate(-1 * mx, -1 * my)
         
     # needs manual queue_draw() on drawing_area afterwards
     def refresh_visual_size(self, drawing_area):

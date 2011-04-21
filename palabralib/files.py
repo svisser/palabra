@@ -579,7 +579,7 @@ def read_xpf(filename, warnings=True):
                         rgb = (32767, 32767, 32767)
                     elif shade.text[0] == '#':
                         rgb = hex_to_color(shade.text)
-                    r_styles[x, y].cell["color"] = rgb
+                    r_styles[x, y]["cell", "color"] = rgb
             elif child.tag == "Clues":
                 for clue in child:
                     if clue.tag != "Clue":

@@ -156,7 +156,7 @@ class FilesTestCase(unittest.TestCase):
                 , "<Shade Row=\"5\" Col=\"5\">gray</Shade>")
             f.write(text)
         results = read_xpf(self.LOCATION, warnings=False)
-        self.puzzle.view.properties.styles[4, 4].cell["color"] = (32767, 32767, 32767)
+        self.puzzle.view.properties.styles[4, 4]["cell", "color"] = (32767, 32767, 32767)
         s1 = self.puzzle.view.properties.styles[4, 4]
         s2 = results[0].view.properties.styles[4, 4]
         self.assertEquals(s1, s2)
