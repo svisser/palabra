@@ -33,23 +33,6 @@ from puzzle import Puzzle
 from view import CellStyle, GridView
 import view
 
-DC_NAMESPACE = "http://purl.org/dc/elements/1.1/"
-DC_SIMPLE_TERMS = ["title"
-    , "creator"
-    , "subject"
-    , "description"
-    , "publisher"
-    , "contributor"
-    , "date"
-    , "type"
-    , "format"
-    , "identifier"
-    , "source"
-    , "language"
-    , "relation"
-    , "coverage"
-    , "rights"]
-
 XPF_META_ELEMS = {'Type': 'type'
     , 'Title': 'title'
     , 'Author': 'creator'
@@ -57,13 +40,20 @@ XPF_META_ELEMS = {'Type': 'type'
     , 'Copyright': 'rights'
     , 'Publisher': 'publisher'
     , 'Date': 'date'}
-XPF_META_ELEMS_LIST = [("type", "Type")
-    , ("title", "Title")
-    , ("creator", "Author")
-    , ("contributor", "Editor")
-    , ("rights", "Copyright")
-    , ("publisher", "Publisher")
-    , ("date", "Date")]
+XPF_META_ELEMS_LIST = [(b, a) for a, b in XPF_META_ELEMS.items()]
+IPUZ_META_ELEMS = [
+    "copyright", "publisher", "publication", "url", "uniqueid"
+    , "title", "intro", "explanation", "annotation", "author"
+    , "editor", "date", "notes", "difficulty"
+]
+IPUZ_TECH_ELEMS = [
+    "origin", "block", "empty", "styles", "checksum" #, "saved"
+]
+IPUZ_CROSS_ELEMS = [
+    "puzzle", "saved", "solution", "clues", "showenumerations"
+    , "clueplacement", "fill", "answer", "answers", "enumeration"
+    , "enumerations", "misses"
+]
 
 class ParserError(Exception):
     def __init__(self, message):
@@ -268,10 +258,104 @@ def read_ipuz(filename, warnings=True):
     if content is not None:
         data = json.loads(content[5:-1])
         keys = data.keys()
-        if u"version" not in keys:
+        if "version" not in keys:
             raise IPUZParserError(u"Mandatory version element missing in ipuz file.")
-        if u"kind" not in keys:
+        if "kind" not in keys:
             raise IPUZParserError(u"Mandatory kind element missing in ipuz file.")
+        n_kinds = len(data["kind"])
+        if n_kinds == 0:
+            raise IPUZParserError(u"Mandatory kind element has no content.")
+        if n_kinds > 1:
+            raise IPUZParserError(u"Mandatory kind element has more than one puzzle kind.")
+        kind = data["kind"][0]
+        if kind != "http://ipuz.org/crossword#1":
+            raise IPUZParserError(u"This type of puzzle (" + kind + ") is not supported.")
+        r_meta = {}
+        r_width = None
+        r_height = None
+        r_grid = None
+        r_notepad = ""
+        r_styles = {}
+        r_gstyles = {}
+        for m in IPUZ_META_ELEMS:
+            if m in data:
+                r_meta[m] = data[m]
+        c_block = '#'
+        c_empty = 0
+        for t in IPUZ_TECH_ELEMS:
+            if t in data:
+                if t == "block":
+                    c_block = data[t]
+                elif t == "empty":
+                    c_empty = data[t]
+                r_meta[m] = data[t]
+        for e in IPUZ_CROSS_ELEMS:
+            if e in data:
+                if e == "puzzle":
+                    r_width, r_height = len(data[e][0]), len(data[e])
+                    assert r_width >= 0
+                    assert r_height >= 0
+                    r_grid = Grid(r_width, r_height)
+                    x, y = 0, 0
+                    for row in data[e]:
+                        for x, c in enumerate(row):
+                            if isinstance(c, dict):
+                                if "style" in c:
+                                    style = c["style"]
+                                    if "shapebg" in style:
+                                        if style["shapebg"] == "circle":
+                                            if (x, y) not in r_styles:
+                                                r_styles[x, y] = CellStyle()
+                                            r_styles[x, y]["circle"] = True
+                                    if "color" in style:
+                                        if (x, y) not in r_styles:
+                                            r_styles[x, y] = CellStyle()
+                                        rgb = hex_to_color(style["color"])
+                                        r_styles[x, y]["cell", "color"] = rgb
+                                    if "colortext" in style:
+                                        if (x, y) not in r_styles:
+                                            r_styles[x, y] = CellStyle()
+                                        rgb = hex_to_color(style["colortext"])
+                                        r_styles[x, y]["char", "color"] = rgb
+                                if "cell" in c:
+                                    c = c["cell"]
+                                    # fall-through
+                            elif c == "null":
+                                r_grid.set_void(x, y, True)
+                            elif c == c_block:
+                                r_grid.set_block(x, y, True)
+                            elif c == c_empty:
+                                pass
+                        y += 1
+                elif e == "solution":
+                    assert r_grid is not None
+                    x, y = 0, 0
+                    for row in data[e]:
+                        for x, c in enumerate(row):
+                            if isinstance(c, list) or isinstance(c, dict):
+                                print "TODO"
+                            elif c != "null" and c != c_block and c != c_empty:
+                                r_grid.set_char(x, y, c)
+                        y += 1
+                elif e == "clues":
+                    assert r_grid is not None
+                    clues = {}
+                    for md, d in [("across", "Across"), ("down", "Down")]:
+                        if d in data[e]:
+                            for n, clue in data[e][d]:
+                                clues[n, md] = clue
+        # TODO modify when arbitrary number schemes are implemented
+        r_grid.assign_numbers()
+        for d in ["across", "down"]:
+            for n, x, y in r_grid.words_by_direction(d):
+                if (n, d) in clues:
+                    r_grid.store_clue(x, y, d, "text", clues[n, d])
+        p = Puzzle(r_grid, r_styles, r_gstyles)
+        p.metadata = r_meta
+        p.type = constants.PUZZLE_IPUZ
+        p.filename = filename
+        p.notepad = r_notepad
+        results.append(p)
     return results
 
 # http://www.xwordinfo.com/XPF/
