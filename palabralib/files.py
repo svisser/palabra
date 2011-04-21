@@ -383,13 +383,10 @@ def write_ipuz(puzzle, backup=True):
         if e in meta:
             contents[e] = meta[e]
     props = puzzle.view.properties
-    props_circle = props["circle"]
-    props_cell_color = props["cell", "color"]
-    props_char_color = props["char", "color"]
     styles = props.styles
-    circles = [c for c in styles if styles[c]["circle"] != props_circle]
-    shades = [c for c in styles if styles[c]["cell", "color"] != props_cell_color]
-    color_txt = [c for c in styles if styles[c]["char", "color"] != props_char_color]
+    diffs = {}
+    for key in ["circle", ("cell", "color"), ("char", "color")]:
+        diffs[key] = [c for c in styles if styles[c][key] != props[key]]
     puz = []
     for y in xrange(puzzle.grid.height):
         row = []
@@ -404,12 +401,12 @@ def write_ipuz(puzzle, backup=True):
             else:
                 cell = c_empty
             style = {}
-            if (x, y) in circles:
+            if (x, y) in diffs["circle"]:
                 style["shapebg"] = "circle"
-            if (x, y) in shades:
+            if (x, y) in diffs["cell", "color"]:
                 color = color_to_hex(styles[x, y]["cell", "color"], include=False)
                 style["color"] = color
-            if (x, y) in color_txt:
+            if (x, y) in diffs["char", "color"]:
                 color = color_to_hex(styles[x, y]["char", "color"], include=False)
                 style["colortext"] = color
             if style:
@@ -853,4 +850,3 @@ FILETYPES[constants.PUZZLE_IPUZ] = {
     , 'writer': write_ipuz
     , 'exception': IPUZParserError
 }
-
