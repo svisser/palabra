@@ -323,7 +323,7 @@ def read_ipuz(filename, warnings=True):
                                     if "color" in style:
                                         if (x, y) not in r_styles:
                                             r_styles[x, y] = CellStyle()
-                                        rgb = hex_to_color(style["color"])
+                                        rgb = hex_to_color('#' + style["color"])
                                         r_styles[x, y]["cell", "color"] = rgb
                                     if "colortext" in style:
                                         if (x, y) not in r_styles:
@@ -333,7 +333,8 @@ def read_ipuz(filename, warnings=True):
                                 if "cell" in c:
                                     c = c["cell"]
                                     # fall-through
-                            elif c == None:
+                                    print "falling", c
+                            if c == None:
                                 r_grid.set_void(x, y, True)
                             elif c == c_block:
                                 r_grid.set_block(x, y, True)
@@ -388,19 +389,33 @@ def write_ipuz(puzzle, backup=True):
                 c_block = contents[e]
             if e == 'empty':
                 c_empty = contents[e]
+    props = puzzle.view.properties
+    styles = props.styles
+    circles = [cell for cell in styles if styles[cell]["circle"] != props["circle"]]
+    shades = [cell for cell in styles if styles[cell]["cell", "color"] != props["cell", "color"]]
     puz = []
     for y in xrange(puzzle.grid.height):
         row = []
         for x in xrange(puzzle.grid.width):
             n = puzzle.grid.data[y][x]["number"]
             if n != 0:
-                row.append(n)
+                cell = n
             elif puzzle.grid.data[y][x]["block"]:
-                row.append(c_block)
+                cell = c_block
             elif puzzle.grid.data[y][x]["void"]:
-                row.append(None)
+                cell = None
             else:
-                row.append(c_empty)
+                cell = c_empty
+            style = {}
+            if (x, y) in circles:
+                style["shapebg"] = "circle"
+            if (x, y) in shades:
+                color = color_to_hex(styles[x, y]["cell", "color"])[1:]
+                style["color"] = color
+            if style:
+                row.append({"cell": cell, "style": style})
+            else:
+                row.append(cell)
         puz.append(row)
     contents["puzzle"] = puz
     clues = {}
@@ -740,8 +755,8 @@ def _write_xpf_xml(root, puzzle, compact=False):
     
     if not compact:
         props = puzzle.view.properties
-        styles = puzzle.view.properties.styles
-        circles = [cell for cell in styles if styles[cell].circle != props["circle"]]
+        styles = props.styles
+        circles = [cell for cell in styles if styles[cell]["circle"] != props["circle"]]
         if circles:
             circles.sort(key=itemgetter(0, 1))
             ecircles = etree.SubElement(main, "Circles")
@@ -749,7 +764,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
                 ecircle = etree.SubElement(ecircles, "Circle")
                 ecircle.set("Row", str(y + 1))
                 ecircle.set("Col", str(x + 1))
-        shades = [cell for cell in styles if styles[cell].cell["color"] != props["cell", "color"]]
+        shades = [cell for cell in styles if styles[cell]["cell", "color"] != props["cell", "color"]]
         if shades:
             shades.sort(key=itemgetter(0, 1))
             eshades = etree.SubElement(main, "Shades")
@@ -757,7 +772,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
                 eshade = etree.SubElement(eshades, "Shade")
                 eshade.set("Row", str(y + 1))
                 eshade.set("Col", str(x + 1))
-                eshade.text = color_to_hex(styles[x, y].cell["color"])
+                eshade.text = color_to_hex(styles[x, y]["cell", "color"])
         rebus = [cell for cell in puzzle.grid.cells() if puzzle.grid.has_rebus(*cell)]
         if rebus:
             entries = etree.SubElement(main, "RebusEntries")
