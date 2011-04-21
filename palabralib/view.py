@@ -507,7 +507,7 @@ class GridView:
         for p, q in cells:
             style = styles[p, q]
             if style["circle"]:
-                color = style["char", "color"]
+                color = style["block", "color"]
                 if color != cur_color:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
