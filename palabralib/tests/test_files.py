@@ -80,11 +80,13 @@ class FilesTestCase(unittest.TestCase):
         results[0].filename = self.LOCATION
         self.assertEquals(self.ipuzzle, results[0])
         
-    def textHexColor(self):
-        c = "#abcdef"
-        self.assertEquals(c, hex_to_color(color_to_hex(c)))
-        c = "abcdef"
-        self.assertEquals(c, hex_to_color(color_to_hex(c)))
+    def testHexColor(self):
+        for c0 in ["#abcdef", "#654321"]:
+            c1 = color_to_hex(hex_to_color(c0), include=True)
+            self.assertEquals(c0, c1)
+        for c0 in ["abcdef", "eb8832", "123456"]:
+            c1 = color_to_hex(hex_to_color(c0), include=False)
+            self.assertEquals(c0, c1)
         
     def testXPFMeta(self):
         self.puzzle.metadata.update(METADATA)
