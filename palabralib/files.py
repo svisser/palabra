@@ -94,16 +94,12 @@ def read_crossword(filename, warnings=True):
     t = determine_file_type(filename)
     if t is None:
         raise ParserError("Palabra was unable to open: " + filename)
-    if t == constants.PUZZLE_XPF:
-        results = FILETYPES[t]['reader'](filename, warnings)
-        if not results:
-            raise XPFParserError(u"No puzzle was found in this file.")
-        if len(results) > 1:
-            raise XPFParserError(u"This is a container file instead of a puzzle file.")
-    elif t == constants.PUZZLE_IPUZ:
-        results = FILETYPES[t]['reader'](filename, warnings)
-        if not results:
-            raise IPUZParserError(u"No puzzle was found in this file.")
+    results = FILETYPES[t]['reader'](filename, warnings)
+    e_type = FILETYPES[t]['exception']
+    if not results:
+        raise e_type(u"No puzzle was found in this file.")
+    if len(results) > 1:
+        raise e_type(u"This is a container file instead of a puzzle file.")
     return results[0]
 
 def determine_file_type(filename):
@@ -841,11 +837,13 @@ FILETYPES[constants.PUZZLE_XPF] = {
     , 'pattern': u".xml"
     , 'reader': read_xpf
     , 'writer': write_xpf
+    , 'exception': XPFParserError
 }
 FILETYPES[constants.PUZZLE_IPUZ] = {
     'description': u"ipuz puzzle files"
     , 'pattern': u".ipuz"
     , 'reader': read_ipuz
     , 'writer': write_ipuz
+    , 'exception': IPUZParserError
 }
 
