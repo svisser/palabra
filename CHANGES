@@ -2,7 +2,9 @@
 This is a list of changes since the initial release of Palabra.
 
 0.1.6 (unreleased)
-* Added ability to store an explanation for a clue.
+* Added ability to store an explanation for a clue (XPF).
+* Added basic support for ipuz file format.
+* Added dialog to modify the appearance of the puzzle.
 
 0.1.5 (April 19, 2011)
 * XPF 1.0 is supported (except right-to-left editing)
