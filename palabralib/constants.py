@@ -47,6 +47,15 @@ PUZZLE_XPF = 'xpf'
 # http://www.ipuz.org/
 PUZZLE_IPUZ = 'ipuz'
 
+# canonical identifiers for metadata across various file formats
+# (using simple Dublin Core)
+META_TITLE = 'title'
+META_CREATOR = 'creator'
+META_EDITOR = 'contributor'
+META_COPYRIGHT = 'rights'
+META_PUBLISHER = 'publisher'
+META_DATE = 'date'
+
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
 STATUS_GRID = "STATUS_GRID"

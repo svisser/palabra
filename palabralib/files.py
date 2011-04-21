@@ -34,13 +34,22 @@ from view import CellStyle, GridView
 import view
 
 XPF_META_ELEMS = {'Type': 'type'
-    , 'Title': 'title'
-    , 'Author': 'creator'
-    , 'Editor': 'contributor'
-    , 'Copyright': 'rights'
-    , 'Publisher': 'publisher'
-    , 'Date': 'date'}
+    , 'Title': constants.META_TITLE
+    , 'Author': constants.META_CREATOR
+    , 'Editor': constants.META_EDITOR
+    , 'Copyright': constants.META_COPYRIGHT
+    , 'Publisher': constants.META_PUBLISHER
+    , 'Date': constants.META_DATE
+}
 XPF_META_ELEMS_LIST = [(b, a) for a, b in XPF_META_ELEMS.items()]
+IPUZ_MY_META_ELEMS = {
+    'copyright': constants.META_COPYRIGHT
+    , 'publisher': constants.META_PUBLISHER
+    , 'title': constants.META_TITLE
+    , 'author': constants.META_CREATOR
+    , 'editor': constants.META_EDITOR
+    , 'date': constants.META_DATE
+}
 IPUZ_META_ELEMS = [
     "copyright", "publisher", "publication", "url", "uniqueid"
     , "title", "intro", "explanation", "annotation", "author"
@@ -279,7 +288,10 @@ def read_ipuz(filename, warnings=True):
         r_gstyles = {}
         for m in IPUZ_META_ELEMS:
             if m in data:
-                r_meta[m] = data[m]
+                if m in IPUZ_MY_META_ELEMS:
+                    r_meta[IPUZ_MY_META_ELEMS[m]] = data[m]
+                else:
+                    r_meta[m] = data[m]
         c_block = '#'
         c_empty = 0
         for t in IPUZ_TECH_ELEMS:
