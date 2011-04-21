@@ -95,13 +95,13 @@ def read_crossword(filename, warnings=True):
     if t is None:
         raise ParserError("Palabra was unable to open: " + filename)
     if t == constants.PUZZLE_XPF:
-        results = read_xpf(filename, warnings)
+        results = FILETYPES[t]['reader'](filename, warnings)
         if not results:
             raise XPFParserError(u"No puzzle was found in this file.")
         if len(results) > 1:
             raise XPFParserError(u"This is a container file instead of a puzzle file.")
     elif t == constants.PUZZLE_IPUZ:
-        results = read_ipuz(filename, warnings)
+        results = FILETYPES[t]['reader'](filename, warnings)
         if not results:
             raise IPUZParserError(u"No puzzle was found in this file.")
     return results[0]
@@ -301,7 +301,8 @@ def read_ipuz(filename, warnings=True):
                     c_block = data[t]
                 elif t == "empty":
                     c_empty = data[t]
-                r_meta[m] = data[t]
+                else:
+                    pass # TODO
         for e in IPUZ_CROSS_ELEMS:
             if e in data:
                 if e == "puzzle":
@@ -347,7 +348,7 @@ def read_ipuz(filename, warnings=True):
                         for x, c in enumerate(row):
                             if isinstance(c, list) or isinstance(c, dict):
                                 print "TODO"
-                            elif c != "null" and c != c_block and c != c_empty:
+                            elif c is not None and c != c_block and c != c_empty:
                                 r_grid.set_char(x, y, c)
                         y += 1
                 elif e == "clues":
@@ -838,11 +839,13 @@ FILETYPES['keys'] = [constants.PUZZLE_XPF, constants.PUZZLE_IPUZ]
 FILETYPES[constants.PUZZLE_XPF] = {
     'description': u"XPF puzzle files"
     , 'pattern': u".xml"
+    , 'reader': read_xpf
     , 'writer': write_xpf
 }
 FILETYPES[constants.PUZZLE_IPUZ] = {
     'description': u"ipuz puzzle files"
     , 'pattern': u".ipuz"
+    , 'reader': read_ipuz
     , 'writer': write_ipuz
 }
 

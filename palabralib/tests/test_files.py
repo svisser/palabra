@@ -22,6 +22,7 @@ from lxml import etree
 
 import palabralib.constants as constants
 from palabralib.files import (
+    FILETYPES,
     read_crossword,
     write_xpf,
     read_xpf,
@@ -30,18 +31,35 @@ from palabralib.files import (
     XPFParserError,
     color_to_hex,
     hex_to_color,
+    read_ipuz,
+    write_ipuz,
 )
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
 from palabralib.view import CellStyle
 
+METADATA = {
+    constants.META_TITLE: "TestTitle"
+    , constants.META_CREATOR: "TestCreator"
+    , constants.META_EDITOR: "TestEditor"
+    , constants.META_COPYRIGHT: "TestRights"
+    , constants.META_PUBLISHER: "TestPublisher"
+    , constants.META_DATE: "TestDate"
+}
+
 class FilesTestCase(unittest.TestCase):
-    LOCATION = "palabralib/tests/test_xpf.xml"
-    LOCATION2 = "palabralib/tests/test_not_xpf.txt"
+    LOCATION = "palabralib/tests/test.puzzle"
+    LOCATION2 = "palabralib/tests/test.not_puzzle"
     
     def setUp(self):
+        # XPF
         self.puzzle = Puzzle(Grid(15, 15))
         self.puzzle.filename = self.LOCATION
+        
+        # IPUZ
+        self.ipuzzle = Puzzle(Grid(15, 15))
+        self.ipuzzle.type = constants.PUZZLE_IPUZ
+        self.ipuzzle.filename = self.LOCATION
         
     def tearDown(self):
         for f in [self.LOCATION, self.LOCATION2]:
@@ -55,6 +73,13 @@ class FilesTestCase(unittest.TestCase):
         results[0].filename = self.LOCATION
         self.assertEquals(self.puzzle, results[0])
         
+    def testIPUZBackup(self):
+        write_ipuz(self.ipuzzle, backup=False)
+        write_ipuz(self.ipuzzle, backup=True)
+        results = read_ipuz(self.LOCATION + "~", warnings=False)
+        results[0].filename = self.LOCATION
+        self.assertEquals(self.ipuzzle, results[0])
+        
     def textHexColor(self):
         c = "#abcdef"
         self.assertEquals(c, hex_to_color(color_to_hex(c)))
@@ -62,18 +87,13 @@ class FilesTestCase(unittest.TestCase):
         self.assertEquals(c, hex_to_color(color_to_hex(c)))
         
     def testXPFMeta(self):
-        self.puzzle.metadata['title'] = "TestTitle"
-        self.puzzle.metadata['creator'] = "TestCreator"
-        self.puzzle.metadata['contributor'] = "TestContributor"
-        self.puzzle.metadata['rights'] = "TestRights"
-        self.puzzle.metadata['publisher'] = "TestPublisher"
-        self.puzzle.metadata['date'] = "TestDate"
+        self.puzzle.metadata.update(METADATA)
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION, warnings=False)
         self.assertEquals(len(results), 1)
         self.assertEquals(results[0], self.puzzle)
             
-    def testXPFOne(self):
+    def testReadWriteXPF(self):
         self.puzzle.grid.set_block(0, 0, True)
         self.puzzle.grid.set_void(5, 5, True)
         self.puzzle.grid.set_char(3, 3, "A")
@@ -86,8 +106,20 @@ class FilesTestCase(unittest.TestCase):
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION, warnings=False)
         self.assertEquals(len(results), 1)
-        self.assertEquals(self.puzzle.grid, results[0].grid)
         self.assertEquals(self.puzzle, results[0])
+    
+    def testReadWriteIPUZ(self):
+        self.ipuzzle.grid.set_block(0, 0, True)
+        self.ipuzzle.grid.set_void(5, 5, True)
+        self.ipuzzle.grid.set_char(3, 3, "A")
+        self.ipuzzle.grid.store_clue(1, 0, "across", "text", "This is a clue")
+        self.ipuzzle.grid.assign_numbers()
+        self.ipuzzle.metadata['title'] = "This is the title"
+        self.ipuzzle.metadata['difficulty'] = "This is the difficulty"
+        write_ipuz(self.ipuzzle, False)
+        results = read_ipuz(self.LOCATION, warnings=False)
+        self.assertEquals(len(results), 1)
+        self.assertEquals(self.ipuzzle, results[0])
         
     def testXPFTwo(self):
         style = CellStyle()
@@ -243,10 +275,13 @@ class FilesTestCase(unittest.TestCase):
         write_xpf(self.puzzle)
         p = read_crossword(self.LOCATION, warnings=False)
         self.assertEquals(self.puzzle, p)
+        write_ipuz(self.ipuzzle)
+        p = read_crossword(self.LOCATION, warnings=False)
+        self.assertEquals(self.ipuzzle, p)
         
     def testReadCrosswordErrors(self):
         with open(self.LOCATION, 'w') as f:
-            f.write("This is not XML")
+            f.write("This is not XPF or IPUZ")
         self.assertRaises(ParserError, read_crossword, self.LOCATION, warnings=False)
         
     def testDetermineFileType(self):
