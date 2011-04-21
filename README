@@ -13,6 +13,7 @@ Requirements
 - PyGTK 2.8
 - lxml package, also known as python-lxml in repositories.
   It can also be found here: http://pypi.python.org/pypi/lxml.
+- python-dev from the repositories.
 
 Palabra should work with the above versions of the software packages but they
 may need to be refined further (please contact me). In any case,
@@ -37,6 +38,15 @@ How to install/run
 - After that, you can run palabra using:
 
   palabra
+  
+If you have trouble installing and you get errors about missing distribution
+options, try upgrading the setup script with:
+
+  sudo python ez_setup.py -U setuptools
+  
+For the latest installation instructions, visit:
+
+  https://bitbucket.org/svisser/palabra/wiki/Home
 
 Getting started
 ===============
