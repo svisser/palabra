@@ -382,13 +382,11 @@ class PropertiesWindow(gtk.Dialog):
         
     def create_metadata_tab(self, puzzle):
         details = gtk.Table(9, 2, False)
-        
         def metadata_changed(widget, key):
             value = widget.get_text().strip()
             self.puzzle.metadata[key] = value
             if len(value) == 0:
                 del self.puzzle.metadata[key]
-        
         def create_metadata_entry(key, label, index):
             entry = gtk.Entry(512)
             entry.connect("changed", lambda w: metadata_changed(w, key))
@@ -396,20 +394,18 @@ class PropertiesWindow(gtk.Dialog):
             alignment.add(gtk.Label(label))
             details.attach(alignment, 0, 1, index, index + 1)
             details.attach(entry, 1, 2, index, index + 1)
-            
             try:
                 value = puzzle.metadata[key]
                 entry.set_text(value)
             except KeyError:
                 pass
-            
-        create_metadata_entry("title", u"Title", 0)
-        create_metadata_entry("creator", u"Creator", 1)
-        create_metadata_entry("contributor", u"Editor", 2)
-        create_metadata_entry("rights", u"Rights", 3)
+        create_metadata_entry(constants.META_TITLE, u"Title", 0)
+        create_metadata_entry(constants.META_CREATOR, u"Author", 1)
+        create_metadata_entry(constants.META_EDITOR, u"Editor", 2)
+        create_metadata_entry(constants.META_COPYRIGHT, u"Rights", 3)
         #create_metadata_entry("description", u"Description", 4)
-        create_metadata_entry("publisher", u"Publisher", 4)
-        create_metadata_entry("date", u"Date", 5)
+        create_metadata_entry(constants.META_PUBLISHER, u"Publisher", 4)
+        create_metadata_entry(constants.META_DATE, u"Date", 5)
         #create_metadata_entry("identifier", u"Identifier", 7)
         #create_metadata_entry("language", u"Language", 8)
 
