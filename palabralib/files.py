@@ -41,7 +41,6 @@ XPF_META_ELEMS = {'Type': 'type'
     , 'Publisher': constants.META_PUBLISHER
     , 'Date': constants.META_DATE
 }
-XPF_META_ELEMS_LIST = [(b, a) for a, b in XPF_META_ELEMS.items()]
 IPUZ_MY_META_ELEMS = {
     'copyright': constants.META_COPYRIGHT
     , 'publisher': constants.META_PUBLISHER
@@ -51,9 +50,8 @@ IPUZ_MY_META_ELEMS = {
     , 'date': constants.META_DATE
 }
 IPUZ_META_ELEMS = [
-    "copyright", "publisher", "publication", "url", "uniqueid"
-    , "title", "intro", "explanation", "annotation", "author"
-    , "editor", "date", "notes", "difficulty"
+    "publication", "url", "uniqueid", "intro", "explanation"
+    , "annotation", "notes", "difficulty"
 ]
 IPUZ_TECH_ELEMS = [
     "origin", "block", "empty", "styles", "checksum" #, "saved"
@@ -63,6 +61,9 @@ IPUZ_CROSS_ELEMS = [
     , "clueplacement", "fill", "answer", "answers", "enumeration"
     , "enumerations", "misses"
 ]
+
+IPUZ_BLOCK_CHAR = '#'
+IPUZ_EMPTY_CHAR = 0
 
 class ParserError(Exception):
     def __init__(self, message):
@@ -286,14 +287,14 @@ def read_ipuz(filename, warnings=True):
         r_notepad = ""
         r_styles = {}
         r_gstyles = {}
+        for m in IPUZ_MY_META_ELEMS:
+            if m in data:
+                r_meta[IPUZ_MY_META_ELEMS[m]] = data[m]
         for m in IPUZ_META_ELEMS:
             if m in data:
-                if m in IPUZ_MY_META_ELEMS:
-                    r_meta[IPUZ_MY_META_ELEMS[m]] = data[m]
-                else:
-                    r_meta[m] = data[m]
-        c_block = '#'
-        c_empty = 0
+                r_meta[m] = data[m]
+        c_block = IPUZ_BLOCK_CHAR
+        c_empty = IPUZ_EMPTY_CHAR
         for t in IPUZ_TECH_ELEMS:
             if t in data:
                 if t == "block":
@@ -332,7 +333,7 @@ def read_ipuz(filename, warnings=True):
                                 if "cell" in c:
                                     c = c["cell"]
                                     # fall-through
-                            elif c == "null":
+                            elif c == None:
                                 r_grid.set_void(x, y, True)
                             elif c == c_block:
                                 r_grid.set_block(x, y, True)
@@ -369,6 +370,64 @@ def read_ipuz(filename, warnings=True):
         p.notepad = r_notepad
         results.append(p)
     return results
+
+def write_ipuz(puzzle, backup=True):
+    contents = {}
+    contents["origin"] = ''.join(["Palabra ", constants.VERSION])
+    contents["version"] = "http://ipuz.org/v1"
+    contents["kind"] = ["http://ipuz.org/crossword#1"]
+    for dc, e in [(b, a) for a, b in IPUZ_MY_META_ELEMS.items()]:
+        if dc in puzzle.metadata:
+            contents[e] = puzzle.metadata[dc]
+    c_block = IPUZ_BLOCK_CHAR
+    c_empty = IPUZ_EMPTY_CHAR
+    for e in IPUZ_META_ELEMS:
+        if e in puzzle.metadata:
+            contents[e] = puzzle.metadata[e]
+            if e == 'block':
+                c_block = contents[e]
+            if e == 'empty':
+                c_empty = contents[e]
+    puz = []
+    for y in xrange(puzzle.grid.height):
+        row = []
+        for x in xrange(puzzle.grid.width):
+            n = puzzle.grid.data[y][x]["number"]
+            if n != 0:
+                row.append(n)
+            elif puzzle.grid.data[y][x]["block"]:
+                row.append(c_block)
+            elif puzzle.grid.data[y][x]["void"]:
+                row.append(None)
+            else:
+                row.append(c_empty)
+        puz.append(row)
+    contents["puzzle"] = puz
+    clues = {}
+    for d, ipuz_d in [("across", "Across"), ("down", "Down")]:
+        clues[ipuz_d] = []
+        for n, x, y, data in puzzle.grid.clues(d):
+            if "text" in data:
+                clues[ipuz_d].append([n, data["text"]])
+    contents["clues"] = clues
+    solution = []
+    for y in xrange(puzzle.grid.height):
+        row = []
+        for x in xrange(puzzle.grid.width):
+            if puzzle.grid.data[y][x]["block"]:
+                row.append(c_block)
+            elif puzzle.grid.data[y][x]["void"]:
+                row.append(None)
+            else:
+                 c = puzzle.grid.data[y][x]["char"]
+                 if c != '':
+                    row.append(c)
+                 else:
+                    row.append(c_empty)
+        solution.append(row)
+    contents["solution"] = solution
+    contents = ''.join(['ipuz(', json.dumps(contents), ')'])
+    _write_puzzle(puzzle.filename, contents, backup)
 
 # http://www.xwordinfo.com/XPF/
 def read_xpf(filename, warnings=True):
@@ -654,7 +713,7 @@ def hex_to_color(colorhex):
 def _write_xpf_xml(root, puzzle, compact=False):
     main = etree.SubElement(root, "Puzzle")
     
-    for dc, e in XPF_META_ELEMS_LIST:
+    for dc, e in [(b, a) for a, b in XPF_META_ELEMS.items()]:
         if dc in puzzle.metadata and puzzle.metadata[dc]:
             child = etree.SubElement(main, e)
             child.text = puzzle.metadata[dc]
@@ -760,10 +819,15 @@ def _write_puzzle(filename, contents, backup=True):
         f.write(contents)
     
 FILETYPES = {}
-FILETYPES['keys'] = [constants.PUZZLE_XPF]
+FILETYPES['keys'] = [constants.PUZZLE_XPF, constants.PUZZLE_IPUZ]
 FILETYPES[constants.PUZZLE_XPF] = {
     'description': u"XPF puzzle files"
     , 'pattern': u".xml"
     , 'writer': write_xpf
+}
+FILETYPES[constants.PUZZLE_IPUZ] = {
+    'description': u"ipuz puzzle files"
+    , 'pattern': u".ipuz"
+    , 'writer': write_ipuz
 }
 
