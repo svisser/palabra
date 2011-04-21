@@ -17,6 +17,7 @@
 
 import cairo
 import gtk
+import json
 import pango
 import pangocairo
 from operator import itemgetter
@@ -72,6 +73,10 @@ class XPFParserError(ParserError):
     def __init__(self, message=""):
         ParserError.__init__(self, "XPFParserError: " + message)
 
+class IPUZParserError(ParserError):
+    def __init__(self, message=""):
+        ParserError.__init__(self, "IPUZParserError: " + message)
+
 def get_real_filename(f):
     return os.path.join(os.path.split(__file__)[0], f)
 
@@ -89,23 +94,33 @@ def read_crossword(filename, warnings=True):
     t = determine_file_type(filename)
     if t is None:
         raise ParserError("Palabra was unable to open: " + filename)
-    if t == "xpf":
+    if t == constants.PUZZLE_XPF:
         results = read_xpf(filename, warnings)
         if not results:
             raise XPFParserError(u"No puzzle was found in this file.")
         if len(results) > 1:
             raise XPFParserError(u"This is a container file instead of a puzzle file.")
+    elif t == constants.PUZZLE_IPUZ:
+        results = read_ipuz(filename, warnings)
+        if not results:
+            raise IPUZParserError(u"No puzzle was found in this file.")
     return results[0]
 
 def determine_file_type(filename):
-    try:
-        doc = etree.parse(filename)
-    except etree.XMLSyntaxError:
-        raise ParserError(u"This is not an XML file.")
-    root = doc.getroot()
-    if root.tag == "Puzzles":
-        return 'xpf'
-    return None
+    t = None
+    with open(filename, 'r') as f:
+        content = f.read(4)
+        if content == 'ipuz':
+            t = constants.PUZZLE_IPUZ
+    if t is None:
+        try:
+            doc = etree.parse(filename)
+        except etree.XMLSyntaxError:
+            raise ParserError(u"This is not an XML file.")
+        root = doc.getroot()
+        if root.tag == "Puzzles":
+            t = constants.PUZZLE_XPF
+    return t
     
 def read_containers(files):
     def load_container(f):
@@ -242,6 +257,22 @@ def export_to_png(puzzle, filename, output, settings):
     puzzle.view.render(context, modes[output])
     surface.write_to_png(filename)
     surface.finish()
+
+# http://www.ipuz.org/    
+def read_ipuz(filename, warnings=True):
+    results = []
+    content = None
+    with open(filename, 'r') as f:
+        content = f.read()
+        content = content.strip('\n')
+    if content is not None:
+        data = json.loads(content[5:-1])
+        keys = data.keys()
+        if u"version" not in keys:
+            raise IPUZParserError(u"Mandatory version element missing in ipuz file.")
+        if u"kind" not in keys:
+            raise IPUZParserError(u"Mandatory kind element missing in ipuz file.")
+    return results
 
 # http://www.xwordinfo.com/XPF/
 def read_xpf(filename, warnings=True):

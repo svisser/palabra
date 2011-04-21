@@ -42,7 +42,10 @@ TRANSFORM_STRUCTURE = 2
 
 # puzzle types
 PUZZLE_PALABRA = 'palabra'
+# http://www.xwordinfo.com/XPF/
 PUZZLE_XPF = 'xpf'
+# http://www.ipuz.org/
+PUZZLE_IPUZ = 'ipuz'
 
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
