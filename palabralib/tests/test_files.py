@@ -121,7 +121,19 @@ class FilesTestCase(unittest.TestCase):
         self.assertEquals(len(results), 1)
         self.assertEquals(self.ipuzzle, results[0])
         
-    def testXPFTwo(self):
+    def testStyleIPUZ(self):
+        style = CellStyle()
+        style["circle"] = True
+        self.ipuzzle.view.properties.styles[2, 2] = style
+        style = CellStyle()
+        style["cell", "color"] = (65535, 0, 0)
+        style["char", "color"] = (0, 65535, 0)
+        self.ipuzzle.view.properties.styles[4, 4] = style
+        write_ipuz(self.ipuzzle, False)
+        results = read_ipuz(self.LOCATION, warnings=False)
+        self.assertEquals(self.ipuzzle, results[0])
+        
+    def testStyleXPF(self):
         style = CellStyle()
         style.circle = True
         self.puzzle.view.properties.styles[2, 2] = style

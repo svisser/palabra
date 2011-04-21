@@ -383,9 +383,13 @@ def write_ipuz(puzzle, backup=True):
         if e in meta:
             contents[e] = meta[e]
     props = puzzle.view.properties
+    props_circle = props["circle"]
+    props_cell_color = props["cell", "color"]
+    props_char_color = props["char", "color"]
     styles = props.styles
-    circles = [cell for cell in styles if styles[cell]["circle"] != props["circle"]]
-    shades = [cell for cell in styles if styles[cell]["cell", "color"] != props["cell", "color"]]
+    circles = [c for c in styles if styles[c]["circle"] != props_circle]
+    shades = [c for c in styles if styles[c]["cell", "color"] != props_cell_color]
+    color_txt = [c for c in styles if styles[c]["char", "color"] != props_char_color]
     puz = []
     for y in xrange(puzzle.grid.height):
         row = []
@@ -405,6 +409,9 @@ def write_ipuz(puzzle, backup=True):
             if (x, y) in shades:
                 color = color_to_hex(styles[x, y]["cell", "color"], include=False)
                 style["color"] = color
+            if (x, y) in color_txt:
+                color = color_to_hex(styles[x, y]["char", "color"], include=False)
+                style["colortext"] = color
             if style:
                 row.append({"cell": cell, "style": style})
             else:
