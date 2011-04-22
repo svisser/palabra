@@ -623,6 +623,7 @@ int is_available(Cell *cgrid, int width, int height, int x, int y) {
 }
 
 char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
+    // TODO reduce these malloc calls
     char* cs = PyMem_Malloc(slot->length * sizeof(char) + 1);
     if (!cs) {
         return NULL;
@@ -837,7 +838,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         
         int is_word_ok = 1;
-        char* word = find_candidate(words, slot->length, cs, slot->offset);
+        char* word = find_candidate(slot->length, cs, slot->offset);
         PyMem_Free(cs);
         if (word) {
             if (DEBUG) {
