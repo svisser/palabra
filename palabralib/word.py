@@ -145,7 +145,7 @@ def read_wordlist(path):
     """Yield all words found in the specified file."""
     if not os.path.exists(path):
         return []
-    words = []
+    words = set()
     with open(path, "r") as f:
         ord_A = ord("A")
         ord_Z = ord("Z")
@@ -166,7 +166,7 @@ def read_wordlist(path):
                     or ord_a <= ords[c] <= ord_z):
                     break
             else:
-                words.append(lower(line))
+                words.add(lower(line))
     return words
 
 def create_wordlists(word_files):
@@ -174,7 +174,7 @@ def create_wordlists(word_files):
     for data in word_files:
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlists[path] = CWordList(read_wordlist(path))
+        wordlists[path] = CWordList(path)
     return wordlists
 
 def search_wordlists(wordlists, length, constraints, more_constraints=None):
@@ -216,10 +216,10 @@ class CWordList:
     def __init__(self, content):
         """Accepts either a filepath or a list of words."""
         if isinstance(content, str):
-            words = read_wordlist(content)
+            words = list(read_wordlist(content))
         else:
             words = content
-        self.words = cPalabra.preprocess(list(set(words)))
+        self.words = cPalabra.preprocess(words)
         
     def has_matches(self, length, constraints, words=None):
         """
