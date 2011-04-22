@@ -27,7 +27,7 @@ import constants
 from files import get_real_filename
 import preferences
 import transform
-from word import search_wordlists
+from word import search_wordlists, analyze_words
 import cPalabra
 
 class CellPropertiesDialog(gtk.Dialog):

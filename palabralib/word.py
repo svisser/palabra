@@ -20,6 +20,7 @@ import gobject
 import gtk
 import os
 import time
+from operator import itemgetter
 
 import cPalabra
 import constants
@@ -181,6 +182,35 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
     for path, item in wordlists.items():
         result += item.search(length, constraints, more_constraints)
     return result
+    
+def analyze_words(words):
+    a = {}
+    for l, ws in words.items():
+        a[l] = {}
+        for i in xrange(l):
+            a[l][i] = {}
+        for w in ws:
+            for i, c in enumerate(w):
+                if c not in a[l][i]:
+                    a[l][i][c] = 1
+                else:
+                    a[l][i][c] += 1
+    for l, vals in a.items():
+        if l in [3]:
+            for i in xrange(l):
+                a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
+                print l, i, a[l][i]
+                print ' '
+    counts = []
+    for w in words[3]:
+        places = []
+        for i, c in enumerate(w):
+            for j, item in enumerate(a[3][i]):
+                if item[0] == c:
+                    places.append(j)
+                    break
+        counts.append((w, sum(places)))
+    print sorted(counts, key=itemgetter(1))[:20]
 
 class CWordList:
     def __init__(self, content):

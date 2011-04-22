@@ -26,7 +26,6 @@ char* find_candidate(int length, char *cs, Py_ssize_t offset) {
     Py_ssize_t w;
     for (w = 0; w < count; w++) {
         char *word = PyString_AsString(PyList_GetItem(mwords, w));
-        printf("%s\n", word);
         if (w == offset) {
             Py_DECREF(mwords);
             return word;
