@@ -328,6 +328,7 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     }
 
     // build ternary search trees per word length
+    // TODO insert in random order for best performance
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
         trees[m] = NULL;
