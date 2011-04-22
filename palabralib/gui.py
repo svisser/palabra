@@ -37,8 +37,7 @@ import webbrowser
 import action
 from action import State
 from appearance import AppearanceDialog
-import cGrid
-import cWord
+import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow, verify_output_options
@@ -1182,7 +1181,7 @@ class PalabraWindow(gtk.Window):
             , grid.word_length(x, y, d)
             , grid.gather_constraints(x, y, d))
             for n, x, y, d in grid.words(True, True)]
-        result = cGrid.fill(grid, words, meta)
+        result = cPalabra.fill(grid, words, meta)
         if len(result) > 0:
             self.transform_grid(transform.modify_chars, chars=result[0])
         
@@ -1272,7 +1271,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 def quit():
     gtk.main_quit()
-    cWord.postprocess()
+    cPalabra.postprocess()
     write_config_file()
     
 def main(argv=None):

@@ -28,7 +28,7 @@ from files import get_real_filename
 import preferences
 import transform
 from word import search_wordlists
-import cGrid
+import cPalabra
 
 class CellPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -607,7 +607,7 @@ class Editor(gtk.HBox):
                 l = self.puzzle.grid.word_length(x, y, d)
                 cs = self.puzzle.grid.gather_constraints(x, y, d)
                 meta.append((x, y, 0 if d == "across" else 1, l, cs))
-            results = cGrid.fill(self.puzzle.grid, wordlist.words, meta)
+            results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta)
             self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
             break
             

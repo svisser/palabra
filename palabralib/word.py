@@ -21,8 +21,7 @@ import gtk
 import os
 import time
 
-import cWord
-
+import cPalabra
 import constants
 import preferences
 
@@ -190,14 +189,14 @@ class CWordList:
             words = read_wordlist(content)
         else:
             words = content
-        self.words = cWord.preprocess(words)
+        self.words = cPalabra.preprocess(words)
         
     def has_matches(self, length, constraints, words=None):
         """
         Return True when a word exists that matches the constraints and the length.
         """
         ws = self.words[length] if words is None else words
-        return cWord.has_matches(ws, length, constraints)
+        return cPalabra.has_matches(ws, length, constraints)
         
     def search(self, length, constraints, more_constraints=None):
         """
@@ -228,10 +227,10 @@ class CWordList:
             css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more_constraints]
         else:
             css_str = None
-        return cWord.search(self.words, length, cs_to_str(length, constraints), css_str)
+        return cPalabra.search(self.words, length, cs_to_str(length, constraints), css_str)
         
     # needed for tests
     @staticmethod
     def postprocess():
-        cWord.postprocess()
+        cPalabra.postprocess()
 

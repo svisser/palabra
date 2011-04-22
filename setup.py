@@ -11,12 +11,7 @@ from setuptools import setup
 from distutils.core import Extension
 import palabralib.constants as constants
 
-def create_ext(e):
-    name = 'c' + e.capitalize()
-    sources = ['palabralib/c' + e + 'module.c', 'palabralib/cpalabra.c']
-    return name, sources
-EXTS = [create_ext(e) for e in ['grid', 'view', 'word']]
-ext_modules = [Extension(n, sources=s) for n, s in EXTS]
+ext_modules = [Extension('cPalabra', sources=['palabralib/cpalabramodule.c', 'palabralib/cpalabra.c'])]
 
 # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
 CLASSIFIERS = [ 

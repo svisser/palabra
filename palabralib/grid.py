@@ -17,9 +17,8 @@
 
 import string
 
-import cGrid
+import cPalabra
 import constants
-import cView
 
 class Grid:
     def __init__(self, width, height, initialize=True):
@@ -76,7 +75,7 @@ class Grid:
         
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
-        cGrid.assign_numbers(self)
+        cPalabra.assign_numbers(self)
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""

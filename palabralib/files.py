@@ -25,7 +25,6 @@ import os
 
 from lxml import etree
 
-import cGrid
 import constants
 import grid
 from grid import Grid

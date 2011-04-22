@@ -22,7 +22,7 @@ import pango
 import pangocairo
 
 import constants
-import cView
+import cPalabra
 
 SETTINGS_PREVIEW = {
     "has_padding": True
@@ -531,7 +531,7 @@ class GridView:
         props_border_color = self.properties["border", "color"]
         
         if not self.grid.lines:
-            self.grid.lines = cView.compute_lines(self.grid)
+            self.grid.lines = cPalabra.compute_lines(self.grid)
         def comp_lines():
             for x, y in cells:
                 lines = self.grid.lines[x, y]
