@@ -192,7 +192,9 @@ class WordTestCase(unittest.TestCase):
         
     def testScale(self):
         clist = CWordList('/usr/share/dict/words')
+        pre_total4 = len(clist.words[4])
         total4 = len(clist.search(4, [], None))
+        self.assertEquals(pre_total4, total4)
         totals = {}
         for c in string.ascii_lowercase:
             totals[c] = len(clist.search(4, [(0, c)], None))
