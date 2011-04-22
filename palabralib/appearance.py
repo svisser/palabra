@@ -19,6 +19,12 @@ import gtk
 
 MAX_LINE_WIDTH = 32
 
+def create_color_button(color):
+    color = gtk.gdk.Color(*color)
+    button = gtk.ColorButton()
+    button.set_color(color)
+    return button
+
 class AppearanceDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Appearance"
@@ -53,12 +59,6 @@ class AppearanceDialog(gtk.Dialog):
             align.set_padding(0, 0, 12, 0)
             align.add(gtk.Label(label))
             return align
-            
-        def create_color_button(color):
-            color = gtk.gdk.Color(*color)
-            button = gtk.ColorButton()
-            button.set_color(color)
-            return button
             
         def create_width_spinner(current):
             adj = gtk.Adjustment(current, 1, MAX_LINE_WIDTH, 1, 0, 0)

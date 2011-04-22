@@ -22,6 +22,7 @@ import pangocairo
 import webbrowser
 
 import action
+from appearance import create_color_button
 import constants
 from files import get_real_filename
 import preferences
@@ -34,72 +35,62 @@ class CellPropertiesDialog(gtk.Dialog):
             , gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(384, 256)
-        
-        tabs = gtk.Notebook()
-        tabs.append_page(self.create_general_tab(properties), gtk.Label(u"General"))
-        tabs.append_page(self.create_appearance_tab(properties), gtk.Label(u"Appearance"))
-        
         x, y = properties["cell"]
-        title = ''.join(['Properties of cell ', str((x + 1, y + 1))])
-        #self.set_title(title)
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup(''.join(['<b>', title, '</b>']))
+        self.set_title(''.join(['Properties of cell ', str((x + 1, y + 1))]))
         
-        hbox = gtk.VBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(9)
-        #hbox.pack_start(label, False, False, 0)
-        hbox.pack_start(tabs, True, True, 0)
-        
-        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-        self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
-        self.vbox.add(hbox)
-        
-    def create_general_tab(self, properties):
-        table = gtk.Table(1, 2, False)
-        table.set_col_spacings(18)
+        table = gtk.Table(3, 2, False)
+        table.set_col_spacings(6)
         table.set_row_spacings(6)
         
         def create_row(table, title, value, x, y):
             label = gtk.Label()
             label.set_markup(title)
-            label.set_alignment(0, 0)
-            table.attach(label, x, x + 1, y, y + 1)
+            label.set_alignment(0, 0.5)
+            table.attach(label, x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
             label = gtk.Label(value)
             label.set_alignment(0, 0)
             table.attach(label, x + 1, x + 2, y, y + 1)
+        def create_color_row(table, title, button, x, y):
+            label = gtk.Label()
+            label.set_markup(title)
+            label.set_alignment(0, 0.5)
+            table.attach(label, x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
+            table.attach(button, x + 1, x + 2, y, y + 1)
         
         x, y = properties["cell"]
         location = str((x + 1, y + 1))
         types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
         create_row(table, "Location", location, 0, 0)
         create_row(table, "Type", types[properties["type"]], 0, 1)
-        content = u"(none)"
+        c = u"(none)"
         if properties["type"] == "letter" and properties["content"]:
-            content = properties["content"]
-        create_row(table, "Content", content, 0, 2)
+            c = properties["content"]
+        create_row(table, "Content", c, 0, 2)
+        self.cell_color_button = create_color_button(properties["props"]["cell", "color"])
+        create_color_row(table, "Background color", self.cell_color_button, 0, 3)
 
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
         main.pack_start(table, False, False, 0)
+        content = gtk.HBox(False, 0)
+        content.set_border_width(6)
+        content.set_spacing(6)
+        content.pack_start(main, True, True, 0)
         
-        hbox = gtk.HBox(False, 0)
+        hbox = gtk.VBox(False, 0)
         hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        return hbox
-        
-    def create_appearance_tab(self, properties):
-        main = gtk.HBox(False, 0)
-        main.set_spacing(18)
-        main.pack_start(gtk.Label(u"TODO"), False, False, 0)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        return hbox
+        hbox.set_spacing(9)
+        hbox.pack_start(content, True, True, 0)
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
+        self.vbox.add(hbox)
+    
+    def gather_appearance(self):
+        a = {}
+        color = self.cell_color_button.get_color()
+        a["cell", "color"] = (color.red, color.green, color.blue)
+        return a
+    appearance = property(gather_appearance)
 
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -461,19 +452,41 @@ class Editor(gtk.HBox):
             grid = self.puzzle.grid
             return any([grid.data[q][p]["char"] != ''
                 for p, q in grid.slot(x, y, direction)])
-        slot_a = x, y, "across"
-        slot_d = x, y, "down"
+        clearable = lambda slot: self.puzzle.grid.is_part_of_word(*slot) and has_chars(*slot)
         item = gtk.MenuItem("Clear across slot")
         item.connect("activate", on_clear_slot, "across")
         item.connect("select", on_clear_slot_select, "across", x, y)
         item.connect("deselect", on_clear_slot_deselect)
-        item.set_sensitive(self.puzzle.grid.is_part_of_word(*slot_a) and has_chars(*slot_a))
+        item.set_sensitive(clearable((x, y, "across")))
         menu.append(item)
         item = gtk.MenuItem("Clear down slot")
         item.connect("activate", on_clear_slot, "down")
         item.connect("select", on_clear_slot_select, "down", x, y)
         item.connect("deselect", on_clear_slot_deselect)
-        item.set_sensitive(self.puzzle.grid.is_part_of_word(*slot_d) and has_chars(*slot_d))
+        item.set_sensitive(clearable((x, y, "down")))
+        menu.append(item)
+        menu.append(gtk.SeparatorMenuItem())
+        def on_cell_properties(item):
+            puzzle = self.puzzle
+            grid = puzzle.grid
+            def determine_type(x, y):
+                if grid.is_block(x, y):
+                    return "block"
+                elif grid.is_void(x, y):
+                    return "void"
+                return "letter"
+            props = {}
+            props["cell"] = (x, y)
+            props["type"] = determine_type(x, y)
+            props["content"] = grid.get_char(x, y)
+            props["props"] = puzzle.view.properties
+            w = CellPropertiesDialog(self.palabra_window, props)
+            w.show_all()
+            if w.run() == gtk.RESPONSE_OK:
+                puzzle.view.properties.update(x, y, w.appearance.items())
+            w.destroy()
+        item = gtk.MenuItem("Properties")
+        item.connect("activate", on_cell_properties)
         menu.append(item)
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
