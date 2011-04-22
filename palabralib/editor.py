@@ -469,17 +469,19 @@ class Editor(gtk.HBox):
         def on_cell_properties(item):
             puzzle = self.puzzle
             grid = puzzle.grid
-            def determine_type(x, y):
-                if grid.is_block(x, y):
+            def determine_type(c):
+                if grid.is_block(*c):
                     return "block"
-                elif grid.is_void(x, y):
+                elif grid.is_void(*c):
                     return "void"
                 return "letter"
-            props = {}
-            props["cell"] = (x, y)
-            props["type"] = determine_type(x, y)
-            props["content"] = grid.get_char(x, y)
-            props["cell", "color"] = puzzle.view.properties.style(x, y)["cell", "color"]
+            c = (x, y)
+            props = {
+                "cell": c
+                , "type": determine_type(c)
+                , "content": grid.get_char(*c)
+                , ("cell", "color"): puzzle.view.properties.style(*c)["cell", "color"]
+            }
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
