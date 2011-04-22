@@ -138,9 +138,7 @@ class FilesTestCase(unittest.TestCase):
         
     def testStyleXPF(self):
         props = self.puzzle.view.properties
-        style = CellStyle()
-        style["circle"] = True
-        props.styles[2, 2] = style
+        props.update(2, 2, [("circle", True)])
         style = CellStyle()
         style["cell", "color"] = (65535, 0, 0)
         props.styles[4, 4] = style

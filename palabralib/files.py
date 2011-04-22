@@ -531,7 +531,7 @@ def read_xpf(filename, warnings=True):
                         continue
                     if (x, y) not in r_styles:
                         r_styles[x, y] = CellStyle()
-                    r_styles[x, y].circle = True
+                    r_styles[x, y]["circle"] = True
             elif child.tag == "RebusEntries":
                 for rebus in child:
                     if rebus.tag != "Rebus":
