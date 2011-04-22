@@ -439,7 +439,44 @@ class Editor(gtk.HBox):
                     self.change_typing_direction()
                 if self.puzzle.grid.is_available(x, y):
                     self.set_selection(x, y)
+            elif event.button == 3:
+                if self.puzzle.grid.is_valid(x, y):
+                    self._create_popup_menu(event, x, y)
         return True
+    
+    def _create_popup_menu(self, event, x, y):
+        menu = gtk.Menu()
+        update_status = self.palabra_window.update_status
+        pop_status = self.palabra_window.pop_status
+        def on_clear_slot_select(item, direction, x, y):
+            grid = self.puzzle.grid
+            sx, sy = grid.get_start_word(x, y, direction)
+            msg = ''.join(["Clear all letters in the slot: "
+                , str(grid.data[sy][sx]["number"]), " "
+                , {"across": "across", "down": "down"}[direction]])
+            update_status(constants.STATUS_MENU, msg)
+        on_clear_slot_deselect = lambda item: pop_status(constants.STATUS_MENU)
+        on_clear_slot = lambda item, d: self.clear_slot_of(x, y, d)
+        def has_chars(x, y, direction):
+            grid = self.puzzle.grid
+            return any([grid.data[q][p]["char"] != ''
+                for p, q in grid.slot(x, y, direction)])
+        slot_a = x, y, "across"
+        slot_d = x, y, "down"
+        item = gtk.MenuItem("Clear across slot")
+        item.connect("activate", on_clear_slot, "across")
+        item.connect("select", on_clear_slot_select, "across", x, y)
+        item.connect("deselect", on_clear_slot_deselect)
+        item.set_sensitive(self.puzzle.grid.is_part_of_word(*slot_a) and has_chars(*slot_a))
+        menu.append(item)
+        item = gtk.MenuItem("Clear down slot")
+        item.connect("activate", on_clear_slot, "down")
+        item.connect("select", on_clear_slot_select, "down", x, y)
+        item.connect("deselect", on_clear_slot_deselect)
+        item.set_sensitive(self.puzzle.grid.is_part_of_word(*slot_d) and has_chars(*slot_d))
+        menu.append(item)
+        menu.show_all()
+        menu.popup(None, None, None, event.button, event.time)
         
     def on_button_release_event(self, drawing_area, event):
         if 1 <= event.button <= 3:
@@ -474,7 +511,9 @@ class Editor(gtk.HBox):
     def clear_slot_of(self, x, y, direction):
         """Clear all letters of the slot in the specified direction
         that contains (x, y)."""
-        chars = [(r, s, "") for r, s in self.puzzle.grid.slot(x, y, direction)]
+        grid = self.puzzle.grid
+        chars = [(r, s, "") for r, s in grid.slot(x, y, direction)
+            if grid.data[s][r]["char"] != '']
         if len(chars) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=chars)
         
