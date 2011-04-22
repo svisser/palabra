@@ -2,32 +2,37 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-char* find_candidate(PyObject *words, int length, char *cs, int offset) {
-    PyObject* key = Py_BuildValue("i", length);
-    PyObject* words_m = PyDict_GetItem(words, key);
-    
-    Py_ssize_t count = PyList_Size(words_m);
-    char **words_array = (char**) calloc(sizeof(char**), count);
-    if (!words_array)
-        return NULL;
-    
-    Py_ssize_t w;
-    for (w = 0; w < count; w++) {
-        char *word = PyString_AsString(PyList_GetItem(words_m, w));
-        words_array[w] = word;
+// TODO return C object
+PyObject* find_matches(PyObject *list, Tptr p, char *s)
+{
+    if (!p) return list;
+    if (*s == '.' || *s < p->splitchar)
+        find_matches(list, p->lokid, s);
+    if (*s == '.' || *s == p->splitchar)
+        if (p->splitchar && *s)
+            find_matches(list, p->eqkid, s + 1);
+    if (*s == 0 && p->splitchar == 0) {
+        PyList_Append(list, PyString_FromString(p->word));
     }
-    int matches = 0;
+    if (*s == '.' || *s > p->splitchar)
+        find_matches(list, p->hikid, s);
+    return list;
+}
+
+char* find_candidate(PyObject *words, int length, char *cs, int offset) {
+    PyObject *mwords = PyList_New(0);
+    mwords = find_matches(mwords, trees[length], cs);
+    Py_ssize_t count = PyList_Size(mwords);
+    Py_ssize_t w;
+    // TODO offset is int, w is Py_ssize_t
     for (w = 0; w < count; w++) {
-        char *word = words_array[w];
-        if (check_constraints(word, cs) == 1) {
-            if (matches == offset) {
-                free(words_array);
-                return word;
-            }
-            matches++;
+        if (w == offset) {
+            char *word = PyString_AsString(PyList_GetItem(mwords, w));
+            Py_DECREF(mwords);
+            return word;
         }
     }
-    free(words_array);
+    Py_DECREF(mwords);
     return NULL;
 }
 
@@ -63,4 +68,3 @@ inline int check_constraints(char *word, char *cs) {
     }
     return 1;
 }
-

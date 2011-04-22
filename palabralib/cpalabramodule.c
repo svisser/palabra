@@ -19,13 +19,6 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-typedef struct tnode *Tptr;
-typedef struct tnode {
-    char splitchar;
-    char *word;
-    Tptr lokid, eqkid, hikid;
-} Tnode;
-
 typedef struct sresult *Sptr;
 typedef struct sresult {
     int n_matches;
@@ -37,8 +30,6 @@ typedef struct sparams {
     int length;
     int offset;
 } SearchParams;
-
-Tptr trees[MAX_WORD_LENGTH];
 
 // return 1 if a word exists that matches the constraints, 0 otherwise
 static int
@@ -146,23 +137,6 @@ Tptr insert1(Tptr p, char *s, char *word)
     } else
         p->hikid = insert1(p->hikid, s, word);
     return p;
-}
-
-// TODO return C object
-PyObject* find_matches(PyObject *list, Tptr p, char *s)
-{
-    if (!p) return list;
-    if (*s == '.' || *s < p->splitchar)
-        find_matches(list, p->lokid, s);
-    if (*s == '.' || *s == p->splitchar)
-        if (p->splitchar && *s)
-            find_matches(list, p->eqkid, s + 1);
-    if (*s == 0 && p->splitchar == 0) {
-        PyList_Append(list, PyString_FromString(p->word));
-    }
-    if (*s == '.' || *s > p->splitchar)
-        find_matches(list, p->hikid, s);
-    return list;
 }
 
 int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
@@ -648,7 +622,7 @@ int is_available(Cell *cgrid, int width, int height, int x, int y) {
 }
 
 char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
-    char* cs = malloc(slot->length * sizeof(char));
+    char* cs = malloc(slot->length * sizeof(char) + 1);
     if (!cs) {
         return NULL;
     }
@@ -667,6 +641,7 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
         y += dy;
         count++;
     }
+    cs[slot->length] = '\0';
     return cs;
 }
 
@@ -827,7 +802,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     
     int attempts = 0;
     PyObject *result = PyList_New(0);
-    while (attempts < 10000) {
+    while (attempts < 100) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -858,6 +833,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         char* word = find_candidate(words, slot->length, cs, slot->offset);
+        free(cs);
         if (word) {
             if (DEBUG) {
                 printf("%s (%i)\n", word, slot->offset);
@@ -932,8 +908,6 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 n_done_slots -= cleared;
             }
         }
-        
-        free(cs);
         
         if (is_word_ok) {
             slot->done = 1;
