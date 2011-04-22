@@ -371,7 +371,7 @@ cGrid_fill(PyObject *self, PyObject *args) {
     PyObject *meta;
     if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
         return NULL;
-        
+
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     PyObject* data = PyObject_GetAttrString(grid, "data");

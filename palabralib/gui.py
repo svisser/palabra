@@ -182,7 +182,7 @@ class PalabraWindow(gtk.Window):
         tool = self.editor.tools["word"].create()
         tabs.append_page(tool, gtk.Label(u"Word"))
         tool = self.editor.tools["fill"].create()
-        #tabs.append_page(tool, gtk.Label(u"Fill"))
+        tabs.append_page(tool, gtk.Label(u"Fill"))
         tool = self.editor.tools["clue"].create(puzzle)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):

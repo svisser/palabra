@@ -28,6 +28,7 @@ from files import get_real_filename
 import preferences
 import transform
 from word import search_wordlists
+import cGrid
 
 class CellPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -113,13 +114,6 @@ class WordPropertiesDialog(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
-
-class FillTool:
-    def __init__(self, editor):
-        self.editor = editor
-        
-    def create(self):
-        return gtk.Label(u"Not yet implemented.")
 
 class WordWidget(gtk.DrawingArea):
     def __init__(self, editor):
@@ -251,6 +245,27 @@ class WordTool:
         
     def deselect(self):
         self.view.selection = None
+
+class FillTool:
+    def __init__(self, editor):
+        self.editor = editor
+        
+    def create(self):
+        main = gtk.VBox(False, 0)
+        main.set_spacing(9)
+        
+        button = gtk.Button("Fill")
+        button.connect("pressed", self.on_button_pressed)
+        main.pack_start(button, False, False, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(6)
+        hbox.set_spacing(6)
+        hbox.pack_start(main, True, True, 0)
+        return hbox
+        
+    def on_button_pressed(self, button):
+        self.editor.fill()
 
 class Selection:
     def __init__(self, x, y, direction):
@@ -584,6 +599,17 @@ class Editor(gtk.HBox):
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , self.selection, force_refresh)
         self.tools["word"].display_words(result)
+        
+    def fill(self):
+        for path, wordlist in self.palabra_window.wordlists.items():
+            meta = []
+            for n, x, y, d in self.puzzle.grid.words(allow_duplicates=True, include_dir=True):
+                l = self.puzzle.grid.word_length(x, y, d)
+                cs = self.puzzle.grid.gather_constraints(x, y, d)
+                meta.append((x, y, 0 if d == "across" else 1, l, cs))
+            results = cGrid.fill(self.puzzle.grid, wordlist.words, meta)
+            self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
+            break
             
     def select(self, x, y, direction, full_update=True):
         """Select the word at (x, y, direction) in the grid."""
