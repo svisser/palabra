@@ -219,7 +219,7 @@ class CWordList:
             words = read_wordlist(content)
         else:
             words = content
-        self.words = cPalabra.preprocess(words)
+        self.words = cPalabra.preprocess(list(set(words)))
         
     def has_matches(self, length, constraints, words=None):
         """
