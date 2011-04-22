@@ -586,11 +586,12 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
     Slot slot = slots[index];
     int l;
     for (l = 0; l < slot.length; l++) {
-        if (cgrid[slot.x + slot.y * height].fixed == 1) continue;
+        if (cgrid[slot.x + slot.y * height].fixed == 1)
+            continue;
         int cx = slot.x + (slot.dir == 0 ? l : 0);
         int cy = slot.y + (slot.dir == 1 ? l : 0);
         int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == 0 ? 1 : 0);
-        
+
         Cell *cell = &cgrid[cx + cy * height];
         if (can_clear_char(cgrid, width, height, slots[m]) && cell->c != CONSTRAINT_EMPTY) {
             cell->c = CONSTRAINT_EMPTY;
@@ -682,6 +683,10 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
         for (s = index; s >= iindex; s--) {
             cleared++;
             int blank = order[s];
+            if (blank < 0) {
+                // no word was actually filled in so skip
+                continue;
+            }
             Slot *bslot = &slots[blank];
             if (DEBUG) {
                 printf("Blanking: %i %i %i %i (%i, %i, %s)\n", s, blank, index, iindex, bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
@@ -802,7 +807,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     
     int attempts = 0;
     PyObject *result = PyList_New(0);
-    while (attempts < 1000) {
+    while (attempts < 100) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
