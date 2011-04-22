@@ -555,6 +555,7 @@ class Editor(gtk.HBox):
                 if self.puzzle.grid.word_length(x, y, d) == length:
                     new.append((x, y, d, length))
         self._render_highlighted_words(new)
+        return new
         
     def highlight_chars(self, char):
         """Highlight all occurrences of the specified character."""

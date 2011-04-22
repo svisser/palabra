@@ -89,12 +89,11 @@ class PropertiesWindow(gtk.Dialog):
         self.connect("destroy", lambda widget: self.palabra_window.editor.clear_highlighted_words())
 
         status = puzzle.grid.determine_status(True)
-        message = self.determine_words_message(status, puzzle)
         
         tabs = gtk.Notebook()
         tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label(u"General"))
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
-        tabs.append_page(self.create_words_tab(message, status, puzzle), gtk.Label(u"Words"))
+        tabs.append_page(self.create_words_tab(status, puzzle), gtk.Label(u"Words"))
         tabs.append_page(self.create_metadata_tab(puzzle), gtk.Label(u"Metadata"))
         tabs.append_page(self.create_notepad_tab(puzzle), gtk.Label(u"Notepad"))
         tabs.connect("switch-page", self.on_switch_page)
@@ -110,8 +109,10 @@ class PropertiesWindow(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
-        
+
     def on_switch_page(self, tabs, page, pagenum):
+        txt = self.determine_words_message(self.puzzle)
+        self.words_data.set_text(txt)
         self.words_tab_sel.unselect_all()
         self.palabra_window.editor.clear_highlighted_words()
     
@@ -290,7 +291,7 @@ class PropertiesWindow(gtk.Dialog):
         hbox.pack_start(main, True, True, 0)
         return hbox
         
-    def create_words_tab(self, message, status, puzzle):
+    def create_words_tab(self, status, puzzle):
         store = gtk.ListStore(int, int)
         tree = gtk.TreeView(store)
         self.words_tab_sel = tree.get_selection()
@@ -313,8 +314,8 @@ class PropertiesWindow(gtk.Dialog):
         
         text = gtk.TextView()
         text.set_editable(False)        
-        data = text.get_buffer()
-        data.set_text(message)
+        self.words_data = text.get_buffer()
+        self.words_data.set_text(self.determine_words_message(self.puzzle))
         
         twindow = gtk.ScrolledWindow(None, None)
         twindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -359,7 +360,12 @@ class PropertiesWindow(gtk.Dialog):
         store, it = selection.get_selected()
         if it:
             length = store.get_value(it, 0)
-            self.palabra_window.editor.highlight_words(length)
+            words = self.palabra_window.editor.highlight_words(length)
+            if not words:
+                message = self.determine_words_message(self.puzzle)
+            else:
+                message = self.determine_words_message(self.puzzle, length=length)
+            self.words_data.set_text(message)
             
     @staticmethod
     def determine_scrabble_score(puzzle):
@@ -372,11 +378,13 @@ class PropertiesWindow(gtk.Dialog):
         return sum([scores[c] for c in chars])
         
     @staticmethod
-    def determine_words_message(status, puzzle):
+    def determine_words_message(puzzle, length=None):
         entries = puzzle.grid.entries()
         entries.sort(key=len)
         result = []
         for word in entries:
+            if length is not None and len(word) != length:
+                continue
             result += (word + u"\n")
         return ''.join(result[:-1])
         
