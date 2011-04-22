@@ -7,6 +7,7 @@ This is a list of changes since the initial release of Palabra.
 * Added dialog to modify the appearance of the puzzle.
 * Added popup menu for individual cells.
 * Added properties dialog for modifying individual cells.
+* Added ability to show words of selected length in properties window.
 
 0.1.5 (April 19, 2011)
 * XPF 1.0 is supported (except right-to-left editing)
