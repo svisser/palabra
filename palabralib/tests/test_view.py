@@ -89,3 +89,10 @@ class ViewTestCase(unittest.TestCase):
         self.assertEquals(s, t)
         s["circle"] = True
         self.assertNotEquals(s, t)
+        
+    def testCellProps(self):
+        props = self.puzzle.view.properties
+        props["cell", "color"] = (65535, 0, 0)
+        props.update(5, 5, [(("cell", "color"), (65535, 0, 0))])
+        props["cell", "color"] = (65535, 65535, 65535)
+        self.assertEquals(props.style(5, 5)["cell", "color"], (65535, 65535, 65535))
