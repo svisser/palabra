@@ -19,12 +19,11 @@ PyObject* find_matches(PyObject *list, Tptr p, char *s)
     return list;
 }
 
-char* find_candidate(PyObject *words, int length, char *cs, int offset) {
+char* find_candidate(PyObject *words, int length, char *cs, Py_ssize_t offset) {
     PyObject *mwords = PyList_New(0);
     mwords = find_matches(mwords, trees[length], cs);
     Py_ssize_t count = PyList_Size(mwords);
     Py_ssize_t w;
-    // TODO offset is int, w is Py_ssize_t
     for (w = 0; w < count; w++) {
         if (w == offset) {
             char *word = PyString_AsString(PyList_GetItem(mwords, w));

@@ -389,7 +389,7 @@ typedef struct Slot {
     int length;
     int count;
     int done; // {0, 1}
-    int offset;
+    Py_ssize_t offset;
 } Slot;
 
 // 0 = false, 1 = true
@@ -802,7 +802,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     
     int attempts = 0;
     PyObject *result = PyList_New(0);
-    while (attempts < 100) {
+    while (attempts < 1000) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
