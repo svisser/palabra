@@ -66,7 +66,7 @@ class CellPropertiesDialog(gtk.Dialog):
         if properties["type"] == "letter" and properties["content"]:
             c = properties["content"]
         create_row(table, "Content", c, 0, 2)
-        self.cell_color_button = create_color_button(properties["props"]["cell", "color"])
+        self.cell_color_button = create_color_button(properties["cell", "color"])
         create_color_row(table, "Background color", self.cell_color_button, 0, 3)
 
         main = gtk.VBox(False, 0)
@@ -479,7 +479,7 @@ class Editor(gtk.HBox):
             props["cell"] = (x, y)
             props["type"] = determine_type(x, y)
             props["content"] = grid.get_char(x, y)
-            props["props"] = puzzle.view.properties
+            props["cell", "color"] = puzzle.view.properties.style(x, y)["cell", "color"]
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
