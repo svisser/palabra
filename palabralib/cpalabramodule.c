@@ -623,7 +623,7 @@ int is_available(Cell *cgrid, int width, int height, int x, int y) {
 }
 
 char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
-    char* cs = malloc(slot->length * sizeof(char) + 1);
+    char* cs = PyMem_Malloc(slot->length * sizeof(char) + 1);
     if (!cs) {
         return NULL;
     }
@@ -657,7 +657,7 @@ int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *s
     if (DEBUG && count == 0) {
         printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, count);
     }
-    free(ds);
+    PyMem_Free(ds);
     return count;
 }
 
@@ -796,7 +796,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         if (slots[m].done) {
             n_done_slots++;
         }
-        free(cs);
+        PyMem_Free(cs);
     }
     
     int order[n_slots];
@@ -838,7 +838,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         char* word = find_candidate(words, slot->length, cs, slot->offset);
-        free(cs);
+        PyMem_Free(cs);
         if (word) {
             if (DEBUG) {
                 printf("%s (%i)\n", word, slot->offset);
