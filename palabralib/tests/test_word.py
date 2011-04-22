@@ -190,12 +190,17 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
         clist.postprocess()
         
-    def testInsertScale(self):
+    def testInsertPrePost(self):
         clist = CWordList('/usr/share/dict/words')
         for l, words in clist.words.items():
-            pre_count = len(clist.words[l])
-            count = len(clist.search(l, [], None))
-            self.assertEquals(pre_count, count)
+            pre_list = clist.words[l]
+            pre_count = len(pre_list)
+            post_list = [a for a, b in clist.search(l, [], None)]
+            post_count = len(post_list)
+            self.assertEquals(pre_count, post_count)
+            pre_list.sort()
+            post_list.sort()
+            self.assertEquals(pre_list, post_list)
         clist.postprocess()
         
     def testScale(self):
