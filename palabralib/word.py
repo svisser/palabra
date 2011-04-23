@@ -211,8 +211,10 @@ def analyze_words(words):
                         break
             data.append((w, sum(places)))
         counts[l] = data
+    result = {}
     for l, words in counts.items():
-        print sorted(words, key=itemgetter(1))[:5]
+        result[l] = [a for a, b in sorted(words, key=itemgetter(1))]
+    return result
 
 class CWordList:
     def __init__(self, content):

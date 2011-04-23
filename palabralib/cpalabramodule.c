@@ -701,11 +701,11 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
             if (blank == iindex) bslot->offset++;
         }
     }
-    int j;
+    /*int j;
     for (j = 0; j < n_slots; j++) {
         printf("%i ", order[j]);
     }
-    printf("\n");
+    printf("\n");*/
     return cleared;
 }
 
@@ -812,7 +812,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     
     int attempts = 0;
     PyObject *result = PyList_New(0);
-    while (attempts < 100) {
+    while (attempts < 1000) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -902,6 +902,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
             }
         } else {
+            is_word_ok = 0;
             if (DEBUG) {
                 printf("no word found\n");
             }
@@ -914,7 +915,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 for (c = n_done_slots; c >= n_done_slots - cleared; c--) {
                     order[c] = -1;
                 }
-                printf("subtracting %i\n", cleared);
+                //printf("subtracting %i\n", cleared);
                 n_done_slots -= cleared;
             }
         }
@@ -922,7 +923,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         if (is_word_ok) {
             slot->done = 1;
             order[n_done_slots] = index;
-            printf("n_done_slots = %i and incrementing\n", n_done_slots);
+            printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
             n_done_slots++;
         }
         attempts++;
