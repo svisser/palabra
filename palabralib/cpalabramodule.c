@@ -220,6 +220,26 @@ Sptr analyze_intersect_slot(int offset, char *cs) {
     return result;
 }
 
+void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length) {
+    int t;
+    for (t = 0; t < length; t++) {
+        int skip = -1;
+        int s;
+        for (s = 0; s < t; s++) {
+            if (strcmp(cs[s], cs[t]) == 0) {
+                skip = s;
+                break;
+            }
+        }
+        if (skip < 0) {
+            results[t] = analyze_intersect_slot(offsets[t], cs[t]);
+        } else {
+            skipped[t] = 1;
+            results[t] = results[skip];
+        }
+    }
+}
+
 static PyObject*
 cPalabra_search(PyObject *self, PyObject *args) {
     PyObject *words;
@@ -250,22 +270,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
                 return NULL;
             cs[t] = PyString_AS_STRING(py_cons_str2);
         }
-        for (t = 0; t < length; t++) {
-            int skip = -1;
-            int s;
-            for (s = 0; s < t; s++) {
-                if (strcmp(cs[s], cs[t]) == 0) {
-                    skip = s;
-                    break;
-                }
-            }
-            if (skip < 0) {
-                results[t] = analyze_intersect_slot(offsets[t], cs[t]);
-            } else {
-                skipped[t] = 1;
-                results[t] = results[skip];
-            }
-        }
+        analyze_intersect_slot2(results, skipped, offsets, cs, length);
     }
     
     Py_ssize_t m;
