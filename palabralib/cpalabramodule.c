@@ -811,8 +811,10 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     }
     
     int attempts = 0;
+    int filled_in = 0;
+    int backtracked = 0;
     PyObject *result = PyList_New(0);
-    while (attempts < 1000) {
+    while (attempts < 5000) {
         int index = -1;
         for (m = 0; m < n_slots; m++) {
             if (!slots[m].done) {
@@ -843,6 +845,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         char* word = find_candidate(slot->words, slot->length, cs, slot->offset);
+        printf("Candidate: %s for %i %i %s\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         PyMem_Free(cs);
         if (word) {
             if (DEBUG) {
@@ -902,11 +905,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
             }
         } else {
-            is_word_ok = 0;
             if (DEBUG) {
                 printf("no word found\n");
             }
             if (n_done_slots > 0) {
+                backtracked++;
                 int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots);
                 if (cleared < 0) {
                     break;
@@ -921,6 +924,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         
         if (is_word_ok) {
+            filled_in++;
             slot->done = 1;
             order[n_done_slots] = index;
             printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
@@ -928,7 +932,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         attempts++;
     }
-    
+    printf("%i %i\n", filled_in, backtracked);
     PyObject *fill = gather_fill(cgrid, width, height);
     PyList_Append(result, fill);
     return result;

@@ -183,7 +183,10 @@ def search_wordlists(wordlists, length, constraints, more_constraints=None):
         result += item.search(length, constraints, more_constraints)
     return result
     
-def analyze_words(words):
+def analyze_words(grid, words):
+    cs = {}
+    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
+        cs[x, y, d] = grid.gather_all_constraints(x, y, d)
     a = {}
     for l, ws in words.items():
         a[l] = {}
@@ -196,24 +199,22 @@ def analyze_words(words):
                 else:
                     a[l][i][c] += 1
     for l, vals in a.items():
-        if l in [3]:
-            for i in xrange(l):
-                a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
-    counts = {}
-    for l in words.keys():
+        for i in xrange(l):
+            a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
+    result = {}
+    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
         data = []
-        for w in words[l]:
+        for w in words[grid.word_length(x, y, d)]:
             places = []
             for i, c in enumerate(w):
-                for j, item in enumerate(a[l][i]):
+                l = cs[x, y, d][i][1]
+                l_i = cs[x, y, d][i][0]
+                for j, item in enumerate(a[l][l_i]):
                     if item[0] == c:
                         places.append(j)
-                        break
             data.append((w, sum(places)))
-        counts[l] = data
-    result = {}
-    for l, words in counts.items():
-        result[l] = [a for a, b in sorted(words, key=itemgetter(1))]
+        print x, y, d
+        result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
     return result
 
 class CWordList:

@@ -604,11 +604,11 @@ class Editor(gtk.HBox):
     def fill(self):
         for path, wordlist in self.palabra_window.wordlists.items():
             meta = []
-            result = analyze_words(wordlist.words)
+            result = analyze_words(self.puzzle.grid, wordlist.words)
             for n, x, y, d in self.puzzle.grid.words(allow_duplicates=True, include_dir=True):
                 l = self.puzzle.grid.word_length(x, y, d)
                 cs = self.puzzle.grid.gather_constraints(x, y, d)
-                meta.append((x, y, 0 if d == "across" else 1, l, cs, result[l]))
+                meta.append((x, y, 0 if d == "across" else 1, l, cs, result[x, y, d]))
             results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta)
             self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
             break
