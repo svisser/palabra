@@ -172,13 +172,11 @@ int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
 }
 
 // 1 = ok, 0 = not ok
-int check_intersect(char *word, char **cs, int length, int *intersections, Sptr *results) {
+int check_intersect(char *word, char **cs, int length, Sptr *results) {
     int c;
-    for (c = 0; c < length; c++) {
-        if (intersections[c] == 0) {
+    for (c = 0; c < length; c++)
+        if (results[c]->n_matches == 0)
             return 0;
-        }
-    }
     int n_chars = 0;
     for (c = 0; c < length; c++) {
         if (strchr(cs[c], '.') == NULL) {
@@ -187,8 +185,9 @@ int check_intersect(char *word, char **cs, int length, int *intersections, Sptr 
         }
         int m;
         for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-            if (results[c]->chars[m] == ' ') break;
-            if (results[c]->chars[m] == *(word + c)) {
+            char m_c = results[c]->chars[m]; 
+            if (m_c == ' ') break;
+            if (m_c == *(word + c)) {
                 n_chars += 1;
                 break;
             }
@@ -237,7 +236,6 @@ cPalabra_search(PyObject *self, PyObject *args) {
     // each of the constraints
     int offsets[length];
     char *cs[length];
-    int intersections[length];
     int t;
     int skipped[length];
     for (t = 0; t < length; t++) skipped[t] = 0;
@@ -263,15 +261,12 @@ cPalabra_search(PyObject *self, PyObject *args) {
             if (skip < 0) {
                 Sptr result = analyze_intersect_slot(offsets[t], cs[t]);
                 if (result == NULL) {
-                    intersections[t] = 0;
                     results[t] = NULL;
                 } else {
-                    intersections[t] = result->n_matches;
                     results[t] = result;
                 }
             } else {
                 skipped[t] = 1;
-                intersections[t] = intersections[skip];
                 results[t] = results[skip];
             }
         }
@@ -283,7 +278,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
         char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
         int valid = 1;
         if (more_constraints != Py_None) {
-            valid = check_intersect(word, cs, length, intersections, results);
+            valid = check_intersect(word, cs, length, results);
         }
         PyObject* py_intersect = PyBool_FromLong(valid);
         PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
