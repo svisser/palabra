@@ -19,7 +19,7 @@ typedef struct tnode {
 Tptr trees[MAX_WORD_LENGTH];
 
 extern PyObject* find_matches(PyObject *list, Tptr p, char *s);
-extern char* find_candidate(int length, char *cs, Py_ssize_t offset);
+extern char* find_candidate(PyObject *words, int length, char *cs, Py_ssize_t offset);
 extern int process_constraints(PyObject* constraints, char *cs);
 extern int check_constraints(char *word, char *cs);
 

@@ -391,6 +391,7 @@ typedef struct Slot {
     int count;
     int done; // {0, 1}
     Py_ssize_t offset;
+    PyObject *words;
 } Slot;
 
 // 0 = false, 1 = true
@@ -775,12 +776,14 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         const int dir;
         const int length;
         PyObject *constraints;
-        if (!PyArg_ParseTuple(item, "iiiiO", &x, &y, &dir, &length, &constraints))
+        PyObject *s_words;
+        if (!PyArg_ParseTuple(item, "iiiiOO", &x, &y, &dir, &length, &constraints, &s_words))
             return NULL;
         slots[m].x = x;
         slots[m].y = y;
         slots[m].dir = dir;
         slots[m].length = length;
+        slots[m].words = s_words;
         char *cs = get_constraints(cgrid, width, height, &slots[m]);
         if (!cs) {
             printf("Warning: fill failed to obtain constraints.\n");
@@ -839,7 +842,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         
         int is_word_ok = 1;
-        char* word = find_candidate(slot->length, cs, slot->offset);
+        char* word = find_candidate(slot->words, slot->length, cs, slot->offset);
         PyMem_Free(cs);
         if (word) {
             if (DEBUG) {
