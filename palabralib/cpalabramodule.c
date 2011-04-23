@@ -172,6 +172,32 @@ int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
     return n;
 }
 
+// 1 = ok, 0 = not ok
+int check_intersect(char *word, char **cs, int length, int *intersections, Sptr *results) {
+    int c;
+    for (c = 0; c < length; c++) {
+        if (intersections[c] == 0) {
+            return 0;
+        }
+    }
+    int n_chars = 0;
+    for (c = 0; c < length; c++) {
+        if (strchr(cs[c], '.') == NULL) {
+            n_chars += 1;
+            continue;
+        }
+        int m;
+        for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
+            if (results[c]->chars[m] == ' ') break;
+            if (results[c]->chars[m] == *(word + c)) {
+                n_chars += 1;
+                break;
+            }
+        }
+    }
+    return n_chars == length;
+}
+
 static PyObject*
 cPalabra_search(PyObject *self, PyObject *args) {
     PyObject *words;
@@ -259,28 +285,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
         char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
         int valid = 1;
         if (more_constraints != Py_None) {
-            int zero_slot = 0;
-            int n_chars = 0;
-            int c;
-            for (c = 0; c < length; c++) {
-                zero_slot = 0 == intersections[c];
-                if (zero_slot) {
-                    break;
-                }
-                if (strchr(cs[c], '.') == NULL) {
-                    n_chars += 1;
-                    continue;
-                }
-                int m;
-                for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-                    if (results[c]->chars[m] == ' ') break;
-                    if (results[c]->chars[m] == *(word + c)) {
-                        n_chars += 1;
-                        break;
-                    }
-                }
-            }
-            valid = !zero_slot && (n_chars == length);
+            valid = check_intersect(word, cs, length, intersections, results);
         }
         PyObject* py_intersect = PyBool_FromLong(valid);
         PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
