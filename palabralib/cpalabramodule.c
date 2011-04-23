@@ -174,9 +174,11 @@ int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
 // 1 = ok, 0 = not ok
 int check_intersect(char *word, char **cs, int length, Sptr *results) {
     int c;
-    for (c = 0; c < length; c++)
-        if (results[c]->n_matches == 0)
+    for (c = 0; c < length; c++) {
+        if (results[c] == NULL || results[c]->n_matches == 0) {
             return 0;
+        }
+    }
     int n_chars = 0;
     for (c = 0; c < length; c++) {
         if (strchr(cs[c], '.') == NULL) {
@@ -185,7 +187,7 @@ int check_intersect(char *word, char **cs, int length, Sptr *results) {
         }
         int m;
         for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-            char m_c = results[c]->chars[m]; 
+            char m_c = results[c]->chars[m];
             if (m_c == ' ') break;
             if (m_c == *(word + c)) {
                 n_chars += 1;
@@ -257,14 +259,8 @@ cPalabra_search(PyObject *self, PyObject *args) {
                     break;
                 }
             }
-            
             if (skip < 0) {
-                Sptr result = analyze_intersect_slot(offsets[t], cs[t]);
-                if (result == NULL) {
-                    results[t] = NULL;
-                } else {
-                    results[t] = result;
-                }
+                results[t] = analyze_intersect_slot(offsets[t], cs[t]);
             } else {
                 skipped[t] = 1;
                 results[t] = results[skip];
