@@ -199,18 +199,20 @@ def analyze_words(words):
         if l in [3]:
             for i in xrange(l):
                 a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
-                print l, i, a[l][i]
-                print ' '
-    counts = []
-    for w in words[3]:
-        places = []
-        for i, c in enumerate(w):
-            for j, item in enumerate(a[3][i]):
-                if item[0] == c:
-                    places.append(j)
-                    break
-        counts.append((w, sum(places)))
-    print sorted(counts, key=itemgetter(1))[:20]
+    counts = {}
+    for l in words.keys():
+        data = []
+        for w in words[l]:
+            places = []
+            for i, c in enumerate(w):
+                for j, item in enumerate(a[l][i]):
+                    if item[0] == c:
+                        places.append(j)
+                        break
+            data.append((w, sum(places)))
+        counts[l] = data
+    for l, words in counts.items():
+        print sorted(words, key=itemgetter(1))[:5]
 
 class CWordList:
     def __init__(self, content):
