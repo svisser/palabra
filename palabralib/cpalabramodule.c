@@ -27,7 +27,6 @@ typedef struct sresult {
 
 typedef struct sparams *SPPtr;
 typedef struct sparams {
-    int length;
     int offset;
 } SearchParams;
 
@@ -139,20 +138,20 @@ Tptr insert1(Tptr p, char *s, char *word)
     return p;
 }
 
-int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
+int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
 {
     if (!p) return 0;
     int n = 0;
     if (*s == '.' || *s < p->splitchar)
-        n += analyze(params, result, p->lokid, s, cs);
+        n += analyze(offset, result, p->lokid, s, cs);
     if (*s == '.' || *s == p->splitchar)
         if (p->splitchar && *s)
-            n += analyze(params, result, p->eqkid, s + 1, cs);
+            n += analyze(offset, result, p->eqkid, s + 1, cs);
     if (*s == 0 && p->splitchar == 0) {
         n += 1;
-        char intersect_char = *(cs + params->offset);
+        char intersect_char = *(cs + offset);
         if (intersect_char == '.') {
-            char c = *(p->word + params->offset);
+            char c = *(p->word + offset);
             int m;
             for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
                 if (result->chars[m] == c)
@@ -167,7 +166,7 @@ int analyze(SPPtr params, Sptr result, Tptr p, char *s, char *cs)
         }
     }
     if (*s == '.' || *s > p->splitchar)
-        n += analyze(params, result, p->hikid, s, cs);
+        n += analyze(offset, result, p->hikid, s, cs);
     result->n_matches = n;
     return n;
 }
@@ -196,6 +195,28 @@ int check_intersect(char *word, char **cs, int length, int *intersections, Sptr 
         }
     }
     return n_chars == length;
+}
+
+Sptr analyze_intersect_slot(int offset, char *cs) {
+    if (!trees[strlen(cs)]) {
+        return NULL;
+    }
+    Sptr result;
+    result = (Sptr) PyMem_Malloc(sizeof(SearchResult));
+    if (!result) {
+        return NULL; //PyErr_NoMemory(); TODO fix
+    }
+    result->chars = PyMem_Malloc(MAX_ALPHABET_SIZE * sizeof(char));
+    if (!result->chars) {
+        PyMem_Free(result);
+        return NULL; //PyErr_NoMemory(); TODO fix
+    }
+    int c;
+    for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
+        result->chars[c] = ' ';
+    }
+    analyze(offset, result, trees[strlen(cs)], cs, cs);
+    return result;
 }
 
 static PyObject*
@@ -240,37 +261,14 @@ cPalabra_search(PyObject *self, PyObject *args) {
             }
             
             if (skip < 0) {
-                SPPtr params;
-                params = (SPPtr) PyMem_Malloc(sizeof(SearchParams));
-                if (!params)
-                    return PyErr_NoMemory();
-                params->length = length;
-                params->offset = offsets[t];
-
-                Sptr result;
-                result = (Sptr) PyMem_Malloc(sizeof(SearchResult));
-                if (!result) {
-                    PyMem_Free(params);
-                    return PyErr_NoMemory();
-                }
-                result->chars = PyMem_Malloc(MAX_ALPHABET_SIZE * sizeof(char));
-                if (!result->chars) {
-                    PyMem_Free(result);
-                    PyMem_Free(params);
-                    return PyErr_NoMemory();
-                }
-                int c;
-                for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
-                    result->chars[c] = ' ';
-                }
-                if (!trees[strlen(cs[t])]) {
+                Sptr result = analyze_intersect_slot(offsets[t], cs[t]);
+                if (result == NULL) {
                     intersections[t] = 0;
                     results[t] = NULL;
                 } else {
-                    intersections[t] = analyze(params, result, trees[strlen(cs[t])], cs[t], cs[t]);
+                    intersections[t] = result->n_matches;
                     results[t] = result;
                 }
-                PyMem_Free(params);
             } else {
                 skipped[t] = 1;
                 intersections[t] = intersections[skip];
