@@ -573,9 +573,7 @@ class GridView:
                     if ltype == "left":
                         yield sx + start, sy, 0, props_cell_size, bar, border
                     elif ltype == "top":
-                        rx = sx
                         ry = sy + start
-                        rdx = props_cell_size
                         
                         is_lb, dxl = False, 0
                         if ((x, y, "left", "outerborder") in v_lines
@@ -597,11 +595,11 @@ class GridView:
                             is_rb, dxr = False, props_line_width
                         
                         # adjust horizontal lines to fill empty spaces in corners
-                        yield rx - dxl, ry, rdx + dxl + dxr, 0, bar, border
+                        yield sx - dxl, ry, props_cell_size + dxl + dxr, 0, bar, border
                         if is_lb:
-                            yield rx - dxl - props_border_width, ry, props_border_width, 0, False, True
+                            yield sx - dxl - props_border_width, ry, props_border_width, 0, False, True
                         if is_rb:
-                            yield rx + props_cell_size, ry, props_border_width, 0, False, True
+                            yield sx + props_cell_size, ry, props_border_width, 0, False, True
         the_lines = list(comp_lines())
         l_bars = [line for line in the_lines if line[4]]
         l_borders = [line for line in the_lines if line[5]]
