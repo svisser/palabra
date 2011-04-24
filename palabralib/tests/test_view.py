@@ -101,3 +101,5 @@ class ViewTestCase(unittest.TestCase):
         self.assertEquals(props.style(1, 1)["circle"], True)
         props.update(1, 1, [("circle", False)])
         self.assertEquals(props.style(1, 1)["circle"], False)
+        props["circle"] = True
+        self.assertEquals(props.style(1, 1)["circle"], True)

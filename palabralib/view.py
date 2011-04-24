@@ -163,8 +163,12 @@ class GridViewProperties:
             else:
                 if (x, y) in self.styles and self.styles[x, y][k] != v:
                     self.styles[x, y][k] = v
+        default = self.style()
         if (x, y) in self.styles:
-            if self.styles[x, y] == self.style():
+            for k, v in self.styles[x, y]._data.items():
+                if self.styles[x, y][k] != default[k]:
+                    break
+            else:
                 del self.styles[x, y]
         
     def style(self, x=None, y=None):
