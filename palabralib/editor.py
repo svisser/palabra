@@ -69,6 +69,14 @@ class CellPropertiesDialog(gtk.Dialog):
         create_row(table, "Content", c, 0, 2)
         self.cell_color_button = create_color_button(properties["cell", "color"])
         create_color_row(table, "Background color", self.cell_color_button, 0, 3)
+        
+        label = gtk.Label()
+        label.set_markup("Other options")
+        label.set_alignment(0, 0.5)
+        table.attach(label, 0, 1, 4, 5, gtk.FILL, gtk.FILL)
+        self.circle_button = gtk.CheckButton(label="Display circle in this cell")
+        self.circle_button.set_active(properties["circle"])
+        table.attach(self.circle_button, 1, 2, 4, 5)
 
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -90,6 +98,7 @@ class CellPropertiesDialog(gtk.Dialog):
         a = {}
         color = self.cell_color_button.get_color()
         a["cell", "color"] = (color.red, color.green, color.blue)
+        a["circle"] = self
         return a
     appearance = property(gather_appearance)
 
@@ -496,11 +505,13 @@ class Editor(gtk.HBox):
                 , "type": determine_type(c)
                 , "content": grid.get_char(*c)
                 , ("cell", "color"): puzzle.view.properties.style(*c)["cell", "color"]
+                , "circle": puzzle.view.properties.style(*c)["circle"]
             }
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
                 puzzle.view.properties.update(x, y, w.appearance.items())
+                self._render_cells([(x, y)])
             w.destroy()
         item = gtk.MenuItem("Properties")
         item.connect("activate", on_cell_properties)
