@@ -924,6 +924,7 @@ class Grid:
     def set_block(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["block"] = status
+        self.data[y][x]["void"] = False
         
     def is_block(self, x, y):
         return self.data[y][x]["block"]

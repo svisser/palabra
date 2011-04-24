@@ -116,6 +116,9 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(self.grid.is_void(0, 0), True)
         self.grid.set_void(0, 0, False)
         self.assertEqual(self.grid.is_void(0, 0), False)
+        self.grid.set_void(5, 5, True)
+        self.grid.set_block(5, 5, True)
+        self.assertEquals(self.grid.is_void(5, 5), False)
         
     def testIsValid(self):
         """A cell is valid when its coordinates are within bounds."""
