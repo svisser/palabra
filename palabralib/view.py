@@ -542,6 +542,10 @@ class GridView:
         
         if not self.grid.lines:
             self.grid.lines = cPalabra.compute_lines(self.grid)
+            self.grid.v_lines = []
+            for v in self.grid.lines.values():
+                self.grid.v_lines += v
+        v_lines = self.grid.v_lines
         def comp_lines():
             for x, y in cells:
                 lines = self.grid.lines[x, y]
@@ -574,35 +578,30 @@ class GridView:
                         rdx = props_cell_size
                         
                         is_lb, dxl = False, 0
-                        if ((x, y, "left", "outerborder") in lines
-                            or (x, y - 1, "left", "outerborder") in lines):
+                        if ((x, y, "left", "outerborder") in v_lines
+                            or (x, y - 1, "left", "outerborder") in v_lines):
                             is_lb, dxl = True, 0
-                        if ((x, y, "left", "innerborder") in lines
-                            or (x, y - 1, "left", "innerborder") in lines
-                            or (x, y, "left", "normal") in lines
-                            or (x, y - 1, "left", "normal") in lines):
+                        if ((x, y, "left", "innerborder") in v_lines
+                            or (x, y - 1, "left", "innerborder") in v_lines
+                            or (x, y, "left", "normal") in v_lines
+                            or (x, y - 1, "left", "normal") in v_lines):
                             is_lb, dxl = False, props_line_width
                         is_rb, dxr = False, 0
-                        if ((x + 1, y, "left", "innerborder") in lines
-                            or (x + 1, y - 1, "left", "innerborder") in lines):
+                        if ((x + 1, y, "left", "innerborder") in v_lines
+                            or (x + 1, y - 1, "left", "innerborder") in v_lines):
                             is_rb, dxr = True, 0
-                        if ((x + 1, y, "left", "outerborder") in lines
-                            or (x + 1, y - 1, "left", "outerborder") in lines
-                            or (x + 1, y, "left", "normal") in lines
-                            or (x + 1, y - 1, "left", "normal") in lines):
+                        if ((x + 1, y, "left", "outerborder") in v_lines
+                            or (x + 1, y - 1, "left", "outerborder") in v_lines
+                            or (x + 1, y, "left", "normal") in v_lines
+                            or (x + 1, y - 1, "left", "normal") in v_lines):
                             is_rb, dxr = False, props_line_width
                         
                         # adjust horizontal lines to fill empty spaces in corners
-                        rx -= dxl
-                        rdx += dxl
-                        rdx += dxr
-                        yield rx, ry, rdx, 0, bar, border
+                        yield rx - dxl, ry, rdx + dxl + dxr, 0, bar, border
                         if is_lb:
-                            rx -= props_border_width
-                            yield rx, ry, props_border_width, 0, False, True
+                            yield rx - dxl - props_border_width, ry, props_border_width, 0, False, True
                         if is_rb:
-                            rx += (props_cell_size + dxl)
-                            yield rx, ry, props_border_width, 0, False, True
+                            yield rx + props_cell_size, ry, props_border_width, 0, False, True
         the_lines = list(comp_lines())
         l_bars = [line for line in the_lines if line[4]]
         l_borders = [line for line in the_lines if line[5]]
