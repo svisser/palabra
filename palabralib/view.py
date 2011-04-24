@@ -498,9 +498,7 @@ class GridView:
         if len(cells) < self.grid.width * self.grid.height:
             cls = [c for c in cells]
             for x, y in cells:
-                ns = [(x + 1, y), (x, y + 1), (x + 1, y + 1)]
-                cls += [(p, q) for p, q in ns
-                    if 0 <= p < self.grid.width and 0 <= q < self.grid.height]
+                cls += self.grid.neighbors(x, y, diagonals=True)
             self.render_lines_of_cells(context, set(cls), screen_xs, screen_ys)
         else:
             self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
@@ -510,8 +508,7 @@ class GridView:
     
     def render_all_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         """Render the lines that surround a cell (all four sides)."""
-        ns = [(x + 1, y), (x, y + 1), (x + 1, y + 1)]
-        cells = ([(x, y)] + [(p, q) for p, q in ns if self.grid.is_valid(p, q)])
+        cells = [(x, y)] + list(self.grid.neighbors(x, y, diagonals=True))
         self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
                 
     def comp_screen(self):
