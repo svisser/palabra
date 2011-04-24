@@ -160,6 +160,12 @@ class GridViewProperties:
                 if (x, y) not in self.styles:
                     self.styles[x, y] = CellStyle()
                 self.styles[x, y][k] = v
+            else:
+                if (x, y) in self.styles and self.styles[x, y][k] != v:
+                    self.styles[x, y][k] = v
+        if (x, y) in self.styles:
+            if self.styles[x, y] == self.style():
+                del self.styles[x, y]
         
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:

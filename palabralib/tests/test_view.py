@@ -96,3 +96,8 @@ class ViewTestCase(unittest.TestCase):
         props.update(5, 5, [(("cell", "color"), (65535, 0, 0))])
         props["cell", "color"] = (65535, 65535, 65535)
         self.assertEquals(props.style(5, 5)["cell", "color"], (65535, 65535, 65535))
+        
+        props.update(1, 1, [("circle", True)])
+        self.assertEquals(props.style(1, 1)["circle"], True)
+        props.update(1, 1, [("circle", False)])
+        self.assertEquals(props.style(1, 1)["circle"], False)

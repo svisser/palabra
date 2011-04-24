@@ -98,7 +98,7 @@ class CellPropertiesDialog(gtk.Dialog):
         a = {}
         color = self.cell_color_button.get_color()
         a["cell", "color"] = (color.red, color.green, color.blue)
-        a["circle"] = self
+        a["circle"] = self.circle_button.get_active()
         return a
     appearance = property(gather_appearance)
 
@@ -507,6 +507,7 @@ class Editor(gtk.HBox):
                 , ("cell", "color"): puzzle.view.properties.style(*c)["cell", "color"]
                 , "circle": puzzle.view.properties.style(*c)["circle"]
             }
+            print props
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
