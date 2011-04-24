@@ -997,7 +997,7 @@ cPalabra_compute_lines(PyObject *self, PyObject *args) {
                     Py_DECREF(item);
                     if (v0 == 0 || v1 == 0) {
                         PyObject* r = NULL;
-                        if (v0 == 1 && v0 == 0) {
+                        if (v0 == 1 && v1 == 0) {
                             r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "innerborder");
                         } else if (v0 == 0 && v1 == 1) {
                             r = Py_BuildValue("(iiss)",  x, y, e == 0 ? "left" : "top", "outerborder");
