@@ -62,7 +62,9 @@ class CellPropertiesDialog(gtk.Dialog):
             label.set_markup(title)
             label.set_alignment(0, 0.5)
             table.attach(label, x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
-            table.attach(button, x + 1, x + 2, y, y + 1)
+            align = gtk.Alignment(0, 0.5)
+            align.add(button)
+            table.attach(align, x + 1, x + 2, y, y + 1)
         
         types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
         create_row(table, "Type", types[properties["type"]], 0, 0)
