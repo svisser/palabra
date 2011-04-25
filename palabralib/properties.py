@@ -118,7 +118,7 @@ class PropertiesWindow(gtk.Dialog):
     
     def create_general_tab(self, status, puzzle):
         table = gtk.Table(13, 4, False)
-        table.set_col_spacings(18)
+        table.set_col_spacings(36)
         table.set_row_spacings(6)
         
         def create_header(table, title, x, y):
