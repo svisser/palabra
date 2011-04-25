@@ -281,6 +281,7 @@ class Grid:
                 status["clue_count"] += len(self.data[y][x]["clues"])
             status["open_count"] = self.count_open_squares()
             status["connected"] = self.is_connected()
+            status["complete"] = self.count_complete()
         return status
         
     def determine_word_counts(self):
@@ -638,6 +639,16 @@ class Grid:
         self.height = height
         # invalidate lines
         self.lines = None
+        
+    def count_complete(self):
+        r = {"across": 0, "down": 0}
+        for n, x, y, d in self.words(allow_duplicates=True, include_dir=True):
+            for p, q in self.in_direction(x, y, d):
+                if self.data[q][p]["char"] == '':
+                    break
+            else:
+                r[d] += 1
+        return r
         
     def _clear_clues(self, dirty_cells):
         """Remove the clues of the words that contain a dirty cell."""
