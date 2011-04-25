@@ -25,8 +25,10 @@ import action
 from appearance import create_color_button
 import constants
 from files import get_real_filename
+from grid import Grid
 import preferences
 import transform
+from view import GridPreview, DEFAULTS_CELL
 from word import search_wordlists, analyze_words
 import cPalabra
 
@@ -34,10 +36,14 @@ class CellPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Cell properties", palabra_window
             , gtk.DIALOG_MODAL)
+        self.set_size_request(640, 420)
         self.palabra_window = palabra_window
-        self.set_size_request(384, 256)
         x, y = properties["cell"]
         self.set_title(''.join(['Properties of cell ', str((x + 1, y + 1))]))
+
+        grid_cell = properties["grid"].data[y][x]
+        self.grid = Grid(1, 1)
+        self.grid.data[0][0].update(grid_cell)
         
         table = gtk.Table(3, 2, False)
         table.set_col_spacings(6)
@@ -64,10 +70,11 @@ class CellPropertiesDialog(gtk.Dialog):
         create_row(table, "Location", location, 0, 0)
         create_row(table, "Type", types[properties["type"]], 0, 1)
         c = u"(none)"
-        if properties["type"] == "letter" and properties["content"]:
-            c = properties["content"]
+        if properties["type"] == "letter" and grid_cell["char"]:
+            c = grid_cell["char"]
         create_row(table, "Content", c, 0, 2)
         self.cell_color_button = create_color_button(properties["cell", "color"])
+        self.cell_color_button.connect("color-set", self.on_cell_color_set)
         create_color_row(table, "Background color", self.cell_color_button, 0, 3)
         
         label = gtk.Label()
@@ -76,6 +83,7 @@ class CellPropertiesDialog(gtk.Dialog):
         table.attach(label, 0, 1, 4, 5, gtk.FILL, gtk.FILL)
         self.circle_button = gtk.CheckButton(label="Display circle in this cell")
         self.circle_button.set_active(properties["circle"])
+        self.circle_button.connect("toggled", self.on_circle_toggled)
         table.attach(self.circle_button, 1, 2, 4, 5)
 
         main = gtk.VBox(False, 0)
@@ -84,7 +92,12 @@ class CellPropertiesDialog(gtk.Dialog):
         content = gtk.HBox(False, 0)
         content.set_border_width(6)
         content.set_spacing(6)
-        content.pack_start(main, True, True, 0)
+        content.pack_start(main, False, False, 0)
+        self.preview = GridPreview(magnify=True, mode=constants.VIEW_MODE_PREVIEW_CELL)
+        content.pack_start(self.preview, True, True, 0)
+        self.preview.display(self.grid)
+        for k in DEFAULTS_CELL:
+            self.preview.view.properties[k] = properties[k]
         
         hbox = gtk.VBox(False, 0)
         hbox.set_border_width(12)
@@ -93,6 +106,15 @@ class CellPropertiesDialog(gtk.Dialog):
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
         self.vbox.add(hbox)
+        
+    def on_cell_color_set(self, button):
+        color = button.get_color()
+        self.preview.view.properties["cell", "color"] = (color.red, color.green, color.blue)
+        self.preview.refresh(force=True)
+        
+    def on_circle_toggled(self, button):
+        self.preview.view.properties["circle"] = button.get_active()
+        self.preview.refresh(force=True)
     
     def gather_appearance(self):
         a = {}
@@ -503,11 +525,10 @@ class Editor(gtk.HBox):
             props = {
                 "cell": c
                 , "type": determine_type(c)
-                , "content": grid.get_char(*c)
-                , ("cell", "color"): puzzle.view.properties.style(*c)["cell", "color"]
-                , "circle": puzzle.view.properties.style(*c)["circle"]
+                , "grid": grid
             }
-            print props
+            for k in DEFAULTS_CELL:
+                props[k] = puzzle.view.properties.style(*c)[k]
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:

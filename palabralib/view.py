@@ -64,6 +64,16 @@ SETTINGS_SOLUTION = {
     , "warn_two_letter_words": False
     , "warn_blacklist": False
 }
+SETTINGS_PREVIEW_CELL = {
+    "has_padding": True
+    , "show_chars": False
+    , "show_numbers": True
+    , "render_overlays": False
+    , "warn_consecutive_unchecked": False
+    , "warn_unchecked_cells": False
+    , "warn_two_letter_words": False
+    , "warn_blacklist": False
+}
 SETTINGS_EXPORT_PDF_PUZZLE = {
     "has_padding": True
     , "show_chars": False
@@ -86,43 +96,31 @@ SETTINGS_EXPORT_PDF_SOLUTION = {
 }
 custom_settings = {}
 
-DEFAULT_BLOCK_COLOR = (0, 0, 0)
-DEFAULT_BLOCK_MARGIN = 0
-DEFAULT_CELL_COLOR = (65535, 65535, 65535)
-DEFAULT_CHAR_COLOR = (0, 0, 0)
-DEFAULT_NUMBER_COLOR = (0, 0, 0)
-DEFAULT_CIRCLE = False
-DEFAULT_CHAR_FONT = "Sans 12"
-DEFAULT_NUMBER_FONT = "Sans 7"
-
+DEFAULTS_CELL = {
+    ("block", "color"): (0, 0, 0),
+    ("block", "margin"): 0,
+    ("char", "color"): (0, 0, 0),
+    ("char", "font"): "Sans 12",
+    ("cell", "color"): (65535, 65535, 65535),
+    ("number", "color"): (0, 0, 0),
+    ("number", "font"): "Sans 7",
+    "circle": False
+}
 DEFAULTS = {
     ("bar", "width"): 3,
     ("border", "width"): 1,
     ("border", "color"): (0, 0, 0),
     ("cell", "size"): 32,
     ("line", "width"): 1,
-    ("line", "color"): (0, 0, 0),
-    ("block", "color"): DEFAULT_BLOCK_COLOR,
-    ("block", "margin"): DEFAULT_BLOCK_MARGIN,
-    ("char", "color"): DEFAULT_CHAR_COLOR,
-    ("char", "font"): DEFAULT_CHAR_FONT,
-    ("cell", "color"): DEFAULT_CELL_COLOR,
-    ("number", "color"): DEFAULT_NUMBER_COLOR,
-    ("number", "font"): DEFAULT_NUMBER_FONT,
-    "circle": DEFAULT_CIRCLE
+    ("line", "color"): (0, 0, 0)
 }
+DEFAULTS.update(DEFAULTS_CELL)
 
 class CellStyle:
     def __init__(self):
         self._data = {}
-        self["block", "color"] = DEFAULT_BLOCK_COLOR
-        self["block", "margin"] = DEFAULT_BLOCK_MARGIN
-        self["cell", "color"] = DEFAULT_CELL_COLOR
-        self["char", "color"] = DEFAULT_CHAR_COLOR
-        self["char", "font"] = DEFAULT_CHAR_FONT
-        self["number", "color"] = DEFAULT_NUMBER_COLOR
-        self["number", "font"] = DEFAULT_NUMBER_FONT
-        self["circle"] = DEFAULT_CIRCLE
+        for k, v in DEFAULTS_CELL.items():
+            self._data[k] = v
         
     def __getitem__(self, key):
         return self._data[key]
@@ -283,6 +281,8 @@ class GridView:
             self.settings.update(SETTINGS_EXPORT_PDF_PUZZLE)
         elif mode == constants.VIEW_MODE_EXPORT_PDF_SOLUTION:
             self.settings.update(SETTINGS_EXPORT_PDF_SOLUTION)
+        elif mode == constants.VIEW_MODE_PREVIEW_CELL:
+            self.settings.update(SETTINGS_PREVIEW_CELL)
     
     def pdf_configure(self):
         # 595 = PDF width
@@ -702,12 +702,13 @@ class GridView:
         drawing_area.set_size_request(*self.properties.visual_size())
 
 class GridPreview(gtk.VBox):
-    def __init__(self):
+    def __init__(self, magnify=False, mode=constants.VIEW_MODE_PREVIEW):
         gtk.VBox.__init__(self)
-        
+        self.magnify = magnify
         self.view = None
         self.preview_surface = None
         self.preview_pattern = None
+        self.render_mode = mode
         
         label = gtk.Label()
         label.set_alignment(0, 0)
@@ -728,9 +729,11 @@ class GridPreview(gtk.VBox):
         self.preview_surface = None
         self.refresh()
         
-    def refresh(self):
+    def refresh(self, force=False):
+        if force:
+            self.preview_surface = None
         if self.view is not None:
-            self.view.properties["cell", "size"] = 12
+            self.view.properties["cell", "size"] = 128 if self.magnify else 12
             self.view.refresh_visual_size(self.drawing_area)
             self.drawing_area.queue_draw()
         
@@ -746,7 +749,7 @@ class GridPreview(gtk.VBox):
                 self.preview_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
                 self.preview_pattern = cairo.SurfacePattern(self.preview_surface)
                 context = cairo.Context(self.preview_surface)
-                self.view.render(context, constants.VIEW_MODE_PREVIEW)
+                self.view.render(context, self.render_mode)
             context = drawing_area.window.cairo_create()
             context.set_source(self.preview_pattern)
             context.paint()
