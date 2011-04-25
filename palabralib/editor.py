@@ -36,7 +36,7 @@ class CellPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Cell properties", palabra_window
             , gtk.DIALOG_MODAL)
-        self.set_size_request(640, 420)
+        self.set_size_request(640, 480)
         self.palabra_window = palabra_window
         x, y = properties["cell"]
         self.set_title(''.join(['Properties of cell ', str((x + 1, y + 1))]))
@@ -93,12 +93,21 @@ class CellPropertiesDialog(gtk.Dialog):
         content.set_border_width(6)
         content.set_spacing(6)
         content.pack_start(main, False, False, 0)
-        self.preview = GridPreview(magnify=True, mode=constants.VIEW_MODE_PREVIEW_CELL)
-        content.pack_start(self.preview, True, True, 0)
-        self.preview.display(self.grid)
-        for k in DEFAULTS_CELL:
-            self.preview.view.properties[k] = properties[k]
         
+        self.previews = []
+        prevs = gtk.VBox(False, 0)
+        for m, h in ([(constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
+            , (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")]):
+            p = GridPreview(magnify=True, mode=m, header=h)
+            self.previews.append(p)
+            p.display(self.grid)
+            for k in DEFAULTS_CELL:
+                p.view.properties[k] = properties[k]
+            p.view.properties["char", "font"] = "Sans 36"
+            p.view.properties["number", "font"] = "Sans 21"
+            prevs.pack_start(p, True, True, 0)
+        content.pack_start(prevs, True, True, 0)
+
         hbox = gtk.VBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(9)
@@ -109,12 +118,15 @@ class CellPropertiesDialog(gtk.Dialog):
         
     def on_cell_color_set(self, button):
         color = button.get_color()
-        self.preview.view.properties["cell", "color"] = (color.red, color.green, color.blue)
-        self.preview.refresh(force=True)
+        self._on_update(("cell", "color"), (color.red, color.green, color.blue))
         
     def on_circle_toggled(self, button):
-        self.preview.view.properties["circle"] = button.get_active()
-        self.preview.refresh(force=True)
+        self._on_update("circle", button.get_active())
+            
+    def _on_update(self, key, value):
+        for p in self.previews:
+            p.view.properties[key] = value
+            p.refresh(force=True)
     
     def gather_appearance(self):
         a = {}

@@ -74,6 +74,16 @@ SETTINGS_PREVIEW_CELL = {
     , "warn_two_letter_words": False
     , "warn_blacklist": False
 }
+SETTINGS_PREVIEW_SOLUTION = {
+    "has_padding": True
+    , "show_chars": True
+    , "show_numbers": True
+    , "render_overlays": False
+    , "warn_consecutive_unchecked": False
+    , "warn_unchecked_cells": False
+    , "warn_two_letter_words": False
+    , "warn_blacklist": False
+}
 SETTINGS_EXPORT_PDF_PUZZLE = {
     "has_padding": True
     , "show_chars": False
@@ -283,6 +293,8 @@ class GridView:
             self.settings.update(SETTINGS_EXPORT_PDF_SOLUTION)
         elif mode == constants.VIEW_MODE_PREVIEW_CELL:
             self.settings.update(SETTINGS_PREVIEW_CELL)
+        elif mode == constants.VIEW_MODE_PREVIEW_SOLUTION:
+            self.settings.update(SETTINGS_PREVIEW_SOLUTION)
     
     def pdf_configure(self):
         # 595 = PDF width
@@ -702,7 +714,10 @@ class GridView:
         drawing_area.set_size_request(*self.properties.visual_size())
 
 class GridPreview(gtk.VBox):
-    def __init__(self, magnify=False, mode=constants.VIEW_MODE_PREVIEW):
+    def __init__(self
+        , magnify=False
+        , mode=constants.VIEW_MODE_PREVIEW
+        , header="Preview"):
         gtk.VBox.__init__(self)
         self.magnify = magnify
         self.view = None
@@ -712,7 +727,7 @@ class GridPreview(gtk.VBox):
         
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup("<b>Preview</b>")
+        label.set_markup(''.join(["<b>", header, "</b>"]))
         
         self.drawing_area = gtk.DrawingArea()
         self.drawing_area.connect("expose_event", self.on_expose_event)
