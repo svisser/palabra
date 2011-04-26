@@ -794,14 +794,18 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     index = m;
                 }
             }
+            //index = 0;
         } else {
             for (o = 0; o < n_slots; o++) {
                 if (order[o] < 0) break;
+                int count = -1;
                 for (m = 0; m < n_slots; m++) {
                     if (o == m) continue;
                     if (is_intersecting(&slots[order[o]], &slots[m]) && !slots[m].done) {
-                        index = m;
-                        break;
+                        if (count < 0 || slots[m].count < count) {
+                            count = slots[m].count;
+                            index = m;
+                        }
                     }
                 }
                 if (index >= 0) break;
