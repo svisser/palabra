@@ -322,6 +322,13 @@ class WordTool:
 class FillTool:
     def __init__(self, editor):
         self.editor = editor
+        self.starts = [
+            (constants.FILL_START_AT_ZERO, "First slot")
+            , (constants.FILL_START_AT_AUTO, "Suitably chosen slot")
+        ]
+        self.editor.fill_options = {
+            constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
+        }
         
     def create(self):
         main = gtk.VBox(False, 0)
@@ -330,6 +337,20 @@ class FillTool:
         button = gtk.Button("Fill")
         button.connect("pressed", self.on_button_pressed)
         main.pack_start(button, False, False, 0)
+        
+        start_combo = gtk.combo_box_new_text()
+        for i, (c, txt) in enumerate(self.starts):
+            start_combo.append_text(txt)
+            if c == self.editor.fill_options[constants.FILL_OPTION_START]:
+                start_combo.set_active(i)
+        def on_start_changed(combo):
+            self.editor.fill_options[constants.FILL_OPTION_START] = self.starts[combo.get_active()][0]
+        start_combo.connect("changed", on_start_changed)
+        
+        label = gtk.Label(u"Start filling from:")
+        label.set_alignment(0, 0.5)
+        main.pack_start(label, False, False, 0)
+        main.pack_start(start_combo, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
@@ -688,9 +709,7 @@ class Editor(gtk.HBox):
                 l = self.puzzle.grid.word_length(x, y, d)
                 cs = self.puzzle.grid.gather_constraints(x, y, d)
                 meta.append((x, y, 0 if d == "across" else 1, l, cs, result[x, y, d]))
-                options = {}
-                options["start"] = constants.FILL_START_AT_AUTO
-            results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta, options)
+            results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta, self.fill_options)
             self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
             break
             

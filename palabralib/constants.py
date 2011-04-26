@@ -45,6 +45,9 @@ FILL_START_AT_ZERO = 0
 FILL_START_AT_SELECTION = 1
 FILL_START_AT_AUTO = 2
 
+# fill options, also in .c (fill function)
+FILL_OPTION_START = "start"
+
 # puzzle types
 PUZZLE_PALABRA = 'palabra'
 # http://www.xwordinfo.com/XPF/
