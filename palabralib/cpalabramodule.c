@@ -826,9 +826,10 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     }
     
     int attempts = 0;
-    int filled_in = 0;
     int backtracked = 0;
     PyObject *result = PyList_New(0);
+    PyObject *best_fill = NULL;
+    int best_n_done_slots = 0;
     while (attempts < 5000) {
         int index = -1;
         if (n_done_slots == 0) {
@@ -952,6 +953,12 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 printf("no word found\n");
             }
             if (n_done_slots > 0) {
+                if (n_done_slots > best_n_done_slots) {
+                    best_n_done_slots = n_done_slots;
+                    Py_XDECREF(best_fill);
+                    best_fill = gather_fill(cgrid, width, height);
+                    printf("NEW BEST FILL: %i\n", best_n_done_slots);
+                }
                 backtracked++;
                 int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots);
                 if (cleared < 0) {
@@ -961,13 +968,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 for (c = n_done_slots; c >= n_done_slots - cleared; c--) {
                     order[c] = -1;
                 }
-                //printf("subtracting %i\n", cleared);
                 n_done_slots -= cleared;
             }
         }
         
         if (is_word_ok) {
-            filled_in++;
             slot->done = 1;
             order[n_done_slots] = index;
             printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
@@ -975,9 +980,10 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         attempts++;
     }
-    printf("%i %i\n", filled_in, backtracked);
-    PyObject *fill = gather_fill(cgrid, width, height);
-    PyList_Append(result, fill);
+    if (best_fill != NULL) {
+        PyList_Append(result, best_fill);
+        Py_DECREF(best_fill);
+    }
     return result;
 }
 
