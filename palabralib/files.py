@@ -56,9 +56,9 @@ IPUZ_TECH_ELEMS = [
     "origin", "block", "empty", "styles", "checksum" #, "saved"
 ]
 IPUZ_CROSS_ELEMS = [
-    "puzzle", "saved", "solution", "clues", "showenumerations"
-    , "clueplacement", "fill", "answer", "answers", "enumeration"
-    , "enumerations", "misses"
+    "dimensions", "puzzle", "saved", "solution", "clues"
+    , "showenumerations", "clueplacement", "fill", "answer", "answers"
+    , "enumeration", "enumerations", "misses"
 ]
 
 IPUZ_BLOCK_CHAR = '#'
@@ -301,8 +301,10 @@ def read_ipuz(filename, warnings=True):
                     pass # TODO
         for e in IPUZ_CROSS_ELEMS:
             if e in data:
-                if e == "puzzle":
-                    r_width, r_height = len(data[e][0]), len(data[e])
+                if e == "dimensions":
+                    r_width = data[e]["width"]
+                    r_height = data[e]["height"]
+                elif e == "puzzle":
                     assert r_width >= 0
                     assert r_height >= 0
                     r_grid = Grid(r_width, r_height)
@@ -388,6 +390,7 @@ def write_ipuz(puzzle, backup=True):
     for key in ["circle", ("cell", "color"), ("char", "color")]:
         diffs[key] = [c for c in styles if styles[c][key] != props[key]]
     puz = []
+    contents["dimensions"] = {"width": puzzle.grid.width, "height": puzzle.grid.height}
     for y in xrange(puzzle.grid.height):
         row = []
         for x in xrange(puzzle.grid.width):
