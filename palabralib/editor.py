@@ -117,7 +117,7 @@ class CellPropertiesDialog(gtk.Dialog):
             p.set_size_request(196, -1)
             align = gtk.Alignment(0, 0)
             align.add(p)
-            self.previews.append(align)
+            self.previews.append(p)
             p.display(self.grid)
             for k in DEFAULTS_CELL:
                 p.view.properties[k] = properties[k]
