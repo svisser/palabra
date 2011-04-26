@@ -39,13 +39,14 @@ class CellPropertiesDialog(gtk.Dialog):
         self.set_title('Properties of cell')
         self.set_size_request(640, 480)
         self.palabra_window = palabra_window
+        self.properties = properties
         x, y = properties["cell"]
 
         grid_cell = properties["grid"].data[y][x]
         self.grid = Grid(1, 1)
         self.grid.data[0][0].update(grid_cell)
         
-        table = gtk.Table(3, 2, False)
+        table = gtk.Table(3, 3, False)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
         
@@ -57,7 +58,7 @@ class CellPropertiesDialog(gtk.Dialog):
             label = gtk.Label(value)
             label.set_alignment(0, 0)
             table.attach(label, x + 1, x + 2, y, y + 1)
-        def create_color_row(table, title, button, x, y):
+        def create_color_row(table, title, button, reset, x, y):
             label = gtk.Label()
             label.set_markup(title)
             label.set_alignment(0, 0.5)
@@ -65,6 +66,9 @@ class CellPropertiesDialog(gtk.Dialog):
             align = gtk.Alignment(0, 0.5)
             align.add(button)
             table.attach(align, x + 1, x + 2, y, y + 1)
+            align = gtk.Alignment(0, 0.5)
+            align.add(reset)
+            table.attach(align, x + 2, x + 3, y, y + 1)
         
         self.colors = [("cell", "color")
             , ("block", "color")
@@ -76,10 +80,17 @@ class CellPropertiesDialog(gtk.Dialog):
             attr = '_'.join(list(key) + ["button"])
             setattr(self, attr, create_color_button(properties[key]))
             getattr(self, attr).connect("color-set", self.on_color_set, key)
-        create_color_row(table, "Background color", self.cell_color_button, 0, 0)
-        create_color_row(table, "Block color", self.block_color_button, 0, 1)
-        create_color_row(table, "Letter color", self.char_color_button, 0, 2)
-        create_color_row(table, "Number color", self.number_color_button, 0, 3)
+            attr2 = '_'.join(list(key) + ["reset", "button"])
+            setattr(self, attr2, gtk.Button(u"Reset"))
+            getattr(self, attr2).connect("clicked", self.on_color_reset, key)
+        create_color_row(table, "Background color"
+            , self.cell_color_button, self.cell_color_reset_button, 0, 0)
+        create_color_row(table, "Block color"
+            , self.block_color_button, self.block_color_reset_button, 0, 1)
+        create_color_row(table, "Letter color"
+            , self.char_color_button, self.char_color_reset_button, 0, 2)
+        create_color_row(table, "Number color"
+            , self.number_color_button, self.number_color_reset_button, 0, 3)
         
         label = gtk.Label()
         label.set_markup("Other options")
@@ -88,7 +99,7 @@ class CellPropertiesDialog(gtk.Dialog):
         self.circle_button = gtk.CheckButton(label="Display circle")
         self.circle_button.set_active(properties["circle"])
         self.circle_button.connect("toggled", self.on_circle_toggled)
-        table.attach(self.circle_button, 1, 2, 4, 5)
+        table.attach(self.circle_button, 1, 3, 4, 5)
 
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -123,6 +134,16 @@ class CellPropertiesDialog(gtk.Dialog):
     def on_color_set(self, button, key):
         color = button.get_color()
         self._on_update(key, (color.red, color.green, color.blue))
+        
+    def on_color_reset(self, button, key):
+        color = self.properties["defaults"][key]
+        button = getattr(self, '_'.join(list(key) + ["button"]))
+        c = button.get_color()
+        c.red = color[0]
+        c.green = color[1]
+        c.blue = color[2]
+        button.set_color(c)
+        self._on_update(key, color)
         
     def on_circle_toggled(self, button):
         self._on_update("circle", button.get_active())
@@ -539,9 +560,10 @@ class Editor(gtk.HBox):
                 elif grid.is_void(*c):
                     return "void"
                 return "letter"
-            props = {"cell": (x, y), "grid": grid}
+            props = {"cell": (x, y), "grid": grid, "defaults": {}}
             for k in DEFAULTS_CELL:
                 props[k] = puzzle.view.properties.style(x, y)[k]
+                props["defaults"][k] = puzzle.view.properties.style()[k]
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
