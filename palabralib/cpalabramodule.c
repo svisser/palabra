@@ -19,12 +19,6 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-typedef struct sresult *Sptr;
-typedef struct sresult {
-    int n_matches;
-    char *chars;
-} SearchResult;
-
 typedef struct sparams *SPPtr;
 typedef struct sparams {
     int offset;
@@ -169,33 +163,6 @@ int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
         n += analyze(offset, result, p->hikid, s, cs);
     result->n_matches = n;
     return n;
-}
-
-// 1 = ok, 0 = not ok
-int check_intersect(char *word, char **cs, int length, Sptr *results) {
-    int c;
-    for (c = 0; c < length; c++) {
-        if (results[c] == NULL || results[c]->n_matches == 0) {
-            return 0;
-        }
-    }
-    int n_chars = 0;
-    for (c = 0; c < length; c++) {
-        if (strchr(cs[c], '.') == NULL) {
-            n_chars += 1;
-            continue;
-        }
-        int m;
-        for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
-            char m_c = results[c]->chars[m];
-            if (m_c == ' ') break;
-            if (m_c == *(word + c)) {
-                n_chars += 1;
-                break;
-            }
-        }
-    }
-    return n_chars == length;
 }
 
 Sptr analyze_intersect_slot(int offset, char *cs) {
@@ -842,26 +809,48 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             return NULL;
         }
         
-        //int offsets[length];
-        //char *cs[length];
-        //int t;
-        //int skipped[length];
-        //for (t = 0; t < length; t++) skipped[t] = 0;
-        //Sptr results[length];
+        char *cs_i[slot->length];
+        int offsets[slot->length];
+        for (m = 0; m < n_slots; m++) {
+            if (is_intersecting(slot, &slots[m])) {
+                int index = 0;
+                int offset = 0;
+                if (slot->dir == 0) {
+                    index = slots[m].x - slot->x;
+                    offset = slot->y - slots[m].y;
+                } else {
+                    index = (&slots[m])->y - slot->y;
+                    offset = slot->x - (&slots[m])->x;
+                }
+                offsets[index] = offset;
+                
+                cs_i[index] = get_constraints(cgrid, width, height, &slots[m]);
+            }
+        }
+        int skipped[slot->length];
+        int t;
+        for (t = 0; t < slot->length; t++) {
+            skipped[t] = 0;
+        }
+        Sptr results[slot->length];
+        analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length);
         
         int is_word_ok = 1;
-        char* word = find_candidate(slot->words, slot->length, cs, slot->offset);
+        char* word = find_candidate(cs_i, results, slot->words, slot->length, cs, slot->offset);
         printf("Candidate: %s for %i %i %s\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         PyMem_Free(cs);
+        for (m = 0; m < slot->length; m++) {
+            if (cs_i[m]) {
+                PyMem_Free(cs_i[m]);
+            }
+        }
         
-        //analyze_intersect_slot2(results, skipped, offsets, cs, length);
-        
-        //for (t = 0; t < length; t++) {
-        //    if (skipped[t] == 0 && results[t] != NULL) {
-        //        PyMem_Free(results[t]->chars);
-        //        PyMem_Free(results[t]);
-        //    }
-        //}
+        for (t = 0; t < slot->length; t++) {
+            if (skipped[t] == 0 && results[t] != NULL) {
+                PyMem_Free(results[t]->chars);
+                PyMem_Free(results[t]);
+            }
+        }
         
         if (word) {
             if (DEBUG) {

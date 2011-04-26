@@ -16,10 +16,17 @@ typedef struct tnode {
     Tptr lokid, eqkid, hikid;
 } Tnode;
 
+typedef struct sresult *Sptr;
+typedef struct sresult {
+    int n_matches;
+    char *chars;
+} SearchResult;
+
 Tptr trees[MAX_WORD_LENGTH];
 
+extern int check_intersect(char *word, char **cs, int length, Sptr *results);
 extern PyObject* find_matches(PyObject *list, Tptr p, char *s);
-extern char* find_candidate(PyObject *words, int length, char *cs, Py_ssize_t offset);
+extern char* find_candidate(char **cs_i, Sptr *results, PyObject *words, int length, char *cs, Py_ssize_t offset);
 extern int process_constraints(PyObject* constraints, char *cs);
 extern int check_constraints(char *word, char *cs);
 
