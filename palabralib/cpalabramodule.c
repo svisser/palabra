@@ -667,11 +667,6 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
             if (blank == iindex) bslot->offset++;
         }
     }
-    /*int j;
-    for (j = 0; j < n_slots; j++) {
-        printf("%i ", order[j]);
-    }
-    printf("\n");*/
     return cleared;
 }
 
