@@ -66,25 +66,26 @@ class CellPropertiesDialog(gtk.Dialog):
             align.add(button)
             table.attach(align, x + 1, x + 2, y, y + 1)
         
+        self.colors = [("cell", "color")
+            , ("block", "color")
+            , ("char", "color")
+            , ("number", "color")
+        ]
         types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
-        self.cell_color_button = create_color_button(properties["cell", "color"])
-        self.cell_color_button.connect("color-set", self.on_color_set, ("cell", "color"))
+        for key in self.colors:
+            attr = '_'.join(list(key) + ["button"])
+            setattr(self, attr, create_color_button(properties[key]))
+            getattr(self, attr).connect("color-set", self.on_color_set, key)
         create_color_row(table, "Background color", self.cell_color_button, 0, 0)
-        self.block_color_button = create_color_button(properties["block", "color"])
-        self.block_color_button.connect("color-set", self.on_color_set, ("block", "color"))
         create_color_row(table, "Block color", self.block_color_button, 0, 1)
-        self.char_color_button = create_color_button(properties["char", "color"])
-        self.char_color_button.connect("color-set", self.on_color_set, ("char", "color"))
         create_color_row(table, "Letter color", self.char_color_button, 0, 2)
-        self.number_color_button = create_color_button(properties["number", "color"])
-        self.number_color_button.connect("color-set", self.on_color_set, ("number", "color"))
         create_color_row(table, "Number color", self.number_color_button, 0, 3)
         
         label = gtk.Label()
         label.set_markup("Other options")
         label.set_alignment(0, 0.5)
         table.attach(label, 0, 1, 4, 5, gtk.FILL, gtk.FILL)
-        self.circle_button = gtk.CheckButton(label="Display circle in this cell")
+        self.circle_button = gtk.CheckButton(label="Display circle")
         self.circle_button.set_active(properties["circle"])
         self.circle_button.connect("toggled", self.on_circle_toggled)
         table.attach(self.circle_button, 1, 2, 4, 5)
@@ -133,14 +134,10 @@ class CellPropertiesDialog(gtk.Dialog):
     
     def gather_appearance(self):
         a = {}
-        color = self.block_color_button.get_color()
-        a["block", "color"] = (color.red, color.green, color.blue)
-        color = self.cell_color_button.get_color()
-        a["cell", "color"] = (color.red, color.green, color.blue)
-        color = self.char_color_button.get_color()
-        a["char", "color"] = (color.red, color.green, color.blue)
-        color = self.number_color_button.get_color()
-        a["number", "color"] = (color.red, color.green, color.blue)
+        for key in self.colors:
+            attr = '_'.join(list(key) + ["button"])
+            color = getattr(self, attr).get_color()
+            a[key] = (color.red, color.green, color.blue)
         a["circle"] = self.circle_button.get_active()
         return a
     appearance = property(gather_appearance)
