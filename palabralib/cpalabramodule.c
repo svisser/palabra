@@ -842,10 +842,27 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             return NULL;
         }
         
+        //int offsets[length];
+        //char *cs[length];
+        //int t;
+        //int skipped[length];
+        //for (t = 0; t < length; t++) skipped[t] = 0;
+        //Sptr results[length];
+        
         int is_word_ok = 1;
         char* word = find_candidate(slot->words, slot->length, cs, slot->offset);
         printf("Candidate: %s for %i %i %s\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         PyMem_Free(cs);
+        
+        //analyze_intersect_slot2(results, skipped, offsets, cs, length);
+        
+        //for (t = 0; t < length; t++) {
+        //    if (skipped[t] == 0 && results[t] != NULL) {
+        //        PyMem_Free(results[t]->chars);
+        //        PyMem_Free(results[t]);
+        //    }
+        //}
+        
         if (word) {
             if (DEBUG) {
                 printf("%s (%i)\n", word, slot->offset);
