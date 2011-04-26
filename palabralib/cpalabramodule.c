@@ -692,6 +692,52 @@ PyObject* gather_fill(Cell *cgrid, int width, int height) {
     return fill;
 }
 
+inline int find_initial_slot(Slot *slots, int n_slots, int option_start) {
+    int index = -1;
+    if (option_start == FILL_START_AT_ZERO) {
+        index = 0;
+    } else if (option_start == FILL_START_AT_SELECTION) {
+        // TODO
+    } else if (option_start == FILL_START_AT_AUTO) {
+        // find most-constrained slot
+        int m;
+        for (m = 0; m < n_slots; m++) {
+            if (!slots[m].done) {
+                index = m;
+                break;
+            }
+        }
+        for (m = 0; m < n_slots; m++) {
+            if (slots[m].count < slots[index].count && !slots[m].done) {
+                index = m;
+            }
+        }
+    }
+    return index;
+}
+
+inline int find_slot(Slot *slots, int n_slots, int* order) {
+    // find most-constrained slot that is connected to a previously filled in slot
+    int index = -1;
+    int o;
+    for (o = 0; o < n_slots; o++) {
+        if (order[o] < 0) break;
+        int count = -1;
+        int m;
+        for (m = 0; m < n_slots; m++) {
+            if (order[o] == m) continue;
+            if (is_intersecting(&slots[order[o]], &slots[m]) && !slots[m].done) {
+                if (count < 0 || slots[m].count < count) {
+                    count = slots[m].count;
+                    index = m;
+                }
+            }
+        }
+        if (index >= 0) break;
+    }
+    return index;
+}
+
 static PyObject*
 cPalabra_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
@@ -786,44 +832,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     while (attempts < 5000) {
         int index = -1;
         if (n_done_slots == 0) {
-            if (OPTION_START == FILL_START_AT_ZERO) {
-                index = 0;
-            } else if (OPTION_START == FILL_START_AT_SELECTION) {
-                // TODO
-            } else if (OPTION_START == FILL_START_AT_AUTO) {
-                // find most-constrained slot
-                for (m = 0; m < n_slots; m++) {
-                    if (!slots[m].done) {
-                        index = m;
-                        break;
-                    }
-                }
-                for (m = 0; m < n_slots; m++) {
-                    if (slots[m].count < slots[index].count && !slots[m].done) {
-                        index = m;
-                    }
-                }
-            }
+            index = find_initial_slot(slots, n_slots, OPTION_START);
         } else {
-            // find most-constrained slot that is connected to a previous filled in slot
-            for (o = 0; o < n_slots; o++) {
-                if (order[o] < 0) break;
-                int count = -1;
-                for (m = 0; m < n_slots; m++) {
-                    if (order[o] == m) continue;
-                    if (is_intersecting(&slots[order[o]], &slots[m]) && !slots[m].done) {
-                        if (count < 0 || slots[m].count < count) {
-                            count = slots[m].count;
-                            index = m;
-                        }
-                    }
-                }
-                if (index >= 0) break;
-            }
+            index = find_slot(slots, n_slots, order);
         }
-        if (index < 0) {
-            break;
-        }
+        if (index < 0) break;
         Slot *slot = &slots[index];
         if (DEBUG) {
             printf("Searching word for (%i, %i, %s) at index %i: ", slot->x, slot->y, slot->dir == 0 ? "across" : "down", index);
