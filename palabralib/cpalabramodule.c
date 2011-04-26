@@ -783,6 +783,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     while (attempts < 5000) {
         int index = -1;
         if (n_done_slots == 0) {
+            // find most-constrained slot
             for (m = 0; m < n_slots; m++) {
                 if (!slots[m].done) {
                     index = m;
@@ -796,6 +797,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             }
             //index = 0;
         } else {
+            // find most-constrained slot that is connected to a previous filled in slot
             for (o = 0; o < n_slots; o++) {
                 if (order[o] < 0) break;
                 int count = -1;
@@ -811,13 +813,10 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (index >= 0) break;
             }
         }
-        Slot *slot = &slots[index];
         if (index < 0) {
-            if (DEBUG) {
-                printf("BREAKING - SHOULD NOT OCCUR\n");
-            }
             break;
-        }
+
+        Slot *slot = &slots[index];
         if (DEBUG) {
             printf("Searching word for (%i, %i, %s) at index %i: ", slot->x, slot->y, slot->dir == 0 ? "across" : "down", index);
         }
