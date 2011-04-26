@@ -390,10 +390,12 @@ def write_ipuz(puzzle, backup=True):
     for key in ["circle", ("cell", "color"), ("char", "color")]:
         diffs[key] = [c for c in styles if styles[c][key] != props[key]]
     puz = []
-    contents["dimensions"] = {"width": puzzle.grid.width, "height": puzzle.grid.height}
-    for y in xrange(puzzle.grid.height):
+    width = puzzle.grid.width
+    height = puzzle.grid.height
+    contents["dimensions"] = {"width": width, "height": height}
+    for y in xrange(height):
         row = []
-        for x in xrange(puzzle.grid.width):
+        for x in xrange(width):
             n = puzzle.grid.data[y][x]["number"]
             if n != 0:
                 cell = n
@@ -426,9 +428,9 @@ def write_ipuz(puzzle, backup=True):
                 clues[ipuz_d].append([n, data["text"]])
     contents["clues"] = clues
     solution = []
-    for y in xrange(puzzle.grid.height):
+    for y in xrange(height):
         row = []
-        for x in xrange(puzzle.grid.width):
+        for x in xrange(width):
             if puzzle.grid.data[y][x]["block"]:
                 row.append(c_block)
             elif puzzle.grid.data[y][x]["void"]:
