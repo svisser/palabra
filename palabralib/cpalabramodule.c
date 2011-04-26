@@ -723,16 +723,26 @@ inline int find_slot(Slot *slots, int n_slots, int* order) {
     for (o = 0; o < n_slots; o++) {
         if (order[o] < 0) break;
         int count = -1;
-        int m;
-        for (m = 0; m < n_slots; m++) {
-            if (order[o] == m) continue;
-            if (slots[m].done) continue;
-            if (is_intersecting(&slots[order[o]], &slots[m])) {
-                if (count < 0 || slots[m].count < count) {
-                    count = slots[m].count;
-                    index = m;
+        
+        int n_done = 0;
+        
+        int l;
+        for (l = 0; l < slots[order[o]].length; l++) {
+            int m;
+            for (m = 0; m < n_slots; m++) {
+                if (order[o] == m) continue;
+                if (slots[m].done) continue;
+                if (is_intersecting(&slots[order[o]], &slots[m])) {
+                    if (slots[order[o]].dir == 0 && (slots[m].x - slots[order[o]].x == l)) {
+                        index = m;
+                        break;
+                    } else if (slots[order[o]].dir == 1 && (slots[m].y - slots[order[o]].y == l)) {
+                        index = m;
+                        break;
+                    }
                 }
             }
+            if (index >= 0) break;
         }
         if (index >= 0) break;
     }
