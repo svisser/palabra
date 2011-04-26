@@ -91,6 +91,8 @@ class PropertiesWindow(gtk.Dialog):
         status = puzzle.grid.determine_status(True)
         
         tabs = gtk.Notebook()
+        tabs.set_property("tab-hborder", 8)
+        tabs.set_property("tab-vborder", 4)
         tabs.append_page(self.create_general_tab(status, puzzle), gtk.Label(u"General"))
         tabs.append_page(self.create_letters_tab(status, puzzle), gtk.Label(u"Letters"))
         tabs.append_page(self.create_words_tab(status, puzzle), gtk.Label(u"Words"))
