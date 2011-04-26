@@ -788,9 +788,23 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 break;
             }
         }
-        for (m = 0; m < n_slots; m++) {
-            if (slots[m].count < slots[index].count && !slots[m].done) {
-                index = m;
+        if (n_done_slots == 0) {
+            for (m = 0; m < n_slots; m++) {
+                if (slots[m].count < slots[index].count && !slots[m].done) {
+                    index = m;
+                }
+            }
+        } else {
+            for (o = 0; o < n_slots; o++) {
+                if (order[o] < 0) break;
+                for (m = 0; m < n_slots; m++) {
+                    if (o == m) continue;
+                    if (is_intersecting(&slots[order[o]], &slots[m]) && !slots[m].done) {
+                        index = m;
+                        break;
+                    }
+                }
+                if (index >= 0) break;
             }
         }
         Slot *slot = &slots[index];
@@ -837,7 +851,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         char* word = find_candidate(cs_i, results, slot->words, slot->length, cs, slot->offset);
-        printf("Candidate: %s for %i %i %s\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
+        //printf("Candidate: %s for %i %i %s\n", word, slot->x, slot->y, slot->dir == 0 ? "across" : "down");
         PyMem_Free(cs);
         for (m = 0; m < slot->length; m++) {
             if (cs_i[m]) {
@@ -932,7 +946,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             filled_in++;
             slot->done = 1;
             order[n_done_slots] = index;
-            printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
+            //printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
             n_done_slots++;
         }
         attempts++;
