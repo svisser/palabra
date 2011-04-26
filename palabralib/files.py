@@ -282,6 +282,7 @@ def read_ipuz(filename, warnings=True):
         r_notepad = ""
         r_styles = {}
         r_gstyles = {}
+        r_number_mode = constants.NUMBERING_AUTO
         for m in IPUZ_MY_META_ELEMS:
             if m in data:
                 r_meta[IPUZ_MY_META_ELEMS[m]] = data[m]
@@ -353,8 +354,8 @@ def read_ipuz(filename, warnings=True):
                         if d in data[e]:
                             for n, clue in data[e][d]:
                                 clues[n, md] = clue
-        # TODO modify when arbitrary number schemes are implemented
-        r_grid.assign_numbers()
+        if r_number_mode == constants.NUMBERING_AUTO:
+            r_grid.assign_numbers()
         for d in ["across", "down"]:
             for n, x, y in r_grid.words_by_direction(d):
                 if (n, d) in clues:
@@ -471,6 +472,7 @@ def read_xpf(filename, warnings=True):
         r_notepad = ""
         r_styles = {}
         r_gstyles = {}
+        r_number_mode = constants.NUMBERING_AUTO
         for child in puzzle:
             if child.tag in XPF_META_ELEMS:
                 r_meta[XPF_META_ELEMS[child.tag]] = child.text
@@ -688,8 +690,8 @@ def read_xpf(filename, warnings=True):
                                 color = s.get("Color")
                                 if color is not None:
                                     r_gstyles["number", "color"] = hex_to_color(color)
-        # TODO modify when arbitrary number schemes are implemented
-        r_grid.assign_numbers()
+        if r_number_mode == constants.NUMBERING_AUTO:
+            r_grid.assign_numbers()
         p = Puzzle(r_grid, r_styles, r_gstyles)
         p.metadata = r_meta
         p.type = constants.PUZZLE_XPF
