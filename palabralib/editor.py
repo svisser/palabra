@@ -683,7 +683,9 @@ class Editor(gtk.HBox):
                 l = self.puzzle.grid.word_length(x, y, d)
                 cs = self.puzzle.grid.gather_constraints(x, y, d)
                 meta.append((x, y, 0 if d == "across" else 1, l, cs, result[x, y, d]))
-            results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta)
+                options = {}
+                options["start"] = constants.FILL_START_AT_AUTO
+            results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta, options)
             self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
             break
             

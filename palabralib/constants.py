@@ -40,6 +40,11 @@ TRANSFORM_NONE = 0
 TRANSFORM_CONTENT = 1
 TRANSFORM_STRUCTURE = 2
 
+# filling options, also in .c
+FILL_START_AT_ZERO = 0
+FILL_START_AT_SELECTION = 1
+FILL_START_AT_AUTO = 2
+
 # puzzle types
 PUZZLE_PALABRA = 'palabra'
 # http://www.xwordinfo.com/XPF/

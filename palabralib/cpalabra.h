@@ -9,6 +9,10 @@
 #define MAX_WORD_LENGTH 64
 #define MAX_ALPHABET_SIZE 50 // TODO
 
+#define FILL_START_AT_ZERO 0
+#define FILL_START_AT_SELECTION 1
+#define FILL_START_AT_AUTO 2
+
 typedef struct tnode *Tptr;
 typedef struct tnode {
     char splitchar;

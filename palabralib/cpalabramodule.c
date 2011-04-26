@@ -697,8 +697,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     PyObject *grid;
     PyObject *words;
     PyObject *meta;
-    if (!PyArg_ParseTuple(args, "OOO", &grid, &words, &meta))
+    PyObject *options;
+    if (!PyArg_ParseTuple(args, "OOOO", &grid, &words, &meta, &options))
         return NULL;
+        
+    const int OPTION_START = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("start")));
 
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
@@ -783,19 +786,24 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     while (attempts < 5000) {
         int index = -1;
         if (n_done_slots == 0) {
-            // find most-constrained slot
-            for (m = 0; m < n_slots; m++) {
-                if (!slots[m].done) {
-                    index = m;
-                    break;
+            if (OPTION_START == FILL_START_AT_ZERO) {
+                index = 0;
+            } else if (OPTION_START == FILL_START_AT_SELECTION) {
+                // TODO
+            } else if (OPTION_START == FILL_START_AT_AUTO) {
+                // find most-constrained slot
+                for (m = 0; m < n_slots; m++) {
+                    if (!slots[m].done) {
+                        index = m;
+                        break;
+                    }
+                }
+                for (m = 0; m < n_slots; m++) {
+                    if (slots[m].count < slots[index].count && !slots[m].done) {
+                        index = m;
+                    }
                 }
             }
-            for (m = 0; m < n_slots; m++) {
-                if (slots[m].count < slots[index].count && !slots[m].done) {
-                    index = m;
-                }
-            }
-            //index = 0;
         } else {
             // find most-constrained slot that is connected to a previous filled in slot
             for (o = 0; o < n_slots; o++) {
@@ -815,7 +823,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         if (index < 0) {
             break;
-
+        }
         Slot *slot = &slots[index];
         if (DEBUG) {
             printf("Searching word for (%i, %i, %s) at index %i: ", slot->x, slot->y, slot->dir == 0 ? "across" : "down", index);
