@@ -518,6 +518,9 @@ class Editor(gtk.HBox):
             elif event.button == 3:
                 if self.puzzle.grid.is_valid(x, y):
                     self._create_popup_menu(event, x, y)
+                    # popup menu right-click should not interfere with
+                    # normal editing controls
+                    self.mouse_buttons_down[2] = False
         return True
     
     def _create_popup_menu(self, event, x, y):
