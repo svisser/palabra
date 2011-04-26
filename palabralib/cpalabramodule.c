@@ -782,13 +782,13 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     PyObject *result = PyList_New(0);
     while (attempts < 5000) {
         int index = -1;
-        for (m = 0; m < n_slots; m++) {
-            if (!slots[m].done) {
-                index = m;
-                break;
-            }
-        }
         if (n_done_slots == 0) {
+            for (m = 0; m < n_slots; m++) {
+                if (!slots[m].done) {
+                    index = m;
+                    break;
+                }
+            }
             for (m = 0; m < n_slots; m++) {
                 if (slots[m].count < slots[index].count && !slots[m].done) {
                     index = m;
@@ -800,7 +800,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (order[o] < 0) break;
                 int count = -1;
                 for (m = 0; m < n_slots; m++) {
-                    if (o == m) continue;
+                    if (order[o] == m) continue;
                     if (is_intersecting(&slots[order[o]], &slots[m]) && !slots[m].done) {
                         if (count < 0 || slots[m].count < count) {
                             count = slots[m].count;
@@ -950,7 +950,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             filled_in++;
             slot->done = 1;
             order[n_done_slots] = index;
-            //printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
+            printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
             n_done_slots++;
         }
         attempts++;
