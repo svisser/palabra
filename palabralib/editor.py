@@ -107,21 +107,24 @@ class CellPropertiesDialog(gtk.Dialog):
         content = gtk.HBox(False, 0)
         content.set_border_width(6)
         content.set_spacing(6)
-        content.pack_start(main, False, False, 0)
+        content.pack_start(main, True, True, 0)
         
         self.previews = []
         prevs = gtk.VBox(False, 0)
         for m, h in ([(constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
             , (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")]):
             p = GridPreview(magnify=True, mode=m, header=h)
-            self.previews.append(p)
+            p.set_size_request(196, -1)
+            align = gtk.Alignment(0, 0)
+            align.add(p)
+            self.previews.append(align)
             p.display(self.grid)
             for k in DEFAULTS_CELL:
                 p.view.properties[k] = properties[k]
             p.view.properties["char", "font"] = "Sans 36"
             p.view.properties["number", "font"] = "Sans 21"
-            prevs.pack_start(p, True, True, 0)
-        content.pack_start(prevs, True, True, 0)
+            prevs.pack_start(align, False, False, 0)
+        content.pack_start(prevs, False, False, 0)
 
         hbox = gtk.VBox(False, 0)
         hbox.set_border_width(12)
