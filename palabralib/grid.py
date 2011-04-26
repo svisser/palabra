@@ -279,7 +279,7 @@ class Grid:
                 elif counts[x, y] == 2:
                     status["checked_count"] += 1
                 status["clue_count"] += len(self.data[y][x]["clues"])
-            status["open_count"] = self.count_open_squares()
+            status["open_count"] = len(self.compute_open_squares())
             status["connected"] = self.is_connected()
             status["complete"] = self.count_complete()
         return status
@@ -515,15 +515,15 @@ class Grid:
             if 0 <= x + dx < width and 0 <= y + dy < height:
                 yield x + dx, y + dy
         
-    def count_open_squares(self):
+    def compute_open_squares(self):
         """
-        Return the number of open squares.
+        Return the open squares.
         
         A square is open if it does not touch a block, including diagonally.
         """
         data = self.data
         neighbors = self.neighbors
-        count = 0
+        cells = []
         for x, y in self.cells():
             if data[y][x]["block"] or data[y][x]["void"]:
                 continue
@@ -531,8 +531,8 @@ class Grid:
                 if data[q][p]["block"]:
                     break
             else:
-                count += 1
-        return count
+                cells.append((x, y))
+        return cells
         
     def is_connected(self):
         """

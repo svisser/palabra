@@ -640,6 +640,11 @@ class Editor(gtk.HBox):
                 new.append((x, y, "across", 1))
         self._render_highlighted_words(new)
         
+    def highlight_open_cells(self):
+        """Highlight all open cells."""
+        new = [(x, y, "across", 1) for x, y in self.puzzle.grid.compute_open_squares()]
+        self._render_highlighted_words(new)
+        
     def clear_highlighted_words(self): 
         """Clear all highlighted words, if there are any."""
         self._render_highlighted_words([])

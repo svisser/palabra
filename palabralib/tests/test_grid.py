@@ -974,13 +974,13 @@ class GridTestCase(unittest.TestCase):
             
     def testOpenSquares(self):
         g = Grid(5, 5)
-        self.assertEquals(g.count_open_squares(), 5 * 5)
+        self.assertEquals(len(g.compute_open_squares()), 5 * 5)
         g.set_block(2, 2, True)
-        self.assertEquals(g.count_open_squares(), (5 * 5) - 1 - 8)
+        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 1 - 8)
         g.set_block(0, 0, True)
-        self.assertEquals(g.count_open_squares(), (5 * 5) - 9 - 1 - 2)
+        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
         g.set_block(1, 1, True)
-        self.assertEquals(g.count_open_squares(), (5 * 5) - 9 - 3 - 2)
+        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
             
     def testIsConnected(self):
         g = Grid(5, 5)

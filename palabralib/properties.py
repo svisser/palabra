@@ -129,13 +129,19 @@ class PropertiesWindow(gtk.Dialog):
             label = gtk.Label("")
             label.set_alignment(1, 0)
             table.attach(label, x + 1, x + 2, y, y + 1)
-        def create_statistic(table, title, value, x, y):
+        def create_statistic(table, title, value, x, y, f=None):
             label = gtk.Label(title)
             label.set_alignment(0, 0)
             table.attach(label, x, x + 1, y, y + 1)
             label = gtk.Label(value)
             label.set_alignment(1, 0)
-            table.attach(label, x + 1, x + 2, y, y + 1)
+            if f is not None:
+                eventbox = gtk.EventBox()
+                eventbox.add(label)
+                eventbox.connect("button-press-event", f)
+                table.attach(eventbox, x + 1, x + 2, y, y + 1)
+            else:
+                table.attach(label, x + 1, x + 2, y, y + 1)
             
         create_header(table, u"<b>Grid</b>", 0, 0)
         create_statistic(table, u"Columns", str(puzzle.grid.width), 0, 1)
@@ -149,7 +155,9 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Voids", str(status["void_count"]), 0, 6)
         create_statistic(table, u"Checked cells", str(status["checked_count"]), 0, 7)
         create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 0, 8)
-        create_statistic(table, u"Open cells", str(status["open_count"]), 0, 9)
+        def on_open_click(widget, event):
+            self.palabra_window.editor.highlight_open_cells()
+        create_statistic(table, u"Open cells", str(status["open_count"]), 0, 9, on_open_click)
         
         create_header(table, u"<b>Words</b>", 2, 0)
         count_c = status["complete"]["across"] + status["complete"]["down"]
