@@ -21,18 +21,18 @@ import cPalabra
 import constants
 
 class Grid:
-    def __init__(self, width, height, initialize=True):
+    def __init__(self, width, height, initialize=True, number_mode=constants.NUMBERING_AUTO):
         """Construct a grid with the given dimensions."""
-        self.initialize(width, height, initialize)
+        self.initialize(width, height, initialize, number_mode)
         
-    def initialize(self, width, height, initialize=True):
+    def initialize(self, width, height, initialize=True, number_mode=constants.NUMBERING_AUTO):
         """Reset the grid to the given dimensions with all empty cells."""
         self.width = width
         self.height = height
         self.lines = None
         self.data = [[self._default_cell() for x in xrange(width)] for y in xrange(height)]
-        # TODO modify when arbitrary number schemes are implemented
-        if initialize:
+        self.number_mode = number_mode
+        if initialize and number_mode == constants.NUMBERING_AUTO:
             self.assign_numbers()
         
     def _default_cell(self):

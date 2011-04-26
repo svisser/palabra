@@ -17,6 +17,7 @@
 
 import unittest
 
+import palabralib.constants as constants
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
 
@@ -1284,3 +1285,12 @@ class GridTestCase(unittest.TestCase):
         dc = [clue for clue in self.grid.clues("down")]
         dc3 = [(1, 0, 0, {"text": "TEST"})] + [(1 + i, i, 0, {}) for i in xrange(1, self.grid.width)]
         self.assertEquals(dc, dc3)
+        
+    def testNumbering(self):
+        g = Grid(15, 15)
+        self.assertEquals(g.data[0][0]["number"], 1)
+        g = Grid(15, 15, number_mode=constants.NUMBERING_MANUAL)
+        for x, y in g.cells():
+            self.assertEquals(g.data[y][x]["number"], 0)
+        g.set_number(5, 5, 33)
+        self.assertEquals(g.data[5][5]["number"], 33)
