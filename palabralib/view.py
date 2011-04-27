@@ -106,16 +106,6 @@ SETTINGS_EXPORT_PDF_SOLUTION = {
 }
 custom_settings = {}
 
-DEFAULTS_CELL = {
-    ("block", "color"): (0, 0, 0),
-    ("block", "margin"): 0,
-    ("char", "color"): (0, 0, 0),
-    ("char", "font"): "Sans 12",
-    ("cell", "color"): (65535, 65535, 65535),
-    ("number", "color"): (0, 0, 0),
-    ("number", "font"): "Sans 7",
-    "circle": False
-}
 DEFAULTS = {
     ("bar", "width"): 3,
     ("border", "width"): 1,
@@ -123,6 +113,18 @@ DEFAULTS = {
     ("cell", "size"): 32,
     ("line", "width"): 1,
     ("line", "color"): (0, 0, 0)
+}
+def _relative_to(key, p):
+    return str(int(DEFAULTS[key] * p)) + "px"
+DEFAULTS_CELL = {
+    ("block", "color"): (0, 0, 0),
+    ("block", "margin"): 0,
+    ("char", "color"): (0, 0, 0),
+    ("char", "font"): "Sans " + _relative_to(("cell", "size"), 0.7),
+    ("cell", "color"): (65535, 65535, 65535),
+    ("number", "color"): (0, 0, 0),
+    ("number", "font"): "Sans " + _relative_to(("cell", "size"), 0.3),
+    "circle": False
 }
 DEFAULTS.update(DEFAULTS_CELL)
 
