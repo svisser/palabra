@@ -358,10 +358,11 @@ class NewWindow(gtk.Dialog):
             buff = d.text.get_buffer()
             text = buff.get_text(*buff.get_bounds())
             words = [w for w in text.split() if w != '']
-            w, h = self.grid.size
-            c = self.generate_criteria(words) if words else None
-            self.clear_pattern()
-            self.display_patterns(w, h, criteria=c)
+            if words:
+                w, h = self.grid.size
+                c = self.generate_criteria(words)
+                self.clear_pattern()
+                self.display_patterns(w, h, criteria=c)
         d.destroy()        
             
     def load_empty_grid(self, width, height):
