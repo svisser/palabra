@@ -122,12 +122,16 @@ class AppearanceDialog(gtk.Dialog):
         # letters
         label = create_label(u"Letter:")
         self.char_color_button = create_color_button(properties["char", "color"])
-        create_row(table, 3, label, self.char_color_button)
+        adj = gtk.Adjustment(properties["char", "size"][0], 0, 100, 1, 0, 0)
+        self.char_size_spinner = gtk.SpinButton(adj)
+        create_row(table, 3, label, self.char_color_button, self.char_size_spinner)
         
         # numbers
         label = create_label(u"Number:")
         self.number_color_button = create_color_button(properties["number", "color"])
-        create_row(table, 4, label, self.number_color_button)
+        adj = gtk.Adjustment(properties["number", "size"][0], 0, 100, 1, 0, 0)
+        self.number_size_spinner = gtk.SpinButton(adj)
+        create_row(table, 4, label, self.number_color_button, self.number_size_spinner)
         
         return main
         
@@ -149,6 +153,8 @@ class AppearanceDialog(gtk.Dialog):
         a["char", "color"] = (color.red, color.green, color.blue)
         color = self.number_color_button.get_color()
         a["number", "color"] = (color.red, color.green, color.blue)
-        a["char", "size"] = _relative_to(("cell", "size"), 0.7, d=a)
-        a["number", "size"] = _relative_to(("cell", "size"), 0.3, d=a)
+        p = self.char_size_spinner.get_value_as_int()
+        a["char", "size"] = (p, _relative_to(("cell", "size"), p / 100.0, d=a))
+        p = self.number_size_spinner.get_value_as_int()
+        a["number", "size"] = (p, _relative_to(("cell", "size"), p / 100.0, d=a))
         return a

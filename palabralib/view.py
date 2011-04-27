@@ -121,11 +121,11 @@ DEFAULTS_CELL = {
     ("block", "margin"): 0,
     ("char", "color"): (0, 0, 0),
     ("char", "font"): "Sans",
-    ("char", "size"): _relative_to(("cell", "size"), 0.7),
+    ("char", "size"): (70, _relative_to(("cell", "size"), 0.7)),
     ("cell", "color"): (65535, 65535, 65535),
     ("number", "color"): (0, 0, 0),
     ("number", "font"): "Sans",
-    ("number", "size"): _relative_to(("cell", "size"), 0.3),
+    ("number", "size"): (30, _relative_to(("cell", "size"), 0.3)),
     "circle": False
 }
 DEFAULTS.update(DEFAULTS_CELL)
@@ -395,7 +395,7 @@ class GridView:
             ry = (border_width +
                 (s + 0.55) * (size + line_width) -
                 height - line_width / 2 - abs(ybearing) / 2)
-            font = styles[r, s]["char", "font"] + " " + styles[r, s]["char", "size"]
+            font = styles[r, s]["char", "font"] + " " + styles[r, s]["char", "size"][1]
             _render_pango(r, s, font, c, rx, ry)
 
         # chars and overlay chars
@@ -493,7 +493,7 @@ class GridView:
                     cur_color = color
                     context.set_source_rgb(*[c / 65535.0 for c in color])
                 n = data[q][p]["number"]
-                font = style["number", "font"] + " " + style["number", "size"]
+                font = style["number", "font"] + " " + style["number", "size"][1]
                 _render_pango(p, q, font, str(n))
 
         # circle
