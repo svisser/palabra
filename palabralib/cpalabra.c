@@ -94,3 +94,465 @@ inline int check_constraints(char *word, char *cs) {
     }
     return 1;
 }
+
+// 1 = equal, 0 = not equal, 2 = error
+int is_intersecting_equal(IntersectingSlot s0, IntersectingSlot s1) {
+    if (s0.index != s1.index) return 0;
+    if (s0.length != s1.length) return 0;
+    const Py_ssize_t len_m = PyList_Size(s0.cs);
+    const Py_ssize_t len_mm = PyList_Size(s1.cs);
+    if (len_m != len_mm) return 0;
+    Py_ssize_t l;
+    for (l = 0; l < len_m; l++) {
+        const int j_m;
+        const char *c_m;
+        PyObject *tuple_m = PyList_GetItem(s0.cs, l);
+        if (!PyArg_ParseTuple(tuple_m, "is", &j_m, &c_m))
+            return 2;
+        const int j_mm;
+        const char *c_mm;
+        PyObject *tuple_mm = PyList_GetItem(s1.cs, l);
+        if (!PyArg_ParseTuple(tuple_mm, "is", &j_mm, &c_mm))
+            return 2;
+        if (j_m != j_mm || *c_m != *c_mm)
+            return 0;
+    }
+    return 1;
+}
+
+void print(Tptr p, int indent)
+{
+    if (p == NULL) return;
+    if (p->splitchar != 0) {
+        int i;
+        for (i = 0; i < indent; i++)
+        {
+            printf(" ");
+        }
+        printf("%c\n", p->splitchar);
+    }
+    if (p->lokid != NULL) print(p->lokid, indent + 2);
+    if (p->eqkid != NULL) print(p->eqkid, indent + 2);
+    if (p->hikid != NULL) print(p->hikid, indent + 2);
+}
+
+Tptr insert1(Tptr p, char *s, char *word)
+{
+    if (p == NULL) {
+        p = (Tptr) PyMem_Malloc(sizeof(Tnode));
+        p->splitchar = *s;
+        p->word = word;
+        p->lokid = p->eqkid = p->hikid = 0;
+    }
+    if (*s < p->splitchar)
+        p->lokid = insert1(p->lokid, s, word);
+    else if (*s == p->splitchar) {
+        if (*s != 0)
+            p->eqkid = insert1(p->eqkid, ++s, word);
+    } else
+        p->hikid = insert1(p->hikid, s, word);
+    return p;
+}
+
+int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
+{
+    if (!p) return 0;
+    int n = 0;
+    if (*s == '.' || *s < p->splitchar)
+        n += analyze(offset, result, p->lokid, s, cs);
+    if (*s == '.' || *s == p->splitchar)
+        if (p->splitchar && *s)
+            n += analyze(offset, result, p->eqkid, s + 1, cs);
+    if (*s == 0 && p->splitchar == 0) {
+        n += 1;
+        char intersect_char = *(cs + offset);
+        if (intersect_char == '.') {
+            char c = *(p->word + offset);
+            int m;
+            for (m = 0; m < MAX_ALPHABET_SIZE; m++) {
+                if (result->chars[m] == c)
+                    break;
+                if (result->chars[m] == ' ') {
+                    result->chars[m] = c;
+                    break;
+                }
+            }
+        } else {
+            result->chars[0] = intersect_char;
+        }
+    }
+    if (*s == '.' || *s > p->splitchar)
+        n += analyze(offset, result, p->hikid, s, cs);
+    result->n_matches = n;
+    return n;
+}
+
+Sptr analyze_intersect_slot(int offset, char *cs) {
+    if (!trees[strlen(cs)]) {
+        return NULL;
+    }
+    Sptr result;
+    result = (Sptr) PyMem_Malloc(sizeof(SearchResult));
+    if (!result) {
+        return NULL; //PyErr_NoMemory(); TODO fix
+    }
+    result->chars = PyMem_Malloc(MAX_ALPHABET_SIZE * sizeof(char));
+    if (!result->chars) {
+        PyMem_Free(result);
+        return NULL; //PyErr_NoMemory(); TODO fix
+    }
+    int c;
+    for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
+        result->chars[c] = ' ';
+    }
+    analyze(offset, result, trees[strlen(cs)], cs, cs);
+    return result;
+}
+
+void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length) {
+    int t;
+    for (t = 0; t < length; t++) {
+        int skip = -1;
+        int s;
+        for (s = 0; s < t; s++) {
+            if (strcmp(cs[s], cs[t]) == 0) {
+                skip = s;
+                break;
+            }
+        }
+        if (skip < 0) {
+            results[t] = analyze_intersect_slot(offsets[t], cs[t]);
+        } else {
+            skipped[t] = 1;
+            results[t] = results[skip];
+        }
+    }
+}
+
+void free_tree(Tptr p) {
+    if (!p) return;
+    if (p->lokid != NULL) {
+        free_tree(p->lokid);
+        PyMem_Free(p->lokid);
+        p->lokid = NULL;
+    }
+    if (p->eqkid != NULL) {
+        free_tree(p->eqkid);
+        PyMem_Free(p->eqkid);
+        p->eqkid = NULL;
+    }
+    if (p->hikid != NULL) {
+        free_tree(p->hikid);
+        PyMem_Free(p->hikid);
+        p->hikid = NULL;
+    }
+}
+
+// 0 = false, 1 = true
+int calc_is_available(PyObject *grid, int x, int y) {
+    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    
+    if (!(0 <= x && x < width && 0 <= y && y < height))
+        return 0;
+    
+    PyObject* data = PyObject_GetAttrString(grid, "data");
+    PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
+    PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
+    
+    int is_block = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("block")));
+    if (is_block != 0)
+        return 0;
+    int is_void = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("void")));
+    if (is_void != 0)
+        return 0;
+    return 1;
+}
+
+// 0 = false, 1 = true
+int calc_is_start_word(PyObject *grid, int x, int y) {
+    int available = calc_is_available(grid, x, y);
+    if (available == 0)
+        return 0;
+    
+    PyObject *bar_str = PyString_FromString("bar");
+    PyObject *side_left = PyString_FromString("left");
+    PyObject *side_top = PyString_FromString("top");
+    
+    // 0 = across, 1 = down
+    int e;
+    for (e = 0; e < 2; e++) {
+        int bdx = e == 0 ? -1 : 0;
+        int bdy = e == 0 ? 0 : -1;
+        int adx = e == 0 ? 1 : 0;
+        int ady = e == 0 ? 0 : 1;
+        PyObject *side = e == 0 ? side_left : side_top;
+        
+        // both conditions of after
+        if (calc_is_available(grid, x + adx, y + ady) == 0)
+            continue;
+        PyObject* data = PyObject_GetAttrString(grid, "data");
+        PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y + ady));
+        PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x + adx));
+        PyObject* bars = PyObject_GetItem(cell, bar_str);
+        if (PyObject_IsTrue(PyObject_GetItem(bars, side)) == 1)
+            continue;
+        
+        // both conditions of before
+        if (calc_is_available(grid, x + bdx, y + bdy) == 0)
+            return 1;
+        col = PyObject_GetItem(data, PyInt_FromLong(y));
+        cell = PyObject_GetItem(col, PyInt_FromLong(x));
+        bars = PyObject_GetItem(cell, bar_str);
+        if (PyObject_IsTrue(PyObject_GetItem(bars, side)) == 1)
+            return 1;
+    }
+    return 0;
+}
+
+int count_words(PyObject *words, int length, char *cs) {
+    int count = 0;
+    Py_ssize_t w;
+    PyObject* key = Py_BuildValue("i", length);
+    PyObject* words_m = PyDict_GetItem(words, key);
+    for (w = 0; w < PyList_Size(words_m); w++) {
+        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+        if (!check_constraints(word, cs)) {
+            continue;
+        }
+        count++;
+    }
+    return count;
+}
+
+int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
+    int s;
+    for (s = 0; s < n_slots; s++) {
+        Slot slot = slots[s];
+        if (dir == slot.dir) {
+            int match_across = (dir == 0 && x>= slot.x
+                && x < slot.x + slot.length && slot.y == y);
+            int match_down = (dir == 1 && y >= slot.y
+                && y < slot.y + slot.length && slot.x == x);
+            if (match_across || match_down) {
+                return s;
+            }
+        }
+    }
+    return -1;
+}
+
+// 1 = yes, 0 = no
+int can_clear_char(Cell *cgrid, int width, int height, Slot slot) {
+    int j;
+    for (j = 0; j < slot.length; j++) {
+        int cx = slot.x + (slot.dir == 0 ? j : 0);
+        int cy = slot.y + (slot.dir == 1 ? j : 0);
+        if (cgrid[cx + cy * height].c == CONSTRAINT_EMPTY)
+            return 1;
+    }
+    return 0;
+}
+
+void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, int index) {
+    Slot slot = slots[index];
+    int l;
+    for (l = 0; l < slot.length; l++) {
+        if (cgrid[slot.x + slot.y * height].fixed == 1)
+            continue;
+        int cx = slot.x + (slot.dir == 0 ? l : 0);
+        int cy = slot.y + (slot.dir == 1 ? l : 0);
+        int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == 0 ? 1 : 0);
+
+        Cell *cell = &cgrid[cx + cy * height];
+        if (can_clear_char(cgrid, width, height, slots[m]) && cell->c != CONSTRAINT_EMPTY) {
+            cell->c = CONSTRAINT_EMPTY;
+        }
+    }
+}
+
+// 0 = false, 1 = true
+int is_intersecting(Slot *slot1, Slot *slot2) {
+    if (slot1->dir == slot2->dir) return 0;
+    if (slot1->dir == 0) {
+        return (slot2->x >= slot1->x && slot2->x < slot1->x + slot1->length
+            && slot1->y >= slot2->y && slot1->y < slot2->y + slot2->length);
+    } else if (slot1->dir == 1) {
+        return (slot1->x >= slot2->x && slot1->x < slot2->x + slot2->length
+            && slot2->y >= slot1->y && slot2->y < slot1->y + slot1->length);
+    }
+    return 0;
+}
+
+int is_valid(int x, int y, int width, int height) {
+    return x >= 0 && y >= 0 && x < width && y < height;
+}
+
+int is_available(Cell *cgrid, int width, int height, int x, int y) {
+    return cgrid[x + y * height].block == 0
+        && cgrid[x + y * height].empty == 0
+        && is_valid(x, y, width, height);
+}
+
+char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
+    // TODO reduce these malloc calls
+    char* cs = PyMem_Malloc(slot->length * sizeof(char) + 1);
+    if (!cs) {
+        return NULL;
+    }
+    int dx = slot->dir == 0 ? 1 : 0;
+    int dy = slot->dir == 1 ? 1 : 0;
+    int x = slot->x;
+    int y = slot->y;
+    int count = 0;
+    while (is_available(cgrid, width, height, x, y)) {
+        cs[count] = cgrid[x + y * height].c;
+        if (dx == 1 && is_valid(x + dx, y, width, height) && cgrid[(x + dx) + y * height].left_bar == 1)
+            break;
+        if (dy == 1 && is_valid(x, y + dy, width, height) && cgrid[x + (y + dy) * height].top_bar == 1)
+            break;
+        x += dx;
+        y += dy;
+        count++;
+    }
+    cs[slot->length] = '\0';
+    return cs;
+}
+
+int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
+    int prev = slot->count;
+    char *ds = get_constraints(cgrid, width, height, slot);
+    if (!ds) {
+        printf("Warning: determine_count failed to obtain constraints.\n");
+        return -1;
+    }
+    int count = count_words(words, slot->length, ds);
+    if (DEBUG && count == 0) {
+        printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, count);
+    }
+    PyMem_Free(ds);
+    return count;
+}
+
+// return = number of slots cleared
+int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int n_done_slots, int index) {
+    //printf("Backtracking\n");
+    int cleared = 0;
+    int s;
+    int iindex = -1;
+    /*for (s = n_done_slots; s >= 0; s--) {
+        //printf("Checking: %i %i %i with %i %i %i\n", slots[order[s]].x, slots[order[s]].y, slots[order[s]].dir, slots[order[index]].x, slots[order[index]].y, slots[order[index]].dir);
+        if (is_intersecting(&slots[order[s]], &slots[index])) {
+            iindex = s;
+            break;
+        }
+    }*/
+    iindex = n_done_slots - 1;
+    if (iindex < 0) {
+        printf("No index found for %i %i %i !\n", slots[index].x, slots[index].y, slots[index].dir);
+        iindex = 0;
+    }
+    //printf("Backtracking %i %i\n", iindex, index);
+    if (iindex >= 0) {
+        if (0) {
+            printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
+                , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
+                , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
+            printf("Indices: %i %i\n", iindex, index);
+        }
+        for (s = n_done_slots; s >= iindex; s--) {
+            int blank = order[s];
+            if (blank < 0) {
+                // no word was actually filled in so skip
+                continue;
+            }
+            Slot *bslot = &slots[blank];
+            if (0) {
+                printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
+            }
+            cleared++;
+            clear_slot(cgrid, width, height, slots, n_slots, blank);
+            bslot->count = determine_count(words, cgrid, width, height, bslot);
+            bslot->done = 0;
+            if (s > iindex) bslot->offset = 0;
+            if (s == iindex) bslot->offset++;
+            //printf("Offset for %i %i | %i %i %i is now %i\n", blank, iindex, bslot->x, bslot->y, bslot->dir, bslot->offset);
+        }
+    }
+    return cleared;
+}
+
+PyObject* gather_fill(Cell *cgrid, int width, int height) {
+    int x;
+    int y;
+    PyObject *fill = PyList_New(0);
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
+            Cell *cell = &cgrid[x + y * height];
+            if (cell->fixed == 1 || cell->c == CONSTRAINT_EMPTY) continue;
+            char cell_c[2];
+            cell_c[0] = toupper(cell->c);
+            cell_c[1] = '\0';
+            PyList_Append(fill, Py_BuildValue("(iis)", x, y, cell_c));
+        }
+    }
+    return fill;
+}
+
+inline int find_initial_slot(Slot *slots, int n_slots, int option_start) {
+    int index = -1;
+    if (option_start == FILL_START_AT_ZERO) {
+        index = 0;
+    } else if (option_start == FILL_START_AT_SELECTION) {
+        // TODO
+    } else if (option_start == FILL_START_AT_AUTO) {
+        // find most-constrained slot
+        int m;
+        for (m = 0; m < n_slots; m++) {
+            if (!slots[m].done) {
+                index = m;
+                break;
+            }
+        }
+        for (m = 0; m < n_slots; m++) {
+            if (slots[m].count < slots[index].count && !slots[m].done) {
+                index = m;
+            }
+        }
+    }
+    return index;
+}
+
+inline int find_slot(Slot *slots, int n_slots, int* order) {
+    // find most-constrained slot that is connected to a previously filled in slot
+    int index = -1;
+    int o;
+    for (o = 0; o < n_slots; o++) {
+        if (order[o] < 0) break;
+        int count = -1;
+        
+        int n_done = 0;
+        
+        int l;
+        for (l = 0; l < slots[order[o]].length; l++) {
+            int m;
+            for (m = 0; m < n_slots; m++) {
+                if (order[o] == m) continue;
+                if (slots[m].done) continue;
+                if (is_intersecting(&slots[order[o]], &slots[m])) {
+                    if (slots[order[o]].dir == 0 && (slots[m].x - slots[order[o]].x == l)) {
+                        index = m;
+                        break;
+                    } else if (slots[order[o]].dir == 1 && (slots[m].y - slots[order[o]].y == l)) {
+                        index = m;
+                        break;
+                    }
+                }
+            }
+            if (index >= 0) break;
+        }
+        if (index >= 0) break;
+    }
+    return index;
+}
+
