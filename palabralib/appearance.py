@@ -122,14 +122,14 @@ class AppearanceDialog(gtk.Dialog):
         # letters
         label = create_label(u"Letter:")
         self.char_color_button = create_color_button(properties["char", "color"])
-        adj = gtk.Adjustment(properties["char", "size"][0], 0, 100, 1, 0, 0)
+        adj = gtk.Adjustment(properties["char", "size"][0], 10, 100, 1, 0, 0)
         self.char_size_spinner = gtk.SpinButton(adj)
         create_row(table, 3, label, self.char_color_button, self.char_size_spinner)
         
         # numbers
         label = create_label(u"Number:")
         self.number_color_button = create_color_button(properties["number", "color"])
-        adj = gtk.Adjustment(properties["number", "size"][0], 0, 100, 1, 0, 0)
+        adj = gtk.Adjustment(properties["number", "size"][0], 10, 100, 1, 0, 0)
         self.number_size_spinner = gtk.SpinButton(adj)
         create_row(table, 4, label, self.number_color_button, self.number_size_spinner)
         
