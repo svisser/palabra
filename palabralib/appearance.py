@@ -17,6 +17,8 @@
 
 import gtk
 
+from view import _relative_to
+
 MAX_LINE_WIDTH = 32
 
 def create_color_button(color):
@@ -130,21 +132,23 @@ class AppearanceDialog(gtk.Dialog):
         return main
         
     def gather_appearance(self):
-        appearance = {}
-        appearance["block", "margin"] = self.block_margin_spinner.get_value_as_int()
-        appearance["border", "width"] = self.border_width_spinner.get_value_as_int()
-        appearance["cell", "size"] = self.cell_size_spinner.get_value_as_int()
-        appearance["line", "width"] = self.line_width_spinner.get_value_as_int()
+        a = {}
+        a["block", "margin"] = self.block_margin_spinner.get_value_as_int()
+        a["border", "width"] = self.border_width_spinner.get_value_as_int()
+        a["cell", "size"] = self.cell_size_spinner.get_value_as_int()
+        a["line", "width"] = self.line_width_spinner.get_value_as_int()
         color = self.cell_color_button.get_color()
-        appearance["cell", "color"] = (color.red, color.green, color.blue)
+        a["cell", "color"] = (color.red, color.green, color.blue)
         color = self.line_color_button.get_color()
-        appearance["line", "color"] = (color.red, color.green, color.blue)
+        a["line", "color"] = (color.red, color.green, color.blue)
         color = self.border_color_button.get_color()
-        appearance["border", "color"] = (color.red, color.green, color.blue)
+        a["border", "color"] = (color.red, color.green, color.blue)
         color = self.block_color_button.get_color()
-        appearance["block", "color"] = (color.red, color.green, color.blue)
+        a["block", "color"] = (color.red, color.green, color.blue)
         color = self.char_color_button.get_color()
-        appearance["char", "color"] = (color.red, color.green, color.blue)
+        a["char", "color"] = (color.red, color.green, color.blue)
         color = self.number_color_button.get_color()
-        appearance["number", "color"] = (color.red, color.green, color.blue)
-        return appearance
+        a["number", "color"] = (color.red, color.green, color.blue)
+        a["char", "size"] = _relative_to(("cell", "size"), 0.7, d=a)
+        a["number", "size"] = _relative_to(("cell", "size"), 0.3, d=a)
+        return a
