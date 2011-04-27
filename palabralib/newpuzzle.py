@@ -372,12 +372,16 @@ class NewWindow(gtk.Dialog):
     def generate_criteria(self, words):
         """Determine search criteria per word length."""
         counts = {}
+        words_l = {}
         for word in words:
-            if len(word) in counts:
-                counts[len(word)] += 1
+            l = len(word)
+            if l in counts:
+                counts[l] += 1
+                words_l[l].append(word)
             else:
-                counts[len(word)] = 0
-        return {"counts": counts}
+                counts[l] = 0
+                words_l[l] = [word]
+        return {"counts": counts, "words": words_l}
         
     def _check_grid(self, grid, criteria):
         """Return True when the grid meets all the search criteria."""
@@ -386,6 +390,9 @@ class NewWindow(gtk.Dialog):
             for k, v in criteria["counts"].items():
                 if k not in counts or counts[k] < v:
                     return False
+        if "words" in criteria:
+            if len(criteria["words"]) > 1:
+                return grid.can_fit(criteria["words"])
         return True
         
     def display_patterns(self, width, height, criteria=None):
