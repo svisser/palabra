@@ -21,6 +21,7 @@ import gobject
 import gtk
 import operator
 import os
+import pango
 
 import constants
 from files import read_containers, get_real_filename
@@ -184,6 +185,30 @@ class SizeWindow(gtk.Dialog):
     def get_size(self):
         return self.size_component.get_size()
 
+class FindPatternDialog(gtk.Dialog):
+    def __init__(self, parent):
+        gtk.Dialog.__init__(self, u"Find patterns", parent, gtk.DIALOG_MODAL)
+        
+        self.text = gtk.TextView()
+        self.text.set_size_request(320, 320)
+        self.text.modify_font(pango.FontDescription("Monospace 12"))
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(gtk.Label(u"Type the words that you wish to fit into the grid:"), False, False, 0)
+        main.pack_start(self.text, True, True, 0)
+        
+        hbox.pack_start(main, True, True, 0)
+        
+        self.vbox.pack_start(hbox, False, False, 0)
+        
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+
 class NewWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
@@ -273,6 +298,9 @@ class NewWindow(gtk.Dialog):
         align = gtk.Alignment(0, 0, 1, 0)
         align.add(self.clear_button)
         buttons_hbox.pack_start(align, False, False, 0)
+        find_button = gtk.Button(u"Find patterns")
+        find_button.connect("clicked", self.on_find_patterns)
+        buttons_hbox.pack_start(find_button, False, False, 0)
         
         patterns_vbox.pack_start(buttons_hbox, False, False, 6)
         
@@ -322,6 +350,18 @@ class NewWindow(gtk.Dialog):
             self.show_grid(editor.grid)
             self.tree.get_selection().unselect_all()
         editor.destroy()
+        
+    def on_find_patterns(self, button):
+        d = FindPatternDialog(self)
+        d.show_all()
+        if d.run() == gtk.RESPONSE_OK:
+            buff = d.text.get_buffer()
+            text = buff.get_text(buff.get_start_iter(), buff.get_end_iter())
+            words = [w for w in text.split() if w != '']
+            w, h = self.grid.size
+            c = self.generate_criteria(words) if words else None
+            self.display_patterns(w, h, criteria=c)
+        d.destroy()        
             
     def load_empty_grid(self, width, height):
         """Load an empty grid with the specified dimensions and load patterns."""
