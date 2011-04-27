@@ -51,7 +51,7 @@ class AppearanceDialog(gtk.Dialog):
         main.set_spacing(6)
         
         table = gtk.Table(6, 6)
-        table.set_col_spacings(6)
+        table.set_col_spacings(12)
         table.set_row_spacings(3)
         main.pack_start(table, True, True, 0)
         
