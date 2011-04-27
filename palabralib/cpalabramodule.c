@@ -631,40 +631,48 @@ int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *s
 }
 
 // return = number of slots cleared
-int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int index) {
+int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int n_done_slots, int index) {
+    //printf("Backtracking\n");
     int cleared = 0;
     int s;
     int iindex = -1;
-    for (s = index; s >= 0; s--) {
-        Slot *slot = &slots[order[s]];
-        if (is_intersecting(slot, &slots[index])) {
-            iindex = order[s];
+    /*for (s = n_done_slots; s >= 0; s--) {
+        //printf("Checking: %i %i %i with %i %i %i\n", slots[order[s]].x, slots[order[s]].y, slots[order[s]].dir, slots[order[index]].x, slots[order[index]].y, slots[order[index]].dir);
+        if (is_intersecting(&slots[order[s]], &slots[index])) {
+            iindex = s;
             break;
         }
+    }*/
+    iindex = n_done_slots - 1;
+    if (iindex < 0) {
+        printf("No index found for %i %i %i !\n", slots[index].x, slots[index].y, slots[index].dir);
+        iindex = 0;
     }
+    //printf("Backtracking %i %i\n", iindex, index);
     if (iindex >= 0) {
-        if (DEBUG) {
+        if (0) {
             printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
                 , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
                 , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
             printf("Indices: %i %i\n", iindex, index);
         }
-        for (s = index; s >= iindex; s--) {
-            cleared++;
+        for (s = n_done_slots; s >= iindex; s--) {
             int blank = order[s];
             if (blank < 0) {
                 // no word was actually filled in so skip
                 continue;
             }
             Slot *bslot = &slots[blank];
-            if (DEBUG) {
-                printf("Blanking: %i %i %i %i (%i, %i, %s)\n", s, blank, index, iindex, bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
+            if (0) {
+                printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
             }
+            cleared++;
             clear_slot(cgrid, width, height, slots, n_slots, blank);
             bslot->count = determine_count(words, cgrid, width, height, bslot);
             bslot->done = 0;
-            if (blank > iindex) bslot->offset = 0;
-            if (blank == iindex) bslot->offset++;
+            if (s > iindex) bslot->offset = 0;
+            if (s == iindex) bslot->offset++;
+            //printf("Offset for %i %i | %i %i %i is now %i\n", blank, iindex, bslot->x, bslot->y, bslot->dir, bslot->offset);
         }
     }
     return cleared;
@@ -832,13 +840,12 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     }
     
     int attempts = 0;
-    int backtracked = 0;
     PyObject *result = PyList_New(0);
     PyObject *best_fill = NULL;
     int best_n_done_slots = 0;
-    while (attempts < 5000) {
+    while (attempts < 25000) {
         int index = -1;
-        if (attempts == 0) {
+        if (attempts == 0 || n_done_slots == 0) {
             index = find_initial_slot(slots, n_slots, OPTION_START);
         } else {
             index = find_slot(slots, n_slots, order);
@@ -881,6 +888,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         char* word = find_candidate(cs_i, results, slot->words, slot->length, cs, slot->offset);
+        //printf("Candidate: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         PyMem_Free(cs);
         for (m = 0; m < slot->length; m++) {
             if (cs_i[m]) {
@@ -953,34 +961,49 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
             }
         } else {
+            is_word_ok = 0;
             if (DEBUG) {
                 printf("no word found\n");
             }
             if (n_done_slots > 0) {
+                //printf("About to backtrack\n");            
                 if (n_done_slots > best_n_done_slots) {
                     best_n_done_slots = n_done_slots;
                     Py_XDECREF(best_fill);
                     best_fill = gather_fill(cgrid, width, height);
-                    printf("NEW BEST FILL: %i\n", best_n_done_slots);
+                    //printf("NEW BEST FILL: %i\n", best_n_done_slots);
                 }
-                backtracked++;
-                int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots);
+                int c;
+                for (c = 0; c < n_slots; c++) {
+                    if (order[c] < 0) break;
+                    //printf("(%i: %i %i %i) ", c, slots[order[c]].x, slots[order[c]].y, slots[order[c]].dir);
+                }
+                //printf("\n");
+                //printf("Calling backtrack for %i %i %i\n", slots[index].x, slots[index].y, slots[index].dir);
+                int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots, index);
+                if (cleared == 0) {
+                    printf("NOTHING WAS CLEARED\n");
+                    break;
+                }
                 if (cleared < 0) {
                     break;
                 }
-                int c;
+                //int c;
                 for (c = n_done_slots; c >= n_done_slots - cleared; c--) {
                     order[c] = -1;
                 }
                 n_done_slots -= cleared;
             }
         }
+        //printf("running %i %i\n", attempts, n_done_slots);
+        //if (attempts > 0 && n_done_slots == 0) break;
+        if (attempts % 1000 == 0) printf("%i\n", attempts);
         
         if (is_word_ok) {
             slot->done = 1;
             order[n_done_slots] = index;
-            printf("n_done_slots = %i - (%i %i %i), %s\n", n_done_slots, slot->x, slot->y, slot->dir, word);
             n_done_slots++;
+            //printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         }
         attempts++;
     }
