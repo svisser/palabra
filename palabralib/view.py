@@ -121,11 +121,11 @@ DEFAULTS_CELL = {
     ("block", "margin"): 0,
     ("char", "color"): (0, 0, 0),
     ("char", "font"): "Sans",
-    ("char", "size"): (70, _relative_to(("cell", "size"), 0.7)),
+    ("char", "size"): (64, _relative_to(("cell", "size"), 0.64)),
     ("cell", "color"): (65535, 65535, 65535),
     ("number", "color"): (0, 0, 0),
     ("number", "font"): "Sans",
-    ("number", "size"): (30, _relative_to(("cell", "size"), 0.3)),
+    ("number", "size"): (32, _relative_to(("cell", "size"), 0.32)),
     "circle": False
 }
 DEFAULTS.update(DEFAULTS_CELL)
