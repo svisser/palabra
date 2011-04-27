@@ -356,7 +356,7 @@ class NewWindow(gtk.Dialog):
         d.show_all()
         if d.run() == gtk.RESPONSE_OK:
             buff = d.text.get_buffer()
-            text = buff.get_text(buff.get_start_iter(), buff.get_end_iter())
+            text = buff.get_text(*buff.get_bounds())
             words = [w for w in text.split() if w != '']
             w, h = self.grid.size
             c = self.generate_criteria(words) if words else None
