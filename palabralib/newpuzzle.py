@@ -337,7 +337,7 @@ class NewWindow(gtk.Dialog):
         self.preview.display(self.grid)
         self.clear_button.set_sensitive(showing_pattern)
             
-    def clear_pattern(self, button):
+    def clear_pattern(self, button=None):
         """Display an empty grid without the currently selected pattern."""
         self.show_grid(Grid(*self.grid.size), False)
         self.tree.get_selection().unselect_all()
@@ -360,6 +360,7 @@ class NewWindow(gtk.Dialog):
             words = [w for w in text.split() if w != '']
             w, h = self.grid.size
             c = self.generate_criteria(words) if words else None
+            self.clear_pattern()
             self.display_patterns(w, h, criteria=c)
         d.destroy()        
             
