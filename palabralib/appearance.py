@@ -32,7 +32,6 @@ class AppearanceDialog(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Appearance"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
-        self.set_size_request(512, 240)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -51,10 +50,10 @@ class AppearanceDialog(gtk.Dialog):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
         
-        table = gtk.Table(9, 6)
+        table = gtk.Table(6, 6)
         table.set_col_spacings(6)
         table.set_row_spacings(3)
-        main.pack_start(table, False, False, 0)
+        main.pack_start(table, True, True, 0)
         
         def create_label(label):
             align = gtk.Alignment(0, 0.5)
@@ -79,7 +78,7 @@ class AppearanceDialog(gtk.Dialog):
         
         label = create_label(u"Color")
         table.attach(label, 1, 2, 0, 1, gtk.FILL, gtk.FILL)
-        label = create_label(u"Thickness")
+        label = create_label(u"Width")
         table.attach(label, 2, 3, 0, 1, gtk.FILL, gtk.FILL)
         
         # border
@@ -120,18 +119,21 @@ class AppearanceDialog(gtk.Dialog):
         create_row_two(table, 3, label, self.block_color_button, self.block_margin_spinner)
         
         # letters
+        label = create_label(u"Size (%)")
+        table.attach(label, 2, 3, 3, 4, gtk.FILL, gtk.FILL)
+        
         label = create_label(u"Letter:")
         self.char_color_button = create_color_button(properties["char", "color"])
         adj = gtk.Adjustment(properties["char", "size"][0], 10, 100, 1, 0, 0)
         self.char_size_spinner = gtk.SpinButton(adj)
-        create_row(table, 3, label, self.char_color_button, self.char_size_spinner)
+        create_row(table, 4, label, self.char_color_button, self.char_size_spinner)
         
         # numbers
         label = create_label(u"Number:")
         self.number_color_button = create_color_button(properties["number", "color"])
         adj = gtk.Adjustment(properties["number", "size"][0], 10, 100, 1, 0, 0)
         self.number_size_spinner = gtk.SpinButton(adj)
-        create_row(table, 4, label, self.number_color_button, self.number_size_spinner)
+        create_row(table, 5, label, self.number_color_button, self.number_size_spinner)
         
         return main
         
