@@ -162,6 +162,10 @@ class GridViewProperties:
                 
     def __setitem__(self, key, value):
         self._data[key] = value
+        if key == ("cell", "size"):
+            for k in [("char", "size"), ("number", "size")]:
+                s = self._data[k]
+                self._data[k] = (s[0], _relative_to(("cell", "size"), s[0] / 100.0, d=self._data))
             
     def __getitem__(self, key):
         return self._data[key]

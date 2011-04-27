@@ -30,8 +30,8 @@ class ViewTestCase(unittest.TestCase):
         for key, value in DEFAULTS.items():
             self.assertEquals(props[key], value)
         for i, (key, value) in enumerate(DEFAULTS.items()):
-            props[key] = "VALUE" + str(i)
-            self.assertEquals(props[key], "VALUE" + str(i))
+            props[key] = i
+            self.assertEquals(props[key], i)
             
     def testGridToScreen(self):
         props = self.puzzle.view.properties
@@ -103,3 +103,17 @@ class ViewTestCase(unittest.TestCase):
         self.assertEquals(props.style(1, 1)["circle"], False)
         props["circle"] = True
         self.assertEquals(props.style(1, 1)["circle"], True)
+        
+    def testFontSize(self):
+        """Updating cell size also updates font sizes."""
+        keys = [("char", "size"), ("number", "size")]
+        pre = []
+        for k in keys:
+            pre.append(self.puzzle.view.properties[k])
+        self.puzzle.view.properties["cell", "size"] = 64
+        post = []
+        for k in keys:
+            post.append(self.puzzle.view.properties[k])
+        for i_pre, i_post in zip(pre, post):
+            self.assertEquals(i_pre[0], i_post[0])
+            self.assertNotEquals(i_pre[1], i_post[1])
