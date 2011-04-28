@@ -193,10 +193,9 @@ def cs_to_str(l, cs):
     for (i, c) in cs:
         result[i] = c
     return ''.join(result)
+
 def css_to_strs(css=None):
-    if css is None:
-        return None
-    return [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
+    return None if css is None else [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
 
 def search_wordlists(wordlists, length, constraints, more=None):
     indices = [item.index for p, item in wordlists.items()]
