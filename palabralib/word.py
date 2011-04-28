@@ -202,7 +202,8 @@ def search_wordlists(wordlists, length, constraints, more=None):
     result = cPalabra.search(length
         , cs_to_str(length, constraints)
         , css_to_strs(more), indices)
-    result.sort()
+    if len(indices) > 1:
+        result.sort()
     return result
     
 def analyze_words(grid, words):
