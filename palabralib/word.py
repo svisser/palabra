@@ -241,11 +241,11 @@ def analyze_words(grid, words):
 
 class CWordList:
     def __init__(self, content, index=0):
-        """Accepts either a filepath or a list of words."""
+        """Accepts either a filepath or a list of words, possibly with ranks."""
         if isinstance(content, str):
-            words = list(read_wordlist(content))
+            words = [(w, 0) for w in list(read_wordlist(content))]
         else:
-            words = content
+            words = [(w if isinstance(w, tuple) else (w, 0)) for w in content]
         self.words = cPalabra.preprocess(words, index)
         self.index = index
         

@@ -136,20 +136,24 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     int l;
     for (l = 0; l < MAX_WORD_LENGTH; l++) {
         keys[l] = Py_BuildValue("i", l);
-        PyObject *words = PyList_New(0);
-        PyDict_SetItem(dict, keys[l], words);
-        Py_DECREF(words);
+        PyObject *ws = PyList_New(0);
+        PyDict_SetItem(dict, keys[l], ws);
+        Py_DECREF(ws);
         Py_DECREF(keys[l]);
     }
     Py_ssize_t w;
     for (w = 0; w < PyList_Size(words); w++) {
         PyObject* word = PyList_GET_ITEM(words, w);
-        int length = (int) PyString_GET_SIZE(word);
+        PyObject* word_str;
+        const int word_rank;
+        if (!PyArg_ParseTuple(word, "Oi", &word_str, &word_rank))
+            return NULL;
+        int length = (int) PyString_GET_SIZE(word_str);
         if (length <= 0 || length >= MAX_WORD_LENGTH)
             continue;
         PyObject* key = keys[length];
         // PyDict_GetItem eats ref
-        PyList_Append(PyDict_GetItem(dict, key), word);
+        PyList_Append(PyDict_GetItem(dict, key), word_str);
     }
 
     // build ternary search trees per word length

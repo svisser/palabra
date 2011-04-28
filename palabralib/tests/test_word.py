@@ -249,3 +249,9 @@ class WordTestCase(unittest.TestCase):
         words = [w for w, b in clist.search(5, [])]
         self.assertEquals(words, ["worda", "wordb", "wordc"])
         cPalabra.postprocess()
+        
+    def testRankedInput(self):
+        clist = CWordList(["unranked", ("ranked", 50)])
+        self.assertEquals(len(clist.search(6, [])), 1)
+        self.assertEquals(len(clist.search(8, [])), 1)
+        cPalabra.postprocess()
