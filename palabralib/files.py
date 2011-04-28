@@ -86,8 +86,9 @@ def export_puzzle(puzzle, filename, options):
         export_to_csv(puzzle, filename, outputs, settings)
     elif options["format"] == "pdf":
         settings.update({
-            "clue_headers": {"across": "Across", "down": "Down", "font": "Sans 12"}
+            "clue_header": {"across": "Across", "down": "Down", "font": "Sans 12"}
             , "clue": {"font": "Sans 8"}
+            , "page_header": {"text": "%T / %A", "font": "Sans 10"}
         })
         export_to_pdf(puzzle, filename, outputs[0], settings)
     elif options["format"] == "png":
@@ -198,12 +199,15 @@ def export_to_pdf(puzzle, filename, output, settings):
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     def pdf_header():
-        header = puzzle.metadata["title"] if "title" in puzzle.metadata else "(nameless)"
-        if "creator" in puzzle.metadata:
-            header += (" / " + puzzle.metadata["creator"])
+        p_h = settings["page_header"]
+        repls = [("%T", constants.META_TITLE), ("%A", constants.META_CREATOR)]
+        for code, key in repls:
+            value = puzzle.metadata[key] if key in puzzle.metadata else "-"
+            p_h["text"] = p_h["text"].replace(code, value)
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
-        layout.set_markup('''<span font_desc="Sans 10">%s</span>''' % header)
+        text = ['''<span font_desc="''', p_h["font"], '''">''', p_h["text"], "</span>"]
+        layout.set_markup(''.join(text))
         context.save()
         context.move_to(20, 20)
         pcr.show_layout(layout)
@@ -218,7 +222,7 @@ def export_to_pdf(puzzle, filename, output, settings):
         def show_clue_page_compact():
             content = []
             for d in ["across", "down"]:
-                c_h = settings["clue_headers"]
+                c_h = settings["clue_header"]
                 c_c = settings["clue"]
                 content += ['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
                     , '''</span>\n<span font_desc="''', c_c["font"], '''">''']
