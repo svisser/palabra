@@ -181,7 +181,7 @@ def read_wordlist(path):
 def create_wordlists(word_files):
     wordlists = {}
     for i, data in enumerate(word_files):
-        if i >= 64: # TODO, max word lists also in .c
+        if i >= constants.MAX_WORD_LISTS:
             break
         name = data["name"]["value"]
         path = data["path"]["value"]
@@ -193,11 +193,16 @@ def cs_to_str(l, cs):
     for (i, c) in cs:
         result[i] = c
     return ''.join(result)
+def css_to_strs(css=None):
+    if css is None:
+        return None
+    return [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
 
 def search_wordlists(wordlists, length, constraints, more=None):
     indices = [item.index for p, item in wordlists.items()]
-    css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more] if more else None
-    result = cPalabra.search(length, cs_to_str(length, constraints), css_str, indices)
+    result = cPalabra.search(length
+        , cs_to_str(length, constraints)
+        , css_to_strs(more), indices)
     result.sort()
     return result
     
@@ -272,5 +277,6 @@ class CWordList:
         
         Words are returned in alphabetical order.
         """
-        css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more] if more else None
-        return cPalabra.search(length, cs_to_str(length, constraints), css_str, [self.index])
+        return cPalabra.search(length
+            , cs_to_str(length, constraints)
+            , css_to_strs(more), [self.index])
