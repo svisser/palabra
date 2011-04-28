@@ -205,8 +205,7 @@ def export_to_pdf(puzzle, filename, output, settings):
         p_h = settings["page_header"]
         if not p_h["include"]:
             return
-        repls = [("%T", constants.META_TITLE), ("%A", constants.META_CREATOR)]
-        for code, key in repls:
+        for key, code in constants.META_CODES.items():
             value = puzzle.metadata[key] if key in puzzle.metadata else "-"
             p_h["text"] = p_h["text"].replace(code, value)
         pcr = pangocairo.CairoContext(context)

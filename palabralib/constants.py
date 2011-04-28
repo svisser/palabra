@@ -65,6 +65,16 @@ META_COPYRIGHT = 'rights'
 META_PUBLISHER = 'publisher'
 META_DATE = 'date'
 
+# for export
+META_CODES = {
+    META_TITLE: "%T"
+    , META_CREATOR: "%A"
+    , META_EDITOR: "%E"
+    , META_COPYRIGHT: "%C"
+    , META_PUBLISHER: "%P"
+    , META_DATE: "%D"
+}
+
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
 STATUS_GRID = "STATUS_GRID"
