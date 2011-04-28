@@ -113,7 +113,7 @@ class CellPropertiesDialog(gtk.Dialog):
         prevs = gtk.VBox(False, 0)
         for m, h in ([(constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
             , (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")]):
-            p = GridPreview(magnify=True, mode=m, header=h)
+            p = GridPreview(mode=m, header=h)
             p.set_size_request(196, -1)
             align = gtk.Alignment(0, 0)
             align.add(p)
@@ -121,8 +121,8 @@ class CellPropertiesDialog(gtk.Dialog):
             p.display(self.grid)
             for k in DEFAULTS_CELL:
                 p.view.properties[k] = properties[k]
-            p.view.properties["char", "font"] = "Sans 36"
-            p.view.properties["number", "font"] = "Sans 21"
+            p.magnify = True
+            p.refresh()
             prevs.pack_start(align, False, False, 0)
         content.pack_start(prevs, False, False, 0)
 
@@ -152,6 +152,7 @@ class CellPropertiesDialog(gtk.Dialog):
         self._on_update("circle", button.get_active())
             
     def _on_update(self, key, value):
+        print "before update", key, value
         for p in self.previews:
             p.view.properties[key] = value
             p.refresh(force=True)
@@ -164,7 +165,6 @@ class CellPropertiesDialog(gtk.Dialog):
             a[key] = (color.red, color.green, color.blue)
         a["circle"] = self.circle_button.get_active()
         return a
-    appearance = property(gather_appearance)
 
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -594,7 +594,7 @@ class Editor(gtk.HBox):
             w = CellPropertiesDialog(self.palabra_window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
-                puzzle.view.properties.update(x, y, w.appearance.items())
+                puzzle.view.properties.update(x, y, w.gather_appearance().items())
                 self._render_cells([(x, y)])
             w.destroy()
         item = gtk.MenuItem("Properties")

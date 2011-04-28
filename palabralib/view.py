@@ -725,11 +725,10 @@ class GridView:
 
 class GridPreview(gtk.VBox):
     def __init__(self
-        , magnify=False
         , mode=constants.VIEW_MODE_PREVIEW
         , header="Preview"):
         gtk.VBox.__init__(self)
-        self.magnify = magnify
+        self.magnify = False
         self.view = None
         self.preview_surface = None
         self.preview_pattern = None
