@@ -171,16 +171,26 @@ def read_wordlist(path):
 
 def create_wordlists(word_files):
     wordlists = {}
-    for data in word_files:
+    for i, data in enumerate(word_files):
+        if i >= 64: # TODO, max word lists also in .c
+            break
         name = data["name"]["value"]
         path = data["path"]["value"]
-        wordlists[path] = CWordList(path)
+        wordlists[path] = CWordList(path, index=i)
+    wordlists["bla"] = CWordList(["simeon"], index=1)
     return wordlists
 
-def search_wordlists(wordlists, length, constraints, more_constraints=None):
-    result = []
-    for path, item in wordlists.items():
-        result += item.search(length, constraints, more_constraints)
+def cs_to_str(l, cs):
+    result = ['.' for i in xrange(l)]
+    for (i, c) in cs:
+        result[i] = c
+    return ''.join(result)
+
+def search_wordlists(wordlists, length, constraints, more=None):
+    indices = [item.index for p, item in wordlists.items()]
+    css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more] if more else None
+    result = cPalabra.search(length, cs_to_str(length, constraints), css_str, indices)
+    result.sort()
     return result
     
 def analyze_words(grid, words):
@@ -218,13 +228,14 @@ def analyze_words(grid, words):
     return result
 
 class CWordList:
-    def __init__(self, content):
+    def __init__(self, content, index=0):
         """Accepts either a filepath or a list of words."""
         if isinstance(content, str):
             words = list(read_wordlist(content))
         else:
             words = content
-        self.words = cPalabra.preprocess(words)
+        self.words = cPalabra.preprocess(words, index)
+        self.index = index
         
     def has_matches(self, length, constraints, words=None):
         """
@@ -233,36 +244,28 @@ class CWordList:
         ws = self.words[length] if words is None else words
         return cPalabra.has_matches(ws, length, constraints)
         
-    def search(self, length, constraints, more_constraints=None):
+    def search(self, length, constraints, more=None):
         """
         Search for words that match the given criteria.
         
         This function returns a list with tuples, (str, bool).
         The first value is the word, the second value is whether all
         positions of the word have a matching word, when the
-        more_constraints argument is specified.
-        If more_constraints is not specified, the second value
+        more_constraints (more) argument is specified.
+        If more is not specified, the second value
         in a tuple is True.
         
-        If more_constraints is specified, then constraints must be
+        If more is specified, then constraints must be
         specified for ALL intersecting words.
         
-        constraints and more_constraints must match with each other
+        constraints and more must match with each other
         (i.e., if intersecting word at position 0 starts with 'a' then
         main word must also have a constraint 'a' at position 0).
         
         Words are returned in alphabetical order.
         """
-        def cs_to_str(l, cs):
-            result = ['.' for i in xrange(l)]
-            for (i, c) in cs:
-                result[i] = c
-            return ''.join(result)
-        if more_constraints:
-            css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more_constraints]
-        else:
-            css_str = None
-        return cPalabra.search(self.words, length, cs_to_str(length, constraints), css_str)
+        css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more] if more else None
+        return cPalabra.search(length, cs_to_str(length, constraints), css_str, [self.index])
         
     # needed for tests
     @staticmethod

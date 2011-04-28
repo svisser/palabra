@@ -6,6 +6,7 @@
 #define DEBUG 0
 #define DEBUG_WORDS 0
 
+#define MAX_WORD_LISTS 64
 #define MAX_WORD_LENGTH 64
 #define MAX_ALPHABET_SIZE 50 // TODO
 
@@ -60,7 +61,7 @@ typedef struct Slot {
     PyObject *words;
 } Slot;
 
-Tptr trees[MAX_WORD_LENGTH];
+Tptr trees[MAX_WORD_LISTS][MAX_WORD_LENGTH];
 
 extern int check_intersect(char *word, char **cs, int length, Sptr *results);
 extern PyObject* find_matches(PyObject *list, Tptr p, char *s);

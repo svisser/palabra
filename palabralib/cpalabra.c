@@ -188,7 +188,7 @@ int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
 }
 
 Sptr analyze_intersect_slot(int offset, char *cs) {
-    if (!trees[strlen(cs)]) {
+    if (!trees[0][strlen(cs)]) {
         return NULL;
     }
     Sptr result;
@@ -205,7 +205,7 @@ Sptr analyze_intersect_slot(int offset, char *cs) {
     for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
         result->chars[c] = ' ';
     }
-    analyze(offset, result, trees[strlen(cs)], cs, cs);
+    analyze(offset, result, trees[0][strlen(cs)], cs, cs);
     return result;
 }
 

@@ -62,18 +62,15 @@ cPalabra_has_matches(PyObject *self, PyObject *args)
 
 static PyObject*
 cPalabra_search(PyObject *self, PyObject *args) {
-    PyObject *words;
     const int length;
     PyObject *constraints;
     PyObject *more_constraints;
-    if (!PyArg_ParseTuple(args, "OiOO", &words, &length, &constraints, &more_constraints))
+    PyObject *indices;
+    if (!PyArg_ParseTuple(args, "iOOO", &length, &constraints, &more_constraints, &indices))
         return NULL;
     if (length <= 0 || length >= MAX_WORD_LENGTH)
         return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
-    // main word
-    PyObject *mwords = PyList_New(0);
-    mwords = find_matches(mwords, trees[strlen(cons_str)], cons_str);
     
     // each of the constraints
     int offsets[length];
@@ -92,21 +89,29 @@ cPalabra_search(PyObject *self, PyObject *args) {
         }
         analyze_intersect_slot2(results, skipped, offsets, cs, length);
     }
-    
-    Py_ssize_t m;
+
+    // main word
     PyObject *result = PyList_New(0);
-    for (m = 0; m < PyList_Size(mwords); m++) {
-        char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
-        int valid = 1;
-        if (more_constraints != Py_None) {
-            valid = check_intersect(word, cs, length, results);
+    Py_ssize_t ii;
+    for (ii = 0; ii < PyList_Size(indices); ii++) {
+        const int index = (int) PyInt_AsLong(PyList_GET_ITEM(indices, ii));
+        
+        PyObject *mwords = PyList_New(0);
+        mwords = find_matches(mwords, trees[index][strlen(cons_str)], cons_str);
+        Py_ssize_t m;
+        for (m = 0; m < PyList_Size(mwords); m++) {
+            char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
+            int valid = 1;
+            if (more_constraints != Py_None) {
+                valid = check_intersect(word, cs, length, results);
+            }
+            PyObject* py_intersect = PyBool_FromLong(valid);
+            PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
+            Py_DECREF(py_intersect);
+            PyList_Append(result, item);
+            Py_DECREF(item);
         }
-        PyObject* py_intersect = PyBool_FromLong(valid);
-        PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
-        Py_DECREF(py_intersect);
-        PyList_Append(result, item);
-        Py_DECREF(item);
-    }
+    }    
     if (more_constraints != Py_None) {
         for (t = 0; t < length; t++) {
             if (skipped[t] == 0 && results[t] != NULL) {
@@ -121,7 +126,8 @@ cPalabra_search(PyObject *self, PyObject *args) {
 static PyObject*
 cPalabra_preprocess(PyObject *self, PyObject *args) {
     PyObject *words;
-    if (!PyArg_ParseTuple(args, "O", &words))
+    const int index;
+    if (!PyArg_ParseTuple(args, "Oi", &words, &index))
         return NULL;
     
     // create dict (keys are word lengths, each item is a list with words of that length)
@@ -150,14 +156,14 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     // TODO insert in random order for best performance
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
-        trees[m] = NULL;
+        trees[index][m] = NULL;
         PyObject *key = Py_BuildValue("i", m);
         PyObject *words = PyDict_GetItem(dict, key);
         const Py_ssize_t len_m = PyList_Size(words);
         Py_ssize_t w;
         for (w = 0; w < len_m; w++) {
             char *word = PyString_AsString(PyList_GET_ITEM(words, w));
-            trees[m] = insert1(trees[m], word, word);
+            trees[index][m] = insert1(trees[index][m], word, word);
         }
     }
     return dict;
@@ -165,10 +171,15 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
 
 static PyObject*
 cPalabra_postprocess(PyObject *self, PyObject *args) {
-    int m;
-    for (m = 0; m < MAX_WORD_LENGTH; m++) {
-        free_tree(trees[m]);
-        free(trees[m]);
+    int i;
+    for (i = 0; i < MAX_WORD_LISTS; i++) {
+        int m;
+        for (m = 0; m < MAX_WORD_LENGTH; m++) {
+            if (trees[i][m] != NULL) {
+                free_tree(trees[i][m]);
+                free(trees[i][m]);
+            }
+        }
     }
     return Py_None;
 }
