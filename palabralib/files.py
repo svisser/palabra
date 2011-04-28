@@ -85,6 +85,10 @@ def export_puzzle(puzzle, filename, options):
     if options["format"] == "csv":
         export_to_csv(puzzle, filename, outputs, settings)
     elif options["format"] == "pdf":
+        settings.update({
+            "clue_headers": {"across": "Across", "down": "Down", "font": "Sans 12"}
+            , "clue": {"font": "Sans 8"}
+        })
         export_to_pdf(puzzle, filename, outputs[0], settings)
     elif options["format"] == "png":
         export_to_png(puzzle, filename, outputs[0], settings)
@@ -213,17 +217,19 @@ def export_to_pdf(puzzle, filename, output, settings):
         context.show_page()
         def show_clue_page_compact():
             content = []
-            for caption, direction in [("Across", "across"), ("Down", "down")]:
-                content += ['''<span font_desc="Sans 10">%s</span>\n<span font_desc="Sans 8">''' % caption]
-                for n, x, y, clue in puzzle.grid.clues(direction):
+            for d in ["across", "down"]:
+                c_h = settings["clue_headers"]
+                c_c = settings["clue"]
+                content += ['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
+                    , '''</span>\n<span font_desc="''', c_c["font"], '''">''']
+                for n, x, y, clue in puzzle.grid.clues(d):
                     try:
                         txt = clue["text"]
                     except KeyError:
                         txt = '''<span color="#ff0000">(missing clue)</span>'''
                     txt = txt.replace("&", "&amp;")
-                    content += [''' <b>%s</b> %s''' % (str(n), txt)]
+                    content += [" <b>", str(n), "</b> ", txt]
                 content += ["</span>\n\n"]
-            rx, ry = 20, 20
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
             layout.set_width(pango.SCALE * 500)
