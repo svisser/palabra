@@ -694,10 +694,9 @@ def read_xpf(filename, warnings=True):
                                 size = s.get("Size")
                                 if size is not None:
                                     s_s = int(size)
-                                    cell_size = (r_gstyles["cell", "size"]
-                                        if ("cell", "size") in r_gstyles else DEFAULTS["cell", "size"])
-                                    s_d = {("cell", "size"): cell_size}
-                                    s_r = _relative_to(("cell", "size"), s_s / 100.0, d=s_d)
+                                    s_k = ("cell", "size")
+                                    s_d = {s_k: (r_gstyles[s_k] if s_k in r_gstyles else DEFAULTS[s_k])}
+                                    s_r = _relative_to(s_k, s_s / 100.0, d=s_d)
                                     r_gstyles["char", "size"] = (s_s, s_r)
                             elif s.tag == "Number":
                                 color = s.get("Color")
@@ -706,10 +705,9 @@ def read_xpf(filename, warnings=True):
                                 size = s.get("Size")
                                 if size is not None:
                                     s_s = int(size)
-                                    cell_size = (r_gstyles["cell", "size"]
-                                        if ("cell", "size") in r_gstyles else DEFAULTS["cell", "size"])
-                                    s_d = {("cell", "size"): cell_size}
-                                    s_r = _relative_to(("cell", "size"), s_s / 100.0, d=s_d)
+                                    s_k = ("cell", "size")
+                                    s_d = {s_k: (r_gstyles[s_k] if s_k in r_gstyles else DEFAULTS[s_k])}
+                                    s_r = _relative_to(s_k, s_s / 100.0, d=s_d)
                                     r_gstyles["number", "size"] = (s_s, s_r)
         if r_number_mode == constants.NUMBERING_AUTO:
             r_grid.assign_numbers()
