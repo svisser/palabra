@@ -122,7 +122,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_seven)], [("koala", False)])
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_eight_t)], [("koala", True)])
         self.assertEquals([w for w in self.basic.search(5, [(4, 'a')], css_eight_f)], [("koala", False)])
-        self.basic.postprocess()
+        cPalabra.postprocess()
         
     def testIntersecting(self):
         clist = CWordList(["aaaa", "bbbb", "abbb"])
