@@ -177,7 +177,6 @@ def create_wordlists(word_files):
         name = data["name"]["value"]
         path = data["path"]["value"]
         wordlists[path] = CWordList(path, index=i)
-    wordlists["bla"] = CWordList(["simeon"], index=1)
     return wordlists
 
 def cs_to_str(l, cs):

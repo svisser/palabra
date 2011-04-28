@@ -172,7 +172,7 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
 static PyObject*
 cPalabra_postprocess(PyObject *self, PyObject *args) {
     int i;
-    for (i = 0; i < MAX_WORD_LISTS; i++) {
+    for (i = 0; i < MAX_WORD_LISTS + 1; i++) {
         int m;
         for (m = 0; m < MAX_WORD_LENGTH; m++) {
             if (trees[i][m] != NULL) {

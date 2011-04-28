@@ -61,7 +61,8 @@ typedef struct Slot {
     PyObject *words;
 } Slot;
 
-Tptr trees[MAX_WORD_LISTS][MAX_WORD_LENGTH];
+// for commonly used wordlists and one special wordlist for search on the fly
+Tptr trees[MAX_WORD_LISTS + 1][MAX_WORD_LENGTH];
 
 extern int check_intersect(char *word, char **cs, int length, Sptr *results);
 extern PyObject* find_matches(PyObject *list, Tptr p, char *s);
