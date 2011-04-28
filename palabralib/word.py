@@ -155,18 +155,27 @@ def read_wordlist(path):
         lower = str.lower
         for line in f:
             line = line.strip("\n")
-            if not line:
+            line = line.split(",")
+            l_line = len(line)
+            if not line or l_line > 2:
                 continue
-            if len(line) > constants.MAX_WORD_LENGTH:
-                continue
-            for c in line:
+            if l_line == 1:
+                word = line[0]
+            elif l_line == 2:
+                word, r = line
+            word = word.strip()
+            if len(word) > constants.MAX_WORD_LENGTH:
+                continue    
+            for c in word:
                 if c not in ords:
-                    ords[c] = ord(c)
-                if not (ord_A <= ords[c] <= ord_Z
-                    or ord_a <= ords[c] <= ord_z):
+                    ord_c = ords[c] = ord(c)
+                else:
+                    ord_c = ords[c]                
+                if not (ord_A <= ord_c <= ord_Z
+                    or ord_a <= ord_c <= ord_z):
                     break
             else:
-                words.add(lower(line))
+                words.add(lower(word))
     return words
 
 def create_wordlists(word_files):

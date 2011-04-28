@@ -225,10 +225,9 @@ class WordTestCase(unittest.TestCase):
     def testMaxWordLengthTwo(self):
         l = MAX_WORD_LENGTH + 10
         LOC = "palabralib/tests/test_wordlist.txt"
-        f = open(LOC, 'w')
-        words = ['a' * l, '\n', 'a' * MAX_WORD_LENGTH, '\n', 'a' * (MAX_WORD_LENGTH - 1), '\n']
-        f.write(''.join(words))
-        f.close()
+        with open(LOC, 'w') as f:
+            words = ['a' * l, '\n', 'a' * MAX_WORD_LENGTH, '\n', 'a' * (MAX_WORD_LENGTH - 1), '\n']
+            f.write(''.join(words))
         clist = CWordList(LOC)
         self.assertEquals(clist.search(l, []), [])
         self.assertEquals(clist.search(MAX_WORD_LENGTH, []), [])
@@ -240,4 +239,13 @@ class WordTestCase(unittest.TestCase):
     def testFileDoesNotExist(self):
         clist = CWordList('/does/not/exist/file')
         self.assertEquals(clist.search(5, [], None), [])
+        cPalabra.postprocess()
+        
+    def testReadWordsWithRank(self):
+        LOC = "palabralib/tests/test_wordlist.txt"
+        with open(LOC, 'w') as f:
+            f.write("worda\nwordb,0\nwordc , 100")
+        clist = CWordList(LOC)
+        words = [w for w, b in clist.search(5, [])]
+        self.assertEquals(words, ["worda", "wordb", "wordc"])
         cPalabra.postprocess()
