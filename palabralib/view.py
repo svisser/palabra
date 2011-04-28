@@ -208,11 +208,15 @@ class GridViewProperties:
             , ("Char", "Color", ("char", "color"))
             , ("Cell", "Color", ("cell", "color"))
             , ("Number", "Color", ("number", "color"))
+            , ("Char", "Size", ("char", "size"))
+            , ("Number", "Size", ("number", "size"))
         ]
         visuals = {}
         for elem, attr, key in props:
             value = self[key]
             if value != DEFAULTS[key]:
+                if key in [("char", "size"), ("number", "size")]:
+                    value = value[0]
                 if elem not in visuals:
                     visuals[elem] = [(attr, value)]
                 else:

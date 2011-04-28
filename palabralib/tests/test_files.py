@@ -36,7 +36,7 @@ from palabralib.files import (
 )
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
-from palabralib.view import CellStyle
+from palabralib.view import CellStyle, _relative_to
 
 METADATA = {
     constants.META_TITLE: "TestTitle"
@@ -284,6 +284,16 @@ class FilesTestCase(unittest.TestCase):
         self.assertEquals(propsL["char", "color"], process((1111, 2222, 3333)))
         self.assertEquals(propsL["cell", "color"], process((4444, 5555, 6666)))
         self.assertEquals(propsL["number", "color"], process((7777, 8888, 9999)))
+        
+    def testXPFFont(self):
+        props = self.puzzle.view.properties
+        props["char", "size"] = (55, _relative_to(("cell", "size"), 0.55, d=props))
+        props["number", "size"] = (33, _relative_to(("cell", "size"), 0.33, d=props))
+        write_xpf(self.puzzle)
+        results = read_xpf(self.LOCATION, warnings=False)
+        propsL = results[0].view.properties
+        self.assertEquals(propsL["char", "size"][0], 55)
+        self.assertEquals(propsL["number", "size"][0], 33)
         
     def testReadCrossword(self):
         write_xpf(self.puzzle)

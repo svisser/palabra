@@ -29,7 +29,7 @@ import constants
 import grid
 from grid import Grid
 from puzzle import Puzzle
-from view import CellStyle, GridView
+from view import CellStyle, GridView, _relative_to, DEFAULTS
 import view
 
 XPF_META_ELEMS = {'Type': 'type'
@@ -691,10 +691,26 @@ def read_xpf(filename, warnings=True):
                                 color = s.get("Color")
                                 if color is not None:
                                     r_gstyles["char", "color"] = hex_to_color(color)
+                                size = s.get("Size")
+                                if size is not None:
+                                    s_s = int(size)
+                                    cell_size = (r_gstyles["cell", "size"]
+                                        if ("cell", "size") in r_gstyles else DEFAULTS["cell", "size"])
+                                    s_d = {("cell", "size"): cell_size}
+                                    s_r = _relative_to(("cell", "size"), s_s / 100.0, d=s_d)
+                                    r_gstyles["char", "size"] = (s_s, s_r)
                             elif s.tag == "Number":
                                 color = s.get("Color")
                                 if color is not None:
                                     r_gstyles["number", "color"] = hex_to_color(color)
+                                size = s.get("Size")
+                                if size is not None:
+                                    s_s = int(size)
+                                    cell_size = (r_gstyles["cell", "size"]
+                                        if ("cell", "size") in r_gstyles else DEFAULTS["cell", "size"])
+                                    s_d = {("cell", "size"): cell_size}
+                                    s_r = _relative_to(("cell", "size"), s_s / 100.0, d=s_d)
+                                    r_gstyles["number", "size"] = (s_s, s_r)
         if r_number_mode == constants.NUMBERING_AUTO:
             r_grid.assign_numbers()
         p = Puzzle(r_grid, r_styles, r_gstyles)
