@@ -19,6 +19,7 @@ import os
 import string
 import unittest
 
+import palabralib.cPalabra as cPalabra
 from palabralib.constants import MAX_WORD_LENGTH
 from palabralib.word import CWordList
 
@@ -42,7 +43,7 @@ class WordTestCase(unittest.TestCase):
             for j in xrange(i, self.length):
                 check = clist.has_matches(self.length, self.constraints[i:j])
                 self.assertEquals(check, True)
-        clist.postprocess()
+        cPalabra.postprocess()
                 
     def testHasMatchesMultiple(self):
         clist = CWordList([self.word, self.word2])
@@ -51,7 +52,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(clist.has_matches(self.length2, []), True)
         self.assertEquals(clist.has_matches(self.length, cs), True)
         self.assertEquals(clist.has_matches(self.length2, cs), True)
-        clist.postprocess()
+        cPalabra.postprocess()
     
     def testSearchBasic(self):
         clist = CWordList([self.word])
@@ -59,7 +60,7 @@ class WordTestCase(unittest.TestCase):
             self.assertEquals(w[0], self.word)
         for w in clist.search(self.length, self.constraints):
             self.assertEquals(w[0], self.word)
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testSearchBasicTwo(self):
         clist = CWordList([self.word, self.word2])
@@ -68,7 +69,7 @@ class WordTestCase(unittest.TestCase):
             self.assertEquals(w[0], self.word)
         for w in clist.search(self.length2, cs):
             self.assertEquals(w[0], self.word2)
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testSearchMore(self):
         clist = CWordList([self.word, self.word2, "peach", "azure", "roast", "reach", "oasis", "trunk"])
@@ -89,7 +90,7 @@ class WordTestCase(unittest.TestCase):
         css = [(0, 5, [(0, c)]) for c in "parrot"]
         for w in clist.search(self.length2, [], css):
             self.assertEquals(w[0], self.word2)
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testSearchMoreTwo(self):
         clist = CWordList([self.word, self.word2, "peach", "azure", "roast", "reach", "oasis", "trunk"
@@ -99,7 +100,7 @@ class WordTestCase(unittest.TestCase):
         results = clist.search(self.length2, [(0, 'p')], css)
         self.assertEquals(len(results), 1)
         self.assertEquals(results[0][0], self.word2)
-        clist.postprocess()
+        cPalabra.postprocess()
                 
     #####
     
@@ -174,7 +175,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals([w for w in clist.search(0, [], None)], [])
         self.assertEquals([w for w in clist.search(MAX_WORD_LENGTH, [], None)], [])
         
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testEmpty(self):
         clist = CWordList([])
@@ -188,7 +189,7 @@ class WordTestCase(unittest.TestCase):
         # identical css, for testing skipping in C code
         css = [(0, 4, []), (0, 5, []), (0, 4, []), (0, 5, [])]
         self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testInsertPrePost(self):
         clist = CWordList('/usr/share/dict/words')
@@ -201,7 +202,7 @@ class WordTestCase(unittest.TestCase):
             pre_list.sort()
             post_list.sort()
             self.assertEquals(pre_list, post_list)
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testScale(self):
         clist = CWordList('/usr/share/dict/words')
@@ -210,7 +211,7 @@ class WordTestCase(unittest.TestCase):
         for c in string.ascii_lowercase:
             totals[c] = len(clist.search(4, [(0, c)], None))
         self.assertEquals(total4, sum(totals.values()))
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testMaxWordLength(self):
         l = MAX_WORD_LENGTH + 10
@@ -219,7 +220,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(clist.search(l, []), [])
         self.assertEquals(clist.search(MAX_WORD_LENGTH, []), [])
         self.assertEquals(len(clist.search(MAX_WORD_LENGTH - 1, [])), 1)
-        clist.postprocess()
+        cPalabra.postprocess()
         
     def testMaxWordLengthTwo(self):
         l = MAX_WORD_LENGTH + 10
@@ -232,11 +233,11 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(clist.search(l, []), [])
         self.assertEquals(clist.search(MAX_WORD_LENGTH, []), [])
         self.assertEquals(len(clist.search(MAX_WORD_LENGTH - 1, [])), 1)
-        clist.postprocess()
+        cPalabra.postprocess()
         if os.path.exists(LOC):
             os.remove(LOC)
             
     def testFileDoesNotExist(self):
         clist = CWordList('/does/not/exist/file')
         self.assertEquals(clist.search(5, [], None), [])
-        clist.postprocess()
+        cPalabra.postprocess()

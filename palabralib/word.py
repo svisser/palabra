@@ -266,9 +266,3 @@ class CWordList:
         """
         css_str = [(i, cs_to_str(l, cs)) for (i, l, cs) in more] if more else None
         return cPalabra.search(length, cs_to_str(length, constraints), css_str, [self.index])
-        
-    # needed for tests
-    @staticmethod
-    def postprocess():
-        cPalabra.postprocess()
-
