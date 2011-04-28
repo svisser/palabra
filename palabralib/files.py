@@ -88,7 +88,10 @@ def export_puzzle(puzzle, filename, options):
         settings.update({
             "clue_header": {"across": "Across", "down": "Down", "font": "Sans 12"}
             , "clue": {"font": "Sans 8"}
-            , "page_header": {"text": "%T / %A", "font": "Sans 10"}
+            , "page_header": {"text": "%T / %A"
+                , "font": "Sans 10"
+                , "include": True
+            }
         })
         export_to_pdf(puzzle, filename, outputs[0], settings)
     elif options["format"] == "png":
@@ -200,6 +203,8 @@ def export_to_pdf(puzzle, filename, output, settings):
     context = cairo.Context(surface)
     def pdf_header():
         p_h = settings["page_header"]
+        if not p_h["include"]:
+            return
         repls = [("%T", constants.META_TITLE), ("%A", constants.META_CREATOR)]
         for code, key in repls:
             value = puzzle.metadata[key] if key in puzzle.metadata else "-"
