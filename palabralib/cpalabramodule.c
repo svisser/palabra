@@ -341,7 +341,13 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     while (attempts < 100) {
         int index = -1;
         if (attempts == 0 || n_done_slots == 0 || OPTION_NICE) {
-            index = find_initial_slot(slots, n_slots, OPTION_START);
+            if (OPTION_NICE) {
+                index = find_nice_slot(slots, n_slots, width, height, order);
+                // fall through when it cannot find index
+            }
+            if (index < 0) {
+                index = find_initial_slot(slots, n_slots, OPTION_START, OPTION_NICE);
+            }
         } else {
             index = find_slot(slots, n_slots, order);
         }
@@ -383,7 +389,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         char* word = find_candidate(cs_i, results, slot, cs);
-        printf("Candidate: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        //printf("Candidate: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         if (word && OPTION_DUPLICATE) {
             for (t = 0; t < n_slots; t++) {
                 char *word_t = get_constraints(cgrid, width, height, &slots[t]);

@@ -14,6 +14,9 @@
 #define FILL_START_AT_SELECTION 1
 #define FILL_START_AT_AUTO 2
 
+#define FILL_NICE_FALSE 0
+#define FILL_NICE_TRUE 1
+
 typedef struct tnode *Tptr;
 typedef struct tnode {
     char splitchar;
@@ -89,7 +92,8 @@ extern char* get_constraints(Cell *cgrid, int width, int height, Slot *slot);
 extern int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot);
 extern int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int n_done_slots, int index);
 extern PyObject* gather_fill(Cell *cgrid, int width, int height);
-extern int find_initial_slot(Slot *slots, int n_slots, int option_start);
+extern int find_initial_slot(Slot *slots, int n_slots, int option_start, int option_nice);
 extern int find_slot(Slot *slots, int n_slots, int* order);
+extern int find_nice_slot(Slot *slots, int n_slots, int width, int height, int* order);
 
 #endif

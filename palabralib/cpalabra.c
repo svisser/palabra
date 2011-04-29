@@ -499,7 +499,7 @@ PyObject* gather_fill(Cell *cgrid, int width, int height) {
     return fill;
 }
 
-inline int find_initial_slot(Slot *slots, int n_slots, int option_start) {
+inline int find_initial_slot(Slot *slots, int n_slots, int option_start, int option_nice) {
     int index = -1;
     if (option_start == FILL_START_AT_ZERO) {
         index = 0;
@@ -507,12 +507,17 @@ inline int find_initial_slot(Slot *slots, int n_slots, int option_start) {
         // TODO
     } else if (option_start == FILL_START_AT_AUTO) {
         // find most-constrained slot that is not done and has at least one possible word
+        // if option_nice then prefer across slots
         int m;
         for (m = 0; m < n_slots; m++) {
-            if (!slots[m].done && slots[m].count > 0) {
+            if (!slots[m].done && slots[m].count > 0 && (option_nice ? slots[m].dir == 0 : 1)) {
                 index = m;
                 break;
             }
+        }
+        if (index < 0 && option_nice) {
+            // we couldn't find an across slot so search for any slot
+            return find_initial_slot(slots, n_slots, option_start, FILL_NICE_FALSE);
         }
         for (m = 0; m < n_slots; m++) {
             if (slots[m].count == 0) continue;
@@ -557,3 +562,27 @@ inline int find_slot(Slot *slots, int n_slots, int* order) {
     return index;
 }
 
+inline int find_nice_slot(Slot *slots, int n_slots, int width, int height, int* order) {
+    int t;
+    for (t = 0; t < n_slots; t++) {
+        int i = order[t];
+        if (i < 0) break;
+        int x = slots[order[t]].x;
+        int y = slots[order[t]].y;
+        int dir = slots[order[t]].dir;
+        int length = slots[order[t]].length;
+        int s;
+        for (s = 0; s < n_slots; s++) {
+            if (s == t) continue;
+            if ((slots[s].x == width - x - (dir == 0 ? length : 0) - (dir == 1 ? 1 : 0))
+                && (slots[s].y == height - y - (dir == 1 ? length : 0) - (dir == 0 ? 1 : 0))
+                && slots[s].dir == dir
+                && slots[s].length == length
+                && !slots[s].done
+                && slots[s].count > 0) {
+                return s;
+            }
+        }
+    }
+    return -1;
+}
