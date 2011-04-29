@@ -380,7 +380,7 @@ class NewWindow(gtk.Dialog):
             if l in counts:
                 counts[l] += 1
             else:
-                counts[l] = 0
+                counts[l] = 1
         return {"counts": counts, "words": words}
         
     def _check_grid(self, grid, criteria):
