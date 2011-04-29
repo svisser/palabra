@@ -24,6 +24,7 @@ import os
 import pango
 
 import constants
+from editor import attempt_fill
 from files import read_containers, get_real_filename
 import grid
 from grid import Grid
@@ -374,35 +375,36 @@ class NewWindow(gtk.Dialog):
     def generate_criteria(self, words):
         """Determine search criteria per word length."""
         counts = {}
-        words_l = {}
         for word in words:
             l = len(word)
             if l in counts:
                 counts[l] += 1
-                words_l[l].append(word)
             else:
                 counts[l] = 0
-                words_l[l] = [word]
-        return {"counts": counts, "words": words_l}
+        return {"counts": counts, "words": words}
         
     def _check_grid(self, grid, criteria):
-        """Return True when the grid meets all the search criteria."""
+        """Return a grid or None when the grid meets all the search criteria."""
         if "counts" in criteria:
             counts = grid.determine_word_counts()
             for k, v in criteria["counts"].items():
                 if k not in counts or counts[k] < v:
-                    return False
+                    return None
         if "words" in criteria:
             if len(criteria["words"]) > 1:
-                return grid.can_fit(criteria["words"])
-        return True
+                return attempt_fill(grid, criteria["words"])
+        return grid
         
     def display_patterns(self, width, height, criteria=None):
         self.store.clear()
         for grid in self.grids:
             if grid.size == (width, height):
-                if criteria and not self._check_grid(grid, criteria):
-                    continue
+                if criteria:
+                    g = self._check_grid(grid, criteria)
+                    if g is None:
+                        continue
+                    else:
+                        grid = g
                 blocks = grid.count_blocks()
                 words = grid.count_words()
                 s = ''.join([str(words), " words, ", str(blocks), " blocks"])

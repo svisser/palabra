@@ -26,7 +26,7 @@ import cPalabra
 
 SETTINGS_PREVIEW = {
     "has_padding": True
-    , "show_chars": False
+    , "show_chars": True
     , "show_numbers": False
     , "render_overlays": False
     , "warn_consecutive_unchecked": False

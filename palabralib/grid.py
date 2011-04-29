@@ -489,10 +489,6 @@ class Grid:
             x += dx
             y += dy
             
-    def can_fit(self, words):
-        # TODO
-        return True
-            
     def count_blocks(self):
         """Return the number of blocks in the grid."""
         total = 0

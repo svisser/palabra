@@ -45,9 +45,12 @@ TRANSFORM_STRUCTURE = 2
 FILL_START_AT_ZERO = 0
 FILL_START_AT_SELECTION = 1
 FILL_START_AT_AUTO = 2
+FILL_NICE_FALSE = 0
+FILL_NICE_TRUE = 1
 
 # fill options, also in .c (fill function)
 FILL_OPTION_START = "start"
+FILL_OPTION_NICE = "nice"
 
 # puzzle types
 PUZZLE_PALABRA = 'palabra'

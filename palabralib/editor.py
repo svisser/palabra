@@ -29,7 +29,7 @@ from grid import Grid
 import preferences
 import transform
 from view import GridPreview, DEFAULTS_CELL
-from word import search_wordlists, analyze_words
+from word import CWordList, search_wordlists, analyze_words
 import cPalabra
 
 class CellPropertiesDialog(gtk.Dialog):
@@ -152,7 +152,6 @@ class CellPropertiesDialog(gtk.Dialog):
         self._on_update("circle", button.get_active())
             
     def _on_update(self, key, value):
-        print "before update", key, value
         for p in self.previews:
             p.view.properties[key] = value
             p.refresh(force=True)
@@ -319,6 +318,11 @@ class WordTool:
     def deselect(self):
         self.view.selection = None
 
+DEFAULT_FILL_OPTIONS = {
+    constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
+    , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
+}
+
 class FillTool:
     def __init__(self, editor):
         self.editor = editor
@@ -326,9 +330,7 @@ class FillTool:
             (constants.FILL_START_AT_ZERO, "First slot")
             , (constants.FILL_START_AT_AUTO, "Suitably chosen slot")
         ]
-        self.editor.fill_options = {
-            constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
-        }
+        self.editor.fill_options.update(DEFAULT_FILL_OPTIONS)
         
     def create(self):
         main = gtk.VBox(False, 0)
@@ -382,6 +384,33 @@ def search(wordlists, grid, selection, force_refresh):
         return []
     more = grid.gather_all_constraints(x, y, dir)
     return search_wordlists(wordlists, length, constraints, more)
+    
+def fill(grid, words, fill_options):
+    meta = []
+    result = analyze_words(grid, words)
+    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
+        l = grid.word_length(x, y, d)
+        cs = grid.gather_constraints(x, y, d)
+        meta.append((x, y, 0 if d == "across" else 1, l, cs, result[x, y, d]))
+    return cPalabra.fill(grid, words, meta, fill_options)
+
+def attempt_fill(grid, words):
+    """Return a grid with possibly the given words filled in."""
+    clist = CWordList(words, index=constants.MAX_WORD_LISTS)
+    options = {}
+    options.update(DEFAULT_FILL_OPTIONS)
+    options.update({
+        constants.FILL_OPTION_NICE: constants.FILL_NICE_TRUE
+    })
+    results = fill(grid, clist.words, options)
+    if results:
+        class P:
+            def __init__(self):
+                self.grid = grid
+        p = P()
+        transform.modify_chars(p, chars=results[0])
+        return p.grid
+    return grid
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area):
@@ -393,6 +422,7 @@ class Editor(gtk.HBox):
         self.editor_pattern = None
         self.blacklist = []
         self.force_redraw = True
+        self.fill_options = {}
         if not palabra_window.editor_settings:
             sett = {}
             sett["symmetries"] = ["180_degree"]
@@ -703,13 +733,7 @@ class Editor(gtk.HBox):
         
     def fill(self):
         for path, wordlist in self.palabra_window.wordlists.items():
-            meta = []
-            result = analyze_words(self.puzzle.grid, wordlist.words)
-            for n, x, y, d in self.puzzle.grid.words(allow_duplicates=True, include_dir=True):
-                l = self.puzzle.grid.word_length(x, y, d)
-                cs = self.puzzle.grid.gather_constraints(x, y, d)
-                meta.append((x, y, 0 if d == "across" else 1, l, cs, result[x, y, d]))
-            results = cPalabra.fill(self.puzzle.grid, wordlist.words, meta, self.fill_options)
+            results = fill(self.puzzle.grid, wordlist.words, self.fill_options)
             self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
             break
             

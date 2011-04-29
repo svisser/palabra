@@ -506,15 +506,16 @@ inline int find_initial_slot(Slot *slots, int n_slots, int option_start) {
     } else if (option_start == FILL_START_AT_SELECTION) {
         // TODO
     } else if (option_start == FILL_START_AT_AUTO) {
-        // find most-constrained slot
+        // find most-constrained slot that is not done and has at least one possible word
         int m;
         for (m = 0; m < n_slots; m++) {
-            if (!slots[m].done) {
+            if (!slots[m].done && slots[m].count > 0) {
                 index = m;
                 break;
             }
         }
         for (m = 0; m < n_slots; m++) {
+            if (slots[m].count == 0) continue;
             if (slots[m].count < slots[index].count && !slots[m].done) {
                 index = m;
             }
