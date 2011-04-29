@@ -17,6 +17,9 @@
 #define FILL_NICE_FALSE 0
 #define FILL_NICE_TRUE 1
 
+#define DIR_ACROSS 0
+#define DIR_DOWN 1
+
 typedef struct tnode *Tptr;
 typedef struct tnode {
     char splitchar;

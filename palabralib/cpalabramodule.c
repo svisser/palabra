@@ -368,7 +368,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             if (is_intersecting(slot, &slots[m])) {
                 int index = 0;
                 int offset = 0;
-                if (slot->dir == 0) {
+                if (slot->dir == DIR_ACROSS) {
                     index = slots[m].x - slot->x;
                     offset = slot->y - slots[m].y;
                 } else {
@@ -424,9 +424,9 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             for (k = 0; k < slot->length; k++) {
                 // mark the affected slot of the modified cell
                 affected[k] = -1;
-                int cx = slot->x + (slot->dir == 0 ? k : 0);
-                int cy = slot->y + (slot->dir == 1 ? k : 0);
-                int dir = slot->dir == 0 ? 1 : 0;
+                int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
+                int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
+                int dir = slot->dir == DIR_ACROSS ? 1 : 0;
                 int indexD = get_slot_index(slots, n_slots, cx, cy, dir);
                 if (indexD >= 0 && indexD != index) {
                     affected[k] = indexD;
@@ -439,8 +439,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             }
             for (k = 0; k < slot->length; k++) {
                 if (affected[k] >= 0) {
-                    int cx = slot->x + (slot->dir == 0 ? k : 0);
-                    int cy = slot->y + (slot->dir == 1 ? k : 0);
+                    int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
+                    int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
                     int is_empty = cgrid[cx + cy * height].c == CONSTRAINT_EMPTY;
                     cgrid[cx + cy * height].c = word[k];
                     int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
@@ -460,8 +460,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     printf("before updating cells\n");
                 }
                 for (k = 0; k < slot->length; k++) {
-                    int cx = slot->x + (slot->dir == 0 ? k : 0);
-                    int cy = slot->y + (slot->dir == 1 ? k : 0);
+                    int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
+                    int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
                     cgrid[cx + cy * height].c = word[k];
                     int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
                     (&slots[affected[k]])->count = count;

@@ -330,9 +330,9 @@ int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
     for (s = 0; s < n_slots; s++) {
         Slot slot = slots[s];
         if (dir == slot.dir) {
-            int match_across = (dir == 0 && x>= slot.x
+            int match_across = (dir == DIR_ACROSS && x>= slot.x
                 && x < slot.x + slot.length && slot.y == y);
-            int match_down = (dir == 1 && y >= slot.y
+            int match_down = (dir == DIR_DOWN && y >= slot.y
                 && y < slot.y + slot.length && slot.x == x);
             if (match_across || match_down) {
                 return s;
@@ -346,8 +346,8 @@ int get_slot_index(Slot *slots, int n_slots, int x, int y, int dir) {
 int can_clear_char(Cell *cgrid, int width, int height, Slot slot) {
     int j;
     for (j = 0; j < slot.length; j++) {
-        int cx = slot.x + (slot.dir == 0 ? j : 0);
-        int cy = slot.y + (slot.dir == 1 ? j : 0);
+        int cx = slot.x + (slot.dir == DIR_ACROSS ? j : 0);
+        int cy = slot.y + (slot.dir == DIR_DOWN ? j : 0);
         if (cgrid[cx + cy * height].c == CONSTRAINT_EMPTY)
             return 1;
     }
@@ -360,9 +360,9 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
     for (l = 0; l < slot.length; l++) {
         if (cgrid[slot.x + slot.y * height].fixed == 1)
             continue;
-        int cx = slot.x + (slot.dir == 0 ? l : 0);
-        int cy = slot.y + (slot.dir == 1 ? l : 0);
-        int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == 0 ? 1 : 0);
+        int cx = slot.x + (slot.dir == DIR_ACROSS ? l : 0);
+        int cy = slot.y + (slot.dir == DIR_DOWN ? l : 0);
+        int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == DIR_ACROSS ? 1 : 0);
 
         Cell *cell = &cgrid[cx + cy * height];
         if (can_clear_char(cgrid, width, height, slots[m]) && cell->c != CONSTRAINT_EMPTY) {
@@ -374,10 +374,10 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
 // 0 = false, 1 = true
 int is_intersecting(Slot *slot1, Slot *slot2) {
     if (slot1->dir == slot2->dir) return 0;
-    if (slot1->dir == 0) {
+    if (slot1->dir == DIR_ACROSS) {
         return (slot2->x >= slot1->x && slot2->x < slot1->x + slot1->length
             && slot1->y >= slot2->y && slot1->y < slot2->y + slot2->length);
-    } else if (slot1->dir == 1) {
+    } else if (slot1->dir == DIR_DOWN) {
         return (slot1->x >= slot2->x && slot1->x < slot2->x + slot2->length
             && slot2->y >= slot1->y && slot2->y < slot1->y + slot1->length);
     }
@@ -400,8 +400,8 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     if (!cs) {
         return NULL;
     }
-    int dx = slot->dir == 0 ? 1 : 0;
-    int dy = slot->dir == 1 ? 1 : 0;
+    int dx = slot->dir == DIR_ACROSS ? 1 : 0;
+    int dy = slot->dir == DIR_DOWN ? 1 : 0;
     int x = slot->x;
     int y = slot->y;
     int count = 0;
@@ -456,8 +456,8 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
     if (iindex >= 0) {
         if (0) {
             printf("Blanking between (%i, %i, %s) and (%i, %i, %s)\n"
-                , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == 0 ? "across" : "down"
-                , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == 0 ? "across" : "down" );
+                , (&slots[iindex])->x, (&slots[iindex])->y, (&slots[iindex])->dir == DIR_ACROSS ? "across" : "down"
+                , (&slots[index])->x, (&slots[index])->y, (&slots[index])->dir == DIR_ACROSS ? "across" : "down" );
             printf("Indices: %i %i\n", iindex, index);
         }
         for (s = n_done_slots; s >= iindex; s--) {
@@ -468,7 +468,7 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
             }
             Slot *bslot = &slots[blank];
             if (0) {
-                printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == 0 ? "across" : "down");
+                printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
             }
             cleared++;
             clear_slot(cgrid, width, height, slots, n_slots, blank);
@@ -510,7 +510,7 @@ inline int find_initial_slot(Slot *slots, int n_slots, int option_start, int opt
         // if option_nice then prefer across slots
         int m;
         for (m = 0; m < n_slots; m++) {
-            if (!slots[m].done && slots[m].count > 0 && (option_nice ? slots[m].dir == 0 : 1)) {
+            if (!slots[m].done && slots[m].count > 0 && (option_nice ? slots[m].dir == DIR_ACROSS : 1)) {
                 index = m;
                 break;
             }
@@ -546,10 +546,10 @@ inline int find_slot(Slot *slots, int n_slots, int* order) {
                 if (order[o] == m) continue;
                 if (slots[m].done) continue;
                 if (is_intersecting(&slots[order[o]], &slots[m])) {
-                    if (slots[order[o]].dir == 0 && (slots[m].x - slots[order[o]].x == l)) {
+                    if (slots[order[o]].dir == DIR_ACROSS && (slots[m].x - slots[order[o]].x == l)) {
                         index = m;
                         break;
-                    } else if (slots[order[o]].dir == 1 && (slots[m].y - slots[order[o]].y == l)) {
+                    } else if (slots[order[o]].dir == DIR_DOWN && (slots[m].y - slots[order[o]].y == l)) {
                         index = m;
                         break;
                     }
@@ -574,8 +574,8 @@ inline int find_nice_slot(Slot *slots, int n_slots, int width, int height, int* 
         int s;
         for (s = 0; s < n_slots; s++) {
             if (s == t) continue;
-            if ((slots[s].x == width - x - (dir == 0 ? length : 0) - (dir == 1 ? 1 : 0))
-                && (slots[s].y == height - y - (dir == 1 ? length : 0) - (dir == 0 ? 1 : 0))
+            if ((slots[s].x == width - x - (dir == DIR_ACROSS ? length : 0) - (dir == DIR_DOWN ? 1 : 0))
+                && (slots[s].y == height - y - (dir == DIR_DOWN ? length : 0) - (dir == DIR_ACROSS ? 1 : 0))
                 && slots[s].dir == dir
                 && slots[s].length == length
                 && !slots[s].done
