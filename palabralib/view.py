@@ -761,7 +761,7 @@ class GridPreview(gtk.VBox):
         if force:
             self.preview_surface = None
         if self.view is not None:
-            self.view.properties["cell", "size"] = 128 if self.magnify else 12
+            self.view.properties["cell", "size"] = 128 if self.magnify else 16
             self.view.refresh_visual_size(self.drawing_area)
             self.drawing_area.queue_draw()
         
