@@ -338,7 +338,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     int best_n_done_slots = 0;
     while (attempts < 100) {
         int index = -1;
-        if (attempts == 0 || n_done_slots == 0) {
+        if (attempts == 0 || n_done_slots == 0 || OPTION_NICE) {
             index = find_initial_slot(slots, n_slots, OPTION_START);
         } else {
             index = find_slot(slots, n_slots, order);
