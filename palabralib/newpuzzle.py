@@ -287,6 +287,9 @@ class NewWindow(gtk.Dialog):
         align = gtk.Alignment(0, 0.5, 0, 0)
         align.add(file_combo)
         files_hbox.pack_start(align, False, False, 0)
+        find_button = gtk.Button(u"Find patterns")
+        find_button.connect("clicked", self.on_find_patterns)
+        files_hbox.pack_start(find_button, False, False, 0)
         
         patterns_vbox.pack_start(files_hbox, False, False, 6)
         
@@ -299,9 +302,6 @@ class NewWindow(gtk.Dialog):
         align = gtk.Alignment(0, 0, 1, 0)
         align.add(self.clear_button)
         buttons_hbox.pack_start(align, False, False, 0)
-        find_button = gtk.Button(u"Find patterns")
-        find_button.connect("clicked", self.on_find_patterns)
-        buttons_hbox.pack_start(find_button, False, False, 0)
         
         patterns_vbox.pack_start(buttons_hbox, False, False, 6)
         
