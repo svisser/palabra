@@ -47,10 +47,14 @@ FILL_START_AT_SELECTION = 1
 FILL_START_AT_AUTO = 2
 FILL_NICE_FALSE = 0
 FILL_NICE_TRUE = 1
+FILL_DUPLICATE_FALSE = 0
+FILL_DUPLICATE_TRUE = 1
 
 # fill options, also in .c (fill function)
 FILL_OPTION_START = "start"
 FILL_OPTION_NICE = "nice"
+FILL_OPTION_DUPLICATE = "duplicate"
+FILL_NICE_COUNT = "nice_count"
 
 # puzzle types
 PUZZLE_PALABRA = 'palabra'

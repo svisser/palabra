@@ -255,6 +255,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
     const int OPTION_START = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("start")));
     const int OPTION_NICE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("nice")));
+    const int OPTION_DUPLICATE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("duplicate")));
+    const int NICE_COUNT = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("nice_count")));
 
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
@@ -380,8 +382,19 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length);
         
         int is_word_ok = 1;
-        char* word = find_candidate(cs_i, results, slot->words, slot->length, cs, slot->offset);
+        char* word = find_candidate(cs_i, results, slot, cs);
         printf("Candidate: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        if (word && OPTION_DUPLICATE) {
+            for (t = 0; t < n_slots; t++) {
+                char *word_t = get_constraints(cgrid, width, height, &slots[t]);
+                if (word_t && strcmp(word, word_t) == 0) {
+                    slot->offset++;
+                    word = find_candidate(cs_i, results, slot, cs);
+                    break;
+                }
+            }
+        }
+        
         PyMem_Free(cs);
         for (m = 0; m < slot->length; m++) {
             if (cs_i[m]) {
@@ -498,6 +511,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             n_done_slots++;
             printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         }
+        if (n_done_slots == NICE_COUNT) break;
         attempts++;
     }
     if (best_fill == NULL) {

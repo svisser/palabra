@@ -321,6 +321,8 @@ class WordTool:
 DEFAULT_FILL_OPTIONS = {
     constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
     , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
+    , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_FALSE
+    , constants.FILL_NICE_COUNT: 0
 }
 
 class FillTool:
@@ -401,7 +403,10 @@ def attempt_fill(grid, words):
     options.update(DEFAULT_FILL_OPTIONS)
     options.update({
         constants.FILL_OPTION_NICE: constants.FILL_NICE_TRUE
+        , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_TRUE
+        , constants.FILL_NICE_COUNT: len(words)
     })
+    print options, words
     results = fill(grid, clist.words, options)
     if results:
         class P:
