@@ -391,8 +391,7 @@ class NewWindow(gtk.Dialog):
                 if k not in counts or counts[k] < v:
                     return None
         if "words" in criteria:
-            if len(criteria["words"]) > 1:
-                return attempt_fill(grid, criteria["words"])
+            return attempt_fill(grid, criteria["words"])
         return grid
         
     def display_patterns(self, width, height, criteria=None):

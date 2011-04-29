@@ -406,7 +406,6 @@ def attempt_fill(grid, words):
         , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_TRUE
         , constants.FILL_NICE_COUNT: len(words)
     })
-    print options, words
     results = fill(grid, clist.words, options)
     if results:
         class P:
