@@ -395,19 +395,21 @@ class NewWindow(gtk.Dialog):
         return grid
         
     def display_patterns(self, width, height, criteria=None):
-        self.store.clear()
+        gs = []
         for grid in self.grids:
             if grid.size == (width, height):
                 if criteria:
                     g = self._check_grid(grid, criteria)
-                    if g is None:
-                        continue
-                    else:
-                        grid = g
-                blocks = grid.count_blocks()
-                words = grid.count_words()
-                s = ''.join([str(words), " words, ", str(blocks), " blocks"])
-                self.store.append([s, grid])
+                    if g is not None:
+                        gs.append(g)
+                else:
+                    gs.append(grid)
+        self.store.clear()
+        for g in gs:
+            blocks = g.count_blocks()
+            words = g.count_words()
+            s = ''.join([str(words), " words, ", str(blocks), " blocks"])
+            self.store.append([s, g])
                 
     def get_configuration(self):
         configuration = {}

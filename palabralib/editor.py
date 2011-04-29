@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import cairo
+import copy
 import gobject
 import gtk
 import pangocairo
@@ -410,7 +411,7 @@ def attempt_fill(grid, words):
     if results:
         class P:
             def __init__(self):
-                self.grid = grid
+                self.grid = copy.deepcopy(grid)
         p = P()
         transform.modify_chars(p, chars=results[0])
         return p.grid
