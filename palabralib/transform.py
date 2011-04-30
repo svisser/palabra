@@ -17,6 +17,7 @@
 
 import constants
 from grid import Grid
+from puzzle import Puzzle
 
 import copy
 
@@ -31,14 +32,15 @@ def modify_blocks(puzzle, blocks=[]):
             puzzle.grid.clear_char(x, y)
         puzzle.grid.set_block(x, y, status)
 
-def modify_chars(puzzle, chars):
+def modify_chars(content, chars):
     # intuition says this should be constants.TRANSFORM_CONTENT but slight
     # hack to make update_window also recompute the status message when
     # adding/removing characters
     modify_chars.__setattr__('type', constants.TRANSFORM_STRUCTURE)
-    """Modify the characters at the given locations."""
+    """Modify the characters at the given locations (content = Puzzle or Grid)."""
+    g = content.grid if isinstance(content, Puzzle) else content
     for x, y, c in chars:
-        puzzle.grid.set_char(x, y, c)
+        g.set_char(x, y, c)
 
 def modify_char(puzzle, x, y, next_char):
     """Modify the character at the given location."""

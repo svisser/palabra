@@ -409,12 +409,9 @@ def attempt_fill(grid, words):
     })
     results = fill(grid, clist.words, options)
     if results:
-        class P:
-            def __init__(self):
-                self.grid = copy.deepcopy(grid)
-        p = P()
-        transform.modify_chars(p, chars=results[0])
-        return p.grid
+        g = copy.deepcopy(grid)
+        transform.modify_chars(g, chars=results[0])
+        return g
     return grid
 
 class Editor(gtk.HBox):
