@@ -154,7 +154,6 @@ class SizeComponent(gtk.VBox):
         if self.callback is not None:
             width = self.width_spinner.get_value_as_int()
             height = self.height_spinner.get_value_as_int()
-            print "callback", width, height
             self.callback(width, height)
             
     def get_size(self):
