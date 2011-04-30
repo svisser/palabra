@@ -47,11 +47,11 @@ class SizeComponent(gtk.VBox):
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.width_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.width_spinner.connect("value-changed", self.on_spinner_changed)
-        
         adj = gtk.Adjustment(initial_height
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         self.height_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.height_spinner.connect("value-changed", self.on_spinner_changed)
+        self.suppress_spinner = False
         
         spinners = gtk.HBox(False, 0)
         
@@ -139,18 +139,22 @@ class SizeComponent(gtk.VBox):
         self.pack_start(align, False, False, 0)
         
     def on_spinner_changed(self, widget, data=None):
-        self.perform_callback()
+        if not self.suppress_spinner:
+            self.perform_callback()
         
     def on_size_change(self, widget, data=None):
         if widget.get_active() == 1:
+            self.suppress_spinner = True
             self.width_spinner.set_value(data)
             self.height_spinner.set_value(data)
+            self.suppress_spinner = False
             self.perform_callback()
                 
     def perform_callback(self):
         if self.callback is not None:
             width = self.width_spinner.get_value_as_int()
             height = self.height_spinner.get_value_as_int()
+            print "callback", width, height
             self.callback(width, height)
             
     def get_size(self):
