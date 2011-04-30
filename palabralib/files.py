@@ -87,7 +87,10 @@ def export_puzzle(puzzle, filename, options):
     elif options["format"] == "pdf":
         settings.update({
             "clue_header": {"across": "Across", "down": "Down", "font": "Sans 12"}
-            , "clue": {"font": "Sans 8"}
+            , "clue": {"font": "Sans 8"
+                , "length": False
+                , "period": False
+            }
             , "page_header": {"text": "%T / %A"
                 , "font": "Sans 10"
                 , "include": True
@@ -236,7 +239,10 @@ def export_to_pdf(puzzle, filename, output, settings):
                     except KeyError:
                         txt = '''<span color="#ff0000">(missing clue)</span>'''
                     txt = txt.replace("&", "&amp;")
-                    content += [" <b>", str(n), "</b> ", txt]
+                    content += [" <b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
+                    if c_c["length"]:
+                        l = puzzle.grid.word_length(x, y, d)
+                        content += [" (", str(l), ")"]
                 content += ["</span>\n\n"]
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
