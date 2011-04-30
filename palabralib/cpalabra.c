@@ -554,6 +554,7 @@ inline int find_slot(Slot *slots, int n_slots, int* order) {
 }
 
 inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, int height, int* order) {
+    // compute lengths of provided words and lengths of actually filled in words
     int lengths[MAX_WORD_LENGTH];
     int a_lengths[MAX_WORD_LENGTH];
     int t;
@@ -571,6 +572,7 @@ inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, 
         if (i < 0) break;
         a_lengths[slots[i].length]++;
     }
+    // find index of a possible symmetrical slot
     for (t = 0; t < n_slots; t++) {
         int i = order[t];
         if (i < 0) break;
@@ -594,19 +596,22 @@ inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, 
             }
         }
     }
+    // find "nicest" slot (= close to center and preferably across)
+    int c_x = width / 2;
+    int c_y = height / 2;
     int index = -1;
+    int score = width + height;
     for (t = 0; t < n_slots; t++) {
         int l = slots[t].length;
         if (!slots[t].done && slots[t].count > 0 && a_lengths[l] < lengths[l]) {
-            index = t;
-            break;
-        }
-    }
-    for (t = 0; t < n_slots; t++) {
-        if (slots[t].count == 0) continue;
-        int l = slots[t].length;
-        if (slots[t].count < slots[index].count && !slots[t].done && a_lengths[l] < lengths[l]) {
-            index = t;
+            int s_x = slots[t].x - c_x;
+            int s_y = slots[t].y - c_y;
+            int s_score = (s_x >= 0 ? s_x : -1 * s_x) + (s_y >= 0 ? s_y : -1 * s_y) + (slots[t].dir == DIR_DOWN ? 5 : 0);
+            printf("Score %i of %i %i %i | %i %i\n", s_score, slots[t].x, slots[t].y, slots[t].dir, c_x, c_y);
+            if (s_score < score) {
+                index = t;
+                score = s_score;
+            }
         }
     }
     return index;
