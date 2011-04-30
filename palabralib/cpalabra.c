@@ -499,7 +499,7 @@ PyObject* gather_fill(Cell *cgrid, int width, int height) {
     return fill;
 }
 
-inline int find_initial_slot(Slot *slots, int n_slots, int option_start, int option_nice) {
+inline int find_initial_slot(Slot *slots, int n_slots, int option_start) {
     int index = -1;
     if (option_start == FILL_START_AT_ZERO) {
         index = 0;
@@ -507,17 +507,12 @@ inline int find_initial_slot(Slot *slots, int n_slots, int option_start, int opt
         // TODO
     } else if (option_start == FILL_START_AT_AUTO) {
         // find most-constrained slot that is not done and has at least one possible word
-        // if option_nice then prefer across slots
         int m;
         for (m = 0; m < n_slots; m++) {
-            if (!slots[m].done && slots[m].count > 0 && (option_nice ? slots[m].dir == DIR_ACROSS : 1)) {
+            if (!slots[m].done && slots[m].count > 0) {
                 index = m;
                 break;
             }
-        }
-        if (index < 0 && option_nice) {
-            // we couldn't find an across slot so search for any slot
-            return find_initial_slot(slots, n_slots, option_start, FILL_NICE_FALSE);
         }
         for (m = 0; m < n_slots; m++) {
             if (slots[m].count == 0) continue;
@@ -535,10 +530,6 @@ inline int find_slot(Slot *slots, int n_slots, int* order) {
     int o;
     for (o = 0; o < n_slots; o++) {
         if (order[o] < 0) break;
-        int count = -1;
-        
-        int n_done = 0;
-        
         int l;
         for (l = 0; l < slots[order[o]].length; l++) {
             int m;
@@ -562,27 +553,61 @@ inline int find_slot(Slot *slots, int n_slots, int* order) {
     return index;
 }
 
-inline int find_nice_slot(Slot *slots, int n_slots, int width, int height, int* order) {
+inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, int height, int* order) {
+    int lengths[MAX_WORD_LENGTH];
+    int a_lengths[MAX_WORD_LENGTH];
     int t;
+    for (t = 0; t < MAX_WORD_LENGTH; t++) {
+        lengths[t] = 0;
+        a_lengths[t] = 0;
+    }
+    for (t = 0; t < MAX_WORD_LENGTH; t++) {
+        PyObject *key = Py_BuildValue("i", t);
+        PyObject *l_words = PyDict_GetItem(words, key);
+        lengths[t] += PyList_Size(l_words);
+    }
     for (t = 0; t < n_slots; t++) {
         int i = order[t];
         if (i < 0) break;
-        int x = slots[order[t]].x;
-        int y = slots[order[t]].y;
-        int dir = slots[order[t]].dir;
-        int length = slots[order[t]].length;
+        a_lengths[slots[i].length]++;
+    }
+    for (t = 0; t < n_slots; t++) {
+        int i = order[t];
+        if (i < 0) break;
+        int x = slots[i].x;
+        int y = slots[i].y;
+        int dir = slots[i].dir;
+        int length = slots[i].length;
         int s;
         for (s = 0; s < n_slots; s++) {
             if (s == t) continue;
-            if ((slots[s].x == width - x - (dir == DIR_ACROSS ? length : 0) - (dir == DIR_DOWN ? 1 : 0))
-                && (slots[s].y == height - y - (dir == DIR_DOWN ? length : 0) - (dir == DIR_ACROSS ? 1 : 0))
+            int symm_x = width - x - (dir == DIR_ACROSS ? length : 0) - (dir == DIR_DOWN ? 1 : 0);
+            int symm_y = height - y - (dir == DIR_DOWN ? length : 0) - (dir == DIR_ACROSS ? 1 : 0);
+            if ((slots[s].x == symm_x)
+                && (slots[s].y == symm_y)
                 && slots[s].dir == dir
                 && slots[s].length == length
                 && !slots[s].done
-                && slots[s].count > 0) {
+                && slots[s].count > 0
+                && a_lengths[length] < lengths[length]) {
                 return s;
             }
         }
     }
-    return -1;
+    int index = -1;
+    for (t = 0; t < n_slots; t++) {
+        int l = slots[t].length;
+        if (!slots[t].done && slots[t].count > 0 && a_lengths[l] < lengths[l]) {
+            index = t;
+            break;
+        }
+    }
+    for (t = 0; t < n_slots; t++) {
+        if (slots[t].count == 0) continue;
+        int l = slots[t].length;
+        if (slots[t].count < slots[index].count && !slots[t].done && a_lengths[l] < lengths[l]) {
+            index = t;
+        }
+    }
+    return index;
 }
