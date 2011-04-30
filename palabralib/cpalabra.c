@@ -46,13 +46,13 @@ int check_intersect(char *word, char **cs, int length, Sptr *results) {
     return n_chars == length;
 }
 
-char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs) {
+char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int option_nice) {
     Py_ssize_t count = PyList_Size(slot->words);
     Py_ssize_t w;
     Py_ssize_t m_count = 0;
     for (w = 0; w < count; w++) {
         char *word = PyString_AsString(PyList_GetItem(slot->words, w));
-        if (check_constraints(word, cs) && check_intersect(word, cs_i, slot->length, results)) {
+        if (check_constraints(word, cs) && (option_nice ? 1 : check_intersect(word, cs_i, slot->length, results))) {
             if (m_count == slot->offset) {
                 return word;
             }

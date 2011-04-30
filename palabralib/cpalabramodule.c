@@ -388,18 +388,26 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length);
         
         int is_word_ok = 1;
-        char* word = find_candidate(cs_i, results, slot, cs);
-        //printf("Candidate: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        
+        char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
+        printf("Candidate BEFORE: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        
         if (word && OPTION_DUPLICATE) {
-            for (t = 0; t < n_slots; t++) {
-                char *word_t = get_constraints(cgrid, width, height, &slots[t]);
-                if (word_t && strcmp(word, word_t) == 0) {
-                    slot->offset++;
-                    word = find_candidate(cs_i, results, slot, cs);
-                    break;
+            while (1) {
+                int next = 0;
+                for (t = 0; t < n_slots; t++) {
+                    char *word_t = get_constraints(cgrid, width, height, &slots[t]);
+                    if (word_t && strcmp(word, word_t) == 0) {
+                        slot->offset++;
+                        word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
+                        next = word != NULL;
+                        break;
+                    }
                 }
+                if (!next) break;
             }
         }
+        printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
         PyMem_Free(cs);
         for (m = 0; m < slot->length; m++) {
@@ -491,7 +499,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     //printf("(%i: %i %i %i) ", c, slots[order[c]].x, slots[order[c]].y, slots[order[c]].dir);
                 }
                 //printf("\n");
-                //printf("Calling backtrack for %i %i %i\n", slots[index].x, slots[index].y, slots[index].dir);
+                printf("Calling backtrack for %i %i %i\n", slots[index].x, slots[index].y, slots[index].dir);
                 int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots, index);
                 if (cleared == 0) {
                     printf("NOTHING WAS CLEARED\n");
