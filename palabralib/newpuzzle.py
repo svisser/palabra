@@ -364,7 +364,7 @@ class NewWindow(gtk.Dialog):
             words = [w for w in text.split() if w != '']
             if words:
                 w, h = self.grid.size
-                c = self.generate_criteria(words)
+                c = self.generate_criteria(list(set(words)))
                 self.clear_pattern()
                 self.display_patterns(w, h, criteria=c)
         d.destroy()        
