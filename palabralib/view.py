@@ -571,12 +571,13 @@ class GridView:
         ctx_stroke = context.stroke
         ctx_set_line_width = context.set_line_width
         ctx_set_source_rgb = context.set_source_rgb
-        props_line_width = self.properties["line", "width"]
-        props_border_width = self.properties["border", "width"]
-        props_bar_width = self.properties["bar", "width"]
-        props_cell_size = self.properties["cell", "size"]
-        props_line_color = self.properties["line", "color"]
-        props_border_color = self.properties["border", "color"]
+        props = self.properties
+        props_line_width = props["line", "width"]
+        props_border_width = props["border", "width"]
+        props_bar_width = props["bar", "width"]
+        props_cell_size = props["cell", "size"]
+        props_line_color = props["line", "color"]
+        props_border_color = props["border", "color"]
         
         if not self.grid.lines:
             self.grid.lines = cPalabra.compute_lines(self.grid)
@@ -791,13 +792,7 @@ class GridPreview(gtk.VBox):
                 self.preview_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
                 self.preview_pattern = cairo.SurfacePattern(self.preview_surface)
                 context = cairo.Context(self.preview_surface)
-                import pstats
-                import cProfile
-                cProfile.runctx('self.view.render(context, self.render_mode)', globals(), locals(), filename='fooprof')
-                p = pstats.Stats('fooprof')
-                p.sort_stats('time').print_stats(20)
-                p.print_callers()
-                #self.view.render(context, self.render_mode)
+                self.view.render(context, self.render_mode)
             context = drawing_area.window.cairo_create()
             context.set_source(self.preview_pattern)
             context.paint()
