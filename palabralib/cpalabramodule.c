@@ -420,9 +420,6 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         
         if (word) {
-            if (DEBUG) {
-                printf("%s (%i)\n", word, slot->offset);
-            }
             int affected[slot->length];
             int k;
             for (k = 0; k < slot->length; k++) {
@@ -438,9 +435,6 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             }
             // update counts for affected slots
             slot->count = 1;
-            if (DEBUG) {
-                printf("before updating affected\n");
-            }
             for (k = 0; k < slot->length; k++) {
                 if (affected[k] >= 0) {
                     int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
@@ -453,16 +447,10 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     }
                     if (count == 0 && !OPTION_NICE) {
                         is_word_ok = 0;
-                        if (DEBUG) {
-                            printf("WARNING: an intersecting slot has 0!!!\n");
-                        }
                     }
                 }
             }
             if (is_word_ok) {
-                if (DEBUG) {
-                    printf("before updating cells\n");
-                }
                 for (k = 0; k < slot->length; k++) {
                     int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
                     int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
@@ -472,46 +460,28 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
             } else {
                 slot->offset += 1;
-                if (DEBUG) {
-                    printf("WORD IS NOT OK (%i %i %i) %i\n", slot->x, slot->y, slot->dir, slot->offset);
-                }
             }
         } else {
             is_word_ok = 0;
-            if (DEBUG) {
-                printf("no word found\n");
-            }
             if (n_done_slots > 0) {
-                //printf("About to backtrack\n");            
                 if (n_done_slots > best_n_done_slots) {
                     best_n_done_slots = n_done_slots;
                     Py_XDECREF(best_fill);
                     best_fill = gather_fill(cgrid, width, height);
-                    //printf("NEW BEST FILL: %i\n", best_n_done_slots);
                 }
                 int c;
                 for (c = 0; c < n_slots; c++) {
                     if (order[c] < 0) break;
-                    //printf("(%i: %i %i %i) ", c, slots[order[c]].x, slots[order[c]].y, slots[order[c]].dir);
                 }
-                //printf("\n");
                 printf("Calling backtrack for %i %i %i\n", slots[index].x, slots[index].y, slots[index].dir);
                 int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots, index);
-                if (cleared == 0) {
-                    printf("NOTHING WAS CLEARED\n");
-                    break;
-                }
-                if (cleared < 0) {
-                    break;
-                }
-                //int c;
+                //assert cleared > 0
                 for (c = n_done_slots; c >= n_done_slots - cleared; c--) {
                     order[c] = -1;
                 }
                 n_done_slots -= cleared;
             }
         }
-        
         if (is_word_ok) {
             slot->done = 1;
             order[n_done_slots] = index;
