@@ -163,8 +163,8 @@ class ExportWindow(gtk.Dialog):
         main.pack_start(label, False, False, 6)
 
         prev_option = None
-        options = {"grid": u"Puzzle", "solution": u"Solution", "clues": u"Clues"}
-        for key, title in options.items():
+        options = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
+        for key, title in options:
             if key in format.outputs:
                 if format.allow_multiple:
                     button = gtk.CheckButton(title)

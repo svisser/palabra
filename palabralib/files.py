@@ -80,7 +80,7 @@ def get_real_filename(f):
     return os.path.join(os.path.split(__file__)[0], f)
 
 def export_puzzle(puzzle, filename, options):
-    outputs = filter(lambda key: options["output"][key], options["output"])
+    outputs = [k for k in ["grid", "solution"] if options["output"][k]]
     settings = options["settings"]
     if options["format"] == "csv":
         export_to_csv(puzzle, filename, outputs, settings)
@@ -94,6 +94,7 @@ def export_puzzle(puzzle, filename, options):
             , "page_header": {"text": "%T / %F / %P"
                 , "font": "Sans 10"
                 , "include": True
+                , "include_where": "all" # "all" / "first"
             }
         })
         export_to_pdf(puzzle, filename, outputs, settings)
@@ -271,27 +272,25 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.show_page()
     pages = []
     for o in outputs:
-        pages.append((o, True))
-    for key, header in pages:
-        if key == "grid":
-            context.save()
-            if header:
-                pdf_header()
+        if o == "grid":
+            pages.extend(["grid", "clues"])
+        elif o == "solution":
+            pages.append("solution")
+    p_h = settings["page_header"]
+    for i, p in enumerate(pages):
+        header = p_h["include"] and {"all": True, "first": i == 0}[p_h["include_where"]]
+        context.save()
+        if header:
+            pdf_header()
+        if p == "grid":
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             context.show_page()
-            context.restore()
-            context.save()
-            if header:
-                pdf_header()
+        elif p == "clues":
             show_clue_page_compact()
-            context.restore()
-        elif key == "solution":
-            context.save()
-            if header:
-                pdf_header()
+        elif p == "solution":
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
             context.show_page()
-            context.restore()
+        context.restore()
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
