@@ -208,8 +208,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         p_h = settings["page_header"]
         if not p_h["include"]:
             return
-        p = puzzle
-        g = p.grid
         values = [
             constants.META_FILENAME
             , constants.META_FILEPATH
@@ -219,24 +217,24 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             , constants.META_N_BLOCKS
         ]
         for key, code in constants.META_CODES.items():
-            value = p.metadata[key] if key in p.metadata else None
+            value = puzzle.metadata[key] if key in puzzle.metadata else None
             if value is not None:
                 p_h["text"] = p_h["text"].replace(code, value)
             elif key in values:
                 if key == constants.META_FILENAME:
-                    value = (os.path.basename(p.filename) if p.filename is not None else
+                    value = (os.path.basename(puzzle.filename) if puzzle.filename is not None else
                         constants.META_CODES[constants.META_FILENAME])
                 elif key == constants.META_FILEPATH:
-                    value = (p.filename if p.filename is not None else
+                    value = (puzzle.filename if puzzle.filename is not None else
                         constants.META_CODES[constants.META_FILEPATH])
                 elif key == constants.META_WIDTH:
-                    value = str(g.width)
+                    value = str(puzzle.grid.width)
                 elif key == constants.META_HEIGHT:
-                    value = str(g.height)
+                    value = str(puzzle.grid.height)
                 elif key == constants.META_N_WORDS:
-                    value = str(g.count_words())
+                    value = str(puzzle.grid.count_words())
                 elif key == constants.META_N_BLOCKS:
-                    value = str(g.count_blocks())
+                    value = str(puzzle.grid.count_blocks())
                 p_h["text"] = p_h["text"].replace(code, value)
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
