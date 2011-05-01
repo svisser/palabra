@@ -91,7 +91,7 @@ def export_puzzle(puzzle, filename, options):
                 , "length": False
                 , "period": False
             }
-            , "page_header": {"text": "%T / %A / %W x %H / %P / %N / %B"
+            , "page_header": {"text": "%T / %F / %P"
                 , "font": "Sans 10"
                 , "include": True
             }
@@ -211,7 +211,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         p = puzzle
         g = p.grid
         values = {
-            constants.META_FILENAME: (p.filename if p.filename is not None else
+            constants.META_FILENAME: (os.path.basename(p.filename) if p.filename is not None else
                 constants.META_CODES[constants.META_FILENAME])
             , constants.META_FILEPATH: (p.filename if p.filename is not None else
                 constants.META_CODES[constants.META_FILEPATH])
@@ -225,7 +225,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             if value is not None:
                 p_h["text"] = p_h["text"].replace(code, value)
             elif key in values:
-                print code, values[key], key
                 p_h["text"] = p_h["text"].replace(code, values[key])
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
