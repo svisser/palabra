@@ -221,9 +221,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.save()
         pdf_header()
         context.translate(0, 24)
-        puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
-        puzzle.view.pdf_reset()
         context.show_page()
         def show_clue_page_compact():
             content = []
@@ -257,9 +255,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.save()
         pdf_header()
         context.translate(0, 24)
-        puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
-        puzzle.view.pdf_reset()
         context.show_page()
         context.restore()
     surface.finish()
