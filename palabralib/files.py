@@ -96,7 +96,7 @@ def export_puzzle(puzzle, filename, options):
                 , "include": True
             }
         })
-        export_to_pdf(puzzle, filename, outputs[0], settings)
+        export_to_pdf(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
         export_to_png(puzzle, filename, outputs[0], settings)
 
@@ -198,7 +198,7 @@ def export_to_csv(puzzle, filename, outputs, settings):
                 f.write(''.join(line))
     f.close()
                     
-def export_to_pdf(puzzle, filename, output, settings):
+def export_to_pdf(puzzle, filename, outputs, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
     width = paper_size.get_width(gtk.UNIT_POINTS)
     height = paper_size.get_height(gtk.UNIT_POINTS)
@@ -215,13 +215,12 @@ def export_to_pdf(puzzle, filename, output, settings):
         layout = pcr.create_layout()
         text = ['''<span font_desc="''', p_h["font"], '''">''', p_h["text"], "</span>"]
         layout.set_markup(''.join(text))
-        context.save()
         context.move_to(20, 20)
         pcr.show_layout(layout)
-        context.restore()
-        context.translate(0, 24)
-    if output == "grid":
+    if "grid" in outputs:
+        context.save()
         pdf_header()
+        context.translate(0, 24)
         puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         puzzle.view.pdf_reset()
@@ -249,18 +248,20 @@ def export_to_pdf(puzzle, filename, output, settings):
             layout.set_width(pango.SCALE * 500)
             layout.set_wrap(pango.WRAP_WORD_CHAR)
             layout.set_markup(''.join(content))
-            context.save()
             context.move_to(20, 36)
             pcr.show_layout(layout)
-            context.restore()
             context.show_page()
         show_clue_page_compact()
-    elif output == "solution":
+        context.restore()
+    if "solution" in outputs:
+        context.save()
         pdf_header()
+        context.translate(0, 24)
         puzzle.view.pdf_configure()
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
         puzzle.view.pdf_reset()
         context.show_page()
+        context.restore()
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):

@@ -62,7 +62,7 @@ class ExportWindow(gtk.Dialog):
 
         csv = Format("csv", u"CSV (csv)", ["grid", "solution", "clues"])
         #self.formats.append(csv)
-        pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"], False)
+        pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         self.formats.append(pdf)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
@@ -163,7 +163,7 @@ class ExportWindow(gtk.Dialog):
         main.pack_start(label, False, False, 6)
 
         prev_option = None
-        options = {"grid": u"Grid", "solution": u"Solution", "clues": u"Clues"}
+        options = {"grid": u"Puzzle", "solution": u"Solution", "clues": u"Clues"}
         for key, title in options.items():
             if key in format.outputs:
                 if format.allow_multiple:
@@ -176,7 +176,6 @@ class ExportWindow(gtk.Dialog):
                         button.set_active(True)
                         callback(button, key)
                     prev_option = button
-                
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)
                 align.add(button)
