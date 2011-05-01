@@ -217,12 +217,15 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         layout.set_markup(''.join(text))
         context.move_to(20, 20)
         pcr.show_layout(layout)
-    if "grid" in outputs:
+    def render_puzzle(puzzle, mode, header=True):
         context.save()
-        pdf_header()
-        context.translate(0, 24)
+        if header:
+            pdf_header()
+            context.translate(0, 24)
         puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         context.show_page()
+    if "grid" in outputs:
+        render_puzzle(puzzle, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         def show_clue_page_compact():
             content = []
             for d in ["across", "down"]:
@@ -252,12 +255,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         show_clue_page_compact()
         context.restore()
     if "solution" in outputs:
-        context.save()
-        pdf_header()
-        context.translate(0, 24)
-        puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
-        context.show_page()
-        context.restore()
+        render_puzzle(puzzle, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
