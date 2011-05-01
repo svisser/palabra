@@ -243,49 +243,55 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.move_to(20, 20)
         pcr.show_layout(layout)
         context.translate(0, 24)
-    def render_puzzle(puzzle, mode, header=True):
-        if header:
-            pdf_header()
-        puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
+    def show_clue_page_compact():
+        content = []
+        for d in ["across", "down"]:
+            c_h = settings["clue_header"]
+            c_c = settings["clue"]
+            content += ['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
+                , '''</span>\n<span font_desc="''', c_c["font"], '''">''']
+            for n, x, y, clue in puzzle.grid.clues(d):
+                try:
+                    txt = clue["text"]
+                except KeyError:
+                    txt = '''<span color="#ff0000">(missing clue)</span>'''
+                txt = txt.replace("&", "&amp;")
+                content += [" <b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
+                if c_c["length"]:
+                    l = puzzle.grid.word_length(x, y, d)
+                    content += [" (", str(l), ")"]
+            content += ["</span>\n\n"]
+        pcr = pangocairo.CairoContext(context)
+        layout = pcr.create_layout()
+        layout.set_width(pango.SCALE * 500)
+        layout.set_wrap(pango.WRAP_WORD_CHAR)
+        layout.set_markup(''.join(content))
+        context.move_to(20, 20)
+        pcr.show_layout(layout)
         context.show_page()
-    if "grid" in outputs:
-        context.save()
-        render_puzzle(puzzle, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
-        context.restore()
-        def show_clue_page_compact():
-            content = []
-            for d in ["across", "down"]:
-                c_h = settings["clue_header"]
-                c_c = settings["clue"]
-                content += ['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
-                    , '''</span>\n<span font_desc="''', c_c["font"], '''">''']
-                for n, x, y, clue in puzzle.grid.clues(d):
-                    try:
-                        txt = clue["text"]
-                    except KeyError:
-                        txt = '''<span color="#ff0000">(missing clue)</span>'''
-                    txt = txt.replace("&", "&amp;")
-                    content += [" <b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
-                    if c_c["length"]:
-                        l = puzzle.grid.word_length(x, y, d)
-                        content += [" (", str(l), ")"]
-                content += ["</span>\n\n"]
-            pcr = pangocairo.CairoContext(context)
-            layout = pcr.create_layout()
-            layout.set_width(pango.SCALE * 500)
-            layout.set_wrap(pango.WRAP_WORD_CHAR)
-            layout.set_markup(''.join(content))
-            context.move_to(20, 20)
-            pcr.show_layout(layout)
+    pages = []
+    for o in outputs:
+        pages.append((o, True))
+    for key, header in pages:
+        if key == "grid":
+            context.save()
+            if header:
+                pdf_header()
+            puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             context.show_page()
-        context.save()
-        pdf_header()
-        show_clue_page_compact()
-        context.restore()
-    if "solution" in outputs:
-        context.save()
-        render_puzzle(puzzle, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
-        context.restore()
+            context.restore()
+            context.save()
+            if header:
+                pdf_header()
+            show_clue_page_compact()
+            context.restore()
+        elif key == "solution":
+            context.save()
+            if header:
+                pdf_header()
+            puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
+            context.show_page()
+            context.restore()
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
