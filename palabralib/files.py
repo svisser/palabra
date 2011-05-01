@@ -91,7 +91,7 @@ def export_puzzle(puzzle, filename, options):
                 , "length": False
                 , "period": False
             }
-            , "page_header": {"text": "%T / %A"
+            , "page_header": {"text": "%T / %A / %W x %H / %P / %N / %B"
                 , "font": "Sans 10"
                 , "include": True
             }
@@ -208,9 +208,25 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         p_h = settings["page_header"]
         if not p_h["include"]:
             return
+        p = puzzle
+        g = p.grid
+        values = {
+            constants.META_FILENAME: (p.filename if p.filename is not None else
+                constants.META_CODES[constants.META_FILENAME])
+            , constants.META_FILEPATH: (p.filename if p.filename is not None else
+                constants.META_CODES[constants.META_FILEPATH])
+            , constants.META_WIDTH: str(g.width)
+            , constants.META_HEIGHT: str(g.height)
+            , constants.META_N_WORDS: str(g.count_words())
+            , constants.META_N_BLOCKS: str(g.count_blocks())
+        }
         for key, code in constants.META_CODES.items():
-            value = puzzle.metadata[key] if key in puzzle.metadata else "-"
-            p_h["text"] = p_h["text"].replace(code, value)
+            value = puzzle.metadata[key] if key in puzzle.metadata else None
+            if value is not None:
+                p_h["text"] = p_h["text"].replace(code, value)
+            elif key in values:
+                print code, values[key], key
+                p_h["text"] = p_h["text"].replace(code, values[key])
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
         text = ['''<span font_desc="''', p_h["font"], '''">''', p_h["text"], "</span>"]

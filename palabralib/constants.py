@@ -72,6 +72,14 @@ META_COPYRIGHT = 'rights'
 META_PUBLISHER = 'publisher'
 META_DATE = 'date'
 
+# additional meta identifiers for headers
+META_FILENAME = 'filename'
+META_FILEPATH = 'filepath'
+META_WIDTH = 'width'
+META_HEIGHT = 'height'
+META_N_WORDS = 'word_count'
+META_N_BLOCKS = 'block_count'
+
 # for export
 META_CODES = {
     META_TITLE: "%T"
@@ -80,6 +88,12 @@ META_CODES = {
     , META_COPYRIGHT: "%C"
     , META_PUBLISHER: "%P"
     , META_DATE: "%D"
+    , META_FILENAME: "%F"
+    , META_FILEPATH: "%P"
+    , META_WIDTH: "%W"
+    , META_HEIGHT: "%H"
+    , META_N_WORDS: "%N"
+    , META_N_BLOCKS: "%B"
 }
 
 # statusbar identifiers
