@@ -1294,3 +1294,18 @@ class GridTestCase(unittest.TestCase):
             self.assertEquals(g.data[y][x]["number"], 0)
         g.set_number(5, 5, 33)
         self.assertEquals(g.data[5][5]["number"], 33)
+        
+    def testCountComplete(self):
+        counts = self.grid.count_complete()
+        self.assertEquals(counts["across"], 0)
+        self.assertEquals(counts["down"], 0)
+        for x in xrange(self.grid.width):
+            self.grid.set_char(x, 0, 'A')
+        counts = self.grid.count_complete()
+        self.assertEquals(counts["across"], 1)
+        self.assertEquals(counts["down"], 0)
+        for y in xrange(self.grid.height):
+            self.grid.set_char(0, y, 'A')
+        counts = self.grid.count_complete()
+        self.assertEquals(counts["across"], 1)
+        self.assertEquals(counts["down"], 1)

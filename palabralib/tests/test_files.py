@@ -123,6 +123,15 @@ class FilesTestCase(unittest.TestCase):
         self.assertEquals(len(results), 1)
         self.assertEquals(self.ipuzzle, results[0])
         
+    def testIPUZTech(self):
+        self.ipuzzle.grid.set_block(3, 4, True)
+        self.ipuzzle.grid.assign_numbers()
+        self.ipuzzle.metadata['block'] = "B"
+        self.ipuzzle.metadata['empty'] = "_"
+        write_ipuz(self.ipuzzle, False)
+        results = read_ipuz(self.LOCATION, warnings=False)
+        self.assertEquals(self.ipuzzle, results[0])
+        
     def testStyleIPUZ(self):
         props = self.ipuzzle.view.properties
         style = CellStyle()

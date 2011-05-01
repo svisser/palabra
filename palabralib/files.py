@@ -314,9 +314,9 @@ def read_ipuz(filename, warnings=True):
         for t in IPUZ_TECH_ELEMS:
             if t in data:
                 if t == "block":
-                    c_block = data[t]
+                    r_meta[t] = c_block = data[t]
                 elif t == "empty":
-                    c_empty = data[t]
+                    r_meta[t] = c_empty = data[t]
                 else:
                     pass # TODO
         for e in IPUZ_CROSS_ELEMS:
@@ -401,6 +401,9 @@ def write_ipuz(puzzle, backup=True):
             contents[e] = meta[dc]
     c_block = meta["block"] if "block" in meta else IPUZ_BLOCK_CHAR
     c_empty = meta["empty"] if "empty" in meta else IPUZ_EMPTY_CHAR
+    for k, v in [("block", c_block), ("empty", c_empty)]:
+        if k in meta:
+            contents[k] = v
     for e in IPUZ_META_ELEMS:
         if e in meta:
             contents[e] = meta[e]
