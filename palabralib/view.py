@@ -307,24 +307,12 @@ class GridView:
             self.settings.update(SETTINGS_PREVIEW_SOLUTION)
     
     def pdf_configure(self, settings):
-        prev_cell_size = self.properties["cell", "size"]
-        prev_margin = self.properties.margin
-        # 595 = PDF width
-        margin = 24
-        size = 400 / self.grid.width
-        self.properties["cell", "size"] = min(24, size)
-        w, h = self.properties.visual_size(False)
-        if settings["align"] == "right":
-            self.properties.margin = 595 - margin - w, margin
-        elif settings["align"] == "center":
-            self.properties.margin = (595 - w) / 2, margin
-        elif settings["align"] == "left":
-            self.properties.margin = margin, margin
+        self.properties.margin = margin
         return prev_cell_size, prev_margin
         
     def pdf_reset(self, prevs):
-        self.properties["cell", "size"] = prevs[0]
-        self.properties.margin = prevs[1]
+        self.properties["cell", "size"] = prevs["cell", "size"]
+        self.properties.margin = prevs["margin"]
         
     def render(self, context, mode=None):
         """

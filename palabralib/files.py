@@ -203,6 +203,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
     width = paper_size.get_width(gtk.UNIT_POINTS)
     height = paper_size.get_height(gtk.UNIT_POINTS)
+    
+    margin = 24, 24
+    c_width, c_height = width - 2 * margin[0], height - 2 * margin[1]
+    
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     def pdf_header():
@@ -325,11 +329,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             layout.set_wrap(pango.WRAP_WORD_CHAR)
             layout.set_markup(text)
             pcr.show_layout(layout)
-        context.show_page()
     pages = []
     for o in outputs:
         if o == "grid":
-            pages.extend(["grid", "clues"])
+            pages.append("grid")
         elif o == "solution":
             pages.append("solution")
     p_h = settings["page_header"]
@@ -340,20 +343,43 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             pdf_header()
         context.translate(0, 24)
         if p == "grid":
-            config = {
-                "align": "right"
+            prevs = {
+                ("cell", "size"): puzzle.view.properties["cell", "size"]
+                , "margin": puzzle.view.properties.margin
             }
-            prevs = puzzle.view.pdf_configure(config)
+            size = 400 / puzzle.grid.width
+            puzzle.view.properties["cell", "size"] = min(24, size)
+            grid_w, grid_h = puzzle.view.properties.visual_size(False)
+            align = "right"
+            if align == "right":
+                position = width - margin[0] - grid_w, margin[1]
+            elif settings["align"] == "center":
+                position = (width - grid_w) / 2, margin[1]
+            elif settings["align"] == "left":
+                position = margin
+            puzzle.view.properties.margin = position
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
-            context.show_page()
             puzzle.view.pdf_reset(prevs)
-        elif p == "clues":
             content = produce_clues(clue_break=True)
-            columns = [(20, 20, 200, 700), (240, 20, 200, 700)]
+            
+            padding = 20
+            x, y = 20, 20
+            columns, n_columns = [], 3
+            for n in xrange(n_columns):
+                col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
+                col_height = c_height
+                col_x = x + n * col_width + n * padding
+                col_y = y
+                if n >= 1:
+                    col_height -= (grid_h + padding)
+                    col_y += (grid_h + padding)
+                columns.append((col_x, col_y, col_width, col_height))
             show_clues_columns(content, columns)
+            context.show_page()
         elif p == "solution":
             config = {
                 "align": "left"
+                , "margin": margin
             }
             prevs = puzzle.view.pdf_configure(config)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
