@@ -306,13 +306,20 @@ class GridView:
         elif mode == constants.VIEW_MODE_PREVIEW_SOLUTION:
             self.settings.update(SETTINGS_PREVIEW_SOLUTION)
     
-    def pdf_configure(self):
+    def pdf_configure(self, settings):
         prev_cell_size = self.properties["cell", "size"]
         prev_margin = self.properties.margin
         # 595 = PDF width
-        size = (595 - ((self.grid.width + 1) * self.properties["line", "width"]) - (2 * 24)) / self.grid.width
-        self.properties["cell", "size"] = min(32, size)
-        self.properties.margin = 24, 24
+        margin = 24
+        size = 400 / self.grid.width
+        self.properties["cell", "size"] = min(24, size)
+        w, h = self.properties.visual_size(False)
+        if settings["align"] == "right":
+            self.properties.margin = 595 - margin - w, margin
+        elif settings["align"] == "center":
+            self.properties.margin = (595 - w) / 2, margin
+        elif settings["align"] == "left":
+            self.properties.margin = margin, margin
         return prev_cell_size, prev_margin
         
     def pdf_reset(self, prevs):
@@ -330,7 +337,10 @@ class GridView:
             self.select_mode(mode)
         is_pdf = mode in [constants.VIEW_MODE_EXPORT_PDF_PUZZLE, constants.VIEW_MODE_EXPORT_PDF_SOLUTION]
         if is_pdf:
-            prevs = self.pdf_configure()
+            settings = {
+                "align": "right"
+            }
+            prevs = self.pdf_configure(settings)
         cells = list(self.grid.cells())
         self.render_bottom(context, cells)
         self.render_top(context, cells)
