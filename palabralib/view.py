@@ -307,14 +307,17 @@ class GridView:
             self.settings.update(SETTINGS_PREVIEW_SOLUTION)
     
     def pdf_configure(self):
+        prev_cell_size = self.properties["cell", "size"]
+        prev_margin = self.properties.margin
         # 595 = PDF width
         size = (595 - ((self.grid.width + 1) * self.properties["line", "width"]) - (2 * 24)) / self.grid.width
         self.properties["cell", "size"] = min(32, size)
         self.properties.margin = 24, 24
+        return prev_cell_size, prev_margin
         
-    def pdf_reset(self):
-        self.properties["cell", "size"] = 32
-        self.properties.margin = 10, 10
+    def pdf_reset(self, prevs):
+        self.properties["cell", "size"] = prevs[0]
+        self.properties.margin = prevs[1]
         
     def render(self, context, mode=None):
         """
@@ -327,12 +330,12 @@ class GridView:
             self.select_mode(mode)
         is_pdf = mode in [constants.VIEW_MODE_EXPORT_PDF_PUZZLE, constants.VIEW_MODE_EXPORT_PDF_SOLUTION]
         if is_pdf:
-            self.pdf_configure()
+            prevs = self.pdf_configure()
         cells = list(self.grid.cells())
         self.render_bottom(context, cells)
         self.render_top(context, cells)
         if is_pdf:
-            self.pdf_reset()
+            self.pdf_reset(prevs)
 
     def render_bottom(self, context, cells):
         has_padding = self.settings["has_padding"]
