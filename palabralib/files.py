@@ -306,7 +306,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 c.append(content["clue_markup"][cur_d])
             while l_h < h:
                 if cur_i >= len(stream[cur_d]):
-                    c.append("</span>")
+                    c.append("</span>\n")
                     if cur_d == "down":
                         break
                     cur_d, cur_i, has_h = "down", 0, True
@@ -343,6 +343,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             pdf_header()
         context.translate(0, 24)
         if p == "grid":
+            n_columns = 3
+            align = "right"
+            
             prevs = {
                 ("cell", "size"): puzzle.view.properties["cell", "size"]
                 , "margin": puzzle.view.properties.margin
@@ -350,7 +353,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             size = 400 / puzzle.grid.width
             puzzle.view.properties["cell", "size"] = min(24, size)
             grid_w, grid_h = puzzle.view.properties.visual_size(False)
-            align = "right"
             if align == "right":
                 position = width - margin[0] - grid_w, margin[1]
             elif settings["align"] == "center":
@@ -364,7 +366,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             
             padding = 20
             x, y = 20, 20
-            columns, n_columns = [], 3
+            columns = []
             for n in xrange(n_columns):
                 col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
                 col_height = c_height
