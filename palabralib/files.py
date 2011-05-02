@@ -244,30 +244,54 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.move_to(20, 20)
         pcr.show_layout(layout)
         context.translate(0, 24)
-    def show_clue_page_compact():
-        content = []
+    def produce_clues(clue_break=False):
+        content = {"header": {}, "clue_markup": {}, "clues": {}}
         for d in ["across", "down"]:
             c_h = settings["clue_header"]
+            content["header"][d] = ''.join(['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
+                , '''</span>'''])
             c_c = settings["clue"]
-            content += ['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
-                , '''</span>\n<span font_desc="''', c_c["font"], '''">''']
+            content["clue_markup"][d] = ''.join(['''<span font_desc="''', c_c["font"], '''">'''])
+            content["clues"][d] = []
             for n, x, y, clue in puzzle.grid.clues(d):
+                clue_txt = []
                 try:
                     txt = clue["text"]
                 except KeyError:
                     txt = '''<span color="#ff0000">(missing clue)</span>'''
                 txt = txt.replace("&", "&amp;")
-                content += [" <b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
+                clue_txt += [" <b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
                 if c_c["length"]:
-                    l = puzzle.grid.word_length(x, y, d)
-                    content += [" (", str(l), ")"]
-            content += ["</span>\n\n"]
+                    clue_txt += [" (", str(puzzle.grid.word_length(x, y, d)), ")"]
+                if clue_break:
+                    clue_txt += ["\n"]
+                content["clues"][d].append(''.join(clue_txt))
+        return content
+    def show_clue_page_compact():
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
         layout.set_width(pango.SCALE * 500)
         layout.set_wrap(pango.WRAP_WORD_CHAR)
-        layout.set_markup(''.join(content))
+        content = produce_clues(clue_break=False)
+        c = []
+        for d in ["across", "down"]:
+            c.append(content["header"][d])
+            c.append("\n")
+            c.append(content["clue_markup"][d])
+            c.extend(content["clues"][d])
+            c.append("</span>\n\n")
+        layout.set_markup(''.join(c))
         context.move_to(20, 20)
+        pcr.show_layout(layout)
+        context.show_page()
+    def show_clues_columns(n_columns=3):
+        pcr = pangocairo.CairoContext(context)
+        layout = pcr.create_layout()
+        layout.set_width(pango.SCALE * (590 / n_columns))
+        layout.set_wrap(pango.WRAP_WORD_CHAR)
+        layout.set_markup(''.join(produce_clues(clue_break=True)))
+        w, h = layout.get_pixel_size()
+        print w, h
         pcr.show_layout(layout)
         context.show_page()
     pages = []
@@ -291,6 +315,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             context.show_page()
             puzzle.view.pdf_reset(prevs)
         elif p == "clues":
+            #show_clues_columns(n_columns=3)
             show_clue_page_compact()
         elif p == "solution":
             config = {
