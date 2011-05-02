@@ -243,7 +243,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         layout.set_markup(''.join(text))
         context.move_to(20, 20)
         pcr.show_layout(layout)
-        context.translate(0, 24)
     def produce_clues(clue_break=False):
         content = {"header": {}, "clue_markup": {}, "clues": {}}
         for d in ["across", "down"]:
@@ -260,7 +259,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 except KeyError:
                     txt = '''<span color="#ff0000">(missing clue)</span>'''
                 txt = txt.replace("&", "&amp;")
-                clue_txt += [" <b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
+                clue_txt += ["<b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
                 if c_c["length"]:
                     clue_txt += [" (", str(puzzle.grid.word_length(x, y, d)), ")"]
                 if clue_break:
@@ -284,15 +283,48 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.move_to(20, 20)
         pcr.show_layout(layout)
         context.show_page()
-    def show_clues_columns(n_columns=3):
-        pcr = pangocairo.CairoContext(context)
-        layout = pcr.create_layout()
-        layout.set_width(pango.SCALE * (590 / n_columns))
-        layout.set_wrap(pango.WRAP_WORD_CHAR)
-        layout.set_markup(''.join(produce_clues(clue_break=True)))
-        w, h = layout.get_pixel_size()
-        print w, h
-        pcr.show_layout(layout)
+    def show_clues_columns(content, columns):
+        stream = dict([(d, content["clues"][d]) for d in ["across", "down"]])
+        cur_d, cur_i, has_h = "across", 0, True
+        in_clue = False
+        r_columns = []
+        for x, y, w, h in columns:
+            pcr = pangocairo.CairoContext(context)
+            layout = pcr.create_layout()
+            layout.set_width(pango.SCALE * w)
+            layout.set_wrap(pango.WRAP_WORD_CHAR)
+            
+            text = ''
+            check = True
+            c = []
+            l_h = 0
+            if in_clue:
+                c.append(content["clue_markup"][cur_d])
+            while l_h < h:
+                if cur_i >= len(stream[cur_d]):
+                    c.append("</span>")
+                    if cur_d == "down":
+                        break
+                    cur_d, cur_i, has_h = "down", 0, True
+                if has_h:
+                    c.append(content["header"][cur_d] + "\n")
+                    c.append(content["clue_markup"][cur_d])
+                    has_h, in_clue = False, True
+                else:
+                    c.append(stream[cur_d][cur_i])
+                    cur_i += 1
+                text = ''.join(c) + ("</span>" if in_clue else '')
+                layout.set_markup(text)
+                l_w, l_h = layout.get_pixel_size()
+            r_columns.append((x, y, w, h, text))
+        for x, y, w, h, text in r_columns:
+            context.move_to(x, y)
+            pcr = pangocairo.CairoContext(context)
+            layout = pcr.create_layout()
+            layout.set_width(pango.SCALE * w)
+            layout.set_wrap(pango.WRAP_WORD_CHAR)
+            layout.set_markup(text)
+            pcr.show_layout(layout)
         context.show_page()
     pages = []
     for o in outputs:
@@ -306,6 +338,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.save()
         if header:
             pdf_header()
+        context.translate(0, 24)
         if p == "grid":
             config = {
                 "align": "right"
@@ -315,8 +348,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             context.show_page()
             puzzle.view.pdf_reset(prevs)
         elif p == "clues":
-            #show_clues_columns(n_columns=3)
-            show_clue_page_compact()
+            content = produce_clues(clue_break=True)
+            columns = [(20, 20, 200, 700), (240, 20, 200, 700)]
+            show_clues_columns(content, columns)
         elif p == "solution":
             config = {
                 "align": "left"
