@@ -335,17 +335,9 @@ class GridView:
         """
         if mode is not None:
             self.select_mode(mode)
-        is_pdf = mode in [constants.VIEW_MODE_EXPORT_PDF_PUZZLE, constants.VIEW_MODE_EXPORT_PDF_SOLUTION]
-        if is_pdf:
-            settings = {
-                "align": "right"
-            }
-            prevs = self.pdf_configure(settings)
         cells = list(self.grid.cells())
         self.render_bottom(context, cells)
         self.render_top(context, cells)
-        if is_pdf:
-            self.pdf_reset(prevs)
 
     def render_bottom(self, context, cells):
         has_padding = self.settings["has_padding"]

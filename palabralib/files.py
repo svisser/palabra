@@ -283,13 +283,23 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         if header:
             pdf_header()
         if p == "grid":
+            config = {
+                "align": "right"
+            }
+            prevs = puzzle.view.pdf_configure(config)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             context.show_page()
+            puzzle.view.pdf_reset(prevs)
         elif p == "clues":
             show_clue_page_compact()
         elif p == "solution":
+            config = {
+                "align": "left"
+            }
+            prevs = puzzle.view.pdf_configure(config)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
             context.show_page()
+            puzzle.view.pdf_reset(prevs)
         context.restore()
     surface.finish()
     
