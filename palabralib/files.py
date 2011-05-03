@@ -92,7 +92,6 @@ def export_puzzle(puzzle, filename, options):
                 , "period": False
             }
             , "page_header": {"font": "Sans 10"
-                , "include": True
                 , "include_where": "all" # "all" / "first"
             }
         })
@@ -209,8 +208,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     def pdf_header():
-        p_h = settings["page_header"]
-        if not p_h["include"]:
+        if not settings["page_header_include"]:
             return
         values = [
             constants.META_FILENAME
@@ -241,6 +239,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 elif key == constants.META_N_BLOCKS:
                     value = str(puzzle.grid.count_blocks())
                 p_h_txt = p_h_txt.replace(code, value)
+        p_h = settings["page_header"]
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
         text = ['''<span font_desc="''', p_h["font"], '''">''', p_h_txt, "</span>"]
@@ -337,7 +336,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             pages.append("solution")
     p_h = settings["page_header"]
     for i, p in enumerate(pages):
-        header = p_h["include"] and {"all": True, "first": i == 0}[p_h["include_where"]]
+        header = settings["page_header_include"] and {"all": True, "first": i == 0}[p_h["include_where"]]
         context.save()
         if header:
             pdf_header()

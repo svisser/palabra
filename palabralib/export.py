@@ -59,11 +59,18 @@ class ExportWindow(gtk.Dialog):
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
 
-        setting = FormatSetting("text", u"Page header:", "page_header_text", "%T / %F / %P")
-        def callback(entry, key):
+        def text_callback(entry, key):
             self.options["settings"][key] = entry.get_text()
-        setting.callback = callback
-        pdf.settings.append(setting)
+        def bool_callback(button, key):
+
+            self.options["settings"][key] = button.get_active()
+            print self.options["settings"]
+        s = FormatSetting("bool", u"Include header?", "page_header_include", True)
+        s.callback = bool_callback
+        pdf.settings.append(s)
+        s = FormatSetting("text", u"Page header:", "page_header_text", "%T / %F / %P")
+        s.callback = text_callback
+        pdf.settings.append(s)
         
         items = gtk.ListStore(str)
         for format in self.formats:
@@ -191,22 +198,26 @@ class ExportWindow(gtk.Dialog):
         main.pack_start(table, False, False, 0)
         
         row = 0
-        for setting in format.settings:
-            if setting.type == "combo":
+        for s in format.settings:
+            if s.type == "combo":
                 widget = gtk.combo_box_new_text()
-                for title, value in setting.properties:
+                for title, value in s.properties:
                     widget.append_text(title)
-                widget.connect("changed", setting.callback)
-            elif setting.type == "text":
+                widget.connect("changed", s.callback)
+            elif s.type == "text":
                 widget = gtk.Entry()
-                widget.set_text(setting.default)
-                widget.connect("changed", setting.callback, setting.key)
+                widget.set_text(s.default)
+                widget.connect("changed", s.callback, s.key)
+            elif s.type == "bool":
+                widget = gtk.CheckButton(s.title)
+                widget.set_active(s.default)
+                widget.connect("toggled", s.callback, s.key)
             align = gtk.Alignment(0, 0.5)
             align.set_padding(0, 0, 12, 0)
-            align.add(gtk.Label(setting.title))
+            align.add(gtk.Label(s.title) if s.type != "bool" else widget)
             table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
-            table.attach(widget, 1, 2, row, row + 1)
-                
-            if setting.initialize is not None:
-                setting.initialize(widget)
+            if s.type != "bool":
+                table.attach(widget, 1, 2, row, row + 1)
+            if s.initialize is not None:
+                s.initialize(widget)
             row += 1
