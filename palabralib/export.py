@@ -51,7 +51,7 @@ class ExportWindow(gtk.Dialog):
         buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
             gtk.STOCK_SAVE, gtk.RESPONSE_OK)
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags, buttons)
-        self.set_size_request(480, 420)
+        self.set_size_request(640, 480)
         
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         pdf.add(Setting("bool", u"Include header", "page_header_include", True))
@@ -60,6 +60,10 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
         pdf.add(Setting("spin", u"Columns", "n_columns", 3, (3, 5)))
+        pdf.add(Setting("spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
+        pdf.add(Setting("spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
+        pdf.add(Setting("spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
+        pdf.add(Setting("spin", u"Margin bottom (mm)", "margin_bottom", 20, (0, 50)))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.format = None
@@ -110,7 +114,6 @@ class ExportWindow(gtk.Dialog):
             self.options["settings"][key] = props[combo.get_active()][1]
         def _spin_callback(spinner, key):
             self.options["settings"][key] = spinner.get_value_as_int()
-            print spinner.get_value_as_int()
         for f in self.formats:
             for s in f.settings:
                 s.callback = {"text": _text_callback

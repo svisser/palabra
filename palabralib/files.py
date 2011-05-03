@@ -92,10 +92,6 @@ def export_puzzle(puzzle, filename, options):
                 , "period": False
             }
             , "page_header": {"font": "Sans 10"}
-            , "margin_left": 25
-            , "margin_right": 25
-            , "margin_top": 25
-            , "margin_bottom": 25
         })
         export_to_pdf(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
