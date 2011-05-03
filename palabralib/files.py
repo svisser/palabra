@@ -199,9 +199,14 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
     width = paper_size.get_width(gtk.UNIT_POINTS)
     height = paper_size.get_height(gtk.UNIT_POINTS)
+    mm_unit = width / paper_size.get_width(gtk.UNIT_MM)
     
-    margin = 24, 24
-    c_width, c_height = width - 2 * margin[0], height - 2 * margin[1]
+    margin_left = 25 * mm_unit
+    margin_right = 25 * mm_unit
+    margin_top = 25 * mm_unit
+    margin_down = 25 * mm_unit
+    c_width = width - margin_left - margin_right
+    c_height = height - margin_top - margin_down
     
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
@@ -242,7 +247,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         layout = pcr.create_layout()
         text = ['''<span font_desc="''', p_h["font"], '''">''', p_h_txt, "</span>"]
         layout.set_markup(''.join(text))
-        context.move_to(20, 20)
+        context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
     def produce_clues(clue_break=False):
         content = {"header": {}, "clue_markup": {}, "clues": {}}
@@ -281,7 +286,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             c.extend(content["clues"][d])
             c.append("</span>\n\n")
         layout.set_markup(''.join(c))
-        context.move_to(20, 20)
+        context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
         context.show_page()
     def show_clues_columns(content, columns):
@@ -367,17 +372,17 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 else:
                     break
             if align == "right":
-                pos_x, pos_y = width - margin[0] - grid_w, margin[1]
+                pos_x, pos_y = width - margin_right - grid_w, margin_top
             elif align == "center":
-                pos_x, pos_y = (width - grid_w) / 2, margin[1]
+                pos_x, pos_y = margin_left + (c_width - grid_w) / 2, margin_top
             elif align == "left":
-                pos_x, pos_y = margin
+                pos_x, pos_y = margin_left, margin_top
             puzzle.view.properties.margin = (pos_x, pos_y)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             puzzle.view.pdf_reset(prevs)
             content = produce_clues(clue_break=True)
             
-            x, y = 20, 20
+            x, y = margin_left, margin_top
             columns = []
             for n in xrange(n_columns):
                 col_height = c_height
