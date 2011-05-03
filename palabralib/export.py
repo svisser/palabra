@@ -33,17 +33,13 @@ class Format:
         self.allow_multiple = allow_multiple
         self.settings = []
         
-    def register_setting(self, setting):
-        self.settings.append(setting)
-        
 class FormatSetting:
-    def __init__(self, type, title, name, default, properties):
+    def __init__(self, type, title, key, default, properties=None):
         self.type = type
         self.title = title
-        self.name = name
+        self.key = key
         self.default = default
         self.properties = properties
-        
         self.callback = None
         self.initialize = None
 
@@ -55,28 +51,19 @@ class ExportWindow(gtk.Dialog):
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         
-        self.reset_options()
-        
         self.format = None
         self.formats = []
 
-        csv = Format("csv", u"CSV (csv)", ["grid", "solution", "clues"])
-        #self.formats.append(csv)
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         self.formats.append(pdf)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
 
-        setting = FormatSetting("combo", u"Separator:", "separator", ","
-            , [(u"Comma", ","), (u"Tab", "\t")])
-        def initialize(combo):
-            combo.set_active(0)
-        def callback(combo):
-            separator = setting.properties[combo.get_active()][1]
-            self.options["settings"]["separator"] = separator
-        setting.initialize = initialize
-        setting.callback = callback        
-        csv.register_setting(setting)
+        setting = FormatSetting("text", u"Page header:", "page_header_text", "%T / %F / %P")
+        def callback(entry, key):
+            self.options["settings"][key] = entry.get_text()
+        setting.callback = callback
+        pdf.settings.append(setting)
         
         items = gtk.ListStore(str)
         for format in self.formats:
@@ -117,6 +104,8 @@ class ExportWindow(gtk.Dialog):
         main.pack_start(self.options_window, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
+        self.reset_options()
+        
         starting_index = 0
         tree.get_selection().select_path(starting_index)
         self.select_format(starting_index)
@@ -126,6 +115,9 @@ class ExportWindow(gtk.Dialog):
         self.options["format"] = None
         self.options["output"] = {"grid": False, "solution": False, "clues": False}
         self.options["settings"] = {}
+        for f in self.formats:
+            for s in f.settings:
+                self.options["settings"][s.key] = s.default
         
     def select_format(self, index):
         if self.format is not None:
@@ -164,11 +156,14 @@ class ExportWindow(gtk.Dialog):
 
         prev_option = None
         options = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
-        for key, title in options:
+        for i, (key, title) in enumerate(options):
             if key in format.outputs:
                 if format.allow_multiple:
                     button = gtk.CheckButton(title)
                     button.connect("toggled", callback, key)
+                    if i == 0:
+                        button.set_active(True)
+                        callback(button, key)
                 else:
                     button = gtk.RadioButton(prev_option, title)
                     button.connect("toggled", callback, key)
@@ -202,12 +197,15 @@ class ExportWindow(gtk.Dialog):
                 for title, value in setting.properties:
                     widget.append_text(title)
                 widget.connect("changed", setting.callback)
-                
-                align = gtk.Alignment(0, 0.5)
-                align.set_padding(0, 0, 12, 0)
-                align.add(gtk.Label(setting.title))
-                table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
-                table.attach(widget, 1, 2, row, row + 1)
+            elif setting.type == "text":
+                widget = gtk.Entry()
+                widget.set_text(setting.default)
+                widget.connect("changed", setting.callback, setting.key)
+            align = gtk.Alignment(0, 0.5)
+            align.set_padding(0, 0, 12, 0)
+            align.add(gtk.Label(setting.title))
+            table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
+            table.attach(widget, 1, 2, row, row + 1)
                 
             if setting.initialize is not None:
                 setting.initialize(widget)

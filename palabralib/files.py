@@ -91,8 +91,7 @@ def export_puzzle(puzzle, filename, options):
                 , "length": False
                 , "period": False
             }
-            , "page_header": {"text": "%T / %F / %P"
-                , "font": "Sans 10"
+            , "page_header": {"font": "Sans 10"
                 , "include": True
                 , "include_where": "all" # "all" / "first"
             }
@@ -221,10 +220,11 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             , constants.META_N_WORDS
             , constants.META_N_BLOCKS
         ]
+        p_h_txt = settings["page_header_text"]
         for key, code in constants.META_CODES.items():
             value = puzzle.metadata[key] if key in puzzle.metadata else None
             if value is not None:
-                p_h["text"] = p_h["text"].replace(code, value)
+                p_h_txt = p_h_txt.replace(code, value)
             elif key in values:
                 if key == constants.META_FILENAME:
                     value = (os.path.basename(puzzle.filename) if puzzle.filename is not None else
@@ -240,10 +240,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     value = str(puzzle.grid.count_words())
                 elif key == constants.META_N_BLOCKS:
                     value = str(puzzle.grid.count_blocks())
-                p_h["text"] = p_h["text"].replace(code, value)
+                p_h_txt = p_h_txt.replace(code, value)
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
-        text = ['''<span font_desc="''', p_h["font"], '''">''', p_h["text"], "</span>"]
+        text = ['''<span font_desc="''', p_h["font"], '''">''', p_h_txt, "</span>"]
         layout.set_markup(''.join(text))
         context.move_to(20, 20)
         pcr.show_layout(layout)
