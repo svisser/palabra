@@ -51,7 +51,7 @@ class ExportWindow(gtk.Dialog):
         buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
             gtk.STOCK_SAVE, gtk.RESPONSE_OK)
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags, buttons)
-        self.set_size_request(640, 480)
+        #self.set_size_request(640, 480)
         
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         pdf.add(Setting("bool", u"Include header", "page_header_include", True))
@@ -226,13 +226,13 @@ class ExportWindow(gtk.Dialog):
                 adj = gtk.Adjustment(s.default, minn, maxx, 1, 0, 0)
                 widget = gtk.SpinButton(adj, 0.0, 0)
                 widget.connect("value-changed", s.callback, s.key)
-            if s.type in ["combo", "text"]:
+            if s.type == "text":
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)
                 align.add(gtk.Label(s.title))
                 table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
                 table.attach(widget, 1, 2, row, row + 1)
-            elif s.type == "spin":
+            elif s.type in ["combo", "spin"]:
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)
                 align.add(gtk.Label(s.title))
