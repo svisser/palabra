@@ -63,7 +63,7 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("page", "combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
         pdf.add(Setting("page", "combo", u"Clues:", "clue_placement", "wrap"
-            , [(u"Wrapped around grid", "wrap"), (u"Below the grid", "below")]))
+            , [(u"Wrapped around grid", "wrap"), (u"Below grid", "below")]))
         pdf.add(Setting("page", "spin", u"Columns", "n_columns", 3, (3, 5)))
         pdf.add(Setting("page", "spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
