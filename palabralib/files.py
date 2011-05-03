@@ -86,7 +86,7 @@ def export_puzzle(puzzle, filename, options):
         export_to_csv(puzzle, filename, outputs, settings)
     elif options["format"] == "pdf":
         settings.update({
-            "clue_header": {"across": "Across", "down": "Down", "font": "Sans 12"}
+            "clue_header": {"font": "Sans 10"}
             , "clue": {"font": "Sans 8"
                 , "length": False
             }
@@ -253,7 +253,15 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         for d in ["across", "down"]:
             c_h = settings["clue_header"]
             c_h_txt = settings["clue_header_" + d]
-            content["clue_header_" + d] = ''.join(['''<span font_desc="''', c_h["font"], '''">''', c_h_txt
+            c_h_bold = settings["clue_header_bold"]
+            c_h_italic = settings["clue_header_italic"]
+            
+            content["clue_header_" + d] = ''.join(['''<span font_desc="''', c_h["font"], '''">'''
+                , ("<b>" if c_h_bold else '')
+                , ("<i>" if c_h_italic else '')
+                , c_h_txt
+                , ("</i>" if c_h_italic else '')
+                , ("</b>" if c_h_bold else '')
                 , '''</span>'''])
             c_c = settings["clue"]
             content["clue_markup"][d] = ''.join(['''<span font_desc="''', c_c["font"], '''">'''])

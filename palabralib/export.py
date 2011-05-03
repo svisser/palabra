@@ -73,6 +73,8 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("clue", "bool", u"Add period after clue number", "clue_number_period", False))
         pdf.add(Setting("clue", "text", u"Across header:", "clue_header_across", u"Across"))
         pdf.add(Setting("clue", "text", u"Down header:", "clue_header_down", u"Down"))
+        pdf.add(Setting("clue", "bool", u"Bold clue header", "clue_header_bold", True))
+        pdf.add(Setting("clue", "bool", u"Italic clue header", "clue_header_italic", False))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.format = None
