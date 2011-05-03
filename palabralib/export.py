@@ -151,6 +151,8 @@ class ExportWindow(gtk.Dialog):
         self.options_window.show_all()
         
     def on_tree_clicked(self, treeview, event):
+        if event.button != 1:
+            return True
         if event.button == 1:
             x = int(event.x)
             y = int(event.y)
