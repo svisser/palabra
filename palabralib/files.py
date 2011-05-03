@@ -354,12 +354,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.properties["cell", "size"] = min(24, size)
             grid_w, grid_h = puzzle.view.properties.visual_size(False)
             if align == "right":
-                position = width - margin[0] - grid_w, margin[1]
+                pos_x, pos_y = width - margin[0] - grid_w, margin[1]
             elif settings["align"] == "center":
-                position = (width - grid_w) / 2, margin[1]
+                pos_x, pos_y = (width - grid_w) / 2, margin[1]
             elif settings["align"] == "left":
-                position = margin
-            puzzle.view.properties.margin = position
+                pos_x, pos_y = margin
+            puzzle.view.properties.margin = (pos_x, pos_y)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             puzzle.view.pdf_reset(prevs)
             content = produce_clues(clue_break=True)
@@ -372,7 +372,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 col_height = c_height
                 col_x = x + n * col_width + n * padding
                 col_y = y
-                if n >= 1:
+                if (col_x < pos_x + grid_w and col_x + col_width > pos_x
+                    and col_y < pos_y + grid_h and col_y + col_height > pos_y):
                     col_height -= (grid_h + padding)
                     col_y += (grid_h + padding)
                 columns.append((col_x, col_y, col_width, col_height))
