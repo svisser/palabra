@@ -350,6 +350,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             padding = 20
             n_columns = settings["n_columns"]
             align = settings["align"]
+            clue_placement = settings["clue_placement"]
             
             props = puzzle.view.properties
             prevs = {
@@ -388,8 +389,14 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 col_height = c_height
                 col_x = x + n * col_width + n * padding
                 col_y = y
-                if (col_x < pos_x + grid_w and col_x + col_width > pos_x
-                    and col_y < pos_y + grid_h and col_y + col_height > pos_y):
+                
+                shrink = False
+                if clue_placement == "below":
+                    shrink = True
+                elif clue_placement == "wrap":
+                    shrink = (col_x < pos_x + grid_w and col_x + col_width > pos_x
+                    and col_y < pos_y + grid_h and col_y + col_height > pos_y)
+                if shrink:
                     col_height -= (grid_h + padding)
                     col_y += (grid_h + padding)
                 columns.append((col_x, col_y, col_width, col_height))

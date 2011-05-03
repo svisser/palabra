@@ -59,6 +59,8 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("text", u"Header:", "page_header_text", "%T / %F / %P"))
         pdf.add(Setting("combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
+        pdf.add(Setting("combo", u"Clues:", "clue_placement", "wrap"
+            , [(u"Wrapped around grid", "wrap"), (u"Below the grid", "below")]))
         pdf.add(Setting("spin", u"Columns", "n_columns", 3, (3, 5)))
         pdf.add(Setting("spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
         pdf.add(Setting("spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
