@@ -336,7 +336,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             pages.append("solution")
     p_h = settings["page_header"]
     for i, p in enumerate(pages):
-        header = settings["page_header_include"] and {"all": True, "first": i == 0}[p_h["include_where"]]
+        p_h_include = settings["page_header_include"]
+        p_h_all = settings["page_header_include_all"]
+        header = p_h_include and (True if p_h_all else i == 0)
+        print i, header
         context.save()
         if header:
             pdf_header()

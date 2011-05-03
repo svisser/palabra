@@ -33,6 +33,9 @@ class Format:
         self.allow_multiple = allow_multiple
         self.settings = []
         
+    def add(self, s):
+        self.settings.append(s)
+        
 class FormatSetting:
     def __init__(self, type, title, key, default, properties=None):
         self.type = type
@@ -55,22 +58,12 @@ class ExportWindow(gtk.Dialog):
         self.formats = []
 
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
+        pdf.add(FormatSetting("bool", u"Include header?", "page_header_include", True))
+        pdf.add(FormatSetting("text", u"Header:", "page_header_text", "%T / %F / %P"))
+        pdf.add(FormatSetting("bool", u"Include header on each page?", "page_header_include_all", False))
         self.formats.append(pdf)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
-
-        def text_callback(entry, key):
-            self.options["settings"][key] = entry.get_text()
-        def bool_callback(button, key):
-
-            self.options["settings"][key] = button.get_active()
-            print self.options["settings"]
-        s = FormatSetting("bool", u"Include header?", "page_header_include", True)
-        s.callback = bool_callback
-        pdf.settings.append(s)
-        s = FormatSetting("text", u"Page header:", "page_header_text", "%T / %F / %P")
-        s.callback = text_callback
-        pdf.settings.append(s)
         
         items = gtk.ListStore(str)
         for format in self.formats:
@@ -111,6 +104,18 @@ class ExportWindow(gtk.Dialog):
         main.pack_start(self.options_window, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         
+        def _text_callback(entry, key):
+            self.options["settings"][key] = entry.get_text()
+        def _bool_callback(button, key):
+            self.options["settings"][key] = button.get_active()
+
+        for f in self.formats:
+            for s in f.settings:
+                if s.type == "text":
+                    s.callback = _text_callback
+                elif s.type == "bool":
+                    s.callback = _bool_callback
+        
         self.reset_options()
         
         starting_index = 0
@@ -148,7 +153,6 @@ class ExportWindow(gtk.Dialog):
         if event.button == 1:
             x = int(event.x)
             y = int(event.y)
-            
             item = treeview.get_path_at_pos(x, y)
             if item is not None:
                 path, col, cellx, celly = item
