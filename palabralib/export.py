@@ -53,23 +53,19 @@ class ExportWindow(gtk.Dialog):
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags, buttons)
         self.set_size_request(480, 420)
         
-        self.format = None
-        self.formats = []
-
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         pdf.add(Setting("bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("bool", u"Include header on each page", "page_header_include_all", False))
         pdf.add(Setting("text", u"Header:", "page_header_text", "%T / %F / %P"))
-        pdf.add(Setting("combo", u"Align puzzle:", "align", "right"
+        pdf.add(Setting("combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
-        self.formats.append(pdf)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
-        self.formats.append(png)
+        self.formats = [pdf, png]
+        self.format = None
         
         items = gtk.ListStore(str)
         for format in self.formats:
             items.append([format.title])
-        
         tree = gtk.TreeView(items)
         tree.set_headers_visible(False)
         tree.connect("button_press_event", self.on_tree_clicked)
@@ -136,17 +132,13 @@ class ExportWindow(gtk.Dialog):
         if self.format is not None:
             self.options_window.remove(self.option)
         self.format = self.formats[index]
-        
         self.reset_options()
         self.options["format"] = self.format.key
-        
         def callback(widget, data=None):
             self.options["output"][data] = widget.get_active()
-        
         self.option = gtk.VBox(False, 0)
         self._create_output_options(self.option, self.format, callback)
         self._create_settings(self.option, self.format)
-        
         self.options_window.pack_start(self.option, False, False, 0)
         self.options_window.show_all()
         
@@ -165,7 +157,6 @@ class ExportWindow(gtk.Dialog):
         label.set_alignment(0, 0)
         label.set_markup(u"<b>Output</b>")
         main.pack_start(label, False, False, 6)
-
         prev_option = None
         options = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
         for i, (key, title) in enumerate(options):
