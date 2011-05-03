@@ -61,6 +61,8 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("bool", u"Include header on each page", "page_header_include_all", False))
         pdf.add(Setting("text", u"Header:", "page_header_text", "%T / %F / %P"))
+        pdf.add(Setting("combo", u"Align puzzle:", "align", "right"
+            , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
         self.formats.append(pdf)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
@@ -108,14 +110,14 @@ class ExportWindow(gtk.Dialog):
             self.options["settings"][key] = entry.get_text()
         def _bool_callback(button, key):
             self.options["settings"][key] = button.get_active()
-
+        def _combo_callback(combo, key, props):
+            self.options["settings"][key] = props[combo.get_active()][1]
         for f in self.formats:
             for s in f.settings:
-                if s.type == "text":
-                    s.callback = _text_callback
-                elif s.type == "bool":
-                    s.callback = _bool_callback
-        
+                s.callback = {"text": _text_callback
+                    , "bool": _bool_callback
+                    , "combo": _combo_callback
+                }[s.type]
         self.reset_options()
         
         starting_index = 0
@@ -189,25 +191,26 @@ class ExportWindow(gtk.Dialog):
         
     @staticmethod
     def _create_settings(main, format):
-        if len(format.settings) == 0:
+        if not format.settings:
             return
-            
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup(u"<b>Settings</b>")
         main.pack_start(label, False, False, 6)
-        
         table = gtk.Table(len(format.settings), 2)
         table.set_col_spacings(6)
+        table.set_row_spacings(3)
         main.pack_start(table, False, False, 0)
-        
-        row = 0
-        for s in format.settings:
+        for row, s in enumerate(format.settings):
             if s.type == "combo":
                 widget = gtk.combo_box_new_text()
-                for title, value in s.properties:
+                index = 0
+                for i, (title, value) in enumerate(s.properties):
                     widget.append_text(title)
-                widget.connect("changed", s.callback)
+                    if value == s.default:
+                        index = i
+                widget.set_active(index)
+                widget.connect("changed", s.callback, s.key, s.properties)
             elif s.type == "text":
                 widget = gtk.Entry()
                 widget.set_text(s.default)
@@ -229,4 +232,3 @@ class ExportWindow(gtk.Dialog):
                 table.attach(align, 0, 2, row, row + 1, gtk.FILL, gtk.FILL)
             if s.initialize is not None:
                 s.initialize(widget)
-            row += 1

@@ -346,7 +346,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         if p == "grid":
             padding = 20
             n_columns = 3
-            align = "right"
+            align = settings["align"]
             
             props = puzzle.view.properties
             prevs = {
