@@ -89,7 +89,6 @@ def export_puzzle(puzzle, filename, options):
             "clue_header": {"across": "Across", "down": "Down", "font": "Sans 12"}
             , "clue": {"font": "Sans 8"
                 , "length": False
-                , "period": False
             }
             , "page_header": {"font": "Sans 10"}
         })
@@ -265,7 +264,14 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 except KeyError:
                     txt = '''<span color="#ff0000">(missing clue)</span>'''
                 txt = txt.replace("&", "&amp;")
-                clue_txt += ["<b>", str(n), ('.' if c_c["period"] else ''), "</b> ", txt]
+                if settings["clue_number_bold"]:
+                    clue_txt += ["<b>"]
+                clue_txt += [str(n)]
+                if settings["clue_number_period"]:
+                    clue_txt += ['.']
+                if settings["clue_number_bold"]:
+                    clue_txt += ["</b>"]
+                clue_txt += [' ', txt]
                 if c_c["length"]:
                     clue_txt += [" (", str(puzzle.grid.word_length(x, y, d)), ")"]
                 if clue_break:

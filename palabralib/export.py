@@ -66,6 +66,8 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
         pdf.add(Setting("spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
         pdf.add(Setting("spin", u"Margin bottom (mm)", "margin_bottom", 20, (0, 50)))
+        pdf.add(Setting("bool", u"Bold clue number", "clue_number_bold", True))
+        pdf.add(Setting("bool", u"Add period after clue number", "clue_number_period", False))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.format = None
