@@ -92,6 +92,10 @@ def export_puzzle(puzzle, filename, options):
                 , "period": False
             }
             , "page_header": {"font": "Sans 10"}
+            , "margin_left": 25
+            , "margin_right": 25
+            , "margin_top": 25
+            , "margin_bottom": 25
         })
         export_to_pdf(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
@@ -201,12 +205,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     height = paper_size.get_height(gtk.UNIT_POINTS)
     mm_unit = width / paper_size.get_width(gtk.UNIT_MM)
     
-    margin_left = 25 * mm_unit
-    margin_right = 25 * mm_unit
-    margin_top = 25 * mm_unit
-    margin_down = 25 * mm_unit
+    margin_left = settings["margin_left"] * mm_unit
+    margin_right = settings["margin_right"] * mm_unit
+    margin_top = settings["margin_top"] * mm_unit
+    margin_bottom = settings["margin_bottom"] * mm_unit
     c_width = width - margin_left - margin_right
-    c_height = height - margin_top - margin_down
+    c_height = height - margin_top - margin_bottom
     
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
