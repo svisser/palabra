@@ -44,7 +44,6 @@ class Setting:
         self.default = default
         self.properties = properties
         self.callback = None
-        self.initialize = None
 
 class ExportWindow(gtk.Dialog):
     def __init__(self, palabra_window):
@@ -230,5 +229,3 @@ class ExportWindow(gtk.Dialog):
                 align.set_padding(0, 0, 12, 0)
                 align.add(widget)
                 table.attach(align, 0, 2, row, row + 1, gtk.FILL, gtk.FILL)
-            if s.initialize is not None:
-                s.initialize(widget)
