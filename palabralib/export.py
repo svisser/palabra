@@ -17,6 +17,8 @@
 
 import gtk
 
+SETTING_TABS = [("page", u"Page"), ("clue", u"Clue")]
+
 def verify_output_options(options):
     for key, value in options["output"].items():
         if value:
@@ -37,7 +39,8 @@ class Format:
         self.settings.append(s)
         
 class Setting:
-    def __init__(self, type, title, key, default, properties=None):
+    def __init__(self, tab, type, title, key, default, properties=None):
+        self.tab = tab
         self.type = type
         self.title = title
         self.key = key
@@ -54,20 +57,20 @@ class ExportWindow(gtk.Dialog):
         #self.set_size_request(640, 480)
         
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
-        pdf.add(Setting("bool", u"Include header", "page_header_include", True))
-        pdf.add(Setting("bool", u"Include header on each page", "page_header_include_all", False))
-        pdf.add(Setting("text", u"Header:", "page_header_text", "%T / %F / %P"))
-        pdf.add(Setting("combo", u"Align grid:", "align", "right"
+        pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
+        pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
+        pdf.add(Setting("page", "text", u"Header:", "page_header_text", "%T / %F / %P"))
+        pdf.add(Setting("page", "combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
-        pdf.add(Setting("combo", u"Clues:", "clue_placement", "wrap"
+        pdf.add(Setting("page", "combo", u"Clues:", "clue_placement", "wrap"
             , [(u"Wrapped around grid", "wrap"), (u"Below the grid", "below")]))
-        pdf.add(Setting("spin", u"Columns", "n_columns", 3, (3, 5)))
-        pdf.add(Setting("spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
-        pdf.add(Setting("spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
-        pdf.add(Setting("spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
-        pdf.add(Setting("spin", u"Margin bottom (mm)", "margin_bottom", 20, (0, 50)))
-        pdf.add(Setting("bool", u"Bold clue number", "clue_number_bold", True))
-        pdf.add(Setting("bool", u"Add period after clue number", "clue_number_period", False))
+        pdf.add(Setting("page", "spin", u"Columns", "n_columns", 3, (3, 5)))
+        pdf.add(Setting("page", "spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
+        pdf.add(Setting("page", "spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
+        pdf.add(Setting("page", "spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
+        pdf.add(Setting("page", "spin", u"Margin bottom (mm)", "margin_bottom", 20, (0, 50)))
+        pdf.add(Setting("clue", "bool", u"Bold clue number", "clue_number_bold", True))
+        pdf.add(Setting("clue", "bool", u"Add period after clue number", "clue_number_period", False))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.format = None
@@ -142,16 +145,48 @@ class ExportWindow(gtk.Dialog):
         
     def select_format(self, index):
         if self.format is not None:
-            self.options_window.remove(self.option)
+            for w in self.removes:
+                self.options_window.remove(w)
         self.format = self.formats[index]
         self.reset_options()
         self.options["format"] = self.format.key
         def callback(widget, data=None):
             self.options["output"][data] = widget.get_active()
+        self.tabs = gtk.Notebook()
+        self.tabs.set_property("tab-hborder", 4)
+        self.tabs.set_property("tab-vborder", 4)
+        n_tabs = 0
+        for k, t in SETTING_TABS:
+            key_setts = [v for v in self.format.settings if v.tab == k]
+            if not key_setts:
+                continue
+            n_tabs += 1
+            tab = gtk.HBox(False, 0)
+            tab.set_border_width(6)
+            tab.set_spacing(6)
+            tab_c = gtk.VBox(False, 0)
+            self._create_settings(tab_c, key_setts)
+            tab.pack_start(tab_c, True, True, 0)
+            self.tabs.append_page(tab, gtk.Label(t))
         self.option = gtk.VBox(False, 0)
         self._create_output_options(self.option, self.format, callback)
-        self._create_settings(self.option, self.format)
+        self.removes = []        
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup(u"<b>Settings:</b>")
+        self.options_window.pack_start(label, False, False, 6)
+        self.removes.append(label)
+        if n_tabs > 0:
+            self.options_window.pack_start(self.tabs, True, True, 0)
+            self.removes.append(self.tabs)
+        else:
+            label = gtk.Label()
+            label.set_alignment(0, 0)
+            label.set_markup(u"No settings available.")
+            self.options_window.pack_start(label, False, False, 6)
+            self.removes.append(label)
         self.options_window.pack_start(self.option, False, False, 0)
+        self.removes.append(self.option)
         self.options_window.show_all()
         
     def on_tree_clicked(self, treeview, event):
@@ -194,18 +229,14 @@ class ExportWindow(gtk.Dialog):
                 main.pack_start(align, False, False, 0)
         
     @staticmethod
-    def _create_settings(main, format):
-        if not format.settings:
+    def _create_settings(main, settings):
+        if not settings:
             return
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup(u"<b>Settings</b>")
-        main.pack_start(label, False, False, 6)
-        table = gtk.Table(len(format.settings), 2)
+        table = gtk.Table(len(settings), 2)
         table.set_col_spacings(6)
         table.set_row_spacings(3)
         main.pack_start(table, False, False, 0)
-        for row, s in enumerate(format.settings):
+        for row, s in enumerate(settings):
             if s.type == "combo":
                 widget = gtk.combo_box_new_text()
                 index = 0
