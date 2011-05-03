@@ -87,9 +87,7 @@ def export_puzzle(puzzle, filename, options):
     elif options["format"] == "pdf":
         settings.update({
             "clue_header": {"font": "Sans 10"}
-            , "clue": {"font": "Sans 8"
-                , "length": False
-            }
+            , "clue": {"font": "Sans 8"}
             , "page_header": {"font": "Sans 10"}
         })
         export_to_pdf(puzzle, filename, outputs, settings)
@@ -281,7 +279,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 if settings["clue_number_bold"]:
                     clue_txt += ["</b>"]
                 clue_txt += [' ', txt]
-                if c_c["length"]:
+                if settings["clue_length"]:
                     clue_txt += [" (", str(puzzle.grid.word_length(x, y, d)), ")"]
                 if clue_break:
                     clue_txt += ["\n"]
