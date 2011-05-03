@@ -339,7 +339,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         p_h_include = settings["page_header_include"]
         p_h_all = settings["page_header_include_all"]
         header = p_h_include and (True if p_h_all else i == 0)
-        print i, header
         context.save()
         if header:
             pdf_header()

@@ -36,7 +36,7 @@ class Format:
     def add(self, s):
         self.settings.append(s)
         
-class FormatSetting:
+class Setting:
     def __init__(self, type, title, key, default, properties=None):
         self.type = type
         self.title = title
@@ -58,9 +58,9 @@ class ExportWindow(gtk.Dialog):
         self.formats = []
 
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
-        pdf.add(FormatSetting("bool", u"Include header?", "page_header_include", True))
-        pdf.add(FormatSetting("text", u"Header:", "page_header_text", "%T / %F / %P"))
-        pdf.add(FormatSetting("bool", u"Include header on each page?", "page_header_include_all", False))
+        pdf.add(Setting("bool", u"Include header", "page_header_include", True))
+        pdf.add(Setting("bool", u"Include header on each page", "page_header_include_all", False))
+        pdf.add(Setting("text", u"Header:", "page_header_text", "%T / %F / %P"))
         self.formats.append(pdf)
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats.append(png)
@@ -216,12 +216,17 @@ class ExportWindow(gtk.Dialog):
                 widget = gtk.CheckButton(s.title)
                 widget.set_active(s.default)
                 widget.connect("toggled", s.callback, s.key)
-            align = gtk.Alignment(0, 0.5)
-            align.set_padding(0, 0, 12, 0)
-            align.add(gtk.Label(s.title) if s.type != "bool" else widget)
-            table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
             if s.type != "bool":
+                align = gtk.Alignment(0, 0.5)
+                align.set_padding(0, 0, 12, 0)
+                align.add(gtk.Label(s.title))
+                table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
                 table.attach(widget, 1, 2, row, row + 1)
+            else:
+                align = gtk.Alignment(0, 0.5)
+                align.set_padding(0, 0, 12, 0)
+                align.add(widget)
+                table.attach(align, 0, 2, row, row + 1, gtk.FILL, gtk.FILL)
             if s.initialize is not None:
                 s.initialize(widget)
             row += 1
