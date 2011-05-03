@@ -91,9 +91,7 @@ def export_puzzle(puzzle, filename, options):
                 , "length": False
                 , "period": False
             }
-            , "page_header": {"font": "Sans 10"
-                , "include_where": "all" # "all" / "first"
-            }
+            , "page_header": {"font": "Sans 10"}
         })
         export_to_pdf(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
@@ -345,7 +343,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.translate(0, 24)
         if p == "grid":
             padding = 20
-            n_columns = 3
+            n_columns = settings["n_columns"]
             align = settings["align"]
             
             props = puzzle.view.properties

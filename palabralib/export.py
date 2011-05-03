@@ -59,6 +59,7 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("text", u"Header:", "page_header_text", "%T / %F / %P"))
         pdf.add(Setting("combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
+        pdf.add(Setting("spin", u"Columns", "n_columns", 3, (3, 5)))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.format = None
@@ -107,11 +108,15 @@ class ExportWindow(gtk.Dialog):
             self.options["settings"][key] = button.get_active()
         def _combo_callback(combo, key, props):
             self.options["settings"][key] = props[combo.get_active()][1]
+        def _spin_callback(spinner, key):
+            self.options["settings"][key] = spinner.get_value_as_int()
+            print spinner.get_value_as_int()
         for f in self.formats:
             for s in f.settings:
                 s.callback = {"text": _text_callback
                     , "bool": _bool_callback
                     , "combo": _combo_callback
+                    , "spin": _spin_callback
                 }[s.type]
         self.reset_options()
         
@@ -209,13 +214,26 @@ class ExportWindow(gtk.Dialog):
                 widget = gtk.CheckButton(s.title)
                 widget.set_active(s.default)
                 widget.connect("toggled", s.callback, s.key)
-            if s.type != "bool":
+            elif s.type == "spin":
+                minn, maxx = s.properties
+                adj = gtk.Adjustment(s.default, minn, maxx, 1, 0, 0)
+                widget = gtk.SpinButton(adj, 0.0, 0)
+                widget.connect("value-changed", s.callback, s.key)
+            if s.type in ["combo", "text"]:
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)
                 align.add(gtk.Label(s.title))
                 table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
                 table.attach(widget, 1, 2, row, row + 1)
-            else:
+            elif s.type == "spin":
+                align = gtk.Alignment(0, 0.5)
+                align.set_padding(0, 0, 12, 0)
+                align.add(gtk.Label(s.title))
+                table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
+                align = gtk.Alignment(0, 0.5)
+                align.add(widget)
+                table.attach(align, 1, 2, row, row + 1)
+            elif s.type == "bool":
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)
                 align.add(widget)
