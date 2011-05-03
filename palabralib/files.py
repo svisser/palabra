@@ -355,9 +355,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             grid_w, grid_h = puzzle.view.properties.visual_size(False)
             if align == "right":
                 pos_x, pos_y = width - margin[0] - grid_w, margin[1]
-            elif settings["align"] == "center":
+            elif align == "center":
                 pos_x, pos_y = (width - grid_w) / 2, margin[1]
-            elif settings["align"] == "left":
+            elif align == "left":
                 pos_x, pos_y = margin
             puzzle.view.properties.margin = (pos_x, pos_y)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
