@@ -59,7 +59,7 @@ class ExportWindow(gtk.Dialog):
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
-        pdf.add(Setting("page", "text", u"Header:", "page_header_text", "%T / %F / %P"))
+        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %F / %P"))
         pdf.add(Setting("page", "combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
         pdf.add(Setting("page", "combo", u"Clues:", "clue_placement", "wrap"
@@ -71,6 +71,8 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("page", "spin", u"Margin bottom (mm)", "margin_bottom", 20, (0, 50)))
         pdf.add(Setting("clue", "bool", u"Bold clue number", "clue_number_bold", True))
         pdf.add(Setting("clue", "bool", u"Add period after clue number", "clue_number_period", False))
+        pdf.add(Setting("clue", "text", u"Across header:", "clue_header_across", u"Across"))
+        pdf.add(Setting("clue", "text", u"Down header:", "clue_header_down", u"Down"))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.format = None

@@ -249,10 +249,11 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
     def produce_clues(clue_break=False):
-        content = {"header": {}, "clue_markup": {}, "clues": {}}
+        content = {"clue_markup": {}, "clues": {}}
         for d in ["across", "down"]:
             c_h = settings["clue_header"]
-            content["header"][d] = ''.join(['''<span font_desc="''', c_h["font"], '''">''', c_h[d]
+            c_h_txt = settings["clue_header_" + d]
+            content["clue_header_" + d] = ''.join(['''<span font_desc="''', c_h["font"], '''">''', c_h_txt
                 , '''</span>'''])
             c_c = settings["clue"]
             content["clue_markup"][d] = ''.join(['''<span font_desc="''', c_c["font"], '''">'''])
@@ -286,7 +287,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         content = produce_clues(clue_break=False)
         c = []
         for d in ["across", "down"]:
-            c.append(content["header"][d])
+            c.append(content["clue_header_" + d])
             c.append("\n")
             c.append(content["clue_markup"][d])
             c.extend(content["clues"][d])
@@ -319,7 +320,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                         break
                     cur_d, cur_i, has_h = "down", 0, True
                 if has_h:
-                    c.append(content["header"][cur_d] + "\n")
+                    c.append(content["clue_header_" + cur_d] + "\n")
                     c.append(content["clue_markup"][cur_d])
                     has_h, in_clue = False, True
                 else:
