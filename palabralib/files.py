@@ -253,11 +253,14 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             c_h_txt = settings["clue_header_" + d]
             c_h_bold = settings["clue_header_bold"]
             c_h_italic = settings["clue_header_italic"]
+            c_h_under = settings["clue_header_underline"]
             
             content["clue_header_" + d] = ''.join(['''<span font_desc="''', c_h["font"], '''">'''
                 , ("<b>" if c_h_bold else '')
                 , ("<i>" if c_h_italic else '')
+                , ("<u>" if c_h_under else '')
                 , c_h_txt
+                , ("</u>" if c_h_under else '')
                 , ("</i>" if c_h_italic else '')
                 , ("</b>" if c_h_bold else '')
                 , '''</span>'''])
