@@ -18,6 +18,7 @@
 import gtk
 
 SETTING_TABS = [("page", u"Page"), ("clue", u"Clue")]
+OUTPUT_OPTIONS = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
 
 class Format:
     def __init__(self, key, title, outputs, allow_multiple=True):
@@ -149,9 +150,6 @@ class ExportWindow(gtk.Dialog):
         self.format = self.formats[index]
         self.reset_options()
         self.options["format"] = self.format.key
-        def callback(widget, data=None):
-            self.options["output"][data] = widget.get_active()
-            self.check_ok_button(check=self.format.allow_multiple)
         self.tabs = gtk.Notebook()
         self.tabs.set_property("tab-hborder", 4)
         self.tabs.set_property("tab-vborder", 4)
@@ -169,6 +167,9 @@ class ExportWindow(gtk.Dialog):
             tab.pack_start(tab_c, True, True, 0)
             self.tabs.append_page(tab, gtk.Label(t))
         self.option = gtk.VBox(False, 0)
+        def callback(widget, data=None):
+            self.options["output"][data] = widget.get_active()
+            self.check_ok_button(check=self.format.allow_multiple)
         self._create_output_options(self.option, self.format, callback)
         self.removes = []        
         label = gtk.Label()
@@ -193,12 +194,10 @@ class ExportWindow(gtk.Dialog):
         if event.button != 1:
             return True
         if event.button == 1:
-            x = int(event.x)
-            y = int(event.y)
-            item = treeview.get_path_at_pos(x, y)
+            pos = int(event.x), int(event.y)
+            item = treeview.get_path_at_pos(*pos)
             if item is not None:
-                path, col, cellx, celly = item
-                self.select_format(path[0])
+                self.select_format(item[0][0])
                 
     def check_ok_button(self, check=True):
         try:
@@ -216,9 +215,8 @@ class ExportWindow(gtk.Dialog):
         label.set_markup(u"<b>Output</b>")
         main.pack_start(label, False, False, 6)
         prev_option = None
-        options = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
         self.outputs[format.key] = []
-        for i, (key, title) in enumerate(options):
+        for i, (key, title) in enumerate(OUTPUT_OPTIONS):
             if key in format.outputs:
                 if format.allow_multiple:
                     button = gtk.CheckButton(title)
