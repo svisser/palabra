@@ -306,10 +306,6 @@ class GridView:
         elif mode == constants.VIEW_MODE_PREVIEW_SOLUTION:
             self.settings.update(SETTINGS_PREVIEW_SOLUTION)
     
-    def pdf_configure(self, settings):
-        self.properties.margin = margin
-        return prev_cell_size, prev_margin
-        
     def pdf_reset(self, prevs):
         self.properties["cell", "size"] = prevs["cell", "size"]
         self.properties.margin = prevs["margin"]

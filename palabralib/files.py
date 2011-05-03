@@ -343,16 +343,30 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             pdf_header()
         context.translate(0, 24)
         if p == "grid":
+            padding = 20
             n_columns = 3
             align = "right"
             
+            props = puzzle.view.properties
             prevs = {
-                ("cell", "size"): puzzle.view.properties["cell", "size"]
-                , "margin": puzzle.view.properties.margin
+                ("cell", "size"): props["cell", "size"]
+                , "margin": props.margin
             }
-            size = 400 / puzzle.grid.width
-            puzzle.view.properties["cell", "size"] = min(24, size)
-            grid_w, grid_h = puzzle.view.properties.visual_size(False)
+            
+            col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
+            
+            alloc_grid_w = c_width - col_width - padding
+            while True:
+                while True:
+                    grid_w, grid_h = props.visual_size(False)
+                    if grid_w <= alloc_grid_w:
+                        break
+                    props["cell", "size"] -= 1
+                if props["cell", "size"] < 16:
+                    props["cell", "size"] = prevs["cell", "size"]
+                    alloc_grid_w = c_width
+                else:
+                    break
             if align == "right":
                 pos_x, pos_y = width - margin[0] - grid_w, margin[1]
             elif align == "center":
@@ -364,11 +378,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.pdf_reset(prevs)
             content = produce_clues(clue_break=True)
             
-            padding = 20
             x, y = 20, 20
             columns = []
             for n in xrange(n_columns):
-                col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
                 col_height = c_height
                 col_x = x + n * col_width + n * padding
                 col_y = y
@@ -384,7 +396,11 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 "align": "left"
                 , "margin": margin
             }
-            prevs = puzzle.view.pdf_configure(config)
+            prevs = {
+                ("cell", "size"): puzzle.view.properties["cell", "size"]
+                , "margin": puzzle.view.properties.margin
+            }
+            puzzle.view.margin = margin
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
             context.show_page()
             puzzle.view.pdf_reset(prevs)
