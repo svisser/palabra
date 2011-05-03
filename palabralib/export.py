@@ -19,14 +19,6 @@ import gtk
 
 SETTING_TABS = [("page", u"Page"), ("clue", u"Clue")]
 
-def verify_output_options(options):
-    for key, value in options["output"].items():
-        if value:
-            break
-    else:
-        return u"No output options are selected."
-    return None
-
 class Format:
     def __init__(self, key, title, outputs, allow_multiple=True):
         self.key = key
@@ -51,10 +43,7 @@ class Setting:
 class ExportWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
-        buttons = (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-            gtk.STOCK_SAVE, gtk.RESPONSE_OK)
-        super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags, buttons)
-        #self.set_size_request(640, 480)
+        super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags)
         
         pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
@@ -79,6 +68,7 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("clue", "bool", u"Underline clue header", "clue_header_underline", False))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
+        self.outputs = {}
         self.format = None
         
         items = gtk.ListStore(str)
@@ -140,6 +130,9 @@ class ExportWindow(gtk.Dialog):
         tree.get_selection().select_path(starting_index)
         self.select_format(starting_index)
         
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
     def reset_options(self):
         self.options = {}
         self.options["format"] = None
@@ -158,6 +151,10 @@ class ExportWindow(gtk.Dialog):
         self.options["format"] = self.format.key
         def callback(widget, data=None):
             self.options["output"][data] = widget.get_active()
+            if self.format.allow_multiple:
+                self.check_ok_button()
+            else:
+                self.ok_button.set_sensitive(True)
         self.tabs = gtk.Notebook()
         self.tabs.set_property("tab-hborder", 4)
         self.tabs.set_property("tab-vborder", 4)
@@ -205,15 +202,22 @@ class ExportWindow(gtk.Dialog):
             if item is not None:
                 path, col, cellx, celly = item
                 self.select_format(path[0])
+                
+    def check_ok_button(self):
+        bools = [w.get_active() for w in self.outputs[self.options["format"]]]
+        try:
+            self.ok_button.set_sensitive(True in bools)
+        except AttributeError:
+            pass
             
-    @staticmethod    
-    def _create_output_options(main, format, callback):
+    def _create_output_options(self, main, format, callback):
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup(u"<b>Output</b>")
         main.pack_start(label, False, False, 6)
         prev_option = None
         options = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
+        self.outputs[format.key] = []
         for i, (key, title) in enumerate(options):
             if key in format.outputs:
                 if format.allow_multiple:
@@ -222,6 +226,7 @@ class ExportWindow(gtk.Dialog):
                     if i == 0:
                         button.set_active(True)
                         callback(button, key)
+                    self.outputs[format.key].append(button)
                 else:
                     button = gtk.RadioButton(prev_option, title)
                     button.connect("toggled", callback, key)
@@ -233,6 +238,10 @@ class ExportWindow(gtk.Dialog):
                 align.set_padding(0, 0, 12, 0)
                 align.add(button)
                 main.pack_start(align, False, False, 0)
+        if format.allow_multiple:
+            self.check_ok_button()
+        else:
+            self.ok_button.set_sensitive(True)
         
     @staticmethod
     def _create_settings(main, settings):

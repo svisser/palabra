@@ -40,7 +40,7 @@ from appearance import AppearanceDialog
 import cPalabra
 from clue import ClueTool
 import constants
-from export import ExportWindow, verify_output_options
+from export import ExportWindow
 from editor import Editor, FillTool, WordTool
 from files import (
     FILETYPES,
@@ -356,36 +356,21 @@ class PalabraWindow(gtk.Window):
         action.stack.distance_from_saved = 0
         
     def export_puzzle(self):
-        window = ExportWindow(self)
-        window.show_all()
-        
-        response = window.run()
-        if response == gtk.RESPONSE_OK:
-            window.hide()
-            
-            options = window.options
-            message = verify_output_options(options)
-            if message is not None:
-                mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
-                    , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
-                mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-                mdialog.run()
-                mdialog.destroy()
-            else:
-                dialog = gtk.FileChooserDialog(u"Export location"
-                    , self
-                    , gtk.FILE_CHOOSER_ACTION_SAVE
-                    , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                    , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-                dialog.set_do_overwrite_confirmation(True)
-                
-                dialog.show_all()
-                response = dialog.run()
-                if response == gtk.RESPONSE_OK:
-                    export_puzzle(self.puzzle_manager.current_puzzle
-                        , dialog.get_filename(), options)
-                dialog.destroy()
-        window.destroy()
+        w = ExportWindow(self)
+        w.show_all() 
+        if w.run() == gtk.RESPONSE_OK:
+            w.hide()
+            d = gtk.FileChooserDialog(u"Export location", self
+                , gtk.FILE_CHOOSER_ACTION_SAVE
+                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+            d.set_do_overwrite_confirmation(True)
+            d.show_all() 
+            if d.run() == gtk.RESPONSE_OK:
+                export_puzzle(self.puzzle_manager.current_puzzle
+                    , d.get_filename(), w.options)
+            d.destroy()
+        w.destroy()
     
     def load_puzzle(self):
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)
