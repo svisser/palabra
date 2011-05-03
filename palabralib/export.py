@@ -151,10 +151,7 @@ class ExportWindow(gtk.Dialog):
         self.options["format"] = self.format.key
         def callback(widget, data=None):
             self.options["output"][data] = widget.get_active()
-            if self.format.allow_multiple:
-                self.check_ok_button()
-            else:
-                self.ok_button.set_sensitive(True)
+            self.check_ok_button(check=self.format.allow_multiple)
         self.tabs = gtk.Notebook()
         self.tabs.set_property("tab-hborder", 4)
         self.tabs.set_property("tab-vborder", 4)
@@ -203,10 +200,13 @@ class ExportWindow(gtk.Dialog):
                 path, col, cellx, celly = item
                 self.select_format(path[0])
                 
-    def check_ok_button(self):
-        bools = [w.get_active() for w in self.outputs[self.options["format"]]]
+    def check_ok_button(self, check=True):
         try:
-            self.ok_button.set_sensitive(True in bools)
+            sensitive = True
+            if check:
+                outputs = self.outputs[self.options["format"]]
+                sensitive = True in [w.get_active() for w in outputs]
+            self.ok_button.set_sensitive(sensitive)
         except AttributeError:
             pass
             
@@ -238,10 +238,7 @@ class ExportWindow(gtk.Dialog):
                 align.set_padding(0, 0, 12, 0)
                 align.add(button)
                 main.pack_start(align, False, False, 0)
-        if format.allow_multiple:
-            self.check_ok_button()
-        else:
-            self.ok_button.set_sensitive(True)
+        self.check_ok_button(check=format.allow_multiple)
         
     @staticmethod
     def _create_settings(main, settings):
