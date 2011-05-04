@@ -479,15 +479,11 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 show_clues_columns(content, columns)
                 context.show_page()
         elif p == "solution":
-            config = {
-                "align": "left"
-                , "margin": margin
-            }
             prevs = {
                 ("cell", "size"): puzzle.view.properties["cell", "size"]
                 , "margin": puzzle.view.properties.margin
             }
-            puzzle.view.margin = margin
+            puzzle.view.properties.margin = (margin_left, margin_top)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
             context.show_page()
             puzzle.view.pdf_reset(prevs)
