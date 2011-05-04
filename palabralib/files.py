@@ -246,7 +246,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         layout.set_markup(''.join(text))
         context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
-    def produce_clues(clue_break=False):
+    def produce_clues(clue_break=False, answers=False):
         content = {"clue_markup": {}, "clues": {}}
         for d in ["across", "down"]:
             c_h = settings["clue_header"]
@@ -286,7 +286,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     clue_txt += [" (", str(puzzle.grid.word_length(x, y, d)), ")"]
                 if clue_break:
                     clue_txt += ["\n"]
-                content["clues"][d].append(''.join(clue_txt))
+                result = ''.join(clue_txt)
+                if answers:
+                    result = (result, puzzle.grid.gather_word(x, y, d))
+                content["clues"][d].append(result)
         return content
     def show_clue_page_compact():
         pcr = pangocairo.CairoContext(context)
@@ -310,7 +313,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         cur_d, cur_i, has_h = "across", 0, True
         in_clue = False
         r_columns = []
-        for page, x, y, w, h in columns():
+        for page, x, y, w, h in columns:
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
             layout.set_width(pango.SCALE * w)
@@ -333,7 +336,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     c.append(content["clue_markup"][cur_d])
                     has_h, in_clue = False, True
                 else:
-                    c.append(stream[cur_d][cur_i])
+                    item = stream[cur_d][cur_i]
+                    if isinstance(item, tuple):
+                        clue = item[0]
+                    else:
+                        clue = item
+                    c.append(clue)
                     cur_i += 1
                 text = ''.join(c) + ("</span>" if in_clue else '')
                 layout.set_markup(text)
@@ -355,6 +363,28 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             layout.set_wrap(pango.WRAP_WORD_CHAR)
             layout.set_markup(text)
             pcr.show_layout(layout)
+    def gen_columns(n_columns, padding=None, grid_w=None, grid_h=None, grid_shrink=True):
+        page = 0
+        x, y = margin_left, margin_top
+        while True:
+            for n in xrange(n_columns):
+                col_height = c_height
+                col_x = x + n * col_width + n * padding
+                col_y = y
+                shrink = False
+                if page == 0 and grid_shrink:
+                    if clue_placement == "below":
+                        shrink = True
+                    elif clue_placement == "wrap":
+                        shrink = (col_x < pos_x + grid_w
+                            and col_x + col_width > pos_x
+                            and col_y < pos_y + grid_h
+                            and col_y + col_height > pos_y)
+                if shrink:
+                    col_height -= (grid_h + padding)
+                    col_y += (grid_h + padding)
+                yield page, col_x, col_y, col_width, col_height
+            page += 1
     pages = [o for o in outputs] # TODO
     p_h = settings["page_header"]
     for i, p in enumerate(pages):
@@ -401,30 +431,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             puzzle.view.pdf_reset(prevs)
             if p == "puzzle":
-                def gen_columns():
-                    page = 0
-                    x, y = margin_left, margin_top
-                    while True:
-                        for n in xrange(n_columns):
-                            col_height = c_height
-                            col_x = x + n * col_width + n * padding
-                            col_y = y
-                            shrink = False
-                            if page == 0:
-                                if clue_placement == "below":
-                                    shrink = True
-                                elif clue_placement == "wrap":
-                                    shrink = (col_x < pos_x + grid_w
-                                        and col_x + col_width > pos_x
-                                        and col_y < pos_y + grid_h
-                                        and col_y + col_height > pos_y)
-                            if shrink:
-                                col_height -= (grid_h + padding)
-                                col_y += (grid_h + padding)
-                            yield page, col_x, col_y, col_width, col_height
-                        page += 1
                 content = produce_clues(clue_break=True)
-                show_clues_columns(content, gen_columns)
+                columns = gen_columns(n_columns, padding, grid_w, grid_h)
+                show_clues_columns(content, columns)
                 context.show_page()
         elif p == "solution":
             config = {
@@ -440,7 +449,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             context.show_page()
             puzzle.view.pdf_reset(prevs)
         elif p == "answers":
-            pass
+            padding = 20
+            col_width = int(c_width)
+            content = produce_clues(clue_break=True, answers=True)
+            columns = gen_columns(1, padding, grid_shrink=False)
+            show_clues_columns(content, columns)
+            context.show_page()
         context.restore()
     surface.finish()
     
