@@ -79,6 +79,7 @@ META_WIDTH = 'width'
 META_HEIGHT = 'height'
 META_N_WORDS = 'word_count'
 META_N_BLOCKS = 'block_count'
+META_PAGE_NUMBER = 'page_number'
 
 # for export
 META_CODES = {
@@ -94,6 +95,7 @@ META_CODES = {
     , META_HEIGHT: "%H"
     , META_N_WORDS: "%N"
     , META_N_BLOCKS: "%B"
+    , META_PAGE_NUMBER: "%G"
 }
 
 # statusbar identifiers

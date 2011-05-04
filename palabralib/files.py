@@ -239,7 +239,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
-    def pdf_header():
+    def pdf_header(page_number):
         if not settings["page_header_include"]:
             return
         values = [
@@ -249,6 +249,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             , constants.META_HEIGHT
             , constants.META_N_WORDS
             , constants.META_N_BLOCKS
+            , constants.META_PAGE_NUMBER
         ]
         p_h_txt = settings["page_header_text"]
         for key, code in constants.META_CODES.items():
@@ -270,6 +271,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     value = str(puzzle.grid.count_words())
                 elif key == constants.META_N_BLOCKS:
                     value = str(puzzle.grid.count_blocks())
+                elif key == constants.META_PAGE_NUMBER:
+                    value = str(page_number + 1)
                 p_h_txt = p_h_txt.replace(code, value)
         p_h = settings["page_header"]
         pcr = pangocairo.CairoContext(context)
@@ -464,7 +467,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         header = p_header and p_h_include and (True if p_h_all else i == 0)
         context.save()
         if header:
-            pdf_header()
+            pdf_header(page_number=i)
             context.translate(0, 24)
         if p == "puzzle":
             display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE
