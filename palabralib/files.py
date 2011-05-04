@@ -191,6 +191,38 @@ def export_to_csv(puzzle, filename, outputs, settings):
                 line.append("\n")
                 f.write(''.join(line))
     f.close()
+    
+class PangoCairoTable():
+    def __init__(self, columns, margin):
+        self.columns = columns
+        self.margin = margin
+        
+    def render_rows(self, context, rows, height):
+        while True:
+            y = 0
+            for r_1, r_2 in rows:
+                if y >= height:
+                    y = 0
+                    context.show_page()
+                r_y = self.render(context, 0, y, r_1, wrap=True)
+                if r_2 is not None:
+                    self.render(context, 1, y, r_2)
+                y += r_y #(r_y / 2) # TODO why divide by 2
+            context.show_page()
+            break
+        
+    def render(self, context, x, y, text, wrap=False):
+        pcr = pangocairo.CairoContext(context)
+        layout = pcr.create_layout()
+        if wrap:
+            layout.set_width(pango.SCALE * self.columns[x])
+            layout.set_wrap(pango.WRAP_WORD_CHAR)
+        layout.set_markup(text)
+        r_x = sum(self.columns[0:x])
+        context.move_to(self.margin[0] + r_x, self.margin[1] + y)
+        pcr.show_layout(layout)
+        w, h = layout.get_pixel_size()
+        return h
                     
 def export_to_pdf(puzzle, filename, outputs, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
@@ -246,7 +278,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         layout.set_markup(''.join(text))
         context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
-    def produce_clues(clue_break=False, answers=False):
+    def produce_clues(clue_break=False, answers=False, reduce_to_rows=False):
         content = {"clue_markup": {}, "clues": {}}
         for d in ["across", "down"]:
             c_h = settings["clue_header"]
@@ -290,6 +322,17 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 if answers:
                     result = (result, puzzle.grid.gather_word(x, y, d))
                 content["clues"][d].append(result)
+        if reduce_to_rows:
+            rows = []
+            for d in ["across", "down"]:
+                rows.append((content["clue_header_" + d], None))
+                for clue, answer in content["clues"][d]:
+                    pre = content["clue_markup"][d]
+                    post = "</span>"
+                    clue = ''.join([pre, clue, post])
+                    answer = ''.join([pre, answer, post])
+                    rows.append((clue, answer))
+            return rows
         return content
     def show_clue_page_compact():
         pcr = pangocairo.CairoContext(context)
@@ -385,16 +428,16 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     col_y += (grid_h + padding)
                 yield page, col_x, col_y, col_width, col_height
             page += 1
-    pages = [o for o in outputs] # TODO
+    pages = [(o, o != "answers") for o in outputs]
     p_h = settings["page_header"]
-    for i, p in enumerate(pages):
+    for i, (p, p_header) in enumerate(pages):
         p_h_include = settings["page_header_include"]
         p_h_all = settings["page_header_include_all"]
         header = p_h_include and (True if p_h_all else i == 0)
         context.save()
-        if header:
+        if header and p_header:
             pdf_header()
-        context.translate(0, 24)
+            context.translate(0, 24)
         if p in ["puzzle", "grid"]:
             padding = 20
             n_columns = settings["n_columns"]
@@ -449,12 +492,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             context.show_page()
             puzzle.view.pdf_reset(prevs)
         elif p == "answers":
-            padding = 20
-            col_width = int(c_width)
-            content = produce_clues(clue_break=True, answers=True)
-            columns = gen_columns(1, padding, grid_shrink=False)
-            show_clues_columns(content, columns)
-            context.show_page()
+            rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
+            table = PangoCairoTable([int(0.6 * c_width), int(0.4 * c_width)]
+                , margin=(margin_left, margin_top))
+            table.render_rows(context, rows, c_height)
         context.restore()
     surface.finish()
     
