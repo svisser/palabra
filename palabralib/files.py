@@ -430,7 +430,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     col_y += (grid_h + padding)
                 yield page, col_x, col_y, col_width, col_height
             page += 1
-    def display_puzzle(page, mode):
+    def display_puzzle(mode, add_clues=False):
         padding = 20
         n_columns = settings["n_columns"]
         align = settings["align"]
@@ -461,7 +461,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         puzzle.view.properties.margin = position
         puzzle.view.render(context, mode)
         puzzle.view.pdf_reset(prevs)
-        if page == "puzzle":
+        if add_clues:
             content = produce_clues(clue_break=True)
             columns = gen_columns(col_width, padding, grid_w, grid_h, position)
             show_clues_columns(content, columns)
@@ -476,10 +476,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         if header:
             pdf_header()
             context.translate(0, 24)
-        if p in ["puzzle", "grid"]:
-            display_puzzle(p, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
+        if p == "puzzle":
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE, add_clues=True)
+        elif p == "grid":
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
         elif p == "solution":
-            display_puzzle(p, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
         elif p == "answers":
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
             columns = [int(0.6 * c_width), int(0.4 * c_width)]
