@@ -347,12 +347,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             layout.set_wrap(pango.WRAP_WORD_CHAR)
             layout.set_markup(text)
             pcr.show_layout(layout)
-    pages = []
-    for o in outputs:
-        if o == "grid":
-            pages.append("grid")
-        elif o == "solution":
-            pages.append("solution")
+    pages = [o for o in outputs] # TODO
     p_h = settings["page_header"]
     for i, p in enumerate(pages):
         p_h_include = settings["page_header_include"]
@@ -362,7 +357,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         if header:
             pdf_header()
         context.translate(0, 24)
-        if p == "grid":
+        if p in ["puzzle", "grid"]:
             padding = 20
             n_columns = settings["n_columns"]
             align = settings["align"]
@@ -397,27 +392,27 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.properties.margin = (pos_x, pos_y)
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             puzzle.view.pdf_reset(prevs)
-            content = produce_clues(clue_break=True)
-            
-            x, y = margin_left, margin_top
-            columns = []
-            for n in xrange(n_columns):
-                col_height = c_height
-                col_x = x + n * col_width + n * padding
-                col_y = y
-                
-                shrink = False
-                if clue_placement == "below":
-                    shrink = True
-                elif clue_placement == "wrap":
-                    shrink = (col_x < pos_x + grid_w and col_x + col_width > pos_x
-                    and col_y < pos_y + grid_h and col_y + col_height > pos_y)
-                if shrink:
-                    col_height -= (grid_h + padding)
-                    col_y += (grid_h + padding)
-                columns.append((col_x, col_y, col_width, col_height))
-            show_clues_columns(content, columns)
-            context.show_page()
+            if p == "puzzle":
+                content = produce_clues(clue_break=True)
+                x, y = margin_left, margin_top
+                columns = []
+                for n in xrange(n_columns):
+                    col_height = c_height
+                    col_x = x + n * col_width + n * padding
+                    col_y = y
+                    
+                    shrink = False
+                    if clue_placement == "below":
+                        shrink = True
+                    elif clue_placement == "wrap":
+                        shrink = (col_x < pos_x + grid_w and col_x + col_width > pos_x
+                        and col_y < pos_y + grid_h and col_y + col_height > pos_y)
+                    if shrink:
+                        col_height -= (grid_h + padding)
+                        col_y += (grid_h + padding)
+                    columns.append((col_x, col_y, col_width, col_height))
+                show_clues_columns(content, columns)
+                context.show_page()
         elif p == "solution":
             config = {
                 "align": "left"
@@ -431,6 +426,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
             context.show_page()
             puzzle.view.pdf_reset(prevs)
+        elif p == "answers":
+            pass
         context.restore()
     surface.finish()
     

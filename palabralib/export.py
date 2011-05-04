@@ -18,7 +18,12 @@
 import gtk
 
 SETTING_TABS = [("page", u"Page"), ("clue", u"Clue")]
-OUTPUT_OPTIONS = [("grid", u"Puzzle"), ("solution", u"Solution"), ("clues", u"Clues")]
+OUTPUT_OPTIONS = [("puzzle", u"Puzzle (grid and clues)")
+    , ("grid", u"Grid")
+    , ("solution", u"Solution")
+    , ("clues", u"Clues")
+    , ("answers", u"Clues and answers")
+]
 
 class Format:
     def __init__(self, key, title, outputs, allow_multiple=True):
@@ -46,7 +51,7 @@ class ExportWindow(gtk.Dialog):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags)
         
-        pdf = Format("pdf", u"PDF (pdf)", ["grid", "solution"])
+        pdf = Format("pdf", u"PDF (pdf)", ["puzzle", "grid", "solution", "answers"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
         pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %F / %P"))
