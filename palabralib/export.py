@@ -55,13 +55,13 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
         pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %F / %P"))
-        pdf.add(Setting("grid", "combo", u"Align grid:", "align", "right"
-            , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
         pdf.add(Setting("grid", "spin", u"Cell size in puzzle (mm)", "cell_size_puzzle", 7, (5, 10)))
         pdf.add(Setting("grid", "spin", u"Cell size in solution (mm)", "cell_size_solution", 6, (5, 10)))
-        pdf.add(Setting("page", "combo", u"Clues:", "clue_placement", "wrap"
+        pdf.add(Setting("grid", "combo", u"Align grid:", "align", "right"
+            , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
+        pdf.add(Setting("clue", "combo", u"Clues:", "clue_placement", "wrap"
             , [(u"Wrapped around grid", "wrap"), (u"Below grid", "below")]))
-        pdf.add(Setting("page", "spin", u"Columns", "n_columns", 3, (3, 5)))
+        pdf.add(Setting("clue", "spin", u"Columns", "n_columns", 3, (3, 5)))
         pdf.add(Setting("page", "spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
