@@ -22,7 +22,7 @@ OUTPUT_OPTIONS = [("puzzle", u"Puzzle")
     , ("grid", u"Grid")
     , ("solution", u"Solution")
     , ("clues", u"Clues")
-    , ("answers", u"Clues and answers")
+    , ("answers", u"Clues with answers")
 ]
 
 class Format:
@@ -50,7 +50,6 @@ class ExportWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags)
-        
         pdf = Format("pdf", u"PDF (pdf)", ["puzzle", "grid", "solution", "answers"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
@@ -85,13 +84,11 @@ class ExportWindow(gtk.Dialog):
         tree = gtk.TreeView(items)
         tree.set_headers_visible(False)
         tree.connect("button_press_event", self.on_tree_clicked)
-        
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=0)
         tree.append_column(column)
-        
         tree_window = gtk.ScrolledWindow(None, None)
         tree_window.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         tree_window.add(tree)
