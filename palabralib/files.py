@@ -430,10 +430,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     col_y += (grid_h + padding)
                 yield page, col_x, col_y, col_width, col_height
             page += 1
-    def display_puzzle(mode, add_clues=False):
+    def display_puzzle(mode, align, add_clues=False):
         padding = 20
         n_columns = settings["n_columns"]
-        align = settings["align"]
         props = puzzle.view.properties
         prevs = {
             ("cell", "size"): props["cell", "size"]
@@ -477,11 +476,13 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             pdf_header()
             context.translate(0, 24)
         if p == "puzzle":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE, add_clues=True)
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+                , align=settings["align"]
+                , add_clues=True)
         elif p == "grid":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE, align="center")
         elif p == "solution":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_SOLUTION)
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_SOLUTION, align="center")
         elif p == "answers":
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
             columns = [int(0.6 * c_width), int(0.4 * c_width)]
