@@ -430,7 +430,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     col_y += (grid_h + padding)
                 yield page, col_x, col_y, col_width, col_height
             page += 1
-    def display_puzzle(mode, align, add_clues=False):
+    def display_puzzle(mode, align, cell_size=7, add_clues=False):
         padding = 20
         n_columns = settings["n_columns"]
         props = puzzle.view.properties
@@ -439,18 +439,9 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             , "margin": props.margin
         }
         col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
-        alloc_grid_w = c_width - col_width - padding
-        while True:
-            while True:
-                grid_w, grid_h = props.visual_size(False)
-                if grid_w <= alloc_grid_w:
-                    break
-                props["cell", "size"] -= 1
-            if props["cell", "size"] < 16:
-                props["cell", "size"] = prevs["cell", "size"]
-                alloc_grid_w = c_width
-            else:
-                break
+        
+        props["cell", "size"] = cell_size * mm_unit
+        grid_w, grid_h = props.visual_size(False)
         if align == "right":
             position = width - margin_right - grid_w, margin_top
         elif align == "center":
@@ -478,11 +469,16 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         if p == "puzzle":
             display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE
                 , align=settings["align"]
+                , cell_size=settings["cell_size_puzzle"]
                 , add_clues=True)
         elif p == "grid":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE, align="center")
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+                , align="center"
+                , cell_size=settings["cell_size_puzzle"])
         elif p == "solution":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_SOLUTION, align="center")
+            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_SOLUTION
+                , align="center"
+                , cell_size=settings["cell_size_solution"])
         elif p == "answers":
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
             columns = [int(0.6 * c_width), int(0.4 * c_width)]

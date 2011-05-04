@@ -17,8 +17,8 @@
 
 import gtk
 
-SETTING_TABS = [("page", u"Page"), ("clue", u"Clue")]
-OUTPUT_OPTIONS = [("puzzle", u"Puzzle (grid and clues)")
+SETTING_TABS = [("page", u"Page"), ("grid", u"Grid"), ("clue", u"Clue")]
+OUTPUT_OPTIONS = [("puzzle", u"Puzzle")
     , ("grid", u"Grid")
     , ("solution", u"Solution")
     , ("clues", u"Clues")
@@ -55,8 +55,10 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
         pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %F / %P"))
-        pdf.add(Setting("page", "combo", u"Align grid:", "align", "right"
+        pdf.add(Setting("grid", "combo", u"Align grid:", "align", "right"
             , [(u"Left", "left"), (u"Center", "center"), (u"Right", "right")]))
+        pdf.add(Setting("grid", "spin", u"Cell size in puzzle (mm)", "cell_size_puzzle", 7, (5, 10)))
+        pdf.add(Setting("grid", "spin", u"Cell size in solution (mm)", "cell_size_solution", 6, (5, 10)))
         pdf.add(Setting("page", "combo", u"Clues:", "clue_placement", "wrap"
             , [(u"Wrapped around grid", "wrap"), (u"Below grid", "below")]))
         pdf.add(Setting("page", "spin", u"Columns", "n_columns", 3, (3, 5)))
@@ -156,7 +158,7 @@ class ExportWindow(gtk.Dialog):
         self.reset_options()
         self.options["format"] = self.format.key
         self.tabs = gtk.Notebook()
-        self.tabs.set_property("tab-hborder", 4)
+        self.tabs.set_property("tab-hborder", 8)
         self.tabs.set_property("tab-vborder", 4)
         n_tabs = 0
         for k, t in SETTING_TABS:
