@@ -142,7 +142,7 @@ class ExportWindow(gtk.Dialog):
     def reset_options(self):
         self.options = {}
         self.options["format"] = None
-        self.options["output"] = {"grid": False, "solution": False, "clues": False}
+        self.options["output"] = dict([(k, False) for k, v in OUTPUT_OPTIONS])
         self.options["settings"] = {}
         for f in self.formats:
             for s in f.settings:

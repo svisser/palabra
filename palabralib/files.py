@@ -80,7 +80,7 @@ def get_real_filename(f):
     return os.path.join(os.path.split(__file__)[0], f)
 
 def export_puzzle(puzzle, filename, options):
-    outputs = [k for k in ["grid", "solution"] if options["output"][k]]
+    outputs = [k for k in options["output"].keys() if options["output"][k]]
     settings = options["settings"]
     if options["format"] == "csv":
         export_to_csv(puzzle, filename, outputs, settings)
@@ -310,7 +310,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         cur_d, cur_i, has_h = "across", 0, True
         in_clue = False
         r_columns = []
-        for x, y, w, h in columns:
+        for page, x, y, w, h in columns():
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
             layout.set_width(pango.SCALE * w)
@@ -338,8 +338,16 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 text = ''.join(c) + ("</span>" if in_clue else '')
                 layout.set_markup(text)
                 l_w, l_h = layout.get_pixel_size()
-            r_columns.append((x, y, w, h, text))
-        for x, y, w, h, text in r_columns:
+            if not text:
+                break
+            r_columns.append((page, x, y, w, h, text))
+        prev_page = None
+        for page, x, y, w, h, text in r_columns:
+            if prev_page is None:
+                prev_page = page
+            if prev_page != page:
+                context.show_page()
+                prev_page = page
             context.move_to(x, y)
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
@@ -393,25 +401,30 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.render(context, constants.VIEW_MODE_EXPORT_PDF_PUZZLE)
             puzzle.view.pdf_reset(prevs)
             if p == "puzzle":
+                def gen_columns():
+                    page = 0
+                    x, y = margin_left, margin_top
+                    while True:
+                        for n in xrange(n_columns):
+                            col_height = c_height
+                            col_x = x + n * col_width + n * padding
+                            col_y = y
+                            shrink = False
+                            if page == 0:
+                                if clue_placement == "below":
+                                    shrink = True
+                                elif clue_placement == "wrap":
+                                    shrink = (col_x < pos_x + grid_w
+                                        and col_x + col_width > pos_x
+                                        and col_y < pos_y + grid_h
+                                        and col_y + col_height > pos_y)
+                            if shrink:
+                                col_height -= (grid_h + padding)
+                                col_y += (grid_h + padding)
+                            yield page, col_x, col_y, col_width, col_height
+                        page += 1
                 content = produce_clues(clue_break=True)
-                x, y = margin_left, margin_top
-                columns = []
-                for n in xrange(n_columns):
-                    col_height = c_height
-                    col_x = x + n * col_width + n * padding
-                    col_y = y
-                    
-                    shrink = False
-                    if clue_placement == "below":
-                        shrink = True
-                    elif clue_placement == "wrap":
-                        shrink = (col_x < pos_x + grid_w and col_x + col_width > pos_x
-                        and col_y < pos_y + grid_h and col_y + col_height > pos_y)
-                    if shrink:
-                        col_height -= (grid_h + padding)
-                        col_y += (grid_h + padding)
-                    columns.append((col_x, col_y, col_width, col_height))
-                show_clues_columns(content, columns)
+                show_clues_columns(content, gen_columns)
                 context.show_page()
         elif p == "solution":
             config = {
