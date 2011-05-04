@@ -337,23 +337,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     rows.append((clue, answer))
             return rows
         return content
-    def show_clue_page_compact():
-        pcr = pangocairo.CairoContext(context)
-        layout = pcr.create_layout()
-        layout.set_width(pango.SCALE * 500)
-        layout.set_wrap(pango.WRAP_WORD_CHAR)
-        content = produce_clues(clue_break=False)
-        c = []
-        for d in ["across", "down"]:
-            c.append(content["clue_header_" + d])
-            c.append("\n")
-            c.append(content["clue_markup"][d])
-            c.extend(content["clues"][d])
-            c.append("</span>\n\n")
-        layout.set_markup(''.join(c))
-        context.move_to(margin_left, margin_top)
-        pcr.show_layout(layout)
-        context.show_page()
     def show_clues_columns(content, columns):
         stream = dict([(d, content["clues"][d]) for d in ["across", "down"]])
         cur_d, cur_i, has_h = "across", 0, True
