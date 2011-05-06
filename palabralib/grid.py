@@ -79,19 +79,24 @@ class Grid:
             
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
-        is_available = self.is_available
-        data = self.data
-        if not is_available(x, y):
+        width, height, data = self.width, self.height, self.data
+        if not (0 <= x < width and 0 <= y < height):
+            return False
+        if data[y][x]["block"] or data[y][x]["void"]:
             return False
         for d in ([direction] if direction else ["across", "down"]):
             if d == "across":
                 bdx, bdy, adx, ady, bar_side = -1, 0, 1, 0, "left"
             elif d == "down":
                 bdx, bdy, adx, ady, bar_side = 0, -1, 0, 1, "top"
-            before = not is_available(x + bdx, y + bdy) or data[y][x]["bar"][bar_side]
+            is_available_xbdx_ybdy = ((0 <= x + bdx < width and 0 <= y + bdy < height)
+                and not data[y + bdy][x + bdx]["block"] and not data[y + bdy][x + bdx]["void"])
+            before = not is_available_xbdx_ybdy or data[y][x]["bar"][bar_side]
             if not before:
                 continue
-            after = is_available(x + adx, y + ady) and not data[y + ady][x + adx]["bar"][bar_side]
+            is_available_xadx_yady = ((0 <= x + adx < width and 0 <= y + ady < height)
+                and not data[y + ady][x + adx]["block"] and not data[y + ady][x + adx]["void"])
+            after = is_available_xadx_yady and not data[y + ady][x + adx]["bar"][bar_side]
             if after:
                 return True
         return False

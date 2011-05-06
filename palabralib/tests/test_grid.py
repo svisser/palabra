@@ -263,6 +263,14 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(self.grid.is_start_word(0, 0, "across"), False)
         self.assertEqual(self.grid.is_start_word(0, 0, "down"), False)
         
+    def testIsStartWordVoid(self):
+        self.assertEqual(self.grid.is_start_word(5, 1), False)
+        self.grid.set_void(4, 1, True)
+        self.assertEqual(self.grid.is_start_word(5, 1), True)
+        self.assertEqual(self.grid.is_start_word(1, 5), False)
+        self.grid.set_void(1, 4, True)
+        self.assertEqual(self.grid.is_start_word(1, 5), True)
+        
     def testGetStartWordOne(self):
         """All cells in a word return the first cell as the word's start."""
         for x in range(self.grid.width):
