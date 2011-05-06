@@ -80,6 +80,15 @@ META_HEIGHT = 'height'
 META_N_WORDS = 'word_count'
 META_N_BLOCKS = 'block_count'
 META_PAGE_NUMBER = 'page_number'
+META_EXPORT_VALUES = [
+    META_FILENAME
+    , META_FILEPATH
+    , META_WIDTH
+    , META_HEIGHT
+    , META_N_WORDS
+    , META_N_BLOCKS
+    , META_PAGE_NUMBER
+]
 
 # for export
 META_CODES = {
