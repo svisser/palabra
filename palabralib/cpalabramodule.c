@@ -629,6 +629,171 @@ cPalabra_compute_lines(PyObject *self, PyObject *args) {
     return lines;
 }
 
+static PyObject*
+cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
+    PyObject *grid;
+    PyObject *data;
+    PyObject *cells;
+    PyObject *grid_lines;
+    PyObject *all_lines;
+    PyObject *sx;
+    PyObject *sy;
+    const int line_width;
+    const int border_width;
+    const int cell_size;
+    if (!PyArg_ParseTuple(args, "OOOOOOOiii", &grid, &data, &cells, &grid_lines, &all_lines
+        , &sx, &sy, &line_width, &border_width, &cell_size))
+        return NULL;
+    PyObject* result = PyList_New(0);
+    
+    const int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    
+    Py_ssize_t c;
+    for (c = 0; c < PyList_Size(cells); c++) {
+        PyObject *cell = PyList_GetItem(cells, c);
+        const int x;
+        const int y;
+        if (!PyArg_ParseTuple(cell, "ii", &x, &y))
+            return NULL;
+        PyObject *cell_lines = PyDict_GetItem(grid_lines, cell);
+
+        Py_ssize_t l;
+        for (l = 0; l < PyList_Size(cell_lines); l++) {
+            PyObject *line = PyList_GetItem(cell_lines, l);
+            const int p;
+            const int q;
+            PyObject *ltype;
+            PyObject *side;
+            if (!PyArg_ParseTuple(line, "iiOO", &p, &q, &ltype, &side))
+                return NULL;
+            char *str_ltype = PyString_AsString(ltype);
+            char *str_side = PyString_AsString(side);
+            
+            PyObject *py_p = PyInt_FromLong(p);
+            PyObject *py_q = PyInt_FromLong(q);
+            PyObject *py_sx_p = PyObject_GetItem(sx, py_p);
+            PyObject *py_sy_q = PyObject_GetItem(sy, py_q);
+            Py_DECREF(py_p);
+            Py_DECREF(py_q);
+            const float sx_p = (float) PyFloat_AsDouble(py_sx_p);
+            const float sy_q = (float) PyFloat_AsDouble(py_sy_q);
+            int bar = 0 <= x && x < width && 0 <= y && y < height;
+            if (bar) {
+                PyObject *py_y = PyInt_FromLong(y);
+                PyObject* col = PyObject_GetItem(data, py_y);
+                Py_DECREF(py_y);
+                PyObject *py_x = PyInt_FromLong(x);
+                PyObject* cell = PyObject_GetItem(col, py_x);
+                Py_DECREF(py_x);
+                PyObject *py_bar = PyString_FromString("bar");
+                PyObject *item = PyObject_GetItem(cell, py_bar);
+                Py_DECREF(py_bar);
+                PyObject *b_item = PyObject_GetItem(item, ltype);
+                Py_DECREF(item);
+                bar = PyObject_IsTrue(b_item);
+                Py_DECREF(b_item);
+            }
+            const int border = strstr(str_side, "border") != NULL;
+            
+            const int l_is_normal = strcmp(str_side, "normal") == 0;
+            const int l_is_outer = strcmp(str_side, "outerborder") == 0;
+            const int l_is_inner = strcmp(str_side, "innerborder") == 0;
+            const int l_is_top = strcmp(str_ltype, "top") == 0;
+            const int l_is_left = strcmp(str_ltype, "left") == 0;
+            
+            float start = 0;
+            if (l_is_normal) {
+                start = -0.5 * line_width;
+            } else if (l_is_outer) {
+                start = -0.5 * border_width;
+            } else if (l_is_inner) {
+                start = 0.5 * border_width;
+                int check_x = 0;
+                int check_y = 0;
+                if (l_is_top) {
+                    check_x = x;
+                    check_y = y + 1;
+                } else if (l_is_left) {
+                    check_x = x + 1;
+                    check_y = y;
+                }
+                if (calc_is_available(grid, check_x, check_y) == 0 ||
+                    calc_is_available(grid, x, y) == 0) {
+                    start -= line_width;
+                }
+            }
+            
+            if (l_is_left) {
+                PyObject* r = Py_BuildValue("(ffiiii)", sx_p + start, sy_q, 0, cell_size, bar, border);
+                PyList_Append(result, r);
+                Py_DECREF(r);
+            } else if (l_is_top) {
+                int is_lb = 0;
+                int is_rb = 0;
+                int dxl = 0;
+                int dxr = 0;
+                
+                Py_ssize_t v;
+                for (v = 0; v < PyList_Size(all_lines); v++) {
+                    PyObject *v_item = PyList_GetItem(all_lines, v);
+                    const int v_x;
+                    const int v_y;
+                    PyObject *v_ltype;
+                    PyObject *v_side;
+                    if (!PyArg_ParseTuple(v_item, "iiOO", &v_x, &v_y, &v_ltype, &v_side))
+                        return NULL;
+                    char *str_v_ltype = PyString_AsString(v_ltype);
+                    char *str_v_side = PyString_AsString(v_side);
+                    const int is_left = strcmp(str_v_ltype, "left") == 0;
+                    const int is_outerborder = strcmp(str_v_side, "outerborder") == 0;
+                    const int is_innerborder = strcmp(str_v_side, "innerborder") == 0;
+                    const int is_normal = strcmp(str_v_side, "normal") == 0;
+                    
+                    if ((v_x == x && v_y == y && is_left && is_outerborder)
+                        || (v_x == x && v_y == y - 1 && is_left && is_outerborder)) {
+                        is_lb = 1;
+                        dxl = 0;
+                    }
+                    if ((v_x == x && v_y == y && is_left && is_innerborder)
+                        || (v_x == x && v_y == y - 1 && is_left && is_innerborder)
+                        || (v_x == x && v_y == y && is_left && is_normal)
+                        || (v_x == x && v_y == y - 1 && is_left && is_normal)) {
+                        is_lb = 0;
+                        dxl = line_width;
+                    }
+                    if ((v_x == x + 1 && v_y == y && is_left && is_innerborder)
+                        || (v_x == x + 1 && v_y == y - 1 && is_left && is_innerborder)) {
+                        is_rb = 1;
+                        dxr = 0;
+                    }
+                    if ((v_x == x + 1 && v_y == y && is_left && is_outerborder)
+                        || (v_x == x + 1 && v_y == y - 1 && is_left && is_outerborder)
+                        || (v_x == x + 1 && v_y == y && is_left && is_normal)
+                        || (v_x == x + 1 && v_y == y - 1 && is_left && is_normal)) {
+                        is_rb = 0;
+                        dxr = line_width;
+                    }
+                }
+                PyObject* r = Py_BuildValue("(ffiiii)", sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
+                PyList_Append(result, r);
+                Py_DECREF(r);
+                if (is_lb) {
+                    PyObject *r1 = Py_BuildValue("(ffiiii)", sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, 1);
+                    PyList_Append(result, r1);
+                    Py_DECREF(r1);
+                }
+                if (is_rb) {
+                    PyObject *r2 = Py_BuildValue("(ffiiii)", sx_p + cell_size, sy_q + start, border_width, 0, 0, 1);
+                    PyList_Append(result, r2);
+                    Py_DECREF(r2);
+                }
+            }
+        }
+    }
+    return result;
+}
+
 static PyMethodDef methods[] = {
     {"has_matches",  cPalabra_has_matches, METH_VARARGS, "has_matches"},
     {"search", cPalabra_search, METH_VARARGS, "search"},
@@ -638,6 +803,7 @@ static PyMethodDef methods[] = {
     {"assign_numbers", cPalabra_assign_numbers, METH_VARARGS, "assign_numbers"},
     {"fill", cPalabra_fill, METH_VARARGS, "fill"},
     {"compute_lines",  cPalabra_compute_lines, METH_VARARGS, "compute_lines"},
+    {"compute_render_lines", cPalabra_compute_render_lines, METH_VARARGS, "compute_render_lines"},
     {NULL, NULL, 0, NULL}
 };
 

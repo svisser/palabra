@@ -584,15 +584,26 @@ class GridView:
             for v in grid.lines.values():
                 grid.v_lines.extend(v)
         v_lines = grid.v_lines
+        p_the_lines = cPalabra.compute_render_lines(grid
+            , data
+            , list(cells)
+            , grid.lines
+            , grid.v_lines
+            , screen_xs
+            , screen_ys
+            , props_line_width
+            , props_border_width
+            , props_cell_size)
         the_lines = []
         for x, y in cells:
-            lines = grid.lines[x, y]
+            lines = self.grid.lines[x, y]
+            test = []
             for p, q, ltype, side in lines:
                 sx = screen_xs[p]
                 sy = screen_ys[q]
-                bar = (0 <= x < width
-                    and 0 <= y < height
-                    and data[y][x]["bar"][ltype])
+                bar = (0 <= x < self.grid.width
+                    and 0 <= y < self.grid.height
+                    and self.grid.data[y][x]["bar"][ltype])
                 border = "border" in side
                 
                 if side == "normal":
@@ -605,11 +616,11 @@ class GridView:
                         check = x, y + 1
                     elif ltype == "left":
                         check = x + 1, y
-                    if not is_available(*check) or not is_available(x, y):
+                    if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
                         start -= props_line_width
                 
                 if ltype == "left":
-                    the_lines.append((sx + start, sy, 0, props_cell_size, bar, border))
+                    test.append((sx + start, sy, 0, props_cell_size, bar, border))
                 elif ltype == "top":
                     ry = sy + start
                     
@@ -631,13 +642,30 @@ class GridView:
                         or (x + 1, y, "left", "normal") in v_lines
                         or (x + 1, y - 1, "left", "normal") in v_lines):
                         is_rb, dxr = False, props_line_width
-
+                    
                     # adjust horizontal lines to fill empty spaces in corners
-                    the_lines.append((sx - dxl, ry, props_cell_size + dxl + dxr, 0, bar, border))
+                    test.append((sx - dxl, ry, props_cell_size + dxl + dxr, 0, bar, border))
                     if is_lb:
-                        the_lines.append((sx - dxl - props_border_width, ry, props_border_width, 0, False, True))
+                        test.append((sx - dxl - props_border_width, ry, props_border_width, 0, False, True))
                     if is_rb:
-                        the_lines.append((sx + props_cell_size, ry, props_border_width, 0, False, True))
+                        test.append((sx + props_cell_size, ry, props_border_width, 0, False, True))
+            r = cPalabra.compute_render_lines(grid
+                , data
+                , list([(x, y)])
+                , grid.lines
+                , grid.v_lines
+                , screen_xs
+                , screen_ys
+                , props_line_width
+                , props_border_width
+                , props_cell_size)
+            rr = [(rx, ry, rdx, rdy, True if bar == 1 else False, True if border == 1 else False) for rx, ry, rdx, rdy, bar, border in r]
+            if test != rr:
+                for i in xrange(len(test)):
+                    print ">>", x, y, test[i], rr[i]
+                print ">>", x, y, test
+                print ">>", x, y, rr
+            the_lines.extend(test)
         # bars - TODO property bar width
         ctx_set_line_width(props_bar_width)
         for rx, ry, rdx, rdy, bar, border in the_lines:
