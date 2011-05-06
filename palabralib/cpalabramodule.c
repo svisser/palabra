@@ -743,35 +743,34 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                     if (!PyArg_ParseTuple(v_item, "iiOO", &v_x, &v_y, &v_ltype, &v_side))
                         return NULL;
                     char *str_v_ltype = PyString_AsString(v_ltype);
-                    char *str_v_side = PyString_AsString(v_side);
                     const int is_left = strcmp(str_v_ltype, "left") == 0;
+                    if (!is_left) continue;                    
+                    char *str_v_side = PyString_AsString(v_side);
                     const int is_outerborder = strcmp(str_v_side, "outerborder") == 0;
                     const int is_innerborder = strcmp(str_v_side, "innerborder") == 0;
                     const int is_normal = strcmp(str_v_side, "normal") == 0;
                     
-                    if ((v_x == x && v_y == y && is_left && is_outerborder)
-                        || (v_x == x && v_y == y - 1 && is_left && is_outerborder)) {
-                        is_lb = 1;
-                        dxl = 0;
-                    }
-                    if ((v_x == x && v_y == y && is_left && is_innerborder)
-                        || (v_x == x && v_y == y - 1 && is_left && is_innerborder)
-                        || (v_x == x && v_y == y && is_left && is_normal)
-                        || (v_x == x && v_y == y - 1 && is_left && is_normal)) {
-                        is_lb = 0;
-                        dxl = line_width;
-                    }
-                    if ((v_x == x + 1 && v_y == y && is_left && is_innerborder)
-                        || (v_x == x + 1 && v_y == y - 1 && is_left && is_innerborder)) {
-                        is_rb = 1;
-                        dxr = 0;
-                    }
-                    if ((v_x == x + 1 && v_y == y && is_left && is_outerborder)
-                        || (v_x == x + 1 && v_y == y - 1 && is_left && is_outerborder)
-                        || (v_x == x + 1 && v_y == y && is_left && is_normal)
-                        || (v_x == x + 1 && v_y == y - 1 && is_left && is_normal)) {
-                        is_rb = 0;
-                        dxr = line_width;
+                    if (v_y == y || v_y == y - 1) {
+                        if (v_x == x) {
+                            if (is_outerborder) {
+                                is_lb = 1;
+                                dxl = 0;
+                            }
+                            if (is_innerborder || is_normal) {
+                                is_lb = 0;
+                                dxl = line_width;
+                            }
+                        }
+                        if (v_x == x + 1) {
+                            if (is_innerborder) {
+                                is_rb = 1;
+                                dxr = 0;
+                            }
+                            if (is_outerborder || is_normal) {
+                                is_rb = 0;
+                                dxr = line_width;
+                            }
+                        }
                     }
                 }
                 PyObject* r = Py_BuildValue("(fffiii)", sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
