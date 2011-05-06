@@ -197,19 +197,16 @@ class PangoCairoTable():
         self.columns = columns
         self.margin = margin
         
-    def render_rows(self, context, rows, height):
-        while True:
-            y = 0
-            for r_1, r_2 in rows:
-                if y >= height:
-                    y = 0
-                    context.show_page()
-                r_y = self.render(context, 0, y, r_1, wrap=True)
-                if r_2 is not None:
-                    self.render(context, 1, y, r_2)
-                y += r_y #(r_y / 2) # TODO why divide by 2
-            context.show_page()
-            break
+    def render_rows(self, context, rows, height, offset=0):
+        y = 0
+        for i, (r_1, r_2) in enumerate(rows[offset:]):
+            if y >= height:
+                return True, offset + i
+            r_y = self.render(context, 0, y, r_1, wrap=True)
+            if r_2 is not None:
+                self.render(context, 1, y, r_2)
+            y += r_y #(r_y / 2) # TODO why divide by 2
+        return True, None
         
     def render(self, context, x, y, text, wrap=False):
         pcr = pangocairo.CairoContext(context)
@@ -240,8 +237,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     def pdf_header(page_number):
-        if not settings["page_header_include"]:
-            return
         values = [
             constants.META_FILENAME
             , constants.META_FILEPATH
@@ -378,20 +373,23 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             if not text:
                 break
             r_columns.append((page, x, y, w, h, text))
-        prev_page = None
+        fs = []
+        pages = []
         for page, x, y, w, h, text in r_columns:
-            if prev_page is None:
-                prev_page = page
-            if prev_page != page:
-                context.show_page()
-                prev_page = page
-            context.move_to(x, y)
-            pcr = pangocairo.CairoContext(context)
-            layout = pcr.create_layout()
-            layout.set_width(pango.SCALE * w)
-            layout.set_wrap(pango.WRAP_WORD_CHAR)
-            layout.set_markup(text)
-            pcr.show_layout(layout)
+            if page not in pages:
+                pages.append(page)
+        def render_page(page):
+            for p, x, y, w, h, text in r_columns:
+                if p == page:
+                    context.move_to(x, y)
+                    pcr = pangocairo.CairoContext(context)
+                    layout = pcr.create_layout()
+                    layout.set_width(pango.SCALE * w)
+                    layout.set_wrap(pango.WRAP_WORD_CHAR)
+                    layout.set_markup(text)
+                    pcr.show_layout(layout)
+            return True, None
+        return render_page, pages
     def gen_columns(col_width, padding=None, grid_w=None, grid_h=None, position=None):
         clue_placement = settings["clue_placement"]
         page = 0
@@ -416,7 +414,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     col_y += (grid_h + padding)
                 yield page, col_x, col_y, col_width, col_height
             page += 1
-    def display_puzzle(mode, align, cell_size=7, add_clues=False):
+    def produce_puzzle(mode, align, cell_size=7, add_clues=False):
         padding = 20
         n_columns = settings["n_columns"]
         props = puzzle.view.properties
@@ -425,7 +423,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             , "margin": props.margin
         }
         col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
-        
         props["cell", "size"] = cell_size * mm_unit
         grid_w, grid_h = props.visual_size(False)
         if align == "right":
@@ -434,43 +431,72 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             position = margin_left + (c_width - grid_w) / 2, margin_top
         elif align == "left":
             position = margin_left, margin_top
-        puzzle.view.properties.margin = position
-        puzzle.view.render(context, mode)
-        puzzle.view.pdf_reset(prevs)
+        def render_puzzle():
+            puzzle.view.properties.margin = position
+            puzzle.view.render(context, mode)
+            puzzle.view.pdf_reset(prevs)
+            return False, None
+        result = [(render_puzzle, None)]
         if add_clues:
             content = produce_clues(clue_break=True)
             columns = gen_columns(col_width, padding, grid_w, grid_h, position)
-            show_clues_columns(content, columns)
-        context.show_page()
-    pages = [(o, o != "answers") for o in outputs]
-    p_h = settings["page_header"]
-    for i, (p, p_header) in enumerate(pages):
-        p_h_include = settings["page_header_include"]
-        p_h_all = settings["page_header_include_all"]
-        header = p_header and p_h_include and (True if p_h_all else i == 0)
-        context.save()
-        if header:
-            pdf_header(page_number=i)
-            context.translate(0, 24)
-        if p == "puzzle":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-                , align=settings["align"]
-                , cell_size=settings["cell_size_puzzle"]
-                , add_clues=True)
-        elif p == "grid":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-                , align="center"
-                , cell_size=settings["cell_size_puzzle"])
-        elif p == "solution":
-            display_puzzle(constants.VIEW_MODE_EXPORT_PDF_SOLUTION
-                , align="center"
-                , cell_size=settings["cell_size_solution"])
-        elif p == "answers":
+            f, args = show_clues_columns(content, columns)
+            result += [(f, a) for a in args]
+        return result
+    def produce_answers():
+        def render_page(offset):
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
             columns = [int(0.6 * c_width), int(0.4 * c_width)]
             table = PangoCairoTable(columns, margin=(margin_left, margin_top))
-            table.render_rows(context, rows, c_height)
-        context.restore()
+            return table.render_rows(context, rows, c_height, offset)
+        return [(render_page, 0)]
+    p_h_include = settings["page_header_include"]
+    p_h_all = settings["page_header_include_all"]
+    page_n = 0
+    producers = {}
+    producers["puzzle"] = (produce_puzzle, {
+        "mode": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+        , "align": settings["align"]
+        , "cell_size": settings["cell_size_puzzle"]
+        , "add_clues": True
+    })
+    producers["grid"] = (produce_puzzle, {
+        "mode": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+        , "align": "center"
+        , "cell_size": settings["cell_size_puzzle"]
+    })
+    producers["solution"] = (produce_puzzle, {
+        "mode": constants.VIEW_MODE_EXPORT_PDF_SOLUTION
+        , "align": "center"
+        , "cell_size": settings["cell_size_solution"]
+    })
+    producers["answers"] = (produce_answers, {})
+    for o in outputs:
+        g, g_args = producers[o]
+        done = False
+        count = 0
+        funcs = g(**g_args)
+        new_arg = None
+        while not done:
+            context.save()
+            if p_h_include and (True if p_h_all else page_n == 0):
+                pdf_header(page_number=page_n)
+                context.translate(0, 24)
+            todo = funcs[count:]
+            for p, p_args in todo:
+                if new_arg is not None:
+                    p_args = new_arg
+                count += 1
+                r, new_arg = p(p_args) if p_args is not None else p()
+                if new_arg is not None:
+                    funcs.insert(0, (p, p_args))
+                if not r:
+                    continue
+                context.show_page()
+                page_n += 1
+                break
+            done = count == len(funcs)
+            context.restore()
     surface.finish()
     
 def export_to_png(puzzle, filename, output, settings):
