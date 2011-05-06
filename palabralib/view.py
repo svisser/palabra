@@ -572,22 +572,27 @@ class GridView:
         props_cell_size = props["cell", "size"]
         props_line_color = props["line", "color"]
         props_border_color = props["border", "color"]
+        grid = self.grid
+        width = grid.width
+        height = grid.height
+        data = grid.data
+        is_available = grid.is_available
         
-        if not self.grid.lines:
-            self.grid.lines = cPalabra.compute_lines(self.grid)
-            self.grid.v_lines = []
-            for v in self.grid.lines.values():
-                self.grid.v_lines += v
-        v_lines = self.grid.v_lines
+        if not grid.lines:
+            grid.lines = cPalabra.compute_lines(grid)
+            grid.v_lines = []
+            for v in grid.lines.values():
+                grid.v_lines.extend(v)
+        v_lines = grid.v_lines
         the_lines = []
         for x, y in cells:
-            lines = self.grid.lines[x, y]
+            lines = grid.lines[x, y]
             for p, q, ltype, side in lines:
                 sx = screen_xs[p]
                 sy = screen_ys[q]
-                bar = (0 <= x < self.grid.width
-                    and 0 <= y < self.grid.height
-                    and self.grid.data[y][x]["bar"][ltype])
+                bar = (0 <= x < width
+                    and 0 <= y < height
+                    and data[y][x]["bar"][ltype])
                 border = "border" in side
                 
                 if side == "normal":
@@ -600,7 +605,7 @@ class GridView:
                         check = x, y + 1
                     elif ltype == "left":
                         check = x + 1, y
-                    if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
+                    if not is_available(*check) or not is_available(x, y):
                         start -= props_line_width
                 
                 if ltype == "left":
@@ -626,37 +631,36 @@ class GridView:
                         or (x + 1, y, "left", "normal") in v_lines
                         or (x + 1, y - 1, "left", "normal") in v_lines):
                         is_rb, dxr = False, props_line_width
-                    
+
                     # adjust horizontal lines to fill empty spaces in corners
                     the_lines.append((sx - dxl, ry, props_cell_size + dxl + dxr, 0, bar, border))
                     if is_lb:
                         the_lines.append((sx - dxl - props_border_width, ry, props_border_width, 0, False, True))
                     if is_rb:
                         the_lines.append((sx + props_cell_size, ry, props_border_width, 0, False, True))
-        l_bars = [line for line in the_lines if line[4]]
-        l_borders = [line for line in the_lines if line[5]]
-        l_normal = [line for line in the_lines if not line[4] and not line[5]]
-        # TODO property bar width
-        if l_bars:
-            ctx_set_line_width(props_bar_width)
-            for rx, ry, rdx, rdy, bar, border in l_bars:
+        # bars - TODO property bar width
+        ctx_set_line_width(props_bar_width)
+        for rx, ry, rdx, rdy, bar, border in the_lines:
+            if bar:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
-            ctx_stroke()
-        if l_normal:
-            ctx_set_line_width(props_line_width)
-            ctx_set_source_rgb(*[c / 65535.0 for c in props_line_color])
-            for rx, ry, rdx, rdy, bar, border in l_normal:
+        ctx_stroke()
+        # lines
+        ctx_set_line_width(props_line_width)
+        ctx_set_source_rgb(*[c / 65535.0 for c in props_line_color])
+        for rx, ry, rdx, rdy, bar, border in the_lines:
+            if not bar and not border:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
-            ctx_stroke()
-        if l_borders:
-            ctx_set_line_width(props_border_width)
-            ctx_set_source_rgb(*[c / 65535.0 for c in props_border_color])
-            for rx, ry, rdx, rdy, bar, border in l_borders:
+        ctx_stroke()
+        # borders
+        ctx_set_line_width(props_border_width)
+        ctx_set_source_rgb(*[c / 65535.0 for c in props_border_color])
+        for rx, ry, rdx, rdy, bar, border in the_lines:
+            if border:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
-            ctx_stroke()
+        ctx_stroke()
         
     def render_warnings_of_cells(self, context, cells):
         """Determine undesired cells."""
