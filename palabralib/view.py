@@ -660,11 +660,11 @@ class GridView:
                 , props_border_width
                 , props_cell_size)
             rr = [(rx, ry, rdx, rdy, True if bar == 1 else False, True if border == 1 else False) for rx, ry, rdx, rdy, bar, border in r]
-            if test != rr:
-                for i in xrange(len(test)):
-                    print ">>", x, y, test[i], rr[i]
-                print ">>", x, y, test
-                print ">>", x, y, rr
+            #if test != rr:
+            #    for i in xrange(len(test)):
+            #        print ">>", x, y, test[i], rr[i]
+            #    print ">>", x, y, test
+            #    print ">>", x, y, rr
             the_lines.extend(test)
         # bars - TODO property bar width
         ctx_set_line_width(props_bar_width)

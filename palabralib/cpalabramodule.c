@@ -640,8 +640,8 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
     PyObject *sy;
     const int line_width;
     const int border_width;
-    const int cell_size;
-    if (!PyArg_ParseTuple(args, "OOOOOOOiii", &grid, &data, &cells, &grid_lines, &all_lines
+    const float cell_size;
+    if (!PyArg_ParseTuple(args, "OOOOOOOiif", &grid, &data, &cells, &grid_lines, &all_lines
         , &sx, &sy, &line_width, &border_width, &cell_size))
         return NULL;
     PyObject* result = PyList_New(0);
@@ -725,7 +725,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
             }
             
             if (l_is_left) {
-                PyObject* r = Py_BuildValue("(ffiiii)", sx_p + start, sy_q, 0, cell_size, bar, border);
+                PyObject* r = Py_BuildValue("(ffifii)", sx_p + start, sy_q, 0, cell_size, bar, border);
                 PyList_Append(result, r);
                 Py_DECREF(r);
             } else if (l_is_top) {
@@ -775,7 +775,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                         dxr = line_width;
                     }
                 }
-                PyObject* r = Py_BuildValue("(ffiiii)", sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
+                PyObject* r = Py_BuildValue("(fffiii)", sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
                 PyList_Append(result, r);
                 Py_DECREF(r);
                 if (is_lb) {
