@@ -693,14 +693,13 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 Py_DECREF(item);
                 bar = PyObject_IsTrue(b_item);
                 Py_DECREF(b_item);
-            }
-            const int border = strstr(str_side, "border") != NULL;
-            
+            }            
             const int l_is_normal = strcmp(str_side, "normal") == 0;
             const int l_is_outer = strcmp(str_side, "outerborder") == 0;
             const int l_is_inner = strcmp(str_side, "innerborder") == 0;
             const int l_is_top = strcmp(str_ltype, "top") == 0;
             const int l_is_left = strcmp(str_ltype, "left") == 0;
+            const int border = l_is_outer || l_is_inner;
             
             float start = 0;
             if (l_is_normal) {
