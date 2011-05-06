@@ -435,7 +435,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             puzzle.view.properties.margin = position
             puzzle.view.render(context, mode)
             puzzle.view.pdf_reset(prevs)
-            return False, None
+            return (not add_clues), None
         result = [(render_puzzle, None)]
         if add_clues:
             content = produce_clues(clue_break=True)
@@ -443,40 +443,35 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             f, args = show_clues_columns(content, columns)
             result += [(f, a) for a in args]
         return result
-    def produce_answers():
-        def render_page(offset):
-            rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
-            columns = [int(0.6 * c_width), int(0.4 * c_width)]
-            table = PangoCairoTable(columns, margin=(margin_left, margin_top))
-            return table.render_rows(context, rows, c_height, offset)
-        return [(render_page, 0)]
+    def render_page(offset):
+        rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
+        columns = [int(0.6 * c_width), int(0.4 * c_width)]
+        table = PangoCairoTable(columns, margin=(margin_left, margin_top))
+        return table.render_rows(context, rows, c_height, offset)
     p_h_include = settings["page_header_include"]
     p_h_all = settings["page_header_include_all"]
     page_n = 0
-    producers = {}
-    producers["puzzle"] = (produce_puzzle, {
-        "mode": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-        , "align": settings["align"]
-        , "cell_size": settings["cell_size_puzzle"]
-        , "add_clues": True
-    })
-    producers["grid"] = (produce_puzzle, {
-        "mode": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-        , "align": "center"
-        , "cell_size": settings["cell_size_puzzle"]
-    })
-    producers["solution"] = (produce_puzzle, {
-        "mode": constants.VIEW_MODE_EXPORT_PDF_SOLUTION
-        , "align": "center"
-        , "cell_size": settings["cell_size_solution"]
-    })
-    producers["answers"] = (produce_answers, {})
     for o in outputs:
-        g, g_args = producers[o]
+        if o == "puzzle":
+            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+            funcs = produce_puzzle(mode=mode
+                , align=settings["align"]
+                , cell_size=settings["cell_size_puzzle"]
+                , add_clues=True)
+        elif o == "grid":
+            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+            funcs = produce_puzzle(mode=mode
+                , align="center"
+                , cell_size=settings["cell_size_puzzle"])
+        elif o == "solution":
+            mode = constants.VIEW_MODE_EXPORT_PDF_SOLUTION
+            funcs = produce_puzzle(mode=mode
+                , align="center"
+                , cell_size=settings["cell_size_solution"])
+        elif o == "answers":
+            funcs = [(render_page, 0)]
         done = False
         count = 0
-        funcs = g(**g_args)
-        new_arg = None
         while not done:
             context.save()
             if p_h_include and (True if p_h_all else page_n == 0):
@@ -484,12 +479,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 context.translate(0, 24)
             todo = funcs[count:]
             for p, p_args in todo:
-                if new_arg is not None:
-                    p_args = new_arg
                 count += 1
                 r, new_arg = p(p_args) if p_args is not None else p()
                 if new_arg is not None:
-                    funcs.insert(0, (p, p_args))
+                    funcs.append((p, new_arg))
                 if not r:
                     continue
                 context.show_page()
