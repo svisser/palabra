@@ -648,6 +648,26 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
     
     const int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    
+    Py_ssize_t a;
+    Py_ssize_t n_lines = PyList_Size(all_lines);
+    int all_x[n_lines];
+    int all_y[n_lines];
+    char *all_t[n_lines];
+    char *all_s[n_lines];
+    for (a = 0; a < n_lines; a++) {
+        PyObject *v_item = PyList_GetItem(all_lines, a);
+        const int v_x;
+        const int v_y;
+        PyObject *v_ltype;
+        PyObject *v_side;
+        if (!PyArg_ParseTuple(v_item, "iiOO", &v_x, &v_y, &v_ltype, &v_side))
+            return NULL;
+        all_x[a] = v_x;
+        all_y[a] = v_y;
+        all_t[a] = PyString_AsString(v_ltype);
+        all_s[a] = PyString_AsString(v_side);
+    }
 
     Py_ssize_t c;
     for (c = 0; c < PyList_Size(cells); c++) {
@@ -722,7 +742,6 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                     start -= line_width;
                 }
             }
-            
             if (l_is_left) {
                 PyObject* r = Py_BuildValue("(ffifii)", sx_p + start, sy_q, 0, cell_size, bar, border);
                 PyList_Append(result, r);
@@ -732,25 +751,15 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 int is_rb = 0;
                 int dxl = 0;
                 int dxr = 0;
-                
                 Py_ssize_t v;
-                for (v = 0; v < PyList_Size(all_lines); v++) {
-                    PyObject *v_item = PyList_GetItem(all_lines, v);
-                    const int v_x;
-                    const int v_y;
-                    PyObject *v_ltype;
-                    PyObject *v_side;
-                    if (!PyArg_ParseTuple(v_item, "iiOO", &v_x, &v_y, &v_ltype, &v_side))
-                        return NULL;
-                    char *str_v_ltype = PyString_AsString(v_ltype);
-                    const int is_left = strcmp(str_v_ltype, "left") == 0;
-                    if (!is_left) continue;                    
-                    char *str_v_side = PyString_AsString(v_side);
-                    const int is_outerborder = strcmp(str_v_side, "outerborder") == 0;
-                    const int is_innerborder = strcmp(str_v_side, "innerborder") == 0;
-                    const int is_normal = strcmp(str_v_side, "normal") == 0;
-                    
+                for (v = 0; v < n_lines; v++) {
+                    if (strcmp(all_t[v], "left") != 0) continue;
+                    const int v_x = all_x[v];
+                    const int v_y = all_y[v];
                     if (v_y == y || v_y == y - 1) {
+                        const int is_outerborder = strcmp(all_s[v], "outerborder") == 0;
+                        const int is_innerborder = strcmp(all_s[v], "innerborder") == 0;
+                        const int is_normal = strcmp(all_s[v], "normal") == 0;
                         if (v_x == x) {
                             if (is_outerborder) {
                                 is_lb = 1;
@@ -773,16 +782,19 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                         }
                     }
                 }
-                PyObject* r = Py_BuildValue("(fffiii)", sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
+                PyObject* r = Py_BuildValue("(fffiii)"
+                    , sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
                 PyList_Append(result, r);
                 Py_DECREF(r);
                 if (is_lb) {
-                    PyObject *r1 = Py_BuildValue("(ffiiii)", sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, 1);
+                    PyObject *r1 = Py_BuildValue("(ffiiii)"
+                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, 1);
                     PyList_Append(result, r1);
                     Py_DECREF(r1);
                 }
                 if (is_rb) {
-                    PyObject *r2 = Py_BuildValue("(ffiiii)", sx_p + cell_size, sy_q + start, border_width, 0, 0, 1);
+                    PyObject *r2 = Py_BuildValue("(ffiiii)"
+                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, 1);
                     PyList_Append(result, r2);
                     Py_DECREF(r2);
                 }
