@@ -15,7 +15,7 @@ ext_modules = [Extension('cPalabra', sources=['palabralib/cpalabramodule.c', 'pa
 
 # see http://pypi.python.org/pypi?%3Aaction=list_classifiers
 CLASSIFIERS = [ 
-"Development Status :: 5 - Production/Stable"
+"Development Status :: 4 - Beta"
 , "Environment :: X11 Applications :: GTK"
 , "Intended Audience :: End Users/Desktop"
 , "License :: OSI Approved :: GNU General Public License (GPL)"
