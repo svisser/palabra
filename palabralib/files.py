@@ -94,7 +94,7 @@ def export_puzzle(puzzle, filename, options):
         import cProfile
         cProfile.runctx('export_to_pdf(puzzle, filename, outputs, settings)', globals(), locals(), filename='fooprof')
         p = pstats.Stats('fooprof')
-        p.sort_stats('time').print_stats(10)
+        p.sort_stats('time').print_stats(20)
         p.print_callers()
         #export_to_pdf(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
@@ -299,15 +299,20 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 , ("</b>" if c_h_bold else '')
                 , '''</span>'''])
             c_c = settings["clue"]
-            content["clue_markup"][d] = ''.join(['''<span font_desc="''', c_c["font"], '''">'''])
+            content["clue_markup"][d] = '<span font_desc="' + c_c["font"] + '">'
             content["clues"][d] = []
-            for n, x, y, clue in puzzle.grid.clues(d):
+            grid = puzzle.grid
+            word_length = grid.word_length
+            gather_word = grid.gather_word
+            clues = grid.clues
+            for n, x, y, clue in clues(d):
                 clue_txt = []
                 try:
                     txt = clue["text"]
                 except KeyError:
                     txt = '''<span color="#ff0000">(missing clue)</span>'''
-                txt = txt.replace("&", "&amp;")
+                if "&" in txt:
+                    txt = txt.replace("&", "&amp;")
                 if settings["clue_number_bold"]:
                     clue_txt += ["<b>"]
                 clue_txt += [str(n)]
@@ -317,12 +322,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     clue_txt += ["</b>"]
                 clue_txt += [' ', txt]
                 if settings["clue_length"]:
-                    clue_txt += [" (", str(puzzle.grid.word_length(x, y, d)), ")"]
+                    clue_txt += [" (", str(word_length(x, y, d)), ")"]
                 if clue_break:
                     clue_txt += ["\n"]
                 result = ''.join(clue_txt)
                 if answers:
-                    result = (result, puzzle.grid.gather_word(x, y, d))
+                    result = (result, gather_word(x, y, d))
                 content["clues"][d].append(result)
         if reduce_to_rows:
             rows = []
@@ -338,67 +343,50 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         return content
     def show_clues_columns(content, columns):
         stream = dict([(d, content["clues"][d]) for d in ["across", "down"]])
-        cur_d, cur_i, has_h = "across", 0, True
+        a_count, d_count = len(stream["across"]), len(stream["down"])
         r_columns = []
-        
-        a_count = len(stream["across"])
-        d_count = len(stream["down"])
-        
-        c = {"across": [], "down": []}
-        for d in ["across", "down"]:
-            for item in stream[d]:
-                clue = item[0] if isinstance(item, tuple) else item
-                c[d].append(clue)
-        
         offset = 0
-        incl_a_header, incl_d_header = False, False
+        incl_a_header = incl_d_header = False
         for page, x, y, w, h in columns:
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
             layout.set_width(pango.SCALE * w)
             layout.set_wrap(pango.WRAP_WORD_CHAR)
-            
             text = ''
-            check = True
             done = totally_done = False
-            step_size = 32
-            count = step_size
-            has_a_header, has_d_header = False, False
+            count = step_size = 32
+            has_a_header = has_d_header = False
             while not done:
                 a_clues = d_clues = []
                 if offset > a_count:
                     d_start = offset - a_count
-                    d_clues = c["down"][d_start:d_start + count]
+                    d_clues = stream["down"][d_start:d_start + count]
                 else:
                     a_c = a_count - offset
                     if count <= a_c:
-                        a_clues = c["across"][offset:offset + count]
+                        a_clues = stream["across"][offset:offset + count]
                     else:
-                        a_clues = c["across"][offset:a_count]
-                        d_clues = c["down"][0:count - a_c]
+                        a_clues = stream["across"][offset:a_count]
+                        d_clues = stream["down"][0:count - a_c]
                 col = []
                 if offset == 0 and not incl_a_header:
                     col.append(content["clue_header_across"] + "\n")
                     has_a_header = True
-                n_clues = len(a_clues) + len(d_clues)
                 if a_clues:
                     col.append(content["clue_markup"]["across"])
-                    for item in a_clues:
-                        clue = item[0] if isinstance(item, tuple) else item
-                        col.append(clue)
+                    col.extend(a_clues)
                     col.append("</span>\n")
-                if d_clues and not incl_d_header:
-                    col.append(content["clue_header_down"] + "\n")
-                    has_d_header = True
                 if d_clues:
+                    if not incl_d_header:
+                        col.append(content["clue_header_down"] + "\n")
+                        has_d_header = True
                     col.append(content["clue_markup"]["down"])
-                    for item in d_clues:
-                        clue = item[0] if isinstance(item, tuple) else item
-                        col.append(clue)
+                    col.extend(d_clues)
                     col.append("</span>")
                 text = ''.join(col)
                 layout.set_markup(text)
                 l_w, l_h = layout.get_pixel_size()
+                n_clues = len(a_clues + d_clues)
                 if l_h <= h:
                     if offset + n_clues == a_count + d_count:
                         done = totally_done = True
@@ -423,14 +411,15 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 pages.append(page)
         def render_page(page):
             for p, x, y, w, h, text in r_columns:
-                if p == page:
-                    context.move_to(x, y)
-                    pcr = pangocairo.CairoContext(context)
-                    layout = pcr.create_layout()
-                    layout.set_width(pango.SCALE * w)
-                    layout.set_wrap(pango.WRAP_WORD_CHAR)
-                    layout.set_markup(text)
-                    pcr.show_layout(layout)
+                if p != page:
+                    continue
+                context.move_to(x, y)
+                pcr = pangocairo.CairoContext(context)
+                layout = pcr.create_layout()
+                layout.set_width(pango.SCALE * w)
+                layout.set_wrap(pango.WRAP_WORD_CHAR)
+                layout.set_markup(text)
+                pcr.show_layout(layout)
             return True, None
         return render_page, pages
     def gen_columns(col_width, padding=None, grid_w=None, grid_h=None, position=None):
@@ -486,11 +475,6 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             f, args = show_clues_columns(content, columns)
             result += [(f, a) for a in args]
         return result
-    def render_page(offset):
-        rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
-        columns = [int(0.6 * c_width), int(0.4 * c_width)]
-        table = PangoCairoTable(columns, margin=(margin_left, margin_top))
-        return table.render_rows(context, rows, c_height, offset)
     p_h_include = settings["page_header_include"]
     p_h_all = settings["page_header_include_all"]
     page_n = 0
@@ -513,7 +497,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 , align="center"
                 , cell_size=settings["cell_size_solution"])
         elif o == "answers":
-            funcs = [(render_page, 0)]
+            rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
+            columns = [int(0.6 * c_width), int(0.4 * c_width)]
+            table = PangoCairoTable(columns, margin=(margin_left, margin_top))
+            def render_table(offset):
+                return table.render_rows(context, rows, c_height, offset)
+            funcs = [(render_table, 0)]
         done = False
         count = 0
         while not done:

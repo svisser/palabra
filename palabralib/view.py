@@ -383,7 +383,7 @@ class GridView:
         pcr_layout = pcr.create_layout()
         def _render_pango(r, s, font, content, rx=None, ry=None):
             if rx is None and ry is None:
-                rx = screen_xs[r] + 1
+                rx = screen_xs[r] + 1 # ?
                 ry = screen_ys[s]
             pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
             context.move_to(rx, ry)
@@ -436,39 +436,40 @@ class GridView:
         line_width = props["line", "width"]
         
         # highlights
-        for p, q in cells:
-            # TODO custom color
-            color = (65535.0, 65535.0, 65535.0 / 2)
-            if color != cur_color:
-                cur_color = color
-                context.set_source_rgb(*[c / 65535.0 for c in color])
+        if self.highlights:
             hwidth = int(cell_size / 8)
             context.set_line_width(hwidth)
-            for r, s, direction, length in self.highlights:
-                top, bottom, left, right = None, None, None, None
-                if direction == "across" and r <= p < r + length and s == q:
-                    top = bottom = True
-                    right = p == (r + length - 1)
-                    left = p == r
-                elif direction == "down" and s <= q < s + length and r == p:
-                    left = right = True
-                    top = q == s
-                    bottom = q == (s + length - 1)
-                sx = screen_xs[p]
-                sy = screen_ys[q]
-                lines = []
-                if top:
-                    lines.append((sx, sy + 0.5 * hwidth, cell_size, 0))
-                if bottom:
-                    lines.append((sx, sy + cell_size - 0.5 * hwidth, cell_size, 0))
-                if left:
-                    lines.append((sx + 0.5 * hwidth, sy, 0, cell_size))
-                if right:
-                    lines.append((sx + cell_size - 0.5 * hwidth, sy, 0, cell_size))
-                for rx, ry, rdx, rdy in lines:
-                    context.move_to(rx, ry)
-                    context.rel_line_to(rdx, rdy)
-                    context.stroke()
+            for p, q in cells:
+                # TODO custom color
+                color = (65535.0, 65535.0, 65535.0 / 2)
+                if color != cur_color:
+                    cur_color = color
+                    context.set_source_rgb(*[c / 65535.0 for c in color])
+                for r, s, direction, length in self.highlights:
+                    top, bottom, left, right = None, None, None, None
+                    if direction == "across" and r <= p < r + length and s == q:
+                        top = bottom = True
+                        right = p == (r + length - 1)
+                        left = p == r
+                    elif direction == "down" and s <= q < s + length and r == p:
+                        left = right = True
+                        top = q == s
+                        bottom = q == (s + length - 1)
+                    sx = screen_xs[p]
+                    sy = screen_ys[q]
+                    lines = []
+                    if top:
+                        lines.append((sx, sy + 0.5 * hwidth, cell_size, 0))
+                    if bottom:
+                        lines.append((sx, sy + cell_size - 0.5 * hwidth, cell_size, 0))
+                    if left:
+                        lines.append((sx + 0.5 * hwidth, sy, 0, cell_size))
+                    if right:
+                        lines.append((sx + cell_size - 0.5 * hwidth, sy, 0, cell_size))
+                    for rx, ry, rdx, rdy in lines:
+                        context.move_to(rx, ry)
+                        context.rel_line_to(rdx, rdy)
+                        context.stroke()
             context.set_line_width(line_width)
         # block
         for p, q in cells:
@@ -585,8 +586,9 @@ class GridView:
                 grid.v_lines.extend(v)
             grid.lines_cache = {}
         key = ''.join([str(c) for c in cells])
-        key2 = ''.join(map(str, [props_line_width, props_border_width, props_bar_width
-            , props_cell_size, props_line_color, props_border_color, width, height, data]))
+        key2 = ''.join([str(props_line_width), str(props_border_width), str(props_bar_width)
+            , str(props_cell_size), str(props_line_color), str(props_border_color)
+            , str(width), str(height), str(data)])
         key = key + str(hash(key2))
         if key not in grid.lines_cache:
             grid.lines_cache[key] = cPalabra.compute_render_lines(grid
