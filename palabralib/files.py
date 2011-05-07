@@ -339,8 +339,19 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     def show_clues_columns(content, columns):
         stream = dict([(d, content["clues"][d]) for d in ["across", "down"]])
         cur_d, cur_i, has_h = "across", 0, True
-        in_clue = False
         r_columns = []
+        
+        a_count = len(stream["across"])
+        d_count = len(stream["down"])
+        
+        c = {"across": [], "down": []}
+        for d in ["across", "down"]:
+            for item in stream[d]:
+                clue = item[0] if isinstance(item, tuple) else item
+                c[d].append(clue)
+        
+        offset = 0
+        incl_a_header, incl_d_header = False, False
         for page, x, y, w, h in columns:
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
@@ -349,34 +360,63 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             
             text = ''
             check = True
-            c = []
-            l_h = 0
-            if in_clue:
-                c.append(content["clue_markup"][cur_d])
-            while l_h < h:
-                if cur_i >= len(stream[cur_d]):
-                    c.append("</span>\n")
-                    if cur_d == "down":
-                        break
-                    cur_d, cur_i, has_h = "down", 0, True
-                if has_h:
-                    c.append(content["clue_header_" + cur_d] + "\n")
-                    c.append(content["clue_markup"][cur_d])
-                    has_h, in_clue = False, True
+            done = totally_done = False
+            step_size = 32
+            count = step_size
+            has_a_header, has_d_header = False, False
+            while not done:
+                a_clues = d_clues = []
+                if offset > a_count:
+                    d_start = offset - a_count
+                    d_clues = c["down"][d_start:d_start + count]
                 else:
-                    item = stream[cur_d][cur_i]
-                    if isinstance(item, tuple):
-                        clue = item[0]
+                    a_c = a_count - offset
+                    if count <= a_c:
+                        a_clues = c["across"][offset:offset + count]
                     else:
-                        clue = item
-                    c.append(clue)
-                    cur_i += 1
-                text = ''.join(c) + ("</span>" if in_clue else '')
+                        a_clues = c["across"][offset:a_count]
+                        d_clues = c["down"][0:count - a_c]
+                col = []
+                if offset == 0 and not incl_a_header:
+                    col.append(content["clue_header_across"] + "\n")
+                    has_a_header = True
+                n_clues = len(a_clues) + len(d_clues)
+                if a_clues:
+                    col.append(content["clue_markup"]["across"])
+                    for item in a_clues:
+                        clue = item[0] if isinstance(item, tuple) else item
+                        col.append(clue)
+                    col.append("</span>\n")
+                if d_clues and not incl_d_header:
+                    col.append(content["clue_header_down"] + "\n")
+                    has_d_header = True
+                if d_clues:
+                    col.append(content["clue_markup"]["down"])
+                    for item in d_clues:
+                        clue = item[0] if isinstance(item, tuple) else item
+                        col.append(clue)
+                    col.append("</span>")
+                text = ''.join(col)
                 layout.set_markup(text)
                 l_w, l_h = layout.get_pixel_size()
-            if not text:
-                break
+                if l_h <= h:
+                    if offset + n_clues == a_count + d_count:
+                        done = totally_done = True
+                    else:
+                        count += step_size
+                elif l_h > h:
+                    step_size /= 2
+                    count -= step_size
+                    if step_size == 1:
+                        offset += n_clues
+                        done = True
             r_columns.append((page, x, y, w, h, text))
+            if has_a_header:
+                incl_a_header = True
+            if has_d_header:
+                incl_d_header = True
+            if totally_done:
+                break
         pages = []
         for page, x, y, w, h, text in r_columns:
             if page not in pages:
