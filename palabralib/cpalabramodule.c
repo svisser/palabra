@@ -648,7 +648,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
     
     const int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
-    
+
     Py_ssize_t c;
     for (c = 0; c < PyList_Size(cells); c++) {
         PyObject *cell = PyList_GetItem(cells, c);

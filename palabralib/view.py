@@ -583,18 +583,23 @@ class GridView:
             grid.v_lines = []
             for v in grid.lines.values():
                 grid.v_lines.extend(v)
-        v_lines = grid.v_lines
-        the_lines = cPalabra.compute_render_lines(grid
-            , data
-            , list(cells)
-            , grid.lines
-            , grid.v_lines
-            , screen_xs
-            , screen_ys
-            , props_line_width
-            , props_border_width
-            , props_cell_size)
-        #the_lines = []
+            grid.lines_cache = {}
+        key = ''.join([str(c) for c in cells])
+        key2 = ''.join(map(str, [props_line_width, props_border_width, props_bar_width
+            , props_cell_size, props_line_color, props_border_color, width, height, data]))
+        key = key + str(hash(key2))
+        if key not in grid.lines_cache:
+            grid.lines_cache[key] = cPalabra.compute_render_lines(grid
+                , data
+                , list(cells)
+                , grid.lines
+                , grid.v_lines
+                , screen_xs
+                , screen_ys
+                , props_line_width
+                , props_border_width
+                , props_cell_size)
+        the_lines = grid.lines_cache[key]
         for x, y in []: #cells:
             lines = self.grid.lines[x, y]
             test = []
