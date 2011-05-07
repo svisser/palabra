@@ -242,11 +242,13 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
-    def pdf_header(page_n):
-        p_h_txt = settings["page_header_text"]
+    def compute_header():
+        header = settings["page_header_text"]
         for key, code in constants.META_CODES.items():
+            if key == constants.META_PAGE_NUMBER:
+                continue
             if key in puzzle.metadata:
-                p_h_txt = p_h_txt.replace(code, puzzle.metadata[key])
+                header = header.replace(code, puzzle.metadata[key])
             elif key in constants.META_EXPORT_VALUES:
                 if key == constants.META_FILENAME:
                     if puzzle.filename is not None:
@@ -266,13 +268,15 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     value = str(puzzle.grid.count_words())
                 elif key == constants.META_N_BLOCKS:
                     value = str(puzzle.grid.count_blocks())
-                elif key == constants.META_PAGE_NUMBER:
-                    value = str(page_n + 1)
-                p_h_txt = p_h_txt.replace(code, value)
+                header = header.replace(code, value)
+        return header
+    def pdf_header(header, page_n):
+        code = constants.META_CODES[constants.META_PAGE_NUMBER]
+        header = header.replace(code, str(page_n + 1))
         p_h = settings["page_header"]
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
-        text = ['<span font_desc="', p_h["font"], '">', p_h_txt, "</span>"]
+        text = ['<span font_desc="', p_h["font"], '">', header, "</span>"]
         layout.set_markup(''.join(text))
         context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
@@ -450,6 +454,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     p_h_include = settings["page_header_include"]
     p_h_all = settings["page_header_include_all"]
     page_n = 0
+    header = compute_header()
     for o in outputs:
         if o == "puzzle":
             mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
@@ -474,7 +479,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         while not done:
             context.save()
             if p_h_include and (True if p_h_all else page_n == 0):
-                pdf_header(page_n)
+                pdf_header(header, page_n)
                 context.translate(0, 24)
             todo = funcs[count:]
             for p, p_args in todo:
