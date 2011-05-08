@@ -286,7 +286,7 @@ class Grid:
                 status["clue_count"] += len(self.data[y][x]["clues"])
             status["open_count"] = len(self.compute_open_squares())
             status["connected"] = self.is_connected()
-            status["complete"] = self.count_complete()
+            status["complete_count"] = self.count_complete()
         return status
         
     def determine_word_counts(self):

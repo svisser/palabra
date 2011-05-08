@@ -1320,3 +1320,31 @@ class GridTestCase(unittest.TestCase):
         counts = self.grid.count_complete()
         self.assertEquals(counts["across"], 1)
         self.assertEquals(counts["down"], 1)
+        
+    def testStatus(self):
+        """Check for keys, test values elsewhere."""
+        status = self.grid.determine_status(full=False)
+        KEYS = ["block_count"
+            , "void_count"
+            , "char_count"
+            , "actual_char_count"
+            , "word_count"
+            , "block_percentage"
+        ]
+        for key in KEYS:
+            self.assertEquals(key in status, True)
+        status = self.grid.determine_status(full=True)
+        KEYS2 = ["mean_word_length"
+            , "blank_count"
+            , "word_counts"
+            , "char_counts"
+            , "char_counts_total"
+            , "checked_count"
+            , "unchecked_count"
+            , "clue_count"
+            , "open_count"
+            , "connected"
+            , "complete_count"
+        ]
+        for key in KEYS + KEYS2:
+            self.assertEquals(key in status, True)

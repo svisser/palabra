@@ -162,12 +162,12 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Open cells", str(status["open_count"]), 0, 9, on_open_click)
         
         create_header(table, u"<b>Words</b>", 2, 0)
-        count_c = status["complete"]["across"] + status["complete"]["down"]
+        count_c = status["complete_count"]["across"] + status["complete_count"]["down"]
         msg = ''.join([str(count_c), " / ", str(status["word_count"])])
         create_statistic(table, u"Total words", msg, 2, 1)
-        msg = ''.join([str(status["complete"]["across"]), " / ", str(status["word_counts"]["across"])])
+        msg = ''.join([str(status["complete_count"]["across"]), " / ", str(status["word_counts"]["across"])])
         create_statistic(table, u"Across words", msg, 2, 2)
-        msg = ''.join([str(status["complete"]["down"]), " / ", str(status["word_counts"]["down"])])
+        msg = ''.join([str(status["complete_count"]["down"]), " / ", str(status["word_counts"]["down"])])
         create_statistic(table, u"Down words", msg, 2, 3)
         message = u"%.2f" % status["mean_word_length"]
         create_statistic(table, u"Average word length", message, 2, 4)
