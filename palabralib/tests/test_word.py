@@ -255,3 +255,9 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(clist.search(6, [])), 1)
         self.assertEquals(len(clist.search(8, [])), 1)
         cPalabra.postprocess()
+        
+    def testCompound(self):
+        clist = CWordList(["a a"])
+        self.assertEquals(len(clist.search(2, [])), 0)
+        self.assertEquals(len(clist.search(3, [])), 0)
+        cPalabra.postprocess()

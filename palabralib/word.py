@@ -164,6 +164,8 @@ def read_wordlist(path):
             elif l_line == 2:
                 word, r = line
             word = word.strip()
+            if " " in word:
+                continue # for now, reject compound
             if len(word) > constants.MAX_WORD_LENGTH:
                 continue    
             for c in word:
@@ -247,6 +249,8 @@ class CWordList:
             words = [(w, 0) for w in list(read_wordlist(content))]
         else:
             words = [(w if isinstance(w, tuple) else (w, 0)) for w in content]
+            # for now, reject compound
+            words = [item for item in words if " " not in item[0]]
         self.words = cPalabra.preprocess(words, index)
         self.index = index
         
