@@ -2,9 +2,9 @@
 Palabra
 =======
 
-Palabra is a crossword editor written in Python. It is free software and
-it is licensed under the GNU General Public License, version 3 or any later
-version.
+Palabra is a professional crossword editor written in Python. It is
+free software and it is licensed under the GNU General Public
+License, version 3 or any later version.
 
 Requirements
 ============
@@ -48,6 +48,7 @@ For the latest installation instructions, visit:
 
   https://bitbucket.org/svisser/palabra/wiki/Home
 
+
 Getting started
 ===============
 
@@ -76,6 +77,16 @@ Jump to the first cell of a slot:
     
 Jump to the last cell of a slot:
     - Press END.
+
+File formats
+============
+
+Palabra supports the file formats XPF and ipuz.
+
+- XFP (http://xwordinfo.com/xpf)
+- ipuz (http://www.ipuz.org/)
+
+ipuz is a trademark of Puzzazz, Inc., used with permission.
   
 Contact
 =======
