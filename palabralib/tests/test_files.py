@@ -33,6 +33,7 @@ from palabralib.files import (
     hex_to_color,
     read_ipuz,
     write_ipuz,
+    compute_header,
 )
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
@@ -322,3 +323,28 @@ class FilesTestCase(unittest.TestCase):
             f.write('<NotQuitePuzzles></NotQuitePuzzles>')
         self.assertEquals(determine_file_type(self.LOCATION), None)
         self.assertRaises(ParserError, read_crossword, self.LOCATION, warnings=False)
+        
+    def testComputeHeader(self):
+        p = self.puzzle
+        p.metadata[constants.META_TITLE] = "Title"
+        p.metadata[constants.META_CREATOR] = "Author"
+        p.metadata[constants.META_EDITOR] = "Editor"
+        p.metadata[constants.META_COPYRIGHT] = "Copyright"
+        p.metadata[constants.META_PUBLISHER] = "Publisher"
+        p.metadata[constants.META_DATE] = "2011/01/01"
+        header = compute_header(p, "%T %A %E %C %P %D")
+        self.assertEquals(header, "Title Author Editor Copyright Publisher 2011/01/01")
+        self.puzzle.filename = None
+        header = compute_header(p, "%F %FF")
+        self.assertEquals(header, "%F %FF")
+        self.puzzle.filename = self.LOCATION
+        header = compute_header(p, "%F %FF")
+        self.assertEquals(header, os.path.basename(self.LOCATION) + " " + self.LOCATION)
+        p.grid.set_block(0, 0, True)
+        p.grid.set_block(5, 0, True)
+        header = compute_header(p, "%W %H %N %B")
+        self.assertEquals(header, "15 15 31 2")
+        header = compute_header(p, "%G")
+        self.assertEquals(header, "%G")
+        header = compute_header(p, "%G", page_n=3)
+        self.assertEquals(header, "4")

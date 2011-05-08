@@ -197,6 +197,37 @@ def export_to_csv(puzzle, filename, outputs, settings):
                 line.append("\n")
                 f.write(''.join(line))
     f.close()
+
+def compute_header(puzzle, header, page_n=None):
+    if page_n is not None:
+        code = constants.META_CODES[constants.META_PAGE_NUMBER]
+        return header.replace(code, str(page_n + 1))
+    for key, code in constants.META_CODES.items():
+        if key == constants.META_PAGE_NUMBER:
+            continue
+        if key in puzzle.metadata:
+            header = header.replace(code, puzzle.metadata[key])
+        elif key in constants.META_EXPORT_VALUES:
+            if key == constants.META_FILENAME:
+                if puzzle.filename is not None:
+                    value = os.path.basename(puzzle.filename)
+                else:
+                    value = constants.META_CODES[key]
+            elif key == constants.META_FILEPATH:
+                if puzzle.filename is not None:
+                    value = puzzle.filename
+                else:
+                    value = constants.META_CODES[key]
+            elif key == constants.META_WIDTH:
+                value = str(puzzle.grid.width)
+            elif key == constants.META_HEIGHT:
+                value = str(puzzle.grid.height)
+            elif key == constants.META_N_WORDS:
+                value = str(puzzle.grid.count_words())
+            elif key == constants.META_N_BLOCKS:
+                value = str(puzzle.grid.count_blocks())
+            header = header.replace(code, value)
+    return header
     
 class PangoCairoTable():
     def __init__(self, columns, margin):
@@ -242,37 +273,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
-    def compute_header():
-        header = settings["page_header_text"]
-        for key, code in constants.META_CODES.items():
-            if key == constants.META_PAGE_NUMBER:
-                continue
-            if key in puzzle.metadata:
-                header = header.replace(code, puzzle.metadata[key])
-            elif key in constants.META_EXPORT_VALUES:
-                if key == constants.META_FILENAME:
-                    if puzzle.filename is not None:
-                        value = os.path.basename(puzzle.filename)
-                    else:
-                        value = constants.META_CODES[key]
-                elif key == constants.META_FILEPATH:
-                    if puzzle.filename is not None:
-                        value = puzzle.filename
-                    else:
-                        value = constants.META_CODES[key]
-                elif key == constants.META_WIDTH:
-                    value = str(puzzle.grid.width)
-                elif key == constants.META_HEIGHT:
-                    value = str(puzzle.grid.height)
-                elif key == constants.META_N_WORDS:
-                    value = str(puzzle.grid.count_words())
-                elif key == constants.META_N_BLOCKS:
-                    value = str(puzzle.grid.count_blocks())
-                header = header.replace(code, value)
-        return header
-    def pdf_header(header, page_n):
-        code = constants.META_CODES[constants.META_PAGE_NUMBER]
-        header = header.replace(code, str(page_n + 1))
+    def pdf_header(header):
         p_h = settings["page_header"]
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
@@ -478,7 +479,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     p_h_include = settings["page_header_include"]
     p_h_all = settings["page_header_include_all"]
     page_n = 0
-    header = compute_header()
+    header = compute_header(puzzle, settings["page_header_text"])
     for o in outputs:
         if o == "puzzle":
             mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
@@ -508,7 +509,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         while not done:
             context.save()
             if p_h_include and (True if p_h_all else page_n == 0):
-                pdf_header(header, page_n)
+                pdf_header(compute_header(puzzle, header, page_n))
                 context.translate(0, 24)
             todo = funcs[count:]
             for p, p_args in todo:
