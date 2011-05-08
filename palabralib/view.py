@@ -381,13 +381,22 @@ class GridView:
         screen_xs, screen_ys = self.comp_screen()
         pcr = pangocairo.CairoContext(context)
         pcr_layout = pcr.create_layout()
+        pcr_set_markup = pcr_layout.set_markup
+        pcr_show_layout = pcr.show_layout
+        ctx_move_to = context.move_to
+        ctx_text_extents = context.text_extents
+        ctx_set_source_rgb = context.set_source_rgb
+        ctx_set_line_width = context.set_line_width
+        ctx_rel_line_to = context.rel_line_to
+        ctx_stroke = context.stroke
+        ctx_rectangle = context.rectangle
         def _render_pango(r, s, font, content, rx=None, ry=None):
             if rx is None and ry is None:
                 rx = screen_xs[r] + 1 # ?
                 ry = screen_ys[s]
-            pcr_layout.set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
-            context.move_to(rx, ry)
-            pcr.show_layout(pcr_layout)
+            pcr_set_markup('''<span font_desc="%s">%s</span>''' % (font, content))
+            ctx_move_to(rx, ry)
+            pcr_show_layout(pcr_layout)
         def _render_char(r, s, c, extents):
             xbearing, ybearing, width, height, xadvance, yadvance = extents[c]
             border_width = props["border", "width"]
@@ -417,19 +426,19 @@ class GridView:
         extents = {}
         for p, q, c in (n_chars + o_chars):
             if c not in extents:
-                extents[c] = context.text_extents(c)
+                extents[c] = ctx_text_extents(c)
         for p, q, c in n_chars:
             color = styles[p, q]["char", "color"] if (p, q) in styles else default["char", "color"]
             if color != cur_color:
                 cur_color = color
-                context.set_source_rgb(*[cc / 65535.0 for cc in color])
+                ctx_set_source_rgb(*[cc / 65535.0 for cc in color])
             _render_char(p, q, c, extents)
         for p, q, c in o_chars:
             # TODO custom color
             color = (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
             if color != cur_color:
                 cur_color = color
-                context.set_source_rgb(*[cc / 65535.0 for cc in color])
+                ctx_set_source_rgb(*[cc / 65535.0 for cc in color])
             _render_char(p, q, c, extents)
         
         cell_size = props["cell", "size"]
@@ -438,13 +447,13 @@ class GridView:
         # highlights
         if self.highlights:
             hwidth = int(cell_size / 8)
-            context.set_line_width(hwidth)
+            ctx_set_line_width(hwidth)
             for p, q in cells:
                 # TODO custom color
                 color = (65535.0, 65535.0, 65535.0 / 2)
                 if color != cur_color:
                     cur_color = color
-                    context.set_source_rgb(*[c / 65535.0 for c in color])
+                    ctx_set_source_rgb(*[c / 65535.0 for c in color])
                 for r, s, direction, length in self.highlights:
                     top, bottom, left, right = None, None, None, None
                     if direction == "across" and r <= p < r + length and s == q:
@@ -467,16 +476,16 @@ class GridView:
                     if right:
                         lines.append((sx + cell_size - 0.5 * hwidth, sy, 0, cell_size))
                     for rx, ry, rdx, rdy in lines:
-                        context.move_to(rx, ry)
-                        context.rel_line_to(rdx, rdy)
-                        context.stroke()
-            context.set_line_width(line_width)
+                        ctx_move_to(rx, ry)
+                        ctx_rel_line_to(rdx, rdy)
+                        ctx_stroke()
+            ctx_set_line_width(line_width)
         # block
         for p, q in cells:
             color = styles[p, q]["block", "color"] if (p, q) in styles else default["block", "color"]
             if color != cur_color:
                 cur_color = color
-                context.set_source_rgb(*[c / 65535.0 for c in color])
+                ctx_set_source_rgb(*[c / 65535.0 for c in color])
             if data[q][p]["block"]:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
@@ -485,11 +494,11 @@ class GridView:
                 if margin == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
-                    context.rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
+                    ctx_rectangle(rx - 0.5, ry - 0.5, rsize + 1, rsize + 1)
                 else:
                     offset = int((margin / 100.0) * rsize)
                     rsize -= (2 * offset)
-                    context.rectangle(rx + offset, ry + offset, rsize, rsize)
+                    ctx_rectangle(rx + offset, ry + offset, rsize, rsize)
                 context.fill()
         
         # number
@@ -505,7 +514,7 @@ class GridView:
                     font = default["number", "font"] + " " + default["number", "size"][1]
                 if color != cur_color:
                     cur_color = color
-                    context.set_source_rgb(*[c / 65535.0 for c in color])
+                    ctx_set_source_rgb(*[c / 65535.0 for c in color])
                 _render_pango(p, q, font, str(data[q][p]["number"]))
 
         # circle
@@ -521,8 +530,8 @@ class GridView:
                     color = default["block", "color"]
                 if color != cur_color:
                     cur_color = color
-                    context.set_source_rgb(*[c / 65535.0 for c in color])
-                context.set_line_width(line_width)
+                    ctx_set_source_rgb(*[c / 65535.0 for c in color])
+                ctx_set_line_width(line_width)
                 rsize = cell_size
                 rx = screen_xs[p] + rsize / 2
                 ry = screen_ys[q] + rsize / 2
@@ -577,7 +586,6 @@ class GridView:
         width = grid.width
         height = grid.height
         data = grid.data
-        is_available = grid.is_available
         
         if not grid.lines:
             grid.lines = cPalabra.compute_lines(grid)
@@ -602,77 +610,6 @@ class GridView:
                 , props_border_width
                 , props_cell_size)
         the_lines = grid.lines_cache[key]
-        for x, y in []: #cells:
-            lines = self.grid.lines[x, y]
-            test = []
-            for p, q, ltype, side in lines:
-                sx = screen_xs[p]
-                sy = screen_ys[q]
-                bar = (0 <= x < self.grid.width
-                    and 0 <= y < self.grid.height
-                    and self.grid.data[y][x]["bar"][ltype])
-                border = "border" in side
-                
-                if side == "normal":
-                    start = -0.5 * props_line_width
-                elif side == "outerborder":
-                    start = -0.5 * props_border_width
-                elif side == "innerborder":
-                    start = 0.5 * props_border_width
-                    if ltype == "top":
-                        check = x, y + 1
-                    elif ltype == "left":
-                        check = x + 1, y
-                    if not self.grid.is_available(*check) or not self.grid.is_available(x, y):
-                        start -= props_line_width
-                
-                if ltype == "left":
-                    test.append((sx + start, sy, 0, props_cell_size, bar, border))
-                elif ltype == "top":
-                    ry = sy + start
-                    
-                    is_lb, dxl = False, 0
-                    if ((x, y, "left", "outerborder") in v_lines
-                        or (x, y - 1, "left", "outerborder") in v_lines):
-                        is_lb, dxl = True, 0
-                    if ((x, y, "left", "innerborder") in v_lines
-                        or (x, y - 1, "left", "innerborder") in v_lines
-                        or (x, y, "left", "normal") in v_lines
-                        or (x, y - 1, "left", "normal") in v_lines):
-                        is_lb, dxl = False, props_line_width
-                    is_rb, dxr = False, 0
-                    if ((x + 1, y, "left", "innerborder") in v_lines
-                        or (x + 1, y - 1, "left", "innerborder") in v_lines):
-                        is_rb, dxr = True, 0
-                    if ((x + 1, y, "left", "outerborder") in v_lines
-                        or (x + 1, y - 1, "left", "outerborder") in v_lines
-                        or (x + 1, y, "left", "normal") in v_lines
-                        or (x + 1, y - 1, "left", "normal") in v_lines):
-                        is_rb, dxr = False, props_line_width
-                    
-                    # adjust horizontal lines to fill empty spaces in corners
-                    test.append((sx - dxl, ry, props_cell_size + dxl + dxr, 0, bar, border))
-                    if is_lb:
-                        test.append((sx - dxl - props_border_width, ry, props_border_width, 0, False, True))
-                    if is_rb:
-                        test.append((sx + props_cell_size, ry, props_border_width, 0, False, True))
-            #r = cPalabra.compute_render_lines(grid
-            #    , data
-            #    , list([(x, y)])
-            #    , grid.lines
-            #    , grid.v_lines
-            #    , screen_xs
-            #    , screen_ys
-            #    , props_line_width
-            #    , props_border_width
-            #    , props_cell_size)
-            #rr = [(rx, ry, rdx, rdy, True if bar == 1 else False, True if border == 1 else False) for rx, ry, rdx, rdy, bar, border in r]
-            #if test != rr:
-            #    for i in xrange(len(test)):
-            #        print ">>", x, y, test[i], rr[i]
-            #    print ">>", x, y, test
-            #    print ">>", x, y, rr
-            #the_lines.extend(test)
         # bars - TODO property bar width
         ctx_set_line_width(props_bar_width)
         for rx, ry, rdx, rdy, bar, border in the_lines:

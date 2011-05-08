@@ -315,16 +315,21 @@ class Grid:
         
     def words_by_direction(self, direction):
         """Iterate over the words in the grid by direction."""
-        for y in xrange(self.height):
-            for x in xrange(self.width):
-                if self.is_start_word(x, y, direction):
-                    yield self.data[y][x]["number"], x, y
+        height = self.height
+        width = self.width
+        is_start_word = self.is_start_word
+        data = self.data
+        for y in xrange(height):
+            for x in xrange(width):
+                if is_start_word(x, y, direction):
+                    yield data[y][x]["number"], x, y
                     
     def clues(self, direction):
         """Iterate over the clues of the grid by direction."""
+        data = self.data
         for n, x, y in self.words_by_direction(direction):
             try:
-                yield n, x, y, self.data[y][x]["clues"][direction]
+                yield n, x, y, data[y][x]["clues"][direction]
             except KeyError:
                 yield n, x, y, {}
     

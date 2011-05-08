@@ -283,14 +283,23 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         pcr.show_layout(layout)
     def produce_clues(clue_break=False, answers=False, reduce_to_rows=False):
         content = {"clue_markup": {}, "clues": {}}
+        c_h = settings["clue_header"]
+        c_h_font = c_h["font"]
+        c_h_bold = settings["clue_header_bold"]
+        c_h_italic = settings["clue_header_italic"]
+        c_h_under = settings["clue_header_underline"]
+        c_c = settings["clue"]
+        c_c_font = c_c["font"]
+        has_bold_number = settings["clue_number_bold"]
+        has_number_period = settings["clue_number_period"]
+        has_clue_length = settings["clue_length"]
+        grid = puzzle.grid
+        word_length = grid.word_length
+        gather_word = grid.gather_word
+        clues = grid.clues
         for d in ["across", "down"]:
-            c_h = settings["clue_header"]
             c_h_txt = settings["clue_header_" + d]
-            c_h_bold = settings["clue_header_bold"]
-            c_h_italic = settings["clue_header_italic"]
-            c_h_under = settings["clue_header_underline"]
-            
-            content["clue_header_" + d] = ''.join(['''<span font_desc="''', c_h["font"], '''">'''
+            content["clue_header_" + d] = ''.join(['''<span font_desc="''', c_h_font, '''">'''
                 , ("<b>" if c_h_bold else '')
                 , ("<i>" if c_h_italic else '')
                 , ("<u>" if c_h_under else '')
@@ -299,30 +308,25 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 , ("</i>" if c_h_italic else '')
                 , ("</b>" if c_h_bold else '')
                 , '''</span>'''])
-            c_c = settings["clue"]
-            content["clue_markup"][d] = '<span font_desc="' + c_c["font"] + '">'
+            content["clue_markup"][d] = '<span font_desc="' + c_c_font + '">'
             content["clues"][d] = []
-            grid = puzzle.grid
-            word_length = grid.word_length
-            gather_word = grid.gather_word
-            clues = grid.clues
             for n, x, y, clue in clues(d):
                 clue_txt = []
                 try:
                     txt = clue["text"]
                 except KeyError:
-                    txt = '''<span color="#ff0000">(missing clue)</span>'''
+                    txt = '<span color="#ff0000">(missing clue)</span>'
                 if "&" in txt:
                     txt = txt.replace("&", "&amp;")
-                if settings["clue_number_bold"]:
+                if has_bold_number:
                     clue_txt += ["<b>"]
                 clue_txt += [str(n)]
-                if settings["clue_number_period"]:
+                if has_number_period:
                     clue_txt += ['.']
-                if settings["clue_number_bold"]:
+                if has_bold_number:
                     clue_txt += ["</b>"]
                 clue_txt += [' ', txt]
-                if settings["clue_length"]:
+                if has_clue_length:
                     clue_txt += [" (", str(word_length(x, y, d)), ")"]
                 if clue_break:
                     clue_txt += ["\n"]
@@ -348,11 +352,19 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         r_columns = []
         offset = 0
         incl_a_header = incl_d_header = False
+        clue_header_across = content["clue_header_across"]
+        clue_header_down = content["clue_header_down"]
+        clue_markup_across = content["clue_markup"]["across"]
+        clue_markup_down = content["clue_markup"]["down"]
+        stream_across = stream["across"]
+        stream_down = stream["down"]
         for page, x, y, w, h in columns:
             pcr = pangocairo.CairoContext(context)
             layout = pcr.create_layout()
             layout.set_width(pango.SCALE * w)
             layout.set_wrap(pango.WRAP_WORD_CHAR)
+            lay_get_pixel_size = layout.get_pixel_size
+            lay_set_markup = layout.set_markup
             text = ''
             done = totally_done = False
             count = step_size = 32
@@ -361,32 +373,32 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 a_clues = d_clues = []
                 if offset > a_count:
                     d_start = offset - a_count
-                    d_clues = stream["down"][d_start:d_start + count]
+                    d_clues = stream_down[d_start:d_start + count]
                 else:
                     a_c = a_count - offset
                     if count <= a_c:
-                        a_clues = stream["across"][offset:offset + count]
+                        a_clues = stream_across[offset:offset + count]
                     else:
-                        a_clues = stream["across"][offset:a_count]
-                        d_clues = stream["down"][0:count - a_c]
+                        a_clues = stream_across[offset:a_count]
+                        d_clues = stream_down[0:count - a_c]
                 col = []
                 if offset == 0 and not incl_a_header:
-                    col.append(content["clue_header_across"] + "\n")
+                    col.append(clue_header_across + "\n")
                     has_a_header = True
                 if a_clues:
-                    col.append(content["clue_markup"]["across"])
+                    col.append(clue_markup_across)
                     col.extend(a_clues)
                     col.append("</span>\n")
                 if d_clues:
                     if not incl_d_header:
-                        col.append(content["clue_header_down"] + "\n")
+                        col.append(clue_header_down + "\n")
                         has_d_header = True
-                    col.append(content["clue_markup"]["down"])
+                    col.append(clue_markup_down)
                     col.extend(d_clues)
                     col.append("</span>")
                 text = ''.join(col)
-                layout.set_markup(text)
-                l_w, l_h = layout.get_pixel_size()
+                lay_set_markup(text)
+                l_w, l_h = lay_get_pixel_size()
                 n_clues = len(a_clues + d_clues)
                 if l_h <= h:
                     if offset + n_clues == a_count + d_count:
@@ -407,7 +419,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             if totally_done:
                 break
         pages = []
-        for page, x, y, w, h, text in r_columns:
+        for p, x, y, w, h, text in r_columns:
             if page not in pages:
                 pages.append(page)
         def render_page(page):
@@ -425,11 +437,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         return render_page, pages
     def gen_columns(col_width, padding=None, grid_w=None, grid_h=None, position=None):
         clue_placement = settings["clue_placement"]
+        n_columns = settings["n_columns"]
         page = 0
         x, y = margin_left, margin_top
         pos_x, pos_y = position
         while True:
-            for n in xrange(settings["n_columns"]):
+            for n in xrange(n_columns):
                 col_height = c_height
                 col_x = x + n * col_width + n * padding
                 col_y = y
