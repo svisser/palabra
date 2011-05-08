@@ -614,6 +614,7 @@ class Grid:
         return count
         
     def has_chars(self):
+        """Return True iff the grid has at least one character."""
         return self.count_chars(include_blanks=False, _return_at_one=True) == 1
             
     def mean_word_length(self):
