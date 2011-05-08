@@ -130,6 +130,13 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(self.grid.is_valid(1, -1), False)
         self.assertEquals(self.grid.is_valid(100, 1), False)
         self.assertEquals(self.grid.is_valid(1, 100), False)
+    
+    def testIsStartWordInvalidCell(self):
+        """An invalid cell cannot be the start of a word."""
+        self.assertEquals(self.grid.is_start_word(-1, 0), False)
+        self.assertEquals(self.grid.is_start_word(0, -1), False)
+        self.assertEquals(self.grid.is_start_word(self.grid.width + 10, 0), False)
+        self.assertEquals(self.grid.is_start_word(0, self.grid.height + 10), False)
         
     def testIsStartHorizontalWordOne(self):
         """A single cell (ended by a block) is not a horizontal word."""
@@ -1322,7 +1329,9 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(counts["down"], 1)
         
     def testStatus(self):
-        """Check for keys, test values elsewhere."""
+        self.grid.set_block(0, 0, True)
+        self.grid.set_char(1, 0, 'A')
+        self.grid.set_void(2, 0, True)
         status = self.grid.determine_status(full=False)
         KEYS = ["block_count"
             , "void_count"
@@ -1348,3 +1357,20 @@ class GridTestCase(unittest.TestCase):
         ]
         for key in KEYS + KEYS2:
             self.assertEquals(key in status, True)
+        self.assertEquals(status["block_count"], 1)
+        self.assertEquals(status["void_count"], 1)
+        self.assertEquals(status["actual_char_count"], 1)
+        self.assertEquals(status["checked_count"], (self.grid.width * self.grid.height) - 3)
+        self.assertEquals(status["unchecked_count"], 1);
+        
+    def testGridString(self):
+        s = str(self.grid)
+        g = Grid(12, 15)
+        g.set_block(0, 0, True)
+        t = str(g)
+        g = Grid(12, 15)
+        g.set_void(0, 0, True)
+        u = str(g)
+        self.assertNotEquals(s, t)
+        self.assertNotEquals(s, u)
+        self.assertNotEquals(t, u)
