@@ -18,7 +18,7 @@
 import unittest
 
 import palabralib.constants as constants
-from palabralib.grid import Grid
+from palabralib.grid import Grid, decompose_word
 from palabralib.puzzle import Puzzle
 
 class PuzzleTestCase(unittest.TestCase):
@@ -1289,8 +1289,8 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(self.grid.gather_all_constraints(3, 0, "down"), [(2, 11, []), (1, 10, []), (0, 9, [])])
         
     def testDecomposeWord(self):
-        self.assertEquals(Grid.decompose_word("abc", 0, 0, "across"), [(0, 0, 'a'), (1, 0, 'b'), (2, 0, 'c')])
-        self.assertEquals(Grid.decompose_word("def", 0, 0, "down"), [(0, 0, 'd'), (0, 1, 'e'), (0, 2, 'f')])
+        self.assertEquals(decompose_word("abc", 0, 0, "across"), [(0, 0, 'a'), (1, 0, 'b'), (2, 0, 'c')])
+        self.assertEquals(decompose_word("def", 0, 0, "down"), [(0, 0, 'd'), (0, 1, 'e'), (0, 2, 'f')])
         
     def testClues(self):
         ac = [clue for clue in self.grid.clues("across")]

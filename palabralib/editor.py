@@ -26,7 +26,7 @@ import action
 from appearance import create_color_button
 import constants
 from files import get_real_filename
-from grid import Grid
+from grid import Grid, decompose_word
 import preferences
 import transform
 from view import GridPreview, DEFAULTS_CELL
@@ -766,7 +766,7 @@ class Editor(gtk.HBox):
         grid = self.puzzle.grid
         if grid.is_available(x, y):
             p, q = grid.get_start_word(x, y, direction)
-            w = grid.decompose_word(word, p, q, direction)
+            w = decompose_word(word, p, q, direction)
             self._insert_word(w)
             
     def set_overlay(self, word):
@@ -787,7 +787,7 @@ class Editor(gtk.HBox):
         direction = self.selection.direction
         grid = self.puzzle.grid
         p, q = grid.get_start_word(x, y, direction)
-        result = grid.decompose_word(word, p, q, direction)
+        result = decompose_word(word, p, q, direction)
         overlay = [(x, y, c.upper()) for x, y, c in result
             if grid.data[y][x]["char"] == ""]
         render_overlay(overlay)

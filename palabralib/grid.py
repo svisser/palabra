@@ -20,6 +20,13 @@ import string
 import cPalabra
 import constants
 
+def decompose_word(word, x, y, direction):
+    """Decompose the word starting at (x, y) in the given direction into tuples."""
+    if direction == "across":
+        return [(x + i, y, word[i]) for i in xrange(len(word))]
+    elif direction == "down":
+        return [(x, y + j, word[j]) for j in xrange(len(word))]
+
 class Grid:
     def __init__(self, width, height, initialize=True, number_mode=constants.NUMBERING_AUTO):
         """Construct a grid with the given dimensions."""
@@ -390,14 +397,6 @@ class Grid:
             c = self.data[q][p]["char"]
             word += (empty_char if c == "" else c)
         return word
-        
-    @staticmethod
-    def decompose_word(word, x, y, direction):
-        """Decompose the word starting at (x, y) in the given direction into tuples."""
-        if direction == "across":
-            return [(x + i, y, word[i]) for i in xrange(len(word))]
-        elif direction == "down":
-            return [(x, y + j, word[j]) for j in xrange(len(word))]
             
     def gather_constraints(self, x, y, direction):
         """Create a list of all chars by position of the specified word."""
