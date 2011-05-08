@@ -592,16 +592,19 @@ class GridTestCase(unittest.TestCase):
             self.grid.set_block(i, i, False)
         self.assertEqual(self.grid.count_blocks(), 0)
         
-    def testCountChars(self):
+    def testCountAndHasChars(self):
         self.assertEqual(self.grid.count_chars(True), self.grid.width * self.grid.height)
         self.assertEqual(self.grid.count_chars(False), 0)
+        self.assertEqual(self.grid.has_chars(), False)
         for i in range(10):
             self.grid.set_char(i, i, 'A')
+            self.assertEqual(self.grid.has_chars(), True)
             self.assertEqual(self.grid.count_chars(False), i + 1)
         for i in range(10):
             self.grid.set_char(i, i, '')
         self.assertEqual(self.grid.count_chars(True), self.grid.width * self.grid.height)
         self.assertEqual(self.grid.count_chars(False), 0)
+        self.assertEqual(self.grid.has_chars(), False)
         
     def testCountWords(self):
         count = self.grid.width + self.grid.height

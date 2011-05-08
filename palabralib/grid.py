@@ -600,15 +600,21 @@ class Grid:
                     count += 1
         return count
         
-    def count_chars(self, include_blanks=True):
+    def count_chars(self, include_blanks=True, _return_at_one=False):
         """Return the number of chars in the grid."""
         count = 0
         for y in xrange(self.height):
             for x in xrange(self.width):
-                if (not self.data[y][x]["block"] and not self.data[y][x]["void"]):
-                    if include_blanks or self.data[y][x]["char"] != '':
-                        count += 1
+                if (self.data[y][x]["block"] or self.data[y][x]["void"]):
+                    continue
+                if include_blanks or self.data[y][x]["char"] != '':
+                    count += 1
+                    if _return_at_one:
+                        return count
         return count
+        
+    def has_chars(self):
+        return self.count_chars(include_blanks=False, _return_at_one=True) == 1
             
     def mean_word_length(self):
         """Return the mean length of the words in the grid."""

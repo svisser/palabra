@@ -406,7 +406,7 @@ class NewWindow(gtk.Dialog):
                 gs.append(grid)
                 continue
             g = self._check_grid(grid, criteria)
-            if g is not None and g.count_chars(include_blanks=False) > 0:
+            if g is not None and g.has_chars():
                 gs.append(g)
         self.store.clear()
         for g in gs:
