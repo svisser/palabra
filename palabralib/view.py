@@ -376,6 +376,16 @@ class GridView:
         cur_color = None
         
         default = props._data
+        default_char_font = default["char", "font"]
+        default_char_size = default["char", "size"]
+        default_char_color = default["char", "color"]
+        default_block_color = default["block", "color"]
+        default_block_margin = default["block", "margin"]
+        default_number_color = default["number", "color"]
+        default_number_font = default["number", "font"]
+        default_number_size = default["number", "size"]
+        default_circle = default["circle"]
+        
         styles = props.styles
         
         screen_xs, screen_ys = self.comp_screen()
@@ -413,8 +423,8 @@ class GridView:
                 char_font = style["char", "font"]
                 char_size = style["char", "size"]
             else:
-                char_font = default["char", "font"]
-                char_size = default["char", "size"]
+                char_font = default_char_font
+                char_size = default_char_size
             _render_pango(r, s, char_font + " " + char_size[1], c, rx, ry)
 
         # chars and overlay chars
@@ -428,7 +438,7 @@ class GridView:
             if c not in extents:
                 extents[c] = ctx_text_extents(c)
         for p, q, c in n_chars:
-            color = styles[p, q]["char", "color"] if (p, q) in styles else default["char", "color"]
+            color = styles[p, q]["char", "color"] if (p, q) in styles else default_char_color
             if color != cur_color:
                 cur_color = color
                 ctx_set_source_rgb(*[cc / 65535.0 for cc in color])
@@ -445,16 +455,17 @@ class GridView:
         line_width = props["line", "width"]
         
         # highlights
-        if self.highlights:
+        highlights = self.highlights
+        if highlights:
             hwidth = int(cell_size / 8)
             ctx_set_line_width(hwidth)
+            # TODO custom color
+            color = (65535.0, 65535.0, 65535.0 / 2)
+            if color != cur_color:
+                cur_color = color
+                ctx_set_source_rgb(*[c / 65535.0 for c in color])
             for p, q in cells:
-                # TODO custom color
-                color = (65535.0, 65535.0, 65535.0 / 2)
-                if color != cur_color:
-                    cur_color = color
-                    ctx_set_source_rgb(*[c / 65535.0 for c in color])
-                for r, s, direction, length in self.highlights:
+                for r, s, direction, length in highlights:
                     top, bottom, left, right = None, None, None, None
                     if direction == "across" and r <= p < r + length and s == q:
                         top = bottom = True
@@ -482,7 +493,7 @@ class GridView:
             ctx_set_line_width(line_width)
         # block
         for p, q in cells:
-            color = styles[p, q]["block", "color"] if (p, q) in styles else default["block", "color"]
+            color = styles[p, q]["block", "color"] if (p, q) in styles else default_block_color
             if color != cur_color:
                 cur_color = color
                 ctx_set_source_rgb(*[c / 65535.0 for c in color])
@@ -490,7 +501,7 @@ class GridView:
                 rx = screen_xs[p]
                 ry = screen_ys[q]
                 rsize = cell_size
-                margin = styles[p, q]["block", "margin"] if (p, q) in styles else default["block", "margin"]
+                margin = styles[p, q]["block", "margin"] if (p, q) in styles else default_block_margin
                 if margin == 0:
                     # -0.5 for coordinates and +1 for size
                     # are needed to render seamlessly in PDF
@@ -510,8 +521,8 @@ class GridView:
                     color = style["number", "color"]
                     font = style["number", "font"] + " " + style["number", "size"][1]
                 else:
-                    color = default["number", "color"]
-                    font = default["number", "font"] + " " + default["number", "size"][1]
+                    color = default_number_color
+                    font = default_number_font + " " + default_number_size[1]
                 if color != cur_color:
                     cur_color = color
                     ctx_set_source_rgb(*[c / 65535.0 for c in color])
@@ -522,12 +533,12 @@ class GridView:
             if (p, q) in styles:
                 has_circle = styles[p, q]["circle"]
             else:
-                has_circle = default["circle"]
+                has_circle = default_circle
             if has_circle:
                 if (p, q) in styles:
                     color = styles[p, q]["block", "color"]
                 else:
-                    color = default["block", "color"]
+                    color = default_block_color
                 if color != cur_color:
                     cur_color = color
                     ctx_set_source_rgb(*[c / 65535.0 for c in color])
