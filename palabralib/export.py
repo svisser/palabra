@@ -53,7 +53,7 @@ class ExportWindow(gtk.Dialog):
         pdf = Format("pdf", u"PDF (pdf)", ["puzzle", "grid", "solution", "answers"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
-        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %F / %P"))
+        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %A"))
         pdf.add(Setting("grid", "spin", u"Cell size in puzzle (mm)", "cell_size_puzzle", 7, (5, 10)))
         pdf.add(Setting("grid", "spin", u"Cell size in solution (mm)", "cell_size_solution", 6, (5, 10)))
         pdf.add(Setting("grid", "combo", u"Align grid:", "align", "right"
