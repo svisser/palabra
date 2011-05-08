@@ -38,7 +38,7 @@ class CellPropertiesDialog(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Cell properties", palabra_window
             , gtk.DIALOG_MODAL)
         self.set_title('Properties of cell')
-        self.set_size_request(640, 480)
+        #self.set_size_request(640, 480)
         self.palabra_window = palabra_window
         self.properties = properties
         x, y = properties["cell"]
@@ -103,7 +103,11 @@ class CellPropertiesDialog(gtk.Dialog):
         table.attach(self.circle_button, 1, 3, 4, 5)
 
         main = gtk.VBox(False, 0)
-        main.set_spacing(18)
+        main.set_spacing(6)
+        label = gtk.Label()
+        label.set_markup("<b>Properties</b>")
+        label.set_alignment(0, 0.5)
+        main.pack_start(label, False, False, 0)
         main.pack_start(table, False, False, 0)
         content = gtk.HBox(False, 0)
         content.set_border_width(6)
@@ -115,7 +119,7 @@ class CellPropertiesDialog(gtk.Dialog):
         for m, h in ([(constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
             , (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")]):
             p = GridPreview(mode=m, header=h)
-            p.set_size_request(196, -1)
+            p.set_size_request(164, 164)
             align = gtk.Alignment(0, 0)
             align.add(p)
             self.previews.append(p)
