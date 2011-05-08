@@ -607,7 +607,7 @@ inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, 
             int s_x = slots[t].x - c_x;
             int s_y = slots[t].y - c_y;
             int s_score = (s_x >= 0 ? s_x : -1 * s_x) + (s_y >= 0 ? s_y : -1 * s_y) + (slots[t].dir == DIR_DOWN ? 5 : 0);
-            printf("Score %i of %i %i %i | %i %i\n", s_score, slots[t].x, slots[t].y, slots[t].dir, c_x, c_y);
+            //printf("Score %i of %i %i %i | %i %i\n", s_score, slots[t].x, slots[t].y, slots[t].dir, c_x, c_y);
             if (s_score < score) {
                 index = t;
                 score = s_score;

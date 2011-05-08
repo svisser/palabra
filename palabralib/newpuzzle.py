@@ -400,13 +400,14 @@ class NewWindow(gtk.Dialog):
     def display_patterns(self, width, height, criteria=None):
         gs = []
         for grid in self.grids:
-            if grid.size == (width, height):
-                if criteria:
-                    g = self._check_grid(grid, criteria)
-                    if g is not None:
-                        gs.append(g)
-                else:
-                    gs.append(grid)
+            if grid.size != (width, height):
+                continue
+            if not criteria:
+                gs.append(grid)
+                continue
+            g = self._check_grid(grid, criteria)
+            if g is not None and g.count_chars(include_blanks=False) > 0:
+                gs.append(g)
         self.store.clear()
         for g in gs:
             blocks = g.count_blocks()

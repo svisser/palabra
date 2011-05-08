@@ -386,7 +386,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         int is_word_ok = 1;
         
         char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
-        printf("Candidate BEFORE: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        //printf("Candidate BEFORE: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
         if (word && OPTION_DUPLICATE) {
             while (1) {
@@ -403,7 +403,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (!next) break;
             }
         }
-        printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        //printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
         PyMem_Free(cs);
         for (m = 0; m < slot->length; m++) {
@@ -464,7 +464,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         } else {
             is_word_ok = 0;
             if (n_done_slots > 0) {
-                if (n_done_slots > best_n_done_slots) {
+                if (OPTION_NICE ? n_done_slots == NICE_COUNT : n_done_slots > best_n_done_slots) {
+                    //printf("n_done %i\n", n_done_slots);
                     best_n_done_slots = n_done_slots;
                     Py_XDECREF(best_fill);
                     best_fill = gather_fill(cgrid, width, height);
@@ -473,7 +474,6 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 for (c = 0; c < n_slots; c++) {
                     if (order[c] < 0) break;
                 }
-                printf("Calling backtrack for %i %i %i\n", slots[index].x, slots[index].y, slots[index].dir);
                 int cleared = backtrack(words, cgrid, width, height, slots, n_slots, order, n_done_slots, index);
                 //assert cleared > 0
                 for (c = n_done_slots; c >= n_done_slots - cleared; c--) {
@@ -486,12 +486,13 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             slot->done = 1;
             order[n_done_slots] = index;
             n_done_slots++;
-            printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+            //printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         }
         if (n_done_slots == NICE_COUNT) break;
         attempts++;
     }
-    if (best_fill == NULL) {
+    if (best_fill == NULL && (OPTION_NICE ? n_done_slots == NICE_COUNT : 1)) {
+        printf ("FILL %i %i\n", n_done_slots, NICE_COUNT);
         best_fill = gather_fill(cgrid, width, height);
     }
     if (best_fill != NULL) {
