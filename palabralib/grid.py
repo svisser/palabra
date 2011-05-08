@@ -628,6 +628,25 @@ class Grid:
             return 0
         char_counts = [self.get_check_count(x, y) for x, y in self.availables()]
         return float(sum(char_counts)) / float(word_count)
+        
+    def generate_diagonals(self):
+        # (0, 0), (0, 1), (1, 0), (0, 2), (1, 1), (2, 0), ...
+        data = self.data
+        width = self.width
+        height = self.height
+        cs1 = [(0, y) for y in xrange(1, height)]
+        cs2 = [(x, height - 1) for x in xrange(1, width - 1)]
+        seqs = []
+        for cx, cy in (cs1 + cs2):
+            cells = []
+            while cy >= 0 and cx < width:
+                if not data[cy][cx]["block"] and not data[cy][cx]["void"]:
+                    cells.append((cx, cy))
+                cx += 1
+                cy -= 1
+            seqs.append(cells)
+        for s in seqs:
+            pass
             
     def resize(self, width, height, make_dirty=True):
         """
