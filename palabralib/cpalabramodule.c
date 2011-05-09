@@ -720,7 +720,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
             const int l_is_inner = strcmp(str_side, "innerborder") == 0;
             const int l_is_top = strcmp(str_ltype, "top") == 0;
             const int l_is_left = strcmp(str_ltype, "left") == 0;
-            const int border = l_is_outer || l_is_inner;
+            const int l_is_border = l_is_outer || l_is_inner;
             
             float start = 0;
             if (l_is_normal) {
@@ -744,58 +744,55 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 }
             }
             if (l_is_left) {
-                PyObject* r = Py_BuildValue("(ffifii)", sx_p + start, sy_q, 0, cell_size, bar, border);
+                //if ((x == 1 && y == 0) || (x == 1 && y == 1))
+                //    printf("%i %i | %f %f %f %f | %f %f\n", x, y, sx_p, sy_q, start, cell_size, sx_p + start, sy_q);
+                PyObject* r = Py_BuildValue("(ffifii)", sx_p + start, sy_q, 0, cell_size, bar, l_is_border);
                 PyList_Append(result, r);
                 Py_DECREF(r);
             } else if (l_is_top) {
-                int is_lb = 0;
-                int is_rb = 0;
+                int is_lb = 1;
+                int is_rb = 1;
                 int dxl = 0;
                 int dxr = 0;
+
+                int x1_y1_left_outerborder = 0;
+                int x1_y_left_outerborder = 0;
+                int x_y1_left_innerborder = 0;
+                int x_y_left_innerborder = 0;
                 Py_ssize_t v;
                 for (v = 0; v < n_lines; v++) {
                     if (strcmp(all_t[v], "left") != 0) continue;
                     const int v_x = all_x[v];
                     const int v_y = all_y[v];
-                    if (v_y == y || v_y == y - 1) {
-                        const int is_outerborder = strcmp(all_s[v], "outerborder") == 0;
-                        const int is_innerborder = strcmp(all_s[v], "innerborder") == 0;
-                        const int is_normal = strcmp(all_s[v], "normal") == 0;
-                        if (v_x == x) {
-                            if (is_outerborder) {
-                                is_lb = 1;
-                                dxl = 0;
-                            }
-                            if (is_innerborder || is_normal) {
-                                is_lb = 0;
-                                dxl = line_width;
-                            }
-                        }
-                        if (v_x == x + 1) {
-                            if (is_innerborder) {
-                                is_rb = 1;
-                                dxr = 0;
-                            }
-                            if (is_outerborder || is_normal) {
-                                is_rb = 0;
-                                dxr = line_width;
-                            }
-                        }
-                    }
+                    const int is_outerborder = strcmp(all_s[v], "outerborder") == 0;
+                    const int is_innerborder = strcmp(all_s[v], "innerborder") == 0;
+                    if (v_x == x + 1 && v_y == y - 1 && is_outerborder)
+                        x1_y1_left_outerborder = 1;
+                    if (v_x == x + 1 && v_y == y && is_outerborder)
+                        x1_y_left_outerborder = 1;
+                    if (v_x == x && v_y == y - 1 && is_innerborder)
+                        x_y1_left_innerborder = 1;
+                    if (v_x == x && v_y == y && is_innerborder)
+                        x_y_left_innerborder = 1;
                 }
-                PyObject* r = Py_BuildValue("(fffiii)"
-                    , sx_p - dxl, sy_q + start, cell_size + dxl + dxr, 0, bar, border);
+                if (x1_y1_left_outerborder || x1_y_left_outerborder) is_rb = 0;
+                if (x_y1_left_innerborder || x_y_left_innerborder) is_lb = 0;
+                
+                float rx = sx_p - dxl;
+                float ry = sy_q + start;
+                float rdx = cell_size + dxl + dxr;
+                PyObject* r = Py_BuildValue("(fffiii)", rx, ry, rdx, 0, bar, l_is_border);
                 PyList_Append(result, r);
                 Py_DECREF(r);
                 if (is_lb) {
                     PyObject *r1 = Py_BuildValue("(ffiiii)"
-                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, 1);
+                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, l_is_border);
                     PyList_Append(result, r1);
                     Py_DECREF(r1);
                 }
                 if (is_rb) {
                     PyObject *r2 = Py_BuildValue("(ffiiii)"
-                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, 1);
+                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, l_is_border);
                     PyList_Append(result, r2);
                     Py_DECREF(r2);
                 }
