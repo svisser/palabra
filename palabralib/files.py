@@ -370,7 +370,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             count = step_size = 32
             has_a_header = has_d_header = False
             while not done:
-                a_clues = d_clues = []
+                a_clues = []
+                d_clues = []
                 if offset > a_count:
                     d_start = offset - a_count
                     d_clues = stream_down[d_start:d_start + count]
