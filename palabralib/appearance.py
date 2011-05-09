@@ -79,7 +79,6 @@ class AppearanceDialog(gtk.Dialog):
         def create_width_spinner(current):
             adj = gtk.Adjustment(current, 1, MAX_LINE_WIDTH, 1, 0, 0)
             button = gtk.SpinButton(adj, 0.0, 0)
-            button.connect("value-changed", self.on_update)
             return button
             
         def create_row(table, y, label, c1, c2=None):
@@ -104,6 +103,19 @@ class AppearanceDialog(gtk.Dialog):
         self.line_color_button = create_color_button(properties["line", "color"], self.on_update)
         self.line_width_spinner = create_width_spinner(properties["line", "width"])
         create_row(table, 2, label, self.line_color_button, self.line_width_spinner)
+
+        def cap_line_width_at(bound):
+            s = self.line_width_spinner
+            adj = s.get_adjustment()
+            adj.set_upper(bound)
+            if s.get_value_as_int() > bound:
+                s.set_value(bound)
+        def on_border_width_update(widget):
+            cap_line_width_at(widget.get_value_as_int())
+            self.on_update()
+        self.border_width_spinner.connect("value-changed", on_border_width_update)
+        self.line_width_spinner.connect("value_changed", self.on_update)
+        cap_line_width_at(properties["border", "width"])
         
         # letters
         label = create_label(u"Size (%)")

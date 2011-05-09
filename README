@@ -10,7 +10,7 @@ Requirements
 ============
 
 - Python 2.6
-- PyGTK 2.8
+- PyGTK 2.14
 - lxml package, also known as python-lxml in repositories.
   It can also be found here: http://pypi.python.org/pypi/lxml.
 - python-dev from the repositories.
