@@ -746,7 +746,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
             if (l_is_left) {
                 //if ((x == 1 && y == 0) || (x == 1 && y == 1))
                 //    printf("%i %i | %f %f %f %f | %f %f\n", x, y, sx_p, sy_q, start, cell_size, sx_p + start, sy_q);
-                PyObject* r = Py_BuildValue("(ffifii)", sx_p + start, sy_q, 0, cell_size, bar, l_is_border);
+                PyObject* r = Py_BuildValue("(ffifiii)", sx_p + start, sy_q, 0, cell_size, bar, l_is_border, 0);
                 PyList_Append(result, r);
                 Py_DECREF(r);
             } else if (l_is_top) {
@@ -781,18 +781,18 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 float rx = sx_p - dxl;
                 float ry = sy_q + start;
                 float rdx = cell_size + dxl + dxr;
-                PyObject* r = Py_BuildValue("(fffiii)", rx, ry, rdx, 0, bar, l_is_border);
+                PyObject* r = Py_BuildValue("(fffiiii)", rx, ry, rdx, 0, bar, l_is_border, 0);
                 PyList_Append(result, r);
                 Py_DECREF(r);
                 if (is_lb) {
-                    PyObject *r1 = Py_BuildValue("(ffiiii)"
-                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, l_is_border);
+                    PyObject *r1 = Py_BuildValue("(ffiiiii)"
+                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, l_is_border, 1);
                     PyList_Append(result, r1);
                     Py_DECREF(r1);
                 }
                 if (is_rb) {
-                    PyObject *r2 = Py_BuildValue("(ffiiii)"
-                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, l_is_border);
+                    PyObject *r2 = Py_BuildValue("(ffiiiii)"
+                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, l_is_border, 1);
                     PyList_Append(result, r2);
                     Py_DECREF(r2);
                 }

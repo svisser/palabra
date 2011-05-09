@@ -626,23 +626,30 @@ class GridView:
         the_lines = grid.lines_cache[key]
         # bars - TODO property bar width
         ctx_set_line_width(props_bar_width)
-        for rx, ry, rdx, rdy, bar, border in the_lines:
+        for rx, ry, rdx, rdy, bar, border, special in the_lines:
             if bar:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
         ctx_stroke()
-        # lines
+        # borders with normal line width
         ctx_set_line_width(props_line_width)
+        ctx_set_source_rgb(*[c / 65535.0 for c in props_border_color])
+        for rx, ry, rdx, rdy, bar, border, special in the_lines:
+            if not bar and not border and special:
+                ctx_move_to(rx, ry)
+                ctx_rel_line_to(rdx, rdy)
+        ctx_stroke()
+        # lines
         ctx_set_source_rgb(*[c / 65535.0 for c in props_line_color])
-        for rx, ry, rdx, rdy, bar, border in the_lines:
-            if not bar and not border:
+        for rx, ry, rdx, rdy, bar, border, special in the_lines:
+            if not bar and not border and not special:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
         ctx_stroke()
         # borders
         ctx_set_line_width(props_border_width)
         ctx_set_source_rgb(*[c / 65535.0 for c in props_border_color])
-        for rx, ry, rdx, rdy, bar, border in the_lines:
+        for rx, ry, rdx, rdy, bar, border, special in the_lines:
             if border:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
