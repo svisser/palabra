@@ -1374,3 +1374,25 @@ class GridTestCase(unittest.TestCase):
         self.assertNotEquals(s, t)
         self.assertNotEquals(s, u)
         self.assertNotEquals(t, u)
+        
+    def testDiagonalCells(self):
+        g = Grid(5, 5)
+        s = g.generate_diagonals(0)
+        self.assertEquals(len(s), 7)
+        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 2)
+        g.set_block(1, 1, True)
+        s = g.generate_diagonals(0)
+        self.assertEquals(len(s), 6)
+        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 5)
+        g.set_void(3, 3, True)
+        s = g.generate_diagonals(0)
+        self.assertEquals(len(s), 5)
+        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 8)
+        result = [[(0, 1), (1, 0)]
+            , [(0, 3), (1, 2), (2, 1), (3, 0)]
+            , [(0, 4), (1, 3), (2, 2), (3, 1), (4, 0)]
+            , [(1, 4), (2, 3), (3, 2), (4, 1)]
+            , [(3, 4), (4, 3)]]
+        self.assertEquals(s, result)
+        s = g.generate_diagonals(1)
+        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 7)

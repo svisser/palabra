@@ -629,24 +629,48 @@ class Grid:
         char_counts = [self.get_check_count(x, y) for x, y in self.availables()]
         return float(sum(char_counts)) / float(word_count)
         
-    def generate_diagonals(self):
-        # (0, 0), (0, 1), (1, 0), (0, 2), (1, 1), (2, 0), ...
+    def generate_diagonals(self, direction=0):
+        """
+        Generate all sequences of diagonal character cells of length 2+.
+        
+        Direction: 0 = north-east, 1 = south-east.
+        """
         data = self.data
         width = self.width
         height = self.height
-        cs1 = [(0, y) for y in xrange(1, height)]
-        cs2 = [(x, height - 1) for x in xrange(1, width - 1)]
+        if direction == 0:
+            cs1 = [(0, y) for y in xrange(1, height)]
+            cs2 = [(x, height - 1) for x in xrange(1, width - 1)]
+            dx, dy = 1, -1
+        elif direction == 1:
+            cs1 = [(0, y) for y in xrange(1, height)]
+            cs2 = [(x, 0) for x in xrange(1, width - 1)]
+            dx, dy = 1, 1
         seqs = []
         for cx, cy in (cs1 + cs2):
             cells = []
-            while cy >= 0 and cx < width:
+            while (0 <= cx < width and 0 <= cy < height):
                 if not data[cy][cx]["block"] and not data[cy][cx]["void"]:
                     cells.append((cx, cy))
-                cx += 1
-                cy -= 1
+                else:
+                    cells.append(None)
+                cx += dx
+                cy += dy
             seqs.append(cells)
+        result = []
         for s in seqs:
-            pass
+            sr = []
+            t = []
+            for e in s:
+                if e is None:
+                    sr.append(t)
+                    t = []
+                else:
+                    t.append(e)
+            if t:
+                sr.append(t)
+            result.extend([i for i in sr if len(i) >= 2])
+        return result
             
     def resize(self, width, height, make_dirty=True):
         """
