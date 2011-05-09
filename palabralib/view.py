@@ -115,7 +115,7 @@ DEFAULTS = {
     ("line", "color"): (0, 0, 0)
 }
 def _relative_to(key, p, d=DEFAULTS):
-    return str(int(d[key] * p)) + "px"
+    return int(d[key] * p)
 DEFAULTS_CELL = {
     ("block", "color"): (0, 0, 0),
     ("block", "margin"): 0,
@@ -408,24 +408,25 @@ class GridView:
             ctx_move_to(rx, ry)
             pcr_show_layout(pcr_layout)
         def _render_char(r, s, c, extents):
-            xbearing, ybearing, width, height, xadvance, yadvance = extents[c]
+            xbearing, ybearing, width, height = extents[c][:4]
             border_width = props["border", "width"]
             size = props["cell", "size"]
             line_width = props["line", "width"]
-            rx = (border_width +
-                (r + 0.55) * (size + line_width) -
-                width - line_width / 2 - abs(xbearing) / 2)
-            ry = (border_width +
-                (s + 0.55) * (size + line_width) -
-                height - line_width / 2 - abs(ybearing) / 2)
+            char_font = default_char_font
+            char_size = default_char_size
             if (r, s) in styles:
                 style = styles[r, s]
                 char_font = style["char", "font"]
                 char_size = style["char", "size"]
-            else:
-                char_font = default_char_font
-                char_size = default_char_size
-            _render_pango(r, s, char_font + " " + char_size[1], c, rx, ry)
+            context.select_font_face(char_font, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+            context.set_font_size(char_size[1])
+            fascent, fdescent, fheight = context.font_extents()[:3]
+            cx = border_width + r * (size + line_width) + 0.5 * size
+            cy = border_width + s * (size + line_width) + 0.5 * size
+            rx = cx - xbearing - width / 2
+            ry = cy - fdescent + fheight / 2
+            context.move_to(rx, ry)
+            context.show_text(c)
 
         # chars and overlay chars
         n_chars, o_chars = [], []
@@ -519,10 +520,10 @@ class GridView:
                 if (p, q) in styles:
                     style = styles[p, q]
                     color = style["number", "color"]
-                    font = style["number", "font"] + " " + style["number", "size"][1]
+                    font = style["number", "font"] + " " + str(style["number", "size"][1]) + "px"
                 else:
                     color = default_number_color
-                    font = default_number_font + " " + default_number_size[1]
+                    font = default_number_font + " " + str(default_number_size[1]) + "px"
                 if color != cur_color:
                     cur_color = color
                     ctx_set_source_rgb(*[c / 65535.0 for c in color])
