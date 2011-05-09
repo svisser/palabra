@@ -369,9 +369,11 @@ class GridView:
             context.translate(-1 * mx, -1 * my)
         
     def render_top(self, context, cells):
-        data = self.grid.data
+        grid = self.grid
+        data = grid.data
         props = self.properties
-        if self.settings["has_padding"]:
+        settings = self.settings
+        if settings["has_padding"]:
             context.translate(*props.margin)
         cur_color = None
         
@@ -430,9 +432,9 @@ class GridView:
 
         # chars and overlay chars
         n_chars, o_chars = [], []
-        if self.settings["show_chars"]:
+        if settings["show_chars"]:
             n_chars = [(p, q, data[q][p]["char"]) for p, q in cells if data[q][p]["char"] != '']
-        if self.settings["render_overlays"]:
+        if settings["render_overlays"]:
             o_chars = [(p, q, c) for p, q in cells for r, s, c in self.overlay if (p, q) == (r, s)]
         extents = {}
         for p, q, c in (n_chars + o_chars):
@@ -514,7 +516,7 @@ class GridView:
                 context.fill()
         
         # number
-        if self.settings["show_numbers"]:
+        if settings["show_numbers"]:
             numbers = [(p, q) for p, q in cells if data[q][p]["number"] > 0]
             for p, q in numbers:
                 if (p, q) in styles:
@@ -552,14 +554,14 @@ class GridView:
                 context.stroke()
         
         # lines
-        if len(cells) < self.grid.width * self.grid.height:
+        if len(cells) < grid.width * grid.height:
             cls = [c for c in cells]
             for x, y in cells:
-                cls += self.grid.neighbors(x, y, diagonals=True)
+                cls += grid.neighbors(x, y, diagonals=True)
             self.render_lines_of_cells(context, set(cls), screen_xs, screen_ys)
         else:
             self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
-        if self.settings["has_padding"]:
+        if settings["has_padding"]:
             mx, my = props.margin
             context.translate(-1 * mx, -1 * my)
     
