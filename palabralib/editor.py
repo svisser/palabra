@@ -118,7 +118,7 @@ class CellPropertiesDialog(gtk.Dialog):
         prevs = gtk.VBox(False, 0)
         for m, h in ([(constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
             , (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")]):
-            p = GridPreview(mode=m, header=h)
+            p = GridPreview(mode=m, header=h, cell_size=96)
             p.set_size_request(164, 164)
             align = gtk.Alignment(0, 0)
             align.add(p)
@@ -126,7 +126,6 @@ class CellPropertiesDialog(gtk.Dialog):
             p.display(self.grid)
             for k in DEFAULTS_CELL:
                 p.view.properties[k] = properties[k]
-            p.magnify = True
             p.refresh()
             prevs.pack_start(align, False, False, 0)
         content.pack_start(prevs, False, False, 0)

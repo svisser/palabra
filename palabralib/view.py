@@ -729,9 +729,10 @@ class GridView:
 class GridPreview(gtk.VBox):
     def __init__(self
         , mode=constants.VIEW_MODE_PREVIEW
-        , header="Preview"):
+        , header="Preview"
+        , cell_size=16):
         gtk.VBox.__init__(self)
-        self.magnify = False
+        self.cell_size = cell_size
         self.view = None
         self.preview_surface = None
         self.preview_pattern = None
@@ -760,7 +761,8 @@ class GridPreview(gtk.VBox):
         if force:
             self.preview_surface = None
         if self.view is not None:
-            self.view.properties["cell", "size"] = 96 if self.magnify else 16
+            if self.cell_size is not None:
+                self.view.properties["cell", "size"] = self.cell_size
             self.view.refresh_visual_size(self.drawing_area)
             self.drawing_area.queue_draw()
         

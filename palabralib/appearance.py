@@ -17,14 +17,18 @@
 
 import gtk
 
-from view import _relative_to
+import constants
+from grid import Grid
+from view import GridPreview, _relative_to
 
 MAX_LINE_WIDTH = 32
 
-def create_color_button(color):
+def create_color_button(color, f=None):
     color = gtk.gdk.Color(*color)
     button = gtk.ColorButton()
     button.set_color(color)
+    if f:
+        button.connect("color-set", f)
     return button
 
 class AppearanceDialog(gtk.Dialog):
@@ -63,7 +67,9 @@ class AppearanceDialog(gtk.Dialog):
             
         def create_width_spinner(current):
             adj = gtk.Adjustment(current, 1, MAX_LINE_WIDTH, 1, 0, 0)
-            return gtk.SpinButton(adj, 0.0, 0)
+            button = gtk.SpinButton(adj, 0.0, 0)
+            button.connect("value-changed", self.on_update)
+            return button
             
         def create_row(table, y, label, c1, c2=None):
             table.attach(label, 0, 1, y, y + 1, gtk.FILL, gtk.FILL)
@@ -83,13 +89,13 @@ class AppearanceDialog(gtk.Dialog):
         
         # border
         label = create_label(u"Border:")
-        self.border_color_button = create_color_button(properties["border", "color"])
+        self.border_color_button = create_color_button(properties["border", "color"], self.on_update)
         self.border_width_spinner = create_width_spinner(properties["border", "width"])
         create_row(table, 1, label, self.border_color_button, self.border_width_spinner)
         
         # lines
         label = create_label(u"Line:")
-        self.line_color_button = create_color_button(properties["line", "color"])
+        self.line_color_button = create_color_button(properties["line", "color"], self.on_update)
         self.line_width_spinner = create_width_spinner(properties["line", "width"])
         create_row(table, 2, label, self.line_color_button, self.line_width_spinner)
         
@@ -100,9 +106,10 @@ class AppearanceDialog(gtk.Dialog):
         table.attach(label, 5, 6, 0, 1, gtk.FILL, gtk.FILL)
         
         label = create_label(u"Cell:")
-        self.cell_color_button = create_color_button(properties["cell", "color"])
+        self.cell_color_button = create_color_button(properties["cell", "color"], self.on_update)
         adj = gtk.Adjustment(properties["cell", "size"], 32, 128, 1, 0, 0)
         self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
+        self.cell_size_spinner.connect("value-changed", self.on_update)
         create_row_two(table, 1, label, self.cell_color_button, self.cell_size_spinner)
         
         # blocks
@@ -113,9 +120,10 @@ class AppearanceDialog(gtk.Dialog):
         
         current = properties["block", "margin"]
         label = create_label(u"Block:")
-        self.block_color_button = create_color_button(properties["block", "color"])
+        self.block_color_button = create_color_button(properties["block", "color"], self.on_update)
         adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
         self.block_margin_spinner = gtk.SpinButton(adj, 0.0, 0)
+        self.block_margin_spinner.connect("value-changed", self.on_update)
         create_row_two(table, 3, label, self.block_color_button, self.block_margin_spinner)
         
         # letters
@@ -123,19 +131,37 @@ class AppearanceDialog(gtk.Dialog):
         table.attach(label, 2, 3, 3, 4, gtk.FILL, gtk.FILL)
         
         label = create_label(u"Letter:")
-        self.char_color_button = create_color_button(properties["char", "color"])
+        self.char_color_button = create_color_button(properties["char", "color"], self.on_update)
         adj = gtk.Adjustment(properties["char", "size"][0], 10, 100, 1, 0, 0)
         self.char_size_spinner = gtk.SpinButton(adj)
+        self.char_size_spinner.connect("value-changed", self.on_update)
         create_row(table, 4, label, self.char_color_button, self.char_size_spinner)
         
         # numbers
         label = create_label(u"Number:")
-        self.number_color_button = create_color_button(properties["number", "color"])
+        self.number_color_button = create_color_button(properties["number", "color"], self.on_update)
         adj = gtk.Adjustment(properties["number", "size"][0], 10, 100, 1, 0, 0)
         self.number_size_spinner = gtk.SpinButton(adj)
+        self.number_size_spinner.connect("value-changed", self.on_update)
         create_row(table, 5, label, self.number_color_button, self.number_size_spinner)
         
+        mode = constants.VIEW_MODE_PREVIEW_SOLUTION
+        self.preview = GridPreview(mode=mode, cell_size=None)
+        self.preview.set_size_request(200, 200)
+        main.pack_start(self.preview, False, False, 0)
+        g = Grid(3, 3)
+        g.set_block(0, 2, True)
+        g.set_void(2, 0, True)
+        g.set_char(0, 0, 'A')
+        g.assign_numbers()
+        self.preview.display(g)
+        self.on_update()
         return main
+        
+    def on_update(self, widget=None):
+        for k, v in self.gather_appearance().items():
+            self.preview.view.properties[k] = v
+        self.preview.refresh(force=True)
         
     def gather_appearance(self):
         a = {}
@@ -156,7 +182,8 @@ class AppearanceDialog(gtk.Dialog):
         color = self.number_color_button.get_color()
         a["number", "color"] = (color.red, color.green, color.blue)
         p = self.char_size_spinner.get_value_as_int()
-        a["char", "size"] = (p, _relative_to(("cell", "size"), p / 100.0, d=a))
+        key = ("cell", "size")
+        a["char", "size"] = (p, _relative_to(key, p / 100.0, d=a))
         p = self.number_size_spinner.get_value_as_int()
-        a["number", "size"] = (p, _relative_to(("cell", "size"), p / 100.0, d=a))
+        a["number", "size"] = (p, _relative_to(key, p / 100.0, d=a))
         return a
