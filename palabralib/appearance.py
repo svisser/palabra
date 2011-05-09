@@ -45,6 +45,17 @@ class AppearanceDialog(gtk.Dialog):
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
+        mode = constants.VIEW_MODE_PREVIEW_SOLUTION
+        self.preview = GridPreview(mode=mode, cell_size=None)
+        self.preview.set_size_request(200, 200)
+        hbox.pack_start(self.preview, False, False, 0)
+        g = Grid(3, 3)
+        g.set_block(0, 2, True)
+        g.set_void(2, 0, True)
+        g.set_char(0, 0, 'A')
+        g.assign_numbers()
+        self.preview.display(g)
+        self.on_update()
         
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
@@ -54,9 +65,9 @@ class AppearanceDialog(gtk.Dialog):
         main = gtk.VBox(False, 0)
         main.set_spacing(6)
         
-        table = gtk.Table(6, 6)
-        table.set_col_spacings(12)
-        table.set_row_spacings(3)
+        table = gtk.Table(10, 3)
+        table.set_col_spacings(6)
+        table.set_row_spacings(6)
         main.pack_start(table, True, True, 0)
         
         def create_label(label):
@@ -76,11 +87,6 @@ class AppearanceDialog(gtk.Dialog):
             table.attach(c1, 1, 2, y, y + 1, 0, 0)
             if c2 is not None:
                 table.attach(c2, 2, 3, y, y + 1, 0, 0)
-        def create_row_two(table, y, label, c1, c2=None):
-            table.attach(label, 3, 4, y, y + 1, gtk.FILL, gtk.FILL)
-            table.attach(c1, 4, 5, y, y + 1, 0, 0)
-            if c2 is not None:
-                table.attach(c2, 5, 6, y, y + 1, 0, 0)
         
         label = create_label(u"Color")
         table.attach(label, 1, 2, 0, 1, gtk.FILL, gtk.FILL)
@@ -98,33 +104,6 @@ class AppearanceDialog(gtk.Dialog):
         self.line_color_button = create_color_button(properties["line", "color"], self.on_update)
         self.line_width_spinner = create_width_spinner(properties["line", "width"])
         create_row(table, 2, label, self.line_color_button, self.line_width_spinner)
-        
-        # cells
-        label = create_label(u"Color")
-        table.attach(label, 4, 5, 0, 1, gtk.FILL, gtk.FILL)
-        label = create_label(u"Size (px)")
-        table.attach(label, 5, 6, 0, 1, gtk.FILL, gtk.FILL)
-        
-        label = create_label(u"Cell:")
-        self.cell_color_button = create_color_button(properties["cell", "color"], self.on_update)
-        adj = gtk.Adjustment(properties["cell", "size"], 32, 128, 1, 0, 0)
-        self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
-        self.cell_size_spinner.connect("value-changed", self.on_update)
-        create_row_two(table, 1, label, self.cell_color_button, self.cell_size_spinner)
-        
-        # blocks
-        label = create_label(u"Color")
-        table.attach(label, 4, 5, 2, 3, gtk.FILL, gtk.FILL)
-        label = create_label(u"Margin (%)")
-        table.attach(label, 5, 6, 2, 3, gtk.FILL, gtk.FILL)
-        
-        current = properties["block", "margin"]
-        label = create_label(u"Block:")
-        self.block_color_button = create_color_button(properties["block", "color"], self.on_update)
-        adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
-        self.block_margin_spinner = gtk.SpinButton(adj, 0.0, 0)
-        self.block_margin_spinner.connect("value-changed", self.on_update)
-        create_row_two(table, 3, label, self.block_color_button, self.block_margin_spinner)
         
         # letters
         label = create_label(u"Size (%)")
@@ -145,17 +124,32 @@ class AppearanceDialog(gtk.Dialog):
         self.number_size_spinner.connect("value-changed", self.on_update)
         create_row(table, 5, label, self.number_color_button, self.number_size_spinner)
         
-        mode = constants.VIEW_MODE_PREVIEW_SOLUTION
-        self.preview = GridPreview(mode=mode, cell_size=None)
-        self.preview.set_size_request(200, 200)
-        main.pack_start(self.preview, False, False, 0)
-        g = Grid(3, 3)
-        g.set_block(0, 2, True)
-        g.set_void(2, 0, True)
-        g.set_char(0, 0, 'A')
-        g.assign_numbers()
-        self.preview.display(g)
-        self.on_update()
+        # cells
+        label = create_label(u"Color")
+        table.attach(label, 1, 2, 6, 7, gtk.FILL, gtk.FILL)
+        label = create_label(u"Size (px)")
+        table.attach(label, 2, 3, 6, 7, gtk.FILL, gtk.FILL)
+        
+        label = create_label(u"Cell:")
+        self.cell_color_button = create_color_button(properties["cell", "color"], self.on_update)
+        adj = gtk.Adjustment(properties["cell", "size"], 32, 128, 1, 0, 0)
+        self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
+        self.cell_size_spinner.connect("value-changed", self.on_update)
+        create_row(table, 7, label, self.cell_color_button, self.cell_size_spinner)
+        
+        # blocks
+        label = create_label(u"Color")
+        table.attach(label, 1, 2, 8, 9, gtk.FILL, gtk.FILL)
+        label = create_label(u"Margin (%)")
+        table.attach(label, 2, 3, 8, 9, gtk.FILL, gtk.FILL)
+        
+        current = properties["block", "margin"]
+        label = create_label(u"Block:")
+        self.block_color_button = create_color_button(properties["block", "color"], self.on_update)
+        adj = gtk.Adjustment(current, 0, 49, 1, 0, 0)
+        self.block_margin_spinner = gtk.SpinButton(adj, 0.0, 0)
+        self.block_margin_spinner.connect("value-changed", self.on_update)
+        create_row(table, 9, label, self.block_color_button, self.block_margin_spinner)
         return main
         
     def on_update(self, widget=None):
