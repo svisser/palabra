@@ -78,7 +78,7 @@ class AppearanceDialog(gtk.Dialog):
         
         label = create_label(u"Color")
         table.attach(label, 1, 2, 0, 1, gtk.FILL, gtk.FILL)
-        label = create_label(u"Width")
+        label = create_label(u"Width (px)")
         table.attach(label, 2, 3, 0, 1, gtk.FILL, gtk.FILL)
         
         # border
@@ -96,7 +96,7 @@ class AppearanceDialog(gtk.Dialog):
         # cells
         label = create_label(u"Color")
         table.attach(label, 4, 5, 0, 1, gtk.FILL, gtk.FILL)
-        label = create_label(u"Size")
+        label = create_label(u"Size (px)")
         table.attach(label, 5, 6, 0, 1, gtk.FILL, gtk.FILL)
         
         label = create_label(u"Cell:")
