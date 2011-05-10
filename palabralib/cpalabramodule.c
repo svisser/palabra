@@ -823,6 +823,13 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
     PyObject *key;
     if (!PyArg_ParseTuple(args, "OOOO", &words, &cs, &counts, &key))
         return NULL;
+        
+    PyObject *py_lengths[MAX_WORD_LENGTH];
+    int m;
+    for (m = 0; m < MAX_WORD_LENGTH; m++) {
+        py_lengths[m] = PyInt_FromLong(m);
+    }
+    
     PyObject *result = PyList_New(0);
     Py_ssize_t w;
     for (w = 0; w < PyList_GET_SIZE(words); w++) {
@@ -838,16 +845,12 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
             const int l = (int) PyInt_AS_LONG(py_l);
             const int l_i = (int) PyInt_AS_LONG(py_l_i);
             
-            PyObject *a_key = PyInt_FromLong(l);
-            PyObject *a_item = PyDict_GetItem(counts, a_key);
-            Py_DECREF(a_key);
-            PyObject *a_key2 = PyInt_FromLong(l_i);
-            PyObject *a_item2 = PyDict_GetItem(a_item, a_key2);
-            Py_DECREF(a_key2);
+            PyObject *a_l = PyDict_GetItem(counts, py_lengths[l]);
+            PyObject *a_l_i = PyDict_GetItem(a_l, py_lengths[l_i]);
             
             int j;
-            for (j = 0; j < PyList_GET_SIZE(a_item2); j++) {
-                PyObject *item = PyList_GET_ITEM(a_item2, j);
+            for (j = 0; j < PyList_GET_SIZE(a_l_i); j++) {
+                PyObject *item = PyList_GET_ITEM(a_l_i, j);
                 PyObject *py_c = PyTuple_GET_ITEM(item, 0);
                 char *c_c = PyString_AS_STRING(py_c);
                 if (c == *c_c) {
@@ -859,6 +862,9 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
         PyObject* item = Py_BuildValue("(si)", word, count);
         PyList_Append(result, item);
         Py_DECREF(item);
+    }
+    for (m = 0; m < MAX_WORD_LENGTH; m++) {
+        Py_DECREF(py_lengths[m]);
     }
     return result;
 }
