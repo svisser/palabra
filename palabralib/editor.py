@@ -33,6 +33,13 @@ from view import GridPreview, DEFAULTS_CELL
 from word import CWordList, search_wordlists, analyze_words
 import cPalabra
 
+DEFAULT_FILL_OPTIONS = {
+    constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
+    , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
+    , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_FALSE
+    , constants.FILL_NICE_COUNT: 0
+}
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
@@ -186,13 +193,6 @@ class WordTool:
     def deselect(self):
         self.view.selection = None
 
-DEFAULT_FILL_OPTIONS = {
-    constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
-    , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
-    , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_FALSE
-    , constants.FILL_NICE_COUNT: 0
-}
-
 class FillTool:
     def __init__(self, editor):
         self.editor = editor
@@ -238,12 +238,6 @@ class FillTool:
         p.sort_stats('time').print_stats(20)
         p.print_callers()
         #self.editor.fill()
-
-class Selection:
-    def __init__(self, x, y, direction):
-        self.x = x
-        self.y = y
-        self.direction = direction
 
 def search(wordlists, grid, selection, force_refresh):
     x = selection.x
@@ -293,6 +287,12 @@ def attempt_fill(grid, words):
         transform.modify_chars(g, chars=results[0])
         return g
     return grid
+
+class Selection:
+    def __init__(self, x, y, direction):
+        self.x = x
+        self.y = y
+        self.direction = direction
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area):
