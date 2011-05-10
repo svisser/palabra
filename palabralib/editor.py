@@ -367,7 +367,13 @@ class FillTool:
         return hbox
         
     def on_button_pressed(self, button):
-        self.editor.fill()
+        import pstats
+        import cProfile
+        cProfile.runctx('self.editor.fill()', globals(), locals(), filename='fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('time').print_stats(20)
+        p.print_callers()
+        #self.editor.fill()
 
 class Selection:
     def __init__(self, x, y, direction):
@@ -393,17 +399,18 @@ def search(wordlists, grid, selection, force_refresh):
     
 def fill(grid, words, fill_options):
     meta = []
-    import pstats
-    import cProfile
-    cProfile.runctx('result = analyze_words(grid, words)', globals(), locals(), filename='fooprof')
-    p = pstats.Stats('fooprof')
-    p.sort_stats('time').print_stats(20)
-    p.print_callers()
-    result = analyze_words(grid, words)
-    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
-        l = grid.word_length(x, y, d)
-        cs = grid.gather_constraints(x, y, d)
-        meta.append((x, y, 0 if d == "across" else 1, l, cs, result[x, y, d]))
+    g_words = [i for i in grid.words(allow_duplicates=True, include_dir=True)]
+    g_lengths = {}
+    g_cs = {}
+    for n, x, y, d in g_words:
+        g_lengths[x, y, d] = grid.word_length(x, y, d)
+        g_cs[x, y, d] = grid.gather_constraints(x, y, d)
+    result = analyze_words(grid, g_words, g_cs, g_lengths, words)
+    for n, x, y, d in g_words:
+        d_i = 0 if d == "across" else 1
+        l = g_lengths[x, y, d]
+        cs = g_cs[x, y, d]
+        meta.append((x, y, d_i, l, cs, result[x, y, d]))
     return cPalabra.fill(grid, words, meta, fill_options)
 
 def attempt_fill(grid, words):

@@ -405,7 +405,7 @@ class Grid:
         word = self.gather_word(x, y, direction, constants.MISSING_CHAR)
         return [(i, c.lower()) for i, c in enumerate(word) if c != constants.MISSING_CHAR]
     
-    def gather_all_constraints(self, x, y, direction):
+    def gather_all_constraints(self, x, y, direction, g_cs=None, g_lengths=None):
         """
         Gather constraints of all intersecting words of the word at (x, y).
         
@@ -425,20 +425,29 @@ class Grid:
         sx, sy = get_start_word(x, y, direction)
         for s, t in self.in_direction(sx, sy, direction):
             p, q = get_start_word(s, t, other)
-            length = word_length(p, q, other)
+            if g_lengths is not None and (p, q, other) in g_lengths:
+                length = g_lengths[p, q, other]
+            else:
+                length = word_length(p, q, other)
             if other == "across":
                 index = x - p
             elif other == "down":
                 index = y - q
-            constraints = gather_constraints(p, q, other)
-            result.append((index, length, constraints))
+            if g_cs is not None and (p, q, other) in g_cs:
+                cs = g_cs[p, q, other]
+            else:
+                cs = gather_constraints(p, q, other)
+            result.append((index, length, cs))
         return result
                 
     def gather_words(self, direction=None):
         """Iterate over the word data in the given direction."""
+        words_by_direction = self.words_by_direction
+        data = self.data
+        gather_word = self.gather_word
         for d in ([direction] if direction else ["across", "down"]):
-            for n, x, y in self.words_by_direction(d):
-                clues = self.data[y][x]["clues"]
+            for n, x, y in words_by_direction(d):
+                clues = data[y][x]["clues"]
                 try:
                     clue = clues[d]["text"]
                 except KeyError:
@@ -447,8 +456,7 @@ class Grid:
                     explanation = clues[d]["explanation"]
                 except KeyError:
                     explanation = ""
-                    
-                word = self.gather_word(x, y, d)
+                word = gather_word(x, y, d)
                 yield n, x, y, d, word, clue, explanation
         
     def word_length(self, x, y, direction):

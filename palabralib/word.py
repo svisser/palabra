@@ -208,30 +208,26 @@ def search_wordlists(wordlists, length, constraints, more=None):
         result.sort()
     return result
     
-def analyze_words(grid, words):
+def analyze_words(grid, g_words, g_cs, g_lengths, words):
     cs = {}
-    lens = {}
-    g_words = [i for i in grid.words(allow_duplicates=True, include_dir=True)]
     for n, x, y, d in g_words:
-        cs[x, y, d] = grid.gather_all_constraints(x, y, d)
-        lens[x, y, d] = grid.word_length(x, y, d)    
+        cs[x, y, d] = grid.gather_all_constraints(x, y, d, g_cs, g_lengths)
     a = {}
-    for l, ws in words.items():
+    for l in words:
         a[l] = {}
         for i in xrange(l):
             a[l][i] = {}
-        for w in ws:
+        for w in words[l]:
             for i, c in enumerate(w):
                 if c not in a[l][i]:
                     a[l][i][c] = 1
                 else:
                     a[l][i][c] += 1
-    for l, vals in a.items():
         for i in xrange(l):
-            a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
+            a[l][i] = sorted(a[l][i].items(), key=itemgetter(1), reverse=True)
     result = {}
     for n, x, y, d in g_words:
-        data = cPalabra.compute_distances(words[lens[x, y, d]], cs, a, (x, y, d))
+        data = cPalabra.compute_distances(words[g_lengths[x, y, d]], cs, a, (x, y, d))
         result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
     return result
 
