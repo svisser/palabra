@@ -823,10 +823,9 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
     PyObject *key;
     if (!PyArg_ParseTuple(args, "OOOO", &words, &cs, &counts, &key))
         return NULL;
-    Py_ssize_t n_words = PyList_Size(words);
-    PyObject *result = PyList_New(0);//n_words);
+    PyObject *result = PyList_New(0);
     Py_ssize_t w;
-    for (w = 0; w < n_words; w++) {
+    for (w = 0; w < PyList_Size(words); w++) {
         int count = 0;
         char *word = PyString_AS_STRING(PyList_GET_ITEM(words, w));
         int i;
