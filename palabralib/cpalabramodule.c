@@ -802,6 +802,68 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
     return result;
 }
 
+static PyObject*
+cPalabra_compute_distances(PyObject *self, PyObject *args) {
+    /*
+    def compute_distance(w):
+        places = 0
+        for i, c in enumerate(w):
+            l = cs[x, y, d][i][1]
+            l_i = cs[x, y, d][i][0]
+            for j, item in enumerate(a[l][l_i]):
+                if item[0] == c:
+                    places += j
+                    break
+        return places
+    data = [(w, compute_distance(w)) for w in words]
+    */
+    PyObject *words;
+    PyObject *cs;
+    PyObject *counts;
+    PyObject *key;
+    if (!PyArg_ParseTuple(args, "OOOO", &words, &cs, &counts, &key))
+        return NULL;
+    Py_ssize_t n_words = PyList_Size(words);
+    PyObject *result = PyList_New(0);//n_words);
+    Py_ssize_t w;
+    for (w = 0; w < n_words; w++) {
+        int count = 0;
+        char *word = PyString_AS_STRING(PyList_GET_ITEM(words, w));
+        int i;
+        for (i = 0; i < strlen(word); i++) {
+            char c = *(word + i);
+            PyObject *cs_item = PyDict_GetItem(cs, key);
+            PyObject *cs_item_i = PyList_GetItem(cs_item, i);
+            PyObject *py_l = PyTuple_GetItem(cs_item_i, 1);
+            PyObject *py_l_i = PyTuple_GetItem(cs_item_i, 0);
+            const int l = (int) PyInt_AsLong(py_l);
+            const int l_i = (int) PyInt_AsLong(py_l_i);
+            
+            PyObject *a_key = PyInt_FromLong(l);
+            PyObject *a_item = PyDict_GetItem(counts, a_key);
+            Py_DECREF(a_key);
+            PyObject *a_key2 = PyInt_FromLong(l_i);
+            PyObject *a_item2 = PyDict_GetItem(a_item, a_key2);
+            Py_DECREF(a_key2);
+            
+            int j;
+            for (j = 0; j < PyList_Size(a_item2); j++) {
+                PyObject *item = PyList_GetItem(a_item2, j);
+                PyObject *py_c = PyTuple_GetItem(item, 0);
+                char *c_c = PyString_AS_STRING(py_c);
+                if (c == *c_c) {
+                    count += j;
+                    break;
+                }
+            }
+        }
+        PyObject* item = Py_BuildValue("(si)", word, count);
+        PyList_Append(result, item);
+        Py_DECREF(item);
+    }
+    return result;
+}
+
 static PyMethodDef methods[] = {
     {"has_matches",  cPalabra_has_matches, METH_VARARGS, "has_matches"},
     {"search", cPalabra_search, METH_VARARGS, "search"},
@@ -812,6 +874,7 @@ static PyMethodDef methods[] = {
     {"fill", cPalabra_fill, METH_VARARGS, "fill"},
     {"compute_lines",  cPalabra_compute_lines, METH_VARARGS, "compute_lines"},
     {"compute_render_lines", cPalabra_compute_render_lines, METH_VARARGS, "compute_render_lines"},
+    {"compute_distances", cPalabra_compute_distances, METH_VARARGS, "compute_distances"},
     {NULL, NULL, 0, NULL}
 };
 

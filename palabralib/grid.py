@@ -351,18 +351,19 @@ class Grid:
         include_dir: If True, include the direction in the output.
         allow_duplicates must be True for this to work.
         """
+        data = self.data
+        is_start_word = self.is_start_word
         for x, y in self.cells():
-            n = self.cell(x, y)["number"]
+            n = data[y][x]["number"]
             if allow_duplicates:
                 for d in ["across", "down"]:
-                    if self.is_start_word(x, y, d):
+                    if is_start_word(x, y, d):
                         if include_dir:
                             yield n, x, y, d
                         else:
                             yield n, x, y
-            else:
-                if self.is_start_word(x, y):
-                    yield n, x, y
+            elif is_start_word(x, y):
+                yield n, x, y
     
     def entries(self):
         """Return all entries in alphabetical order."""
@@ -393,8 +394,9 @@ class Grid:
     def gather_word(self, x, y, direction, empty_char=constants.MISSING_CHAR):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
+        data = self.data
         for p, q in self.in_direction(x, y, direction):
-            c = self.data[q][p]["char"]
+            c = data[q][p]["char"]
             word += (empty_char if c == "" else c)
         return word
             

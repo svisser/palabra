@@ -231,17 +231,7 @@ def analyze_words(grid, words):
             a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
     result = {}
     for n, x, y, d in g_words:
-        data = []
-        for w in words[lens[x, y, d]]:
-            places = []
-            for i, c in enumerate(w):
-                l = cs[x, y, d][i][1]
-                l_i = cs[x, y, d][i][0]
-                for j, item in enumerate(a[l][l_i]):
-                    if item[0] == c:
-                        places.append(j)
-            data.append((w, sum(places)))
-        print x, y, d
+        data = cPalabra.compute_distances(words[lens[x, y, d]], cs, a, (x, y, d))
         result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
     return result
 

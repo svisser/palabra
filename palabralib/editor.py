@@ -393,6 +393,12 @@ def search(wordlists, grid, selection, force_refresh):
     
 def fill(grid, words, fill_options):
     meta = []
+    import pstats
+    import cProfile
+    cProfile.runctx('result = analyze_words(grid, words)', globals(), locals(), filename='fooprof')
+    p = pstats.Stats('fooprof')
+    p.sort_stats('time').print_stats(20)
+    p.print_callers()
     result = analyze_words(grid, words)
     for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
         l = grid.word_length(x, y, d)
