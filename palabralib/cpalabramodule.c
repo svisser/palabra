@@ -825,18 +825,18 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
         return NULL;
     PyObject *result = PyList_New(0);
     Py_ssize_t w;
-    for (w = 0; w < PyList_Size(words); w++) {
+    for (w = 0; w < PyList_GET_SIZE(words); w++) {
         int count = 0;
         char *word = PyString_AS_STRING(PyList_GET_ITEM(words, w));
         int i;
         for (i = 0; i < strlen(word); i++) {
             char c = *(word + i);
             PyObject *cs_item = PyDict_GetItem(cs, key);
-            PyObject *cs_item_i = PyList_GetItem(cs_item, i);
-            PyObject *py_l = PyTuple_GetItem(cs_item_i, 1);
-            PyObject *py_l_i = PyTuple_GetItem(cs_item_i, 0);
-            const int l = (int) PyInt_AsLong(py_l);
-            const int l_i = (int) PyInt_AsLong(py_l_i);
+            PyObject *cs_item_i = PyList_GET_ITEM(cs_item, i);
+            PyObject *py_l = PyTuple_GET_ITEM(cs_item_i, 1);
+            PyObject *py_l_i = PyTuple_GET_ITEM(cs_item_i, 0);
+            const int l = (int) PyInt_AS_LONG(py_l);
+            const int l_i = (int) PyInt_AS_LONG(py_l_i);
             
             PyObject *a_key = PyInt_FromLong(l);
             PyObject *a_item = PyDict_GetItem(counts, a_key);
@@ -846,9 +846,9 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
             Py_DECREF(a_key2);
             
             int j;
-            for (j = 0; j < PyList_Size(a_item2); j++) {
-                PyObject *item = PyList_GetItem(a_item2, j);
-                PyObject *py_c = PyTuple_GetItem(item, 0);
+            for (j = 0; j < PyList_GET_SIZE(a_item2); j++) {
+                PyObject *item = PyList_GET_ITEM(a_item2, j);
+                PyObject *py_c = PyTuple_GET_ITEM(item, 0);
                 char *c_c = PyString_AS_STRING(py_c);
                 if (c == *c_c) {
                     count += j;
