@@ -863,6 +863,96 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
     return result;
 }
 
+static PyObject*
+cPalabra_compute_counts(PyObject *self, PyObject *args) {
+    /*
+    a = {}
+    for l in words:
+        a[l] = {}
+        for i in xrange(l):
+            a[l][i] = {}
+        for w in words[l]:
+            for i, c in enumerate(w):
+                if c not in a[l][i]:
+                    a[l][i][c] = 1
+                else:
+                    a[l][i][c] += 1
+    */
+    PyObject *words;
+    if (!PyArg_ParseTuple(args, "O", &words))
+        return NULL;
+    PyObject *result = PyDict_New();
+    int l;
+    for (l = 0; l < MAX_WORD_LENGTH; l++) {
+        PyObject *key = PyInt_FromLong(l);
+        PyObject *a_l = PyDict_New();
+        PyDict_SetItem(result, key, a_l);
+        int m;
+        for (m = 0; m < MAX_WORD_LENGTH; m++) {
+            PyObject *key2 = PyInt_FromLong(m);
+            PyObject *a_l_i = PyDict_New();
+            PyDict_SetItem(a_l, key2, a_l_i);
+            Py_DECREF(key2);
+            Py_DECREF(a_l_i);
+        }
+        char *a_chars[l];
+        int *a_counts[l];
+        for (m = 0; m < l; m++) {
+            a_chars[m] = malloc(sizeof(char) * MAX_ALPHABET_SIZE);
+            a_counts[m] = malloc(sizeof(int) * MAX_ALPHABET_SIZE);
+            int k;
+            for (k = 0; k < MAX_ALPHABET_SIZE; k++) {
+                a_chars[m][k] = -1;
+                a_counts[m][k] = 0;
+            }
+        }
+        PyObject *l_words = PyDict_GetItem(words, key);
+        Py_ssize_t w;
+        for (w = 0; w < PyList_Size(l_words); w++) {
+            PyObject *item = PyList_GetItem(l_words, w);
+            char *word = PyString_AsString(item);
+            int i;
+            for (i = 0; i < strlen(word); i++) {
+                char c = *(word + i);
+                int j;
+                for (j = 0; j < MAX_ALPHABET_SIZE; j++) {
+                    if (a_chars[i][j] == -1) {
+                        a_chars[i][j] = c;
+                        a_counts[i][j] = 1;
+                        break;
+                    } else if (a_chars[i][j] == c) {
+                        a_counts[i][j] += 1;
+                        break;
+                    }
+                }
+            }
+        }
+        for (m = 0; m < l; m++) {
+            PyObject *key_m = PyInt_FromLong(m);
+            PyObject *a_l_i = PyDict_GetItem(a_l, key_m);
+            int k;
+            for (k = 0; k < MAX_ALPHABET_SIZE; k++) {
+                if (a_chars[m][k] == -1) break;
+                char str[2];
+                str[0] = a_chars[m][k];
+                str[1] = '\0';
+                PyObject *py_c = PyString_FromString(str);
+                PyObject *py_count = PyInt_FromLong(a_counts[m][k]);
+                PyDict_SetItem(a_l_i, py_c, py_count);
+                Py_DECREF(py_c);
+                Py_DECREF(py_count);
+            }
+        }
+        for (m = 0; m < l; m++) {
+            free(a_chars[m]);
+            free(a_counts[m]);
+        }
+        Py_DECREF(key);
+        Py_DECREF(a_l);
+    }
+    return result;
+}
+
 static PyMethodDef methods[] = {
     {"has_matches",  cPalabra_has_matches, METH_VARARGS, "has_matches"},
     {"search", cPalabra_search, METH_VARARGS, "search"},
@@ -874,6 +964,7 @@ static PyMethodDef methods[] = {
     {"compute_lines",  cPalabra_compute_lines, METH_VARARGS, "compute_lines"},
     {"compute_render_lines", cPalabra_compute_render_lines, METH_VARARGS, "compute_render_lines"},
     {"compute_distances", cPalabra_compute_distances, METH_VARARGS, "compute_distances"},
+    {"compute_counts", cPalabra_compute_counts, METH_VARARGS, "compute_counts"},
     {NULL, NULL, 0, NULL}
 };
 

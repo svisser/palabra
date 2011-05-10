@@ -212,22 +212,13 @@ def analyze_words(grid, g_words, g_cs, g_lengths, words):
     cs = {}
     for n, x, y, d in g_words:
         cs[x, y, d] = grid.gather_all_constraints(x, y, d, g_cs, g_lengths)
-    a = {}
+    counts = cPalabra.compute_counts(words)
     for l in words:
-        a[l] = {}
         for i in xrange(l):
-            a[l][i] = {}
-        for w in words[l]:
-            for i, c in enumerate(w):
-                if c not in a[l][i]:
-                    a[l][i][c] = 1
-                else:
-                    a[l][i][c] += 1
-        for i in xrange(l):
-            a[l][i] = sorted(a[l][i].items(), key=itemgetter(1), reverse=True)
+            counts[l][i] = sorted(counts[l][i].items(), key=itemgetter(1), reverse=True)
     result = {}
     for n, x, y, d in g_words:
-        data = cPalabra.compute_distances(words[g_lengths[x, y, d]], cs, a, (x, y, d))
+        data = cPalabra.compute_distances(words[g_lengths[x, y, d]], cs, counts, (x, y, d))
         result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
     return result
 
