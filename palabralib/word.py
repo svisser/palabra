@@ -210,8 +210,11 @@ def search_wordlists(wordlists, length, constraints, more=None):
     
 def analyze_words(grid, words):
     cs = {}
-    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
+    lens = {}
+    g_words = [i for i in grid.words(allow_duplicates=True, include_dir=True)]
+    for n, x, y, d in g_words:
         cs[x, y, d] = grid.gather_all_constraints(x, y, d)
+        lens[x, y, d] = grid.word_length(x, y, d)    
     a = {}
     for l, ws in words.items():
         a[l] = {}
@@ -227,9 +230,9 @@ def analyze_words(grid, words):
         for i in xrange(l):
             a[l][i] = sorted(list(a[l][i].items()), key=itemgetter(1), reverse=True)
     result = {}
-    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
+    for n, x, y, d in g_words:
         data = []
-        for w in words[grid.word_length(x, y, d)]:
+        for w in words[lens[x, y, d]]:
             places = []
             for i, c in enumerate(w):
                 l = cs[x, y, d][i][1]
