@@ -105,6 +105,11 @@ def transform_blocks(grid, symms, x, y, status):
             blocks.append((p, q, status))
     return blocks
 
+def compute_overlay(grid, word, x, y, d):
+    p, q = grid.get_start_word(x, y, d)
+    result = decompose_word(word, p, q, d)
+    return [(x, y, c.upper()) for x, y, c in result if grid.data[y][x]["char"] == ""]
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
@@ -352,6 +357,9 @@ class Selection:
         self.x = x
         self.y = y
         self.direction = direction
+        
+    def to_tuple(self):
+        return self.x, self.y, self.direction
 
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area):
@@ -676,14 +684,11 @@ class Editor(gtk.HBox):
         
     def insert(self, word):
         """Insert a word in the selected slot."""
-        x = self.selection.x
-        y = self.selection.y
-        direction = self.selection.direction
+        x, y, d = self.selection.to_tuple()
         grid = self.puzzle.grid
         if grid.is_available(x, y):
-            p, q = grid.get_start_word(x, y, direction)
-            w = decompose_word(word, p, q, direction)
-            self._insert_word(w)
+            p, q = grid.get_start_word(x, y, d)
+            self._insert_word(decompose_word(word, p, q, d))
             
     def set_overlay(self, word):
         """
@@ -698,15 +703,8 @@ class Editor(gtk.HBox):
         if word is None:
             render_overlay([])
             return
-        x = self.selection.x
-        y = self.selection.y
-        direction = self.selection.direction
-        grid = self.puzzle.grid
-        p, q = grid.get_start_word(x, y, direction)
-        result = decompose_word(word, p, q, direction)
-        overlay = [(x, y, c.upper()) for x, y, c in result
-            if grid.data[y][x]["char"] == ""]
-        render_overlay(overlay)
+        x, y, d = self.selection.to_tuple()
+        render_overlay(compute_overlay(self.puzzle.grid, word, x, y, d))
             
     def _insert_word(self, chars):
         """Insert a word by storing the list of (x, y, c) items in the grid."""
@@ -764,9 +762,7 @@ class Editor(gtk.HBox):
         
     def on_backspace(self):
         """Remove a character in the current or previous cell."""
-        x = self.selection.x
-        y = self.selection.y
-        direction = self.selection.direction
+        x, y, direction = self.selection.to_tuple()
         grid = self.puzzle.grid
         transform_grid = self.palabra_window.transform_grid
         modify_char = transform.modify_char
@@ -797,14 +793,12 @@ class Editor(gtk.HBox):
         
     def _on_jump_to_cell(self, target):
         """Jump to the start or end (i.e., first or last cell) of a word."""
-        x = self.selection.x
-        y = self.selection.y
-        direction = self.selection.direction
+        selection = self.selection.to_tuple()
         grid = self.puzzle.grid
         if target == "start":
-            cell = grid.get_start_word(x, y, direction)
+            cell = grid.get_start_word(*selection)
         elif target == "end":
-            cell = grid.get_end_word(x, y, direction)
+            cell = grid.get_end_word(*selection)
         self.set_selection(*cell)
         
     def on_delete(self):
@@ -821,31 +815,32 @@ class Editor(gtk.HBox):
         
     def on_typing(self, keyval):
         """Place an alphabetical character in the grid and move the selection."""
-        if gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period:
+        valid = gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period
+        if not valid:
+            return
+        x, y, direction = self.selection.to_tuple()
+        grid = self.puzzle.grid
+        if grid.is_valid(x, y):
+            if keyval == gtk.keysyms.period:
+                self.transform_blocks(x, y, True)
+            else:
+                c = chr(keyval).capitalize()
+                if c != grid.get_char(x, y):
+                    self.palabra_window.transform_grid(transform.modify_char
+                            , x=x
+                            , y=y
+                            , next_char=c)
+                    self._check_blacklist_for_cell(x, y)
+            nx = x + (1 if direction == "across" else 0)
+            ny = y + (1 if direction == "down" else 0)
+            cells = [(x, y)]
+            if grid.is_available(nx, ny):
+                self.selection.x = nx
+                self.selection.y = ny
+                cells += [(nx, ny)]
             x = self.selection.x
             y = self.selection.y
-            direction = self.selection.direction
-            if self.puzzle.grid.is_valid(x, y):
-                if keyval == gtk.keysyms.period:
-                    self.transform_blocks(x, y, True)
-                else:
-                    c = chr(keyval).capitalize()
-                    if c != self.puzzle.grid.get_char(x, y):
-                        self.palabra_window.transform_grid(transform.modify_char
-                                , x=x
-                                , y=y
-                                , next_char=c)
-                        self._check_blacklist_for_cell(x, y)
-                nx = x + (1 if direction == "across" else 0)
-                ny = y + (1 if direction == "down" else 0)
-                cells = [(x, y)]
-                if self.puzzle.grid.is_available(nx, ny):
-                    self.selection.x = nx
-                    self.selection.y = ny
-                    cells += [(nx, ny)]
-                x = self.selection.x
-                y = self.selection.y
-                self._render_cells(cells)
+            self._render_cells(cells)
                 
     def _check_blacklist_for_cell(self, x, y):
         """
@@ -911,9 +906,7 @@ class Editor(gtk.HBox):
         Clear the selection containing (x, y) in the specified direction.
         """
         if x is None and y is None and direction is None:
-            x = self.selection.x
-            y = self.selection.y
-            direction = self.selection.direction
+            x, y, direction = self.selection.to_tuple()
         self._render_selection(x, y, direction, editor=False)
         
     def _render_selection(self, x=None, y=None, direction=None, editor=True):
@@ -921,16 +914,12 @@ class Editor(gtk.HBox):
         Render the selected cells containing (x, y) in the specified direction.
         """
         if x is None and y is None and direction is None:
-            x = self.selection.x
-            y = self.selection.y
-            direction = self.selection.direction
+            x, y, direction = self.selection.to_tuple()
         self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
        
     def _set_full_selection(self, x=None, y=None, direction=None, full_update=True):
         """Select (x, y), the direction or both."""
-        prev_x = self.selection.x
-        prev_y = self.selection.y
-        prev_dir = self.selection.direction
+        prev_x, prev_y, prev_dir = self.selection.to_tuple()
         
         # determine whether updating is needed
         has_xy = x is not None and y is not None
