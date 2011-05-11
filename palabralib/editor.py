@@ -40,6 +40,20 @@ DEFAULT_FILL_OPTIONS = {
     , constants.FILL_NICE_COUNT: 0
 }
 
+def get_char_slots(grid, c):
+    return [(x, y, "across", 1) for x, y in grid.cells() if grid.data[y][x]["char"] == c]
+    
+def get_length_slots(grid, length):
+    cells = []
+    for d in ["across", "down"]:
+        for n, x, y in grid.words_by_direction(d):
+            if grid.word_length(x, y, d) == length:
+                cells.append((x, y, d, length))
+    return cells
+    
+def get_open_slots(grid):
+    return [(x, y, "across", 1) for x, y in grid.compute_open_squares()]
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
@@ -547,30 +561,30 @@ class Editor(gtk.HBox):
             if grid.data[s][r]["char"] != '']
         if len(chars) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=chars)
+            
+    def highlight_cells(self, f=None, arg=None):
+        """Highlight cells according to a specified function."""
+        grid = self.puzzle.grid
+        if f == "length":
+            cells = get_length_slots(grid, arg)
+        elif f == "char":
+            cells = get_char_slots(grid, arg)
+        elif f == "open":
+            cells = get_open_slots(grid)
+        self._render_highlighted_words(cells)
+        return cells
         
     def highlight_words(self, length):
         """Highlight the words with the specified length."""
-        new = []
-        for d in ["across", "down"]:
-            for n, x, y in self.puzzle.grid.words_by_direction(d):
-                if self.puzzle.grid.word_length(x, y, d) == length:
-                    new.append((x, y, d, length))
-        self._render_highlighted_words(new)
-        return new
+        return self.highlight_cells("length", length)
         
-    def highlight_chars(self, char):
+    def highlight_chars(self, c):
         """Highlight all occurrences of the specified character."""
-        new = []
-        grid = self.puzzle.grid
-        for x, y in grid.cells():
-            if grid.data[y][x]["char"] == char:
-                new.append((x, y, "across", 1))
-        self._render_highlighted_words(new)
+        self.highlight_cells("char", c)
         
     def highlight_open_cells(self):
         """Highlight all open cells."""
-        new = [(x, y, "across", 1) for x, y in self.puzzle.grid.compute_open_squares()]
-        self._render_highlighted_words(new)
+        self.highlight_cells("open")
         
     def clear_highlighted_words(self): 
         """Clear all highlighted words, if there are any."""
