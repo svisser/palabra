@@ -93,6 +93,18 @@ def apply_symmetry(grid, symms, x, y):
         cells.append((y, height - 1 - x))
     return cells
 
+def transform_blocks(grid, symms, x, y, status):
+    """Determine cells that need to modified a block at (x, y) and its symmetrical cells."""
+    if not grid.is_valid(x, y):
+        return []
+    blocks = []
+    if status != grid.data[y][x]["block"]:
+        blocks.append((x, y, status))
+    for p, q in apply_symmetry(grid, symms, x, y):
+        if status != grid.data[q][p]["block"]:
+            blocks.append((p, q, status))
+    return blocks
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
@@ -707,34 +719,15 @@ class Editor(gtk.HBox):
             
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
-        grid = self.puzzle.grid
-        if not grid.is_valid(x, y):
-            return []
-        
-        # determine blocks that need to be modified
-        blocks = []
-        if status != grid.data[y][x]["block"]:
-            blocks.append((x, y, status))
-        for p, q in apply_symmetry(grid, self.settings["symmetries"], x, y):
-            if status != grid.data[q][p]["block"]:
-                blocks.append((p, q, status))
-                
-        if len(blocks) > 0:
-            x = self.selection.x
-            y = self.selection.y
-            direction = self.selection.direction
-            self._clear_selection(x, y, direction)
-            
-            self.palabra_window.transform_grid(transform.modify_blocks, blocks=blocks)
-            if (x, y, True) in blocks:
-                self.set_selection(-1, -1)
-                
-            x = self.selection.x
-            y = self.selection.y
-            direction = self.selection.direction
-            self._render_selection(x, y, direction)
-            
-            self._render_cells([(x, y) for x, y, status in blocks])
+        blocks = transform_blocks(self.puzzle.grid, self.settings["symmetries"], x, y, status)
+        if not blocks:
+            return
+        self._clear_selection()
+        self.palabra_window.transform_grid(transform.modify_blocks, blocks=blocks)
+        if (self.selection.x, self.selection.y, True) in blocks:
+            self.set_selection(-1, -1)
+        self._render_selection()
+        self._render_cells([(x, y) for x, y, status in blocks])
 
     # needed to capture the press of a tab button
     # so focus won't switch to the toolbar
@@ -746,27 +739,27 @@ class Editor(gtk.HBox):
         if ((event.state & gtk.gdk.SHIFT_MASK) or
             (event.state & gtk.gdk.CONTROL_MASK)):
             return True
-            
-        if event.keyval == gtk.keysyms.BackSpace and not self.settings["locked_grid"]:
+        key = event.keyval
+        if key == gtk.keysyms.BackSpace and not self.settings["locked_grid"]:
             self.on_backspace()
-        elif event.keyval == gtk.keysyms.Tab:
+        elif key == gtk.keysyms.Tab:
             self.change_typing_direction()
-        elif event.keyval == gtk.keysyms.Home:
+        elif key == gtk.keysyms.Home:
             self._on_jump_to_cell("start")
-        elif event.keyval == gtk.keysyms.End:
+        elif key == gtk.keysyms.End:
             self._on_jump_to_cell("end")
-        elif event.keyval == gtk.keysyms.Left:
+        elif key == gtk.keysyms.Left:
             self.on_arrow_key(-1, 0)
-        elif event.keyval == gtk.keysyms.Up:
+        elif key == gtk.keysyms.Up:
             self.on_arrow_key(0, -1)
-        elif event.keyval == gtk.keysyms.Right:
+        elif key == gtk.keysyms.Right:
             self.on_arrow_key(1, 0)
-        elif event.keyval == gtk.keysyms.Down:
+        elif key == gtk.keysyms.Down:
             self.on_arrow_key(0, 1)
-        elif event.keyval == gtk.keysyms.Delete and not self.settings["locked_grid"]:
+        elif key == gtk.keysyms.Delete and not self.settings["locked_grid"]:
             self.on_delete()
         elif not self.settings["locked_grid"]:
-            self.on_typing(event.keyval)
+            self.on_typing(key)
         return True
         
     def on_backspace(self):
@@ -913,16 +906,24 @@ class Editor(gtk.HBox):
         size = self.puzzle.view.properties.visual_size()
         self.drawing_area.set_size_request(*size)
 
-    def _clear_selection(self, x, y, direction):
+    def _clear_selection(self, x=None, y=None, direction=None):
         """
         Clear the selection containing (x, y) in the specified direction.
         """
+        if x is None and y is None and direction is None:
+            x = self.selection.x
+            y = self.selection.y
+            direction = self.selection.direction
         self._render_selection(x, y, direction, editor=False)
         
-    def _render_selection(self, x, y, direction, editor=True):
+    def _render_selection(self, x=None, y=None, direction=None, editor=True):
         """
         Render the selected cells containing (x, y) in the specified direction.
         """
+        if x is None and y is None and direction is None:
+            x = self.selection.x
+            y = self.selection.y
+            direction = self.selection.direction
         self._render_cells(self.puzzle.grid.slot(x, y, direction), editor=editor)
        
     def _set_full_selection(self, x=None, y=None, direction=None, full_update=True):
