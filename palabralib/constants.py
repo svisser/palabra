@@ -63,6 +63,13 @@ PUZZLE_XPF = 'xpf'
 # http://www.ipuz.org/
 PUZZLE_IPUZ = 'ipuz'
 
+# symmetry options
+SYM_HORIZONTAL = "horizontal"
+SYM_VERTICAL = "vertical"
+SYM_90 = "90_degree"
+SYM_180 = "180_degree"
+SYM_DIAGONALS = "diagonals"
+
 # canonical identifiers for metadata across various file formats
 # (using simple Dublin Core)
 META_TITLE = 'title'

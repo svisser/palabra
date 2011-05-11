@@ -63,6 +63,36 @@ def expand_slots(slots):
             cells += [(x, y) for y in xrange(y, y + l)]
     return cells
 
+def apply_symmetry(grid, symms, x, y):
+    """Apply one or more symmetrical transforms to (x, y)."""
+    if not grid.is_valid(x, y):
+        return []
+    cells = []
+    width = grid.width
+    height = grid.height
+    if constants.SYM_HORIZONTAL in symms:
+        cells.append((x, height - 1 - y))
+    if constants.SYM_VERTICAL in symms:
+        cells.append((width - 1 - x, y))
+    if ((constants.SYM_HORIZONTAL in symms and constants.SYM_VERTICAL in symms)
+        or constants.SYM_180 in symms
+        or constants.SYM_90 in symms
+        or constants.SYM_DIAGONALS in symms):
+        p = width - 1 - x
+        q = height - 1 - y
+        cells.append((p, q))
+    if constants.SYM_DIAGONALS in symms:
+        p = int((y / float(height - 1)) * (width - 1))
+        q = int((x / float(width - 1)) * (height - 1))
+        cells.append((p, q))
+        r = width - 1 - p
+        s = height - 1 - q
+        cells.append((r, s))
+    if constants.SYM_90 in symms:
+        cells.append((width - 1 - y, x))
+        cells.append((y, height - 1 - x))
+    return cells
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
@@ -403,7 +433,8 @@ class Editor(gtk.HBox):
             if (i, j) in cells:
                 render.append((i, j, r, g, b))
         
-        symms = list(self.apply_symmetry(*self.current))
+        cx, cy = self.current
+        symms = apply_symmetry(grid, self.settings["symmetries"], cx, cy)
         for p, q in cells:
             # selection cell
             if (p, q) == (sx, sy):
@@ -547,10 +578,11 @@ class Editor(gtk.HBox):
         prev_x, prev_y = self.current
         self.current = (cx, cy)
 
-        apply_symmetry = self.apply_symmetry
         if (prev_x, prev_y) != (cx, cy):
-            c0 = apply_symmetry(prev_x, prev_y)
-            c1 = apply_symmetry(cx, cy)
+            grid = self.puzzle.grid
+            symms = self.settings["symmetries"]
+            c0 = apply_symmetry(grid, symms, prev_x, prev_y)
+            c1 = apply_symmetry(grid, symms, cx, cy)
             self._render_cells(c0 + c1 + [(prev_x, prev_y), (cx, cy)])
         
         mouse_buttons_down = self.mouse_buttons_down
@@ -673,38 +705,6 @@ class Editor(gtk.HBox):
         if len(actual) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=actual)
             
-    def apply_symmetry(self, x, y):
-        """Apply one or more symmetrical transforms to (x, y)."""
-        grid = self.puzzle.grid
-        if not grid.is_valid(x, y):
-            return []
-        cells = []
-        width = grid.width
-        height = grid.height
-        symms = self.settings["symmetries"]
-        if "horizontal" in symms:
-            cells.append((x, height - 1 - y))
-        if "vertical" in symms:
-            cells.append((width - 1 - x, y))
-        if (("horizontal" in symms and "vertical" in symms)
-            or "180_degree" in symms
-            or "90_degree" in symms
-            or "diagonals" in symms):
-            p = width - 1 - x
-            q = height - 1 - y
-            cells.append((p, q))
-        if "diagonals" in symms:
-            p = int((y / float(height - 1)) * (width - 1))
-            q = int((x / float(width - 1)) * (height - 1))
-            cells.append((p, q))
-            r = width - 1 - p
-            s = height - 1 - q
-            cells.append((r, s))
-        if "90_degree" in symms:
-            cells.append((width - 1 - y, x))
-            cells.append((y, height - 1 - x))
-        return cells
-
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
         grid = self.puzzle.grid
@@ -715,7 +715,7 @@ class Editor(gtk.HBox):
         blocks = []
         if status != grid.data[y][x]["block"]:
             blocks.append((x, y, status))
-        for p, q in self.apply_symmetry(x, y):
+        for p, q in apply_symmetry(grid, self.settings["symmetries"], x, y):
             if status != grid.data[q][p]["block"]:
                 blocks.append((p, q, status))
                 

@@ -677,88 +677,52 @@ class PalabraWindow(gtk.Window):
         
     def create_edit_symmetry_menu(self):
         menu = gtk.Menu()
-        
         def set_symmetry(options):
             try:
                 self.editor.settings["symmetries"] = options
             except AttributeError:
                 pass
-        
-        activate = lambda item: set_symmetry([])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use no symmetry rules when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(None, u"_No symmetry", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        menu.append(gtk.SeparatorMenuItem())
-        
-        activate = lambda item: set_symmetry(["horizontal"])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use a horizontal symmetry axis when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(item, u"_Horizontal symmetry axis", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: set_symmetry(["vertical"])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use a vertical symmetry axis when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(item, u"_Vertical symmetry axis", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: set_symmetry(["horizontal", "vertical"])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use horizontal and vertical symmetry axes when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(item, u"_Horizontal and vertical axes", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: set_symmetry(["diagonals"])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use diagonal symmetry axes when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(item, u"_Diagonal symmetry axes", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        menu.append(gtk.SeparatorMenuItem())
-
-        activate = lambda item: set_symmetry(["90_degree"])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use 90 degree rotational symmetry when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(item, u"_90 degree rotational symmetry", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        
-        activate = lambda item: set_symmetry(["180_degree"])
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Use 180 degree rotational symmetry when modifying the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.RadioMenuItem(item, u"_180 degree rotational symmetry", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        item.set_active(True)
-        menu.append(item)
-        
+        def create_symmetry_option(symmetries, txt_select, txt_item, prev, active):
+            activate = lambda i: set_symmetry(symmetries)
+            select = lambda i: self.update_status(constants.STATUS_MENU, txt_select)
+            deselect = lambda i: self.pop_status(constants.STATUS_MENU)
+            item = gtk.RadioMenuItem(prev, txt_item, True)
+            item.connect("activate", activate)
+            item.connect("select", select)
+            item.connect("deselect", deselect)
+            if active:
+                item.set_active(True)
+            menu.append(item)
+            return item
+        item = None
+        options = [
+            ([], u"Use no symmetry rules when modifying the grid", u"_No symmetry", False)
+            , (None, None, None, None)
+            , ([constants.SYM_HORIZONTAL]
+                , u"Use a horizontal symmetry axis when modifying the grid"
+                , u"_Horizontal symmetry axis", False)
+            , ([constants.SYM_VERTICAL]
+                , u"Use a vertical symmetry axis when modifying the grid"
+                , u"_Vertical symmetry axis", False)
+            , ([constants.SYM_HORIZONTAL, constants.SYM_VERTICAL]
+                , u"Use horizontal and vertical symmetry axes when modifying the grid"
+                , u"_Horizontal and vertical axes", False)
+            , ([constants.SYM_DIAGONALS]
+                , u"Use diagonal symmetry axes when modifying the grid"
+                , u"_Diagonal symmetry axes", False)
+            , (None, None, None, None)
+            , ([constants.SYM_90]
+                , u"Use 90 degree rotational symmetry when modifying the grid"
+                , u"_90 degree rotational symmetry", False)
+            , ([constants.SYM_180]
+                , u"Use 180 degree rotational symmetry when modifying the grid"
+                , u"_180 degree rotational symmetry", True)
+        ]
+        for o_s, o_sel, o_item, o_active in options:
+            if o_s is None:
+                menu.append(gtk.SeparatorMenuItem())
+            else:
+                item = create_symmetry_option(o_s, o_sel, o_item, item, o_active)
         symmetry_menu = gtk.MenuItem(u"_Symmetry", True)
         symmetry_menu.set_submenu(menu)
         return symmetry_menu
