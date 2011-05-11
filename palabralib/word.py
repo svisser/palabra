@@ -179,6 +179,21 @@ def read_wordlist(path):
             else:
                 words.add(lower(word))
     return words
+    
+def check_accidental_words(grid):
+    accidentals = []
+    slots = grid.generate_all_slots()
+    for s in slots:
+        word = ''.join([c for x, y, c in s])
+        for offset, length in check_accidental_word(word):
+            accidentals.append(s[offset:offset + length])
+    return accidentals
+        
+def check_accidental_word(word):
+    # return (offset, length) pairs
+    if len(word) == 3:
+        return [(0, 2)]
+    return []
 
 def create_wordlists(word_files):
     wordlists = {}
