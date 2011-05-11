@@ -53,6 +53,15 @@ def get_length_slots(grid, length):
     
 def get_open_slots(grid):
     return [(x, y, "across", 1) for x, y in grid.compute_open_squares()]
+    
+def expand_slots(slots):
+    cells = []
+    for x, y, d, l in slots:
+        if d == "across":
+            cells += [(x, y) for x in xrange(x, x + l)]
+        elif d == "down":
+            cells += [(x, y) for y in xrange(y, y + l)]
+    return cells
 
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -578,13 +587,7 @@ class Editor(gtk.HBox):
                 cells = get_open_slots(grid)
         old = self.puzzle.view.highlights
         self.puzzle.view.highlights = cells
-        render = []
-        for x, y, d, l in (old + cells):
-            if d == "across":
-                render += [(x, y) for x in xrange(x, x + l)]
-            elif d == "down":
-                render += [(x, y) for y in xrange(y, y + l)]
-        self._render_cells(list(set(render)))
+        self._render_cells(list(set(expand_slots(old + cells))))
         return cells
         
     def refresh_clues(self):
