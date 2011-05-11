@@ -27,7 +27,7 @@ from appearance import CellPropertiesDialog
 import constants
 from files import get_real_filename
 from grid import Grid, decompose_word
-import preferences
+from preferences import read_pref_color
 import transform
 from view import GridPreview, DEFAULTS_CELL
 from word import CWordList, search_wordlists, analyze_words
@@ -426,9 +426,7 @@ class Editor(gtk.HBox):
         render = []
         for wx, wy in view.render_warnings_of_cells(context, cells):
             # warnings for undesired cells
-            r = preferences.prefs["color_warning_red"] / 65535.0
-            g = preferences.prefs["color_warning_green"] / 65535.0
-            b = preferences.prefs["color_warning_blue"] / 65535.0
+            r, g, b = read_pref_color("color_warning")
             render.append((wx, wy, r, g, b))
         
         for p, q in cells:
@@ -440,14 +438,10 @@ class Editor(gtk.HBox):
                     elif direction == "down" and by <= q < by + length and bx == p:
                         render.append((p, q, r, g, b))
         
-        sx = self.selection.x
-        sy = self.selection.y
-        sdir = self.selection.direction
+        sx, sy, sdir = self.selection.to_tuple()
         
         # selection line
-        r = preferences.prefs["color_current_word_red"] / 65535.0
-        g = preferences.prefs["color_current_word_green"] / 65535.0
-        b = preferences.prefs["color_current_word_blue"] / 65535.0
+        r, g, b = read_pref_color("color_current_word")
         startx, starty = grid.get_start_word(sx, sy, sdir)
         for i, j in grid.in_direction(startx, starty, sdir):
             if (i, j) in cells:
@@ -458,25 +452,19 @@ class Editor(gtk.HBox):
         for p, q in cells:
             # selection cell
             if (p, q) == (sx, sy):
-                r = preferences.prefs["color_primary_selection_red"] / 65535.0
-                g = preferences.prefs["color_primary_selection_green"] / 65535.0
-                b = preferences.prefs["color_primary_selection_blue"] / 65535.0
+                r, g, b = read_pref_color("color_primary_selection")
                 render.append((p, q, r, g, b))
                 
             # current cell and symmetrical cells
             cx, cy = self.current
             if 0 <= cx < grid.width and 0 <= cy < grid.height:
-                r = preferences.prefs["color_secondary_active_red"] / 65535.0
-                g = preferences.prefs["color_secondary_active_green"] / 65535.0
-                b = preferences.prefs["color_secondary_active_blue"] / 65535.0
+                r, g, b = read_pref_color("color_secondary_active")
                 if (p, q) in symms:
                     render.append((p, q, r, g, b))
                 
                 # draw current cell last to prevent
                 # symmetrical cells from overlapping it
-                r = preferences.prefs["color_primary_active_red"] / 65535.0
-                g = preferences.prefs["color_primary_active_green"] / 65535.0
-                b = preferences.prefs["color_primary_active_blue"] / 65535.0
+                r, g, b = read_pref_color("color_primary_active")
                 if (p, q) == self.current:
                     render.append((p, q, r, g, b))
         view.render_locations(context, render)

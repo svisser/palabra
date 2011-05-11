@@ -160,6 +160,12 @@ def write_config_file():
     f.write(contents)
     f.close()
 
+def read_pref_color(key):
+    r = prefs[key + "_red"] / 65535.0
+    g = prefs[key + "_green"] / 65535.0
+    b = prefs[key + "_blue"] / 65535.0
+    return r, g, b
+
 class PreferencesWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
