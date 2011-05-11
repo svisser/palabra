@@ -677,17 +677,16 @@ class PalabraWindow(gtk.Window):
         
     def create_edit_symmetry_menu(self):
         menu = gtk.Menu()
-        def set_symmetry(options):
+        def set_symmetry(item, options):
             try:
                 self.editor.settings["symmetries"] = options
             except AttributeError:
                 pass
         def create_symmetry_option(symmetries, txt_select, txt_item, prev, active):
-            activate = lambda i: set_symmetry(symmetries)
             select = lambda i: self.update_status(constants.STATUS_MENU, txt_select)
             deselect = lambda i: self.pop_status(constants.STATUS_MENU)
             item = gtk.RadioMenuItem(prev, txt_item, True)
-            item.connect("activate", activate)
+            item.connect("activate", set_symmetry, symmetries)
             item.connect("select", select)
             item.connect("deselect", deselect)
             if active:
