@@ -423,14 +423,14 @@ class Editor(gtk.HBox):
         grid = self.puzzle.grid
         view = self.puzzle.view
         
+        # warnings for undesired cells
         render = []
         for wx, wy in view.render_warnings_of_cells(context, cells):
-            # warnings for undesired cells
             r, g, b = read_pref_color("color_warning")
             render.append((wx, wy, r, g, b))
         
+        # blacklist
         for p, q in cells:
-            # blacklist
             if view.settings["warn_blacklist"] and False: # TODO until ready
                 for bx, by, direction, length in self.blacklist:
                     if direction == "across" and bx <= p < bx + length and by == q:
@@ -438,9 +438,8 @@ class Editor(gtk.HBox):
                     elif direction == "down" and by <= q < by + length and bx == p:
                         render.append((p, q, r, g, b))
         
-        sx, sy, sdir = self.selection.to_tuple()
-        
         # selection line
+        sx, sy, sdir = self.selection.to_tuple()
         r, g, b = read_pref_color("color_current_word")
         startx, starty = grid.get_start_word(sx, sy, sdir)
         for i, j in grid.in_direction(startx, starty, sdir):
@@ -456,16 +455,15 @@ class Editor(gtk.HBox):
                 render.append((p, q, r, g, b))
                 
             # current cell and symmetrical cells
-            cx, cy = self.current
             if 0 <= cx < grid.width and 0 <= cy < grid.height:
-                r, g, b = read_pref_color("color_secondary_active")
                 if (p, q) in symms:
+                    r, g, b = read_pref_color("color_secondary_active")
                     render.append((p, q, r, g, b))
                 
                 # draw current cell last to prevent
                 # symmetrical cells from overlapping it
-                r, g, b = read_pref_color("color_primary_active")
                 if (p, q) == self.current:
+                    r, g, b = read_pref_color("color_primary_active")
                     render.append((p, q, r, g, b))
         view.render_locations(context, render)
         
