@@ -26,6 +26,65 @@ import cPalabra
 import constants
 import preferences
 
+class AnagramDialog(gtk.Dialog):
+    def __init__(self, parent):
+        gtk.Dialog.__init__(self, u"Find anagrams", parent, gtk.DIALOG_MODAL)
+        self.wordlists = parent.wordlists
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        
+        entry = gtk.Entry()
+        entry.connect("changed", self.on_input_changed)
+        main.pack_start(entry, False, False, 0)
+        
+        self.store = gtk.ListStore(str)
+        self.tree = gtk.TreeView(self.store)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Partial words", cell, text=0)
+        self.tree.append_column(column)
+        self.tree.set_size_request(300, 300)
+        scrolled_window = gtk.ScrolledWindow(None, None)
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add_with_viewport(self.tree)
+        main.pack_start(scrolled_window, True, True, 0)
+        hbox.pack_start(main, True, True, 0)
+        
+        self.vbox.pack_start(hbox, True, True, 0)
+        
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+    def on_input_changed(self, widget):
+        word = widget.get_text().strip()
+        if len(word) >= 3:
+            import pstats
+            import cProfile
+            cProfile.runctx('self.load_partial_words(word)', globals(), locals(), filename='fooprof')
+            p = pstats.Stats('fooprof')
+            p.sort_stats('time').print_stats(20)
+            p.print_callers()
+        
+    def load_partial_words(self, word):
+        self.store.clear()
+        self.store.append(["Loading..."])
+        counts, strings = get_partial_words(self.wordlists, word)
+        counts = dict(counts)
+        self.store.clear()
+        for s in strings:
+            chars = []
+            s_counts = {}
+            for c in s:
+                if c not in s_counts:
+                    s_counts[c] = 1
+                else:
+                    s_counts[c] += 1
+                if c not in counts or s_counts[c] > counts[c]:
+                    chars.append(c)
+            self.store.append([s + " (" + ''.join(chars) + ")"])
+
 class NewWordListDialog(gtk.Dialog):
     def __init__(self, parent):
         gtk.Dialog.__init__(self, u"New word list", parent, gtk.DIALOG_MODAL)
@@ -214,6 +273,23 @@ def check_accidental_word(seq):
 def _check_seq_for_words(seq):
     print seq
     return None
+
+def produce_word_counts(word):
+    counts = {}
+    for i, c in enumerate(word):
+        if c not in counts:
+            counts[c] = 1
+        else:
+            counts[c] += 1
+    return counts
+    
+def get_partial_words(wordlists, word):
+    c_items = produce_word_counts(word).items()
+    result = []
+    for p, wlist in wordlists.items():
+        for l in xrange(len(word) + 1, constants.MAX_WORD_LENGTH):
+            result.extend(cPalabra.get_partial_words(wlist.index, l, c_items, len(c_items)))
+    return c_items, result
 
 def create_wordlists(word_files):
     wordlists = {}

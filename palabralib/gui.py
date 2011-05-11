@@ -100,6 +100,7 @@ class PalabraWindow(gtk.Window):
         #self.menubar.append(self.create_fill_menu())
         #self.menubar.append(self.create_word_menu())
         #self.menubar.append(self.create_clue_menu())
+        #self.menubar.append(self.create_tools_menu())
         self.menubar.append(self.create_help_menu())
         
         self.toolbar = self.create_toolbar()
@@ -1169,6 +1170,28 @@ class PalabraWindow(gtk.Window):
         result = cPalabra.fill(grid, words, meta)
         if len(result) > 0:
             self.transform_grid(transform.modify_chars, chars=result[0])
+            
+    def create_tools_menu(self):
+        menu = gtk.Menu()
+        
+        def activate(item):
+            from word import AnagramDialog
+            w = AnagramDialog(self)
+            w.show_all()
+            w.run()
+            w.destroy()
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , u"View partial words")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.MenuItem(u"_Partial Words", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        
+        tool_menu = gtk.MenuItem(u"_Tools", True)
+        tool_menu.set_submenu(menu)
+        return tool_menu
         
     def create_fill_menu(self):
         menu = gtk.Menu()

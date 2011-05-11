@@ -231,15 +231,7 @@ class FillTool:
         return hbox
         
     def on_button_pressed(self, button):
-        from word import check_accidental_words
-        check_accidental_words(self.editor.puzzle.grid)
-        import pstats
-        import cProfile
-        cProfile.runctx('self.editor.fill()', globals(), locals(), filename='fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('time').print_stats(20)
-        p.print_callers()
-        #self.editor.fill()
+        self.editor.fill()
 
 def search(wordlists, grid, selection, force_refresh):
     x = selection.x

@@ -959,6 +959,58 @@ cPalabra_compute_counts(PyObject *self, PyObject *args) {
     return result;
 }
 
+static PyObject*
+cPalabra_get_partial_words(PyObject *self, PyObject *args) {
+    const int index;
+    const int length;
+    PyObject *counts;
+    const int counts_length;
+    if (!PyArg_ParseTuple(args, "iiOi", &index, &length, &counts, &counts_length))
+        return NULL;
+    char counts_c[counts_length];
+    int counts_i[counts_length];
+    char cons_str[length + 1];
+    int i;
+    for (i = 0; i < length; i++) {
+        cons_str[i] = '.';
+    }
+    Py_ssize_t n_counts = PyList_Size(counts);
+    for (i = 0; i < n_counts; i++) {
+        PyObject *c_item = PyList_GetItem(counts, i);
+        char *c_c;
+        const int c_i;
+        if (!PyArg_ParseTuple(c_item, "si", &c_c, &c_i))
+            return NULL;
+        counts_c[i] = c_c[0];
+        counts_i[i] = c_i;
+    }
+    cons_str[length] = '\0';
+    PyObject *result = PyList_New(0);
+    PyObject *mwords = PyList_New(0);
+    mwords = find_matches(mwords, trees[index][length], cons_str);
+    Py_ssize_t m;
+    for (m = 0; m < PyList_Size(mwords); m++) {
+        char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
+        int ok = 0;
+        for (i = 0; i < counts_length; i++) {
+            int count = 0;
+            int j;
+            for (j = 0; j < strlen(word); j++) {
+                if (word[j] == counts_c[i]) count++;
+            }
+            if (count >= counts_i[i]) {
+                ok++;
+            }
+        }
+        if (ok == counts_length) {
+            PyObject *py_word = PyString_FromString(word);
+            PyList_Append(result, py_word);
+            Py_DECREF(py_word);
+        }
+    }
+    return result;
+}
+
 static PyMethodDef methods[] = {
     {"has_matches",  cPalabra_has_matches, METH_VARARGS, "has_matches"},
     {"search", cPalabra_search, METH_VARARGS, "search"},
@@ -971,6 +1023,7 @@ static PyMethodDef methods[] = {
     {"compute_render_lines", cPalabra_compute_render_lines, METH_VARARGS, "compute_render_lines"},
     {"compute_distances", cPalabra_compute_distances, METH_VARARGS, "compute_distances"},
     {"compute_counts", cPalabra_compute_counts, METH_VARARGS, "compute_counts"},
+    {"get_partial_words", cPalabra_get_partial_words, METH_VARARGS, "get_partial_words"},
     {NULL, NULL, 0, NULL}
 };
 
