@@ -37,7 +37,7 @@ class Format:
         self.settings.append(s)
         
 class Setting:
-    def __init__(self, tab, type, title, key, default, properties=None):
+    def __init__(self, tab, type, title, key, default, properties=None, editable=None):
         self.tab = tab
         self.type = type
         self.title = title
@@ -45,15 +45,35 @@ class Setting:
         self.default = default
         self.properties = properties
         self.callback = None
+        self.editable = editable
+
+class HeaderEditor(gtk.Dialog):
+    def __init__(self, palabra_window):
+        flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
+        super(HeaderEditor, self).__init__(u"Page header editor", palabra_window, flags)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        main = gtk.HBox(False, 0)
+        main.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
+        text = gtk.TextView()
+        text.set_size_request(320, 200)
+        main.pack_start(text, False, False, 0)
+        
+        self.vbox.pack_start(hbox, True, True, 0)
 
 class ExportWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags)
+        self.palabra_window = palabra_window
         pdf = Format("pdf", u"PDF (pdf)", ["puzzle", "grid", "solution", "answers"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
-        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %A"))
+        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %A"))#, editable=self.on_edit_header))
         pdf.add(Setting("grid", "spin", u"Cell size in puzzle (mm)", "cell_size_puzzle", 7, (5, 10)))
         pdf.add(Setting("grid", "spin", u"Cell size in solution (mm)", "cell_size_solution", 6, (5, 10)))
         pdf.add(Setting("grid", "combo", u"Align grid:", "align", "right"
@@ -213,6 +233,12 @@ class ExportWindow(gtk.Dialog):
         except AttributeError:
             pass
             
+    def on_edit_header(self, item):
+        w = HeaderEditor(self.palabra_window)
+        w.show_all()
+        w.run()
+        w.destroy()
+            
     def _create_output_options(self, main, format, callback):
         label = gtk.Label()
         label.set_alignment(0, 0)
@@ -246,7 +272,7 @@ class ExportWindow(gtk.Dialog):
     def _create_settings(main, settings):
         if not settings:
             return
-        table = gtk.Table(len(settings), 2)
+        table = gtk.Table(len(settings), 3)
         table.set_col_spacings(6)
         table.set_row_spacings(3)
         main.pack_start(table, False, False, 0)
@@ -279,6 +305,11 @@ class ExportWindow(gtk.Dialog):
                 align.add(gtk.Label(s.title))
                 table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
                 table.attach(widget, 1, 2, row, row + 1)
+                if s.editable:
+                    button = gtk.ToolButton() # TODO check
+                    button.set_stock_id(gtk.STOCK_EDIT)
+                    button.connect("clicked", s.editable)
+                    table.attach(button, 2, 3, row, row + 1)
             elif s.type in ["combo", "spin"]:
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)
