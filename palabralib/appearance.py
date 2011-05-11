@@ -118,6 +118,8 @@ class AppearanceDialog(gtk.Dialog):
         cap_line_width_at(properties["border", "width"])
         
         # letters
+        label = create_label(u"Color")
+        table.attach(label, 1, 2, 3, 4, gtk.FILL, gtk.FILL)
         label = create_label(u"Size (%)")
         table.attach(label, 2, 3, 3, 4, gtk.FILL, gtk.FILL)
         
