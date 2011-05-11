@@ -367,6 +367,8 @@ def attempt_fill(grid, words):
 
 Selection = namedtuple('Selection', ['x', 'y', 'direction'])
 
+mouse_buttons_down = [False, False, False]
+
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area):
         gtk.HBox.__init__(self)
@@ -386,7 +388,6 @@ class Editor(gtk.HBox):
         self.settings = palabra_window.editor_settings
         self.current = (-1, -1)
         self.selection = Selection(-1, -1, "across")
-        self.mouse_buttons_down = [False, False, False]
         self.drawing_area.set_flags(gtk.CAN_FOCUS)
         events = {"expose_event": self.on_expose_event
             , "button_press_event": self.on_button_press_event
@@ -490,10 +491,9 @@ class Editor(gtk.HBox):
         
     def on_button_press_event(self, drawing_area, event):
         if 1 <= event.button <= 3:
-            self.mouse_buttons_down[event.button - 1] = True
+            mouse_buttons_down[event.button - 1] = True
         drawing_area.grab_focus()
-        prev_x = self.selection.x
-        prev_y = self.selection.y
+        prev_x, prev_y = self.selection.x, self.selection.y
         x, y = self.puzzle.view.properties.screen_to_grid(event.x, event.y)
         
         if not self.puzzle.grid.is_valid(x, y):
@@ -516,7 +516,7 @@ class Editor(gtk.HBox):
                     self._create_popup_menu(event, x, y)
                     # popup menu right-click should not interfere with
                     # normal editing controls
-                    self.mouse_buttons_down[2] = False
+                    mouse_buttons_down[2] = False
         return True
     
     def _create_popup_menu(self, event, x, y):
@@ -577,7 +577,7 @@ class Editor(gtk.HBox):
         
     def on_button_release_event(self, drawing_area, event):
         if 1 <= event.button <= 3:
-            self.mouse_buttons_down[event.button - 1] = False
+            mouse_buttons_down[event.button - 1] = False
         return True
         
     def on_motion_notify_event(self, drawing_area, event):
@@ -597,7 +597,6 @@ class Editor(gtk.HBox):
             c1 = apply_symmetry(grid, symms, cx, cy)
             self._render_cells(c0 + c1 + [(prev_x, prev_y), (cx, cy)])
         
-        mouse_buttons_down = self.mouse_buttons_down
         transform_blocks = self.transform_blocks
         if (estate & gtk.gdk.SHIFT_MASK and not self.settings["locked_grid"]):
             if mouse_buttons_down[0]:
