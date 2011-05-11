@@ -562,45 +562,30 @@ class Editor(gtk.HBox):
         if len(chars) > 0:
             self.palabra_window.transform_grid(transform.modify_chars, chars=chars)
             
-    def highlight_cells(self, f=None, arg=None):
-        """Highlight cells according to a specified function."""
-        grid = self.puzzle.grid
-        if f == "length":
-            cells = get_length_slots(grid, arg)
-        elif f == "char":
-            cells = get_char_slots(grid, arg)
-        elif f == "open":
-            cells = get_open_slots(grid)
-        self._render_highlighted_words(cells)
-        return cells
-        
-    def highlight_words(self, length):
-        """Highlight the words with the specified length."""
-        return self.highlight_cells("length", length)
-        
-    def highlight_chars(self, c):
-        """Highlight all occurrences of the specified character."""
-        self.highlight_cells("char", c)
-        
-    def highlight_open_cells(self):
-        """Highlight all open cells."""
-        self.highlight_cells("open")
-        
-    def clear_highlighted_words(self): 
-        """Clear all highlighted words, if there are any."""
-        self._render_highlighted_words([])
-        
-    def _render_highlighted_words(self, new):
-        """Render the cells of the highlighted words and the previous cells."""
-        old = self.puzzle.view.highlights
-        self.puzzle.view.highlights = new
+    def highlight_cells(self, f=None, arg=None, clear=False):
+        """
+        Highlight cells according to a specified function.
+        Use clear=True to clear the highlights.
+        """
         cells = []
-        for x, y, d, l in (old + new):
+        if not clear:
+            grid = self.puzzle.grid
+            if f == "length":
+                cells = get_length_slots(grid, arg)
+            elif f == "char":
+                cells = get_char_slots(grid, arg)
+            elif f == "open":
+                cells = get_open_slots(grid)
+        old = self.puzzle.view.highlights
+        self.puzzle.view.highlights = cells
+        render = []
+        for x, y, d, l in (old + cells):
             if d == "across":
-                cells += [(x, y) for x in xrange(x, x + l)]
+                render += [(x, y) for x in xrange(x, x + l)]
             elif d == "down":
-                cells += [(x, y) for y in xrange(y, y + l)]
-        self._render_cells(list(set(cells)))
+                render += [(x, y) for y in xrange(y, y + l)]
+        self._render_cells(list(set(render)))
+        return cells
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
