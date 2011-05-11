@@ -489,9 +489,9 @@ def example(grid):
     p = tile_from_cell(grid.width, grid.height, 1, 1)
     apply_pattern(grid, p)
     
-class PatternEditor(gtk.Dialog):
+class GridEditor(gtk.Dialog):
     def __init__(self, parent, size=None):
-        gtk.Dialog.__init__(self, u"Pattern editor"
+        gtk.Dialog.__init__(self, u"Grid editor"
             , parent, gtk.DIALOG_MODAL)
         self.set_size_request(512, 384)
         

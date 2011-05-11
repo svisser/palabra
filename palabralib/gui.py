@@ -52,7 +52,7 @@ from files import (
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow
-from pattern import PatternFileEditor, PatternEditor
+from pattern import PatternFileEditor
 import preferences
 from preferences import (
     PreferencesWindow,

@@ -28,7 +28,7 @@ from editor import attempt_fill
 from files import read_containers, get_real_filename
 import grid
 from grid import Grid
-from pattern import PatternEditor
+from pattern import GridEditor
 import preferences
 from view import GridPreview, GridView
 
@@ -191,7 +191,7 @@ class SizeWindow(gtk.Dialog):
 
 class FindPatternDialog(gtk.Dialog):
     def __init__(self, parent):
-        gtk.Dialog.__init__(self, u"Find patterns", parent, gtk.DIALOG_MODAL)
+        gtk.Dialog.__init__(self, u"Find grids", parent, gtk.DIALOG_MODAL)
         
         self.text = gtk.TextView()
         self.text.set_size_request(320, 320)
@@ -242,7 +242,7 @@ class NewWindow(gtk.Dialog):
         
         label = gtk.Label()
         label.set_alignment(0, 0)
-        label.set_markup(u"<b>Patterns</b>")
+        label.set_markup(u"<b>Grids</b>")
         options_vbox.pack_start(label, False, False, 6)
         
         # display_string grid
@@ -261,7 +261,7 @@ class NewWindow(gtk.Dialog):
         window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         window.add(self.tree)
         
-        self.clear_button = gtk.Button("Clear pattern")
+        self.clear_button = gtk.Button("Clear grid")
         self.clear_button.connect("clicked", self.clear_pattern)
         
         self.files = []
@@ -286,11 +286,11 @@ class NewWindow(gtk.Dialog):
         patterns_vbox = gtk.VBox(False, 0)
         
         files_hbox = gtk.HBox(False, 0)
-        files_hbox.pack_start(gtk.Label(u"Show patterns from: "), False, False, 0)
+        files_hbox.pack_start(gtk.Label(u"Show grids from: "), False, False, 0)
         align = gtk.Alignment(0, 0.5, 0, 0)
         align.add(file_combo)
         files_hbox.pack_start(align, False, False, 0)
-        find_button = gtk.Button(u"Find patterns")
+        find_button = gtk.Button(u"Find grids")
         find_button.connect("clicked", self.on_find_patterns)
         files_hbox.pack_start(find_button, False, False, 0)
         
@@ -299,7 +299,7 @@ class NewWindow(gtk.Dialog):
         patterns_vbox.pack_start(window, True, True, 0)
         
         buttons_hbox = gtk.HBox(False, 6)
-        generate_button = gtk.Button(u"Construct pattern")
+        generate_button = gtk.Button(u"Construct grid")
         generate_button.connect("clicked", self.construct_pattern)
         buttons_hbox.pack_start(generate_button, False, False, 0)
         align = gtk.Alignment(0, 0, 1, 0)
@@ -348,7 +348,7 @@ class NewWindow(gtk.Dialog):
         
     def construct_pattern(self, button):
         """Open the pattern editor to construct a pattern."""
-        editor = PatternEditor(self, size=self.grid.size)
+        editor = GridEditor(self, size=self.grid.size)
         editor.show_all()
         if editor.run() == gtk.RESPONSE_OK:
             self.show_grid(editor.grid)
