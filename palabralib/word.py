@@ -184,16 +184,36 @@ def check_accidental_words(grid):
     accidentals = []
     slots = grid.generate_all_slots()
     for s in slots:
-        word = ''.join([c for x, y, c in s])
-        for offset, length in check_accidental_word(word):
+        for offset, length in check_accidental_word(s):
             accidentals.append(s[offset:offset + length])
     return accidentals
         
-def check_accidental_word(word):
+def check_accidental_word(seq):
     # return (offset, length) pairs
-    if len(word) == 3:
-        return [(0, 2)]
-    return []
+    seqs = [(c if c[2] != constants.MISSING_CHAR else None) for c in seq]
+    if False not in [(i is None) for i in seqs]:
+        return []
+    p = []
+    p_r = []
+    for item in seqs:
+        if item is None:
+            p.append(p_r)
+            p_r = []
+        else:
+            p_r.append(item)
+    if p_r:
+        p.append(p_r)
+    check = [i for i in p if len(i) >= 2]
+    result = []
+    for s in check:
+        r = _check_seq_for_words(s)
+        if r is not None:
+            result.append(r)
+    return result
+    
+def _check_seq_for_words(seq):
+    print seq
+    return None
 
 def create_wordlists(word_files):
     wordlists = {}

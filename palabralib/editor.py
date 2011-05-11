@@ -231,6 +231,8 @@ class FillTool:
         return hbox
         
     def on_button_pressed(self, button):
+        from word import check_accidental_words
+        check_accidental_words(self.editor.puzzle.grid)
         import pstats
         import cProfile
         cProfile.runctx('self.editor.fill()', globals(), locals(), filename='fooprof')
