@@ -175,9 +175,9 @@ class EditorTestCase(unittest.TestCase):
     def testSelection(self):
         for i in xrange(self.grid.width):
             result = editor.compute_editor_of_cell([(i, 0)], self.puzzle, self.e_settings)
-            self.assertTrue((i, 0, "color_current_word") in result)
+            self.assertTrue((i, 0, constants.COLOR_CURRENT_WORD) in result)
             if i == 0:
-                self.assertTrue((i, 0, "color_primary_selection") in result)
+                self.assertTrue((i, 0, constants.COLOR_PRIMARY_SELECTION) in result)
                 
     def testSelectionTwo(self):
         """Cells behind a block are not part of the selection."""
@@ -195,15 +195,15 @@ class EditorTestCase(unittest.TestCase):
         self.e_settings.current = (1, 0)
         self.e_settings.settings["symmetries"] = [constants.SYM_180]
         result = editor.compute_editor_of_cell([(1, 0)], self.puzzle, self.e_settings)
-        self.assertTrue((1, 0, "color_primary_active") in result)
+        self.assertTrue((1, 0, constants.COLOR_PRIMARY_ACTIVE) in result)
         
     def testCurrentTwo(self):
         self.e_settings.current = (3, 0)
         self.e_settings.settings["symmetries"] = [constants.SYM_180]
         cells = [(3, 0), (self.grid.width - 4, self.grid.height - 1)]
         result = editor.compute_editor_of_cell(cells, self.puzzle, self.e_settings)
-        self.assertTrue((3, 0, "color_primary_active") in result)
-        cell = (self.grid.width - 4, self.grid.height - 1, "color_secondary_active")
+        self.assertTrue((3, 0, constants.COLOR_PRIMARY_ACTIVE) in result)
+        cell = (self.grid.width - 4, self.grid.height - 1, constants.COLOR_SECONDARY_ACTIVE)
         self.assertTrue(cell in result)
         
     def testWarningsTwoLetterAcross(self):
@@ -274,3 +274,42 @@ class EditorTestCase(unittest.TestCase):
         result = editor.compute_editor_of_cell(list(self.grid.cells()), self.puzzle, self.e_settings)
         self.assertTrue((0, 0, constants.COLOR_WARNING) in result)
         self.assertTrue((self.grid.width - 1, 0, constants.COLOR_WARNING) in result)
+        
+    def testComputeSelectionOtherDir(self):
+        s = self.e_settings.selection
+        next = editor.compute_selection(s, other_dir=True)
+        self.assertEquals(next[0], s.x)
+        self.assertEquals(next[1], s.y)
+        self.assertEquals(next[2], "down")
+        
+    def testComputeSelectionPos(self):
+        s = self.e_settings.selection
+        next = editor.compute_selection(s, x=5, y=3)
+        self.assertEquals(next[0], 5)
+        self.assertEquals(next[1], 3)
+        self.assertEquals(next[2], "across")
+        
+    def testComputeSelectionDir(self):
+        s = self.e_settings.selection
+        next = editor.compute_selection(s, direction="down")
+        self.assertEquals(next[0], s.x)
+        self.assertEquals(next[1], s.y)
+        self.assertEquals(next[2], "down")
+        
+    def testComputeSelectionPosDir(self):
+        s = self.e_settings.selection
+        next = editor.compute_selection(s, x=2, y=7, direction="down")
+        self.assertEquals(next[0], 2)
+        self.assertEquals(next[1], 7)
+        self.assertEquals(next[2], "down")
+        
+    def testComputeSelectionAlone(self):
+        s = self.e_settings.selection
+        next = editor.compute_selection(s, x=2)
+        self.assertEquals(next[0], 2)
+        self.assertEquals(next[1], 0)
+        self.assertEquals(next[2], "across")
+        next = editor.compute_selection(s, y=2)
+        self.assertEquals(next[0], 0)
+        self.assertEquals(next[1], 2)
+        self.assertEquals(next[2], "across")

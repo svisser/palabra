@@ -462,10 +462,10 @@ def compute_editor_of_cell(cells, puzzle, e_settings):
 def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
     if not cells or not e_settings.surface:
         return
-    grid, view = puzzle.grid, puzzle.view
+    view = puzzle.view
     view.select_mode(constants.VIEW_MODE_EDITOR)
     context = cairo.Context(e_settings.surface)
-    cs = [c for c in cells if grid.is_valid(*c)]
+    cs = [c for c in cells if puzzle.grid.is_valid(*c)]
     view.render_bottom(context, cs)
     if editor:
         e_cells = compute_editor_of_cell(cs, puzzle, e_settings)
@@ -493,7 +493,6 @@ class EditorSettings:
         for w in constants.WARNINGS:
             self.warnings[w] = False
 e_settings = EditorSettings()
-
 e_tools = {}
 
 def on_button_release_event(drawing_area, event):
@@ -524,13 +523,13 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
         cell = grid.get_cell_of_slot(e_settings.selection, "end")
         set_selection(window, puzzle, e_settings, *cell)
     elif key == gtk.keysyms.Left:
-        on_arrow_key(window, puzzle, e_settings, -1, 0)
+        apply_selection_delta(window, puzzle, e_settings, -1, 0)
     elif key == gtk.keysyms.Up:
-        on_arrow_key(window, puzzle, e_settings, 0, -1)
+        apply_selection_delta(window, puzzle, e_settings, 0, -1)
     elif key == gtk.keysyms.Right:
-        on_arrow_key(window, puzzle, e_settings, 1, 0)
+        apply_selection_delta(window, puzzle, e_settings, 1, 0)
     elif key == gtk.keysyms.Down:
-        on_arrow_key(window, puzzle, e_settings, 0, 1)
+        apply_selection_delta(window, puzzle, e_settings, 0, 1)
     elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
         on_delete(window, puzzle, e_settings)
     elif not e_settings.settings["locked_grid"]:
@@ -584,29 +583,21 @@ def on_delete(window, puzzle, e_settings):
         #self._check_blacklist_for_cell(x, y)
         _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
 
+def compute_selection(prev, x=None, y=None, direction=None, other_dir=False):
+    if other_dir:
+        direction = {"across": "down", "down": "across"}[prev.direction]
+    nx = x if x is not None else prev[0]
+    ny = y if y is not None else prev[1]
+    ndir = direction if direction is not None else prev[2]
+    return nx, ny, ndir
+
 def set_selection(window, puzzle, e_settings, x=None, y=None, direction=None, full_update=True, other_dir=False):
     """
     Select (x, y), the direction or both.
     Use other_dir to switch the typing direction to the other direction.
     """
-    if other_dir:
-        direction = {"across": "down", "down": "across"}[e_settings.selection.direction]
     prev = e_settings.selection
-    
-    # determine whether updating is needed
-    has_xy = x is not None and y is not None
-    has_dir = direction is not None
-    if has_xy and not has_dir and (x, y) == (prev[0], prev[1]):
-        return
-    if not has_xy and has_dir and direction == prev[2]:
-        return
-    if has_xy and has_dir and (x, y, direction) == prev:
-        return
-    
-    # determine the next selection
-    nx = x if x is not None else prev[0]
-    ny = y if y is not None else prev[1]
-    ndir = direction if direction is not None else prev[2]
+    nx, ny, ndir = compute_selection(prev, x, y, direction, other_dir)
     
     # update the selection of the clue tool when the grid selection changes
     grid = puzzle.grid
@@ -635,7 +626,7 @@ def set_overlay(window, puzzle, e_settings, word=None):
     render = [(x, y) for x, y, c in (old + cells)]
     _render_cells(puzzle, render, e_settings, window.drawing_area)
 
-def on_arrow_key(window, puzzle, e_settings, dx, dy):
+def apply_selection_delta(window, puzzle, e_settings, dx, dy):
     """Move the selection to an available nearby cell."""
     nx, ny = e_settings.selection.x + dx, e_settings.selection.y + dy
     if puzzle.grid.is_available(nx, ny):
