@@ -768,11 +768,15 @@ class PalabraWindow(gtk.Window):
             self.set_title(u"Palabra")
             self.pop_status(constants.STATUS_GRID)
         else:
+            selection = self.get_selection()
             if content_changed and transform >= constants.TRANSFORM_STRUCTURE:
                 status = puzzle.grid.determine_status(False)
                 message = self.determine_status_message(status)
                 self.update_status(constants.STATUS_GRID, message)
-            selection = self.get_selection()
+                # if grid structure changes, set selection again
+                # (it may have changed)
+                if selection is not None:
+                    self.set_selection(*selection)
             if selection is not None:
                 sel_x, sel_y = selection
                 valid = puzzle.grid.is_valid(sel_x, sel_y)
