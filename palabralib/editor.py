@@ -369,26 +369,106 @@ Selection = namedtuple('Selection', ['x', 'y', 'direction'])
 
 mouse_buttons_down = [False, False, False]
 
+def configure_drawing_area(widget, events):
+    widget.set_flags(gtk.CAN_FOCUS)
+    widget.add_events(gtk.gdk.POINTER_MOTION_HINT_MASK)
+    return [widget.connect(*e) for e in events.items()]
+    
+def cleanup_drawing_area(widget, ids):
+    widget.unset_flags(gtk.CAN_FOCUS)
+    for i in ids:
+        widget.disconnect(i)
+
+# cells = 1 cell or all cells of grid
+def _render_editor_of_cell(context, cells, puzzle, e_settings):
+    """Render everything editor related colors for cells."""
+    grid = puzzle.grid
+    view = puzzle.view
+    selection = e_settings.selection
+    current = e_settings.current
+    symmetries = e_settings.settings["symmetries"]
+
+    # warnings for undesired cells
+    render = []
+    for wx, wy in view.render_warnings_of_cells(context, cells):
+        r, g, b = read_pref_color("color_warning")
+        render.append((wx, wy, r, g, b))
+    
+    # blacklist
+    for p, q in cells:
+        if view.settings["warn_blacklist"] and False: # TODO until ready
+            for bx, by, direction, length in self.blacklist:
+                if direction == "across" and bx <= p < bx + length and by == q:
+                    render.append((p, q, r, g, b))
+                elif direction == "down" and by <= q < by + length and bx == p:
+                    render.append((p, q, r, g, b))
+    
+    # selection line
+    sx, sy, sdir = selection
+    r, g, b = read_pref_color("color_current_word")
+    startx, starty = grid.get_start_word(sx, sy, sdir)
+    for i, j in grid.in_direction(startx, starty, sdir):
+        if (i, j) in cells:
+            render.append((i, j, r, g, b))
+    
+    cx, cy = current
+    symms = apply_symmetry(grid, symmetries, cx, cy)
+    for p, q in cells:
+        # selection cell
+        if (p, q) == (sx, sy):
+            r, g, b = read_pref_color("color_primary_selection")
+            render.append((p, q, r, g, b))
+            
+        # current cell and symmetrical cells
+        if 0 <= cx < grid.width and 0 <= cy < grid.height:
+            if (p, q) in symms:
+                r, g, b = read_pref_color("color_secondary_active")
+                render.append((p, q, r, g, b))
+            
+            # draw current cell last to prevent
+            # symmetrical cells from overlapping it
+            if (p, q) == current:
+                r, g, b = read_pref_color("color_primary_active")
+                render.append((p, q, r, g, b))
+    return render
+
+def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
+    if not cells or not e_settings.surface:
+        return
+    grid, view = puzzle.grid, puzzle.view
+    view.select_mode(constants.VIEW_MODE_EDITOR)
+    context = cairo.Context(e_settings.surface)
+    cs = [c for c in cells if grid.is_valid(*c)]
+    view.render_bottom(context, cs)
+    if editor:
+        r = _render_editor_of_cell(context, cs, puzzle, e_settings)
+        view.render_locations(context, r)
+    view.render_top(context, cs)
+    context = drawing_area.window.cairo_create()
+    context.set_source(e_settings.pattern)
+    context.paint()
+
+class EditorSettings:
+    def __init__(self):
+        self.surface = None
+        self.pattern = None
+        self.selection = Selection(-1, -1, "across")
+        self.current = (-1, -1)
+        self.settings = {
+            "symmetries": constants.SYM_180
+            , "locked_grid": False
+        }
+e_settings = EditorSettings()
+
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area):
         gtk.HBox.__init__(self)
         self.palabra_window = palabra_window
         self.drawing_area = drawing_area
         self.tools = {}
-        self.editor_surface = None
-        self.editor_pattern = None
         self.blacklist = []
         self.force_redraw = True
         self.fill_options = {}
-        if not palabra_window.editor_settings:
-            sett = {}
-            sett["symmetries"] = ["180_degree"]
-            sett["locked_grid"] = False
-            palabra_window.editor_settings = sett
-        self.settings = palabra_window.editor_settings
-        self.current = (-1, -1)
-        self.selection = Selection(-1, -1, "across")
-        self.drawing_area.set_flags(gtk.CAN_FOCUS)
         events = {"expose_event": self.on_expose_event
             , "button_press_event": self.on_button_press_event
             , "button_release_event": self.on_button_release_event
@@ -396,96 +476,28 @@ class Editor(gtk.HBox):
             , "key_press_event": self.on_key_press_event
             , "key_release_event": self.on_key_release_event
         }
-        self.ids = [self.drawing_area.connect(*e) for e in events.items()]
-        self.drawing_area.add_events(gtk.gdk.POINTER_MOTION_HINT_MASK)
+        self.ids = configure_drawing_area(self.drawing_area, events)
         
     def get_puzzle(self):
         return self.palabra_window.puzzle_manager.current_puzzle
         
     puzzle = property(get_puzzle)
-                
-    def cleanup(self):
-        self.drawing_area.unset_flags(gtk.CAN_FOCUS)
-        for i in self.ids:
-            self.drawing_area.disconnect(i)
     
     def _render_cells(self, cells, editor=True):
-        if not cells:
-            return
-        self.puzzle.view.select_mode(constants.VIEW_MODE_EDITOR)
-        if self.editor_surface:
-            context = cairo.Context(self.editor_surface)
-            cs = [c for c in cells if self.puzzle.grid.is_valid(*c)]
-            self.puzzle.view.render_bottom(context, cs)
-            if editor:
-                self._render_editor_of_cell(context, cs)
-            self.puzzle.view.render_top(context, cs)
-            context = self.drawing_area.window.cairo_create()
-            context.set_source(self.editor_pattern)
-            context.paint()
-        
-    # cells = 1 cell or all cells of grid
-    def _render_editor_of_cell(self, context, cells):
-        """Render everything editor related colors for cells."""
-        grid = self.puzzle.grid
-        view = self.puzzle.view
-        
-        # warnings for undesired cells
-        render = []
-        for wx, wy in view.render_warnings_of_cells(context, cells):
-            r, g, b = read_pref_color("color_warning")
-            render.append((wx, wy, r, g, b))
-        
-        # blacklist
-        for p, q in cells:
-            if view.settings["warn_blacklist"] and False: # TODO until ready
-                for bx, by, direction, length in self.blacklist:
-                    if direction == "across" and bx <= p < bx + length and by == q:
-                        render.append((p, q, r, g, b))
-                    elif direction == "down" and by <= q < by + length and bx == p:
-                        render.append((p, q, r, g, b))
-        
-        # selection line
-        sx, sy, sdir = self.selection
-        r, g, b = read_pref_color("color_current_word")
-        startx, starty = grid.get_start_word(sx, sy, sdir)
-        for i, j in grid.in_direction(startx, starty, sdir):
-            if (i, j) in cells:
-                render.append((i, j, r, g, b))
-        
-        cx, cy = self.current
-        symms = apply_symmetry(grid, self.settings["symmetries"], cx, cy)
-        for p, q in cells:
-            # selection cell
-            if (p, q) == (sx, sy):
-                r, g, b = read_pref_color("color_primary_selection")
-                render.append((p, q, r, g, b))
-                
-            # current cell and symmetrical cells
-            if 0 <= cx < grid.width and 0 <= cy < grid.height:
-                if (p, q) in symms:
-                    r, g, b = read_pref_color("color_secondary_active")
-                    render.append((p, q, r, g, b))
-                
-                # draw current cell last to prevent
-                # symmetrical cells from overlapping it
-                if (p, q) == self.current:
-                    r, g, b = read_pref_color("color_primary_active")
-                    render.append((p, q, r, g, b))
-        view.render_locations(context, render)
+        _render_cells(self.puzzle, cells, e_settings, self.drawing_area, editor)
         
     def on_expose_event(self, drawing_area, event):
         """Render the main editing component."""
-        if not self.editor_surface or self.force_redraw:
+        if not e_settings.surface or self.force_redraw:
             width, height = self.puzzle.view.properties.visual_size(True)
-            self.editor_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-            self.editor_pattern = cairo.SurfacePattern(self.editor_surface)
+            e_settings.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+            e_settings.pattern = cairo.SurfacePattern(e_settings.surface)
             # TODO should not be needed
             self.puzzle.view.grid = self.puzzle.grid
             self.force_redraw = False
             self._render_cells(list(self.puzzle.grid.cells()), editor=True)
         context = self.drawing_area.window.cairo_create()
-        context.set_source(self.editor_pattern)
+        context.set_source(e_settings.pattern)
         context.paint()
         return True
         
@@ -493,7 +505,7 @@ class Editor(gtk.HBox):
         if 1 <= event.button <= 3:
             mouse_buttons_down[event.button - 1] = True
         drawing_area.grab_focus()
-        prev_x, prev_y = self.selection.x, self.selection.y
+        prev_x, prev_y = e_settings.selection.x, e_settings.selection.y
         x, y = self.puzzle.view.properties.screen_to_grid(event.x, event.y)
         
         if not self.puzzle.grid.is_valid(x, y):
@@ -501,7 +513,7 @@ class Editor(gtk.HBox):
             return True
             
         if (event.state & gtk.gdk.SHIFT_MASK):
-            if event.button in [1, 3] and not self.settings["locked_grid"]:
+            if event.button in [1, 3] and not e_settings.settings["locked_grid"]:
                 self.transform_blocks(x, y, event.button == 1)
         else:
             if event.button == 1:
@@ -587,18 +599,18 @@ class Editor(gtk.HBox):
             ex, ey, estate = event.x, event.y, event.state
         props = self.puzzle.view.properties
         cx, cy = props.screen_to_grid(ex, ey)
-        prev_x, prev_y = self.current
-        self.current = (cx, cy)
+        prev_x, prev_y = e_settings.current
+        e_settings.current = (cx, cy)
 
         if (prev_x, prev_y) != (cx, cy):
             grid = self.puzzle.grid
-            symms = self.settings["symmetries"]
+            symms = e_settings.settings["symmetries"]
             c0 = apply_symmetry(grid, symms, prev_x, prev_y)
             c1 = apply_symmetry(grid, symms, cx, cy)
             self._render_cells(c0 + c1 + [(prev_x, prev_y), (cx, cy)])
         
         transform_blocks = self.transform_blocks
-        if (estate & gtk.gdk.SHIFT_MASK and not self.settings["locked_grid"]):
+        if (estate & gtk.gdk.SHIFT_MASK and not e_settings.settings["locked_grid"]):
             if mouse_buttons_down[0]:
                 transform_blocks(cx, cy, True)
             elif mouse_buttons_down[2]:
@@ -635,9 +647,9 @@ class Editor(gtk.HBox):
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
-        p, q = self.puzzle.grid.get_start_word(*self.selection)
+        p, q = self.puzzle.grid.get_start_word(*e_settings.selection)
         self.tools["clue"].load_items(self.puzzle)
-        self.tools["clue"].select(p, q, self.selection[2])
+        self.tools["clue"].select(p, q, e_settings.selection[2])
         
     def refresh_words(self, force_refresh=False):
         """
@@ -645,7 +657,7 @@ class Editor(gtk.HBox):
         and the current settings (e.g., show only words with intersections).
         """
         result = search(self.palabra_window.wordlists, self.puzzle.grid
-            , self.selection, force_refresh)
+            , e_settings.selection, force_refresh)
         self.tools["word"].display_words(result)
         
     def fill(self):
@@ -667,9 +679,9 @@ class Editor(gtk.HBox):
         
     def insert(self, word):
         """Insert a word in the selected slot."""
-        if self.settings["locked_grid"]:
+        if e_settings.settings["locked_grid"]:
             return
-        x, y, d = self.selection
+        x, y, d = e_settings.selection
         grid = self.puzzle.grid
         if not grid.is_available(x, y):
             return
@@ -683,7 +695,7 @@ class Editor(gtk.HBox):
         Display the word in the selected slot without storing it the grid.
         If the word is None, the overlay will be cleared.
         """
-        x, y, d = self.selection
+        x, y, d = e_settings.selection
         cells = compute_overlay(self.puzzle.grid, word, x, y, d)
         old = self.puzzle.view.overlay
         self.puzzle.view.overlay = cells
@@ -691,11 +703,11 @@ class Editor(gtk.HBox):
             
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
-        blocks = transform_blocks(self.puzzle.grid, self.settings["symmetries"], x, y, status)
+        blocks = transform_blocks(self.puzzle.grid, e_settings.settings["symmetries"], x, y, status)
         if not blocks:
             return
         self.palabra_window.transform_grid(transform.modify_blocks, blocks=blocks)
-        if (self.selection.x, self.selection.y, True) in blocks:
+        if (e_settings.selection.x, e_settings.selection.y, True) in blocks:
             self.set_selection(-1, -1)
         self._render_cells([(x, y) for x, y, status in blocks])
 
@@ -711,14 +723,14 @@ class Editor(gtk.HBox):
             return True
         key = event.keyval
         grid = self.puzzle.grid
-        if key == gtk.keysyms.BackSpace and not self.settings["locked_grid"]:
+        if key == gtk.keysyms.BackSpace and not e_settings.settings["locked_grid"]:
             self.on_backspace()
         elif key == gtk.keysyms.Tab:
             self.set_selection(other_dir=True)
         elif key == gtk.keysyms.Home:
-            self.set_selection(*get_cell_of_slot(grid, self.selection, "start"))
+            self.set_selection(*get_cell_of_slot(grid, e_settings.selection, "start"))
         elif key == gtk.keysyms.End:
-            self.set_selection(*get_cell_of_slot(grid, self.selection, "end"))
+            self.set_selection(*get_cell_of_slot(grid, e_settings.selection, "end"))
         elif key == gtk.keysyms.Left:
             self.on_arrow_key(-1, 0)
         elif key == gtk.keysyms.Up:
@@ -727,15 +739,15 @@ class Editor(gtk.HBox):
             self.on_arrow_key(1, 0)
         elif key == gtk.keysyms.Down:
             self.on_arrow_key(0, 1)
-        elif key == gtk.keysyms.Delete and not self.settings["locked_grid"]:
+        elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
             self.on_delete()
-        elif not self.settings["locked_grid"]:
+        elif not e_settings.settings["locked_grid"]:
             self.on_typing(key)
         return True
         
     def on_backspace(self):
         """Remove a character in the current or previous cell."""
-        x, y, direction = self.selection
+        x, y, direction = e_settings.selection
         grid = self.puzzle.grid
         transform_grid = self.palabra_window.transform_grid
         modify_char = transform.modify_char
@@ -759,13 +771,13 @@ class Editor(gtk.HBox):
             
     def on_arrow_key(self, dx, dy):
         """Move the selection to an available nearby cell."""
-        nx, ny = self.selection.x + dx, self.selection.y + dy
+        nx, ny = e_settings.selection.x + dx, e_settings.selection.y + dy
         if self.puzzle.grid.is_available(nx, ny):
             self.set_selection(nx, ny)
         
     def on_delete(self):
         """Remove the character in the selected cell."""
-        x, y = self.selection.x, self.selection.y
+        x, y = e_settings.selection.x, e_settings.selection.y
         if self.puzzle.grid.get_char(x, y) != "":
             self.palabra_window.transform_grid(transform.modify_char
                 , x=x
@@ -779,7 +791,7 @@ class Editor(gtk.HBox):
         valid = gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period
         if not valid:
             return
-        x, y, direction = self.selection
+        x, y, direction = e_settings.selection
         grid = self.puzzle.grid
         if not grid.is_valid(x, y):
             return
@@ -797,7 +809,7 @@ class Editor(gtk.HBox):
         ny = y + (1 if direction == "down" else 0)
         cells = [(x, y)]
         if grid.is_available(nx, ny):
-            self.selection = self.selection._replace(x=nx, y=ny)
+            e_settings.selection = e_settings.selection._replace(x=nx, y=ny)
             cells += [(nx, ny)]
         self._render_cells(cells)
                 
@@ -861,8 +873,8 @@ class Editor(gtk.HBox):
         Use other_dir to switch the typing direction to the other direction.
         """
         if other_dir:
-            direction = {"across": "down", "down": "across"}[self.selection.direction]
-        prev = self.selection
+            direction = {"across": "down", "down": "across"}[e_settings.selection.direction]
+        prev = e_settings.selection
         
         # determine whether updating is needed
         has_xy = x is not None and y is not None
@@ -889,11 +901,11 @@ class Editor(gtk.HBox):
             clue_tool.deselect()
         self.set_overlay(None)
         self._render_cells(self.puzzle.grid.slot(*prev), editor=False)
-        self.selection = self.selection._replace(x=nx, y=ny, direction=ndir)
+        e_settings.selection = e_settings.selection._replace(x=nx, y=ny, direction=ndir)
         self._render_cells(self.puzzle.grid.slot(nx, ny, ndir), editor=True)
         if full_update:
             self.palabra_window.update_window()
         
     def get_selection(self):
         """Return the (x, y) of the selected cell."""
-        return (self.selection.x, self.selection.y)
+        return (e_settings.selection.x, e_settings.selection.y)

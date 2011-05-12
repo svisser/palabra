@@ -41,7 +41,7 @@ import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow
-from editor import Editor, FillTool, WordTool
+from editor import cleanup_drawing_area, e_settings, Editor, FillTool, WordTool
 from files import (
     FILETYPES,
     ParserError,
@@ -90,8 +90,6 @@ class PalabraWindow(gtk.Window):
         
         self.puzzle_manager = PuzzleManager()
         
-        self.editor_settings = None
-        
         self.menubar = gtk.MenuBar()
         self.menubar.append(self.create_file_menu())
         self.menubar.append(self.create_edit_menu())
@@ -136,11 +134,11 @@ class PalabraWindow(gtk.Window):
     def to_empty_panel(self):
         for widget in self.panel.get_children():
             self.panel.remove(widget)
-        self.editor.cleanup()
+        cleanup_drawing_area(self.drawing_area, self.editor.ids)
     
     def to_edit_panel(self):
-        drawing_area = gtk.DrawingArea()
-        drawing_area.add_events(
+        self.drawing_area = gtk.DrawingArea()
+        self.drawing_area.add_events(
             gtk.gdk.BUTTON_PRESS_MASK
             | gtk.gdk.BUTTON_RELEASE_MASK
             | gtk.gdk.POINTER_MOTION_MASK
@@ -148,10 +146,10 @@ class PalabraWindow(gtk.Window):
             | gtk.gdk.KEY_RELEASE_MASK
             )
         puzzle = self.puzzle_manager.current_puzzle
-        puzzle.view.refresh_visual_size(drawing_area)
-        drawing_area.queue_draw()
+        puzzle.view.refresh_visual_size(self.drawing_area)
+        self.drawing_area.queue_draw()
         
-        self.editor = Editor(self, drawing_area)
+        self.editor = Editor(self, self.drawing_area)
         self.editor.tools["clue"] = ClueTool(self.editor)
         self.editor.tools["fill"] = FillTool(self.editor)
         self.editor.tools["word"] = WordTool(self.editor)
@@ -169,7 +167,7 @@ class PalabraWindow(gtk.Window):
         
         scrolled_window = gtk.ScrolledWindow(None, None)
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add_with_viewport(drawing_area)
+        scrolled_window.add_with_viewport(self.drawing_area)
         main = gtk.VBox(False, 0)
         main.pack_start(scrolled_window, True, True, 0)
         
@@ -679,7 +677,7 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         def set_symmetry(item, options):
             try:
-                self.editor.settings["symmetries"] = options
+                e_settings.settings["symmetries"] = options
             except AttributeError:
                 pass
         def create_symmetry_option(symmetries, txt_select, txt_item, prev, active):
