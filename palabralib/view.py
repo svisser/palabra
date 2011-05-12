@@ -29,80 +29,48 @@ SETTINGS_PREVIEW = {
     , "show_chars": True
     , "show_numbers": False
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 SETTINGS_EDITOR = {
     "has_padding": True
     , "show_chars": True
     , "show_numbers": False
     , "render_overlays": True
-    , "warn_consecutive_unchecked": True
-    , "warn_unchecked_cells": True
-    , "warn_two_letter_words": True
-    , "warn_blacklist": True
 }
 SETTINGS_EMPTY = {
     "has_padding": False
     , "show_chars": False
     , "show_numbers": True
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 SETTINGS_SOLUTION = {
     "has_padding": False
     , "show_chars": True
     , "show_numbers": True
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 SETTINGS_PREVIEW_CELL = {
     "has_padding": True
     , "show_chars": False
     , "show_numbers": True
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 SETTINGS_PREVIEW_SOLUTION = {
     "has_padding": True
     , "show_chars": True
     , "show_numbers": True
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 SETTINGS_EXPORT_PDF_PUZZLE = {
     "has_padding": True
     , "show_chars": False
     , "show_numbers": True
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 SETTINGS_EXPORT_PDF_SOLUTION = {
     "has_padding": True
     , "show_chars": True
     , "show_numbers": True
     , "render_overlays": False
-    , "warn_consecutive_unchecked": False
-    , "warn_unchecked_cells": False
-    , "warn_two_letter_words": False
-    , "warn_blacklist": False
 }
 custom_settings = {}
 
