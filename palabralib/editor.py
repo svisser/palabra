@@ -392,15 +392,14 @@ def compute_warnings_of_cells(grid, cells, settings):
                 continue
         if warn_consecutive:
             # Color consecutive (two or more) unchecked cells.
-            if not (0 <= counts[p, q] <= 1):
-                continue
             warn = False
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                if not (0 <= p + dx < width and 0 <= q + dy < height):
-                    continue
-                if 0 <= counts[p + dx, q + dy] <= 1:
-                    warn = True
-                    break
+            if 0 <= counts[p, q] <= 1:
+                for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    if not (0 <= p + dx < width and 0 <= q + dy < height):
+                        continue
+                    if 0 <= counts[p + dx, q + dy] <= 1:
+                        warn = True
+                        break
             if warn:
                 yield p, q
                 continue
@@ -431,15 +430,16 @@ def compute_editor_of_cell(cells, puzzle, e_settings):
     selection = e_settings.selection
     current = e_settings.current
     symmetries = e_settings.settings["symmetries"]
+    warnings = e_settings.warnings
 
     # warnings for undesired cells
     render = []
-    for wx, wy in compute_warnings_of_cells(grid, cells, e_settings.warnings):
+    for wx, wy in compute_warnings_of_cells(grid, cells, warnings):
         render.append((wx, wy, "color_warning"))
     
     # blacklist
     for p, q in cells:
-        if view.settings["warn_blacklist"] and False: # TODO until ready
+        if False: # TODO until ready
             for bx, by, direction, length in self.blacklist:
                 if direction == "across" and bx <= p < bx + length and by == q:
                     render.append((p, q, "color_warning"))

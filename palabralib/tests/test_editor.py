@@ -252,3 +252,16 @@ class EditorTestCase(unittest.TestCase):
         self.assertTrue((0, 0) in result)
         self.assertTrue((0, 1) in result)
         self.assertTrue(len(result) == 2)
+        
+    def testWarningsMultiple(self):
+        g = self.grid
+        g.set_block(4, 0, True)
+        g.set_block(4, 1, True)
+        g.set_block(3, 2, True)
+        self.warnings[constants.WARN_UNCHECKED] = True
+        self.warnings[constants.WARN_CONSECUTIVE] = True
+        self.warnings[constants.WARN_TWO_LETTER] = True
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertTrue((3, 0) in result)
+        self.assertTrue((3, 1) in result)
+        self.assertTrue(len(result) == 2)
