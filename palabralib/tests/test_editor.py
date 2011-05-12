@@ -265,3 +265,12 @@ class EditorTestCase(unittest.TestCase):
         self.assertTrue((3, 0) in result)
         self.assertTrue((3, 1) in result)
         self.assertTrue(len(result) == 2)
+        
+    def testEditorWarnings(self):
+        self.grid.set_block(2, 0, True)
+        self.grid.set_block(self.grid.width - 2, 0, True)
+        self.e_settings.warnings[constants.WARN_UNCHECKED] = True
+        self.e_settings.warnings[constants.WARN_TWO_LETTER] = True
+        result = editor.compute_editor_of_cell(list(self.grid.cells()), self.puzzle, self.e_settings)
+        self.assertTrue((0, 0, constants.COLOR_WARNING) in result)
+        self.assertTrue((self.grid.width - 1, 0, constants.COLOR_WARNING) in result)

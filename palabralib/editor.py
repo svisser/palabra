@@ -426,44 +426,37 @@ def compute_warnings_of_cells(grid, cells, settings):
 def compute_editor_of_cell(cells, puzzle, e_settings):
     """Compute cells that have editor related colors."""
     grid = puzzle.grid
-    view = puzzle.view
     selection = e_settings.selection
     current = e_settings.current
     symmetries = e_settings.settings["symmetries"]
     warnings = e_settings.warnings
-
     # warnings for undesired cells
     render = []
     for wx, wy in compute_warnings_of_cells(grid, cells, warnings):
-        render.append((wx, wy, "color_warning"))
-    
+        render.append((wx, wy, constants.COLOR_WARNING))
     # blacklist
     for p, q in cells:
         if False: # TODO until ready
             for bx, by, direction, length in self.blacklist:
                 if direction == "across" and bx <= p < bx + length and by == q:
-                    render.append((p, q, "color_warning"))
+                    render.append((p, q, constants.COLOR_WARNING))
                 elif direction == "down" and by <= q < by + length and bx == p:
-                    render.append((p, q, "color_warning"))
-    
+                    render.append((p, q, constants.COLOR_WARNING))
     # selection line
-    render.extend([(i, j, "color_current_word") for i, j in grid.slot(*selection) if (i, j) in cells])
-    
+    render.extend([(i, j, constants.COLOR_CURRENT_WORD) for i, j in grid.slot(*selection) if (i, j) in cells])
     cx, cy = current
     for p, q in cells:
         # selection cell
         if (p, q) == (selection.x, selection.y):
-            render.append((p, q, "color_primary_selection"))
-            
+            render.append((p, q, constants.COLOR_PRIMARY_SELECTION))
         # current cell and symmetrical cells
         if 0 <= cx < grid.width and 0 <= cy < grid.height:
             if (p, q) in apply_symmetry(grid, symmetries, cx, cy):
-                render.append((p, q, "color_secondary_active"))
-            
+                render.append((p, q, constants.COLOR_SECONDARY_ACTIVE))
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
             if (p, q) == current:
-                render.append((p, q, "color_primary_active"))
+                render.append((p, q, constants.COLOR_PRIMARY_ACTIVE))
     return render
 
 def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
