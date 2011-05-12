@@ -372,7 +372,13 @@ mouse_buttons_down = [False, False, False]
 def configure_drawing_area(widget, events):
     widget.set_flags(gtk.CAN_FOCUS)
     widget.add_events(gtk.gdk.POINTER_MOTION_HINT_MASK)
-    return [widget.connect(*e) for e in events.items()]
+    ids = []
+    for k, e in events.items():
+        if isinstance(e, tuple):
+            ids.append(widget.connect(k, *e))
+        else:
+            ids.append(widget.connect(k, e))
+    return ids
     
 def cleanup_drawing_area(widget, ids):
     widget.unset_flags(gtk.CAN_FOCUS)
@@ -460,23 +466,227 @@ class EditorSettings:
         }
 e_settings = EditorSettings()
 
+e_tools = {}
+
+def on_button_release_event(drawing_area, event):
+    if 1 <= event.button <= 3:
+        mouse_buttons_down[event.button - 1] = False
+    return True
+
+# needed to capture the press of a tab button
+# so focus won't switch to the toolbar
+def on_key_press_event(drawing_area, event):
+    return True
+
+def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
+    # prevent conflicts with menu shortcut keys
+    if ((event.state & gtk.gdk.SHIFT_MASK) or
+        (event.state & gtk.gdk.CONTROL_MASK)):
+        return True
+    key = event.keyval
+    grid = puzzle.grid
+    if key == gtk.keysyms.BackSpace and not e_settings.settings["locked_grid"]:
+        on_backspace(window, puzzle, e_settings)
+    elif key == gtk.keysyms.Tab:
+        set_selection(window, puzzle, e_settings, other_dir=True)
+    elif key == gtk.keysyms.Home:
+        set_selection(window, puzzle, e_settings, *get_cell_of_slot(grid, e_settings.selection, "start"))
+    elif key == gtk.keysyms.End:
+        set_selection(window, puzzle, e_settings, *get_cell_of_slot(grid, e_settings.selection, "end"))
+    elif key == gtk.keysyms.Left:
+        on_arrow_key(window, puzzle, e_settings, -1, 0)
+    elif key == gtk.keysyms.Up:
+        on_arrow_key(window, puzzle, e_settings, 0, -1)
+    elif key == gtk.keysyms.Right:
+        on_arrow_key(window, puzzle, e_settings, 1, 0)
+    elif key == gtk.keysyms.Down:
+        on_arrow_key(window, puzzle, e_settings, 0, 1)
+    elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
+        on_delete(window, puzzle, e_settings)
+    elif not e_settings.settings["locked_grid"]:
+        on_typing(window, puzzle, key, e_settings)
+    return True
+
+def on_typing(window, puzzle, keyval, e_settings):
+    """Place an alphabetical character in the grid and move the selection."""
+    valid = gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period
+    if not valid:
+        return
+    grid = puzzle.grid
+    x, y, direction = e_settings.selection
+    if not grid.is_valid(x, y):
+        return
+    if keyval == gtk.keysyms.period:
+        r_transform_blocks(window, puzzle, e_settings, x, y, True)
+    else:
+        c = chr(keyval).capitalize()
+        if c != grid.get_char(x, y):
+            window.transform_grid(transform.modify_char
+                    , x=x
+                    , y=y
+                    , next_char=c)
+            #self._check_blacklist_for_cell(x, y)
+    nx = x + (1 if direction == "across" else 0)
+    ny = y + (1 if direction == "down" else 0)
+    cells = [(x, y)]
+    if grid.is_available(nx, ny):
+        e_settings.selection = e_settings.selection._replace(x=nx, y=ny)
+        cells += [(nx, ny)]
+    _render_cells(puzzle, cells, e_settings, window.drawing_area)
+
+def r_transform_blocks(window, puzzle, e_settings, x, y, status):
+    """Place or remove a block at (x, y) and its symmetrical cells."""
+    blocks = transform_blocks(puzzle.grid, e_settings.settings["symmetries"], x, y, status)
+    if not blocks:
+        return
+    window.transform_grid(transform.modify_blocks, blocks=blocks)
+    cells = [(x, y) for x, y, status in blocks]
+    _render_cells(puzzle, cells, e_settings, window.drawing_area)
+
+def on_delete(window, puzzle, e_settings):
+    """Remove the character in the selected cell."""
+    x, y = e_settings.selection.x, e_settings.selection.y
+    if puzzle.grid.get_char(x, y) != "":
+        window.transform_grid(transform.modify_char
+            , x=x
+            , y=y
+            , next_char="")
+        #self._check_blacklist_for_cell(x, y)
+        _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
+
+def set_selection(window, puzzle, e_settings, x=None, y=None, direction=None, full_update=True, other_dir=False):
+    """
+    Select (x, y), the direction or both.
+    Use other_dir to switch the typing direction to the other direction.
+    """
+    if other_dir:
+        direction = {"across": "down", "down": "across"}[e_settings.selection.direction]
+    prev = e_settings.selection
+    
+    # determine whether updating is needed
+    has_xy = x is not None and y is not None
+    has_dir = direction is not None
+    if has_xy and not has_dir and (x, y) == (prev[0], prev[1]):
+        return
+    if not has_xy and has_dir and direction == prev[2]:
+        return
+    if has_xy and has_dir and (x, y, direction) == prev:
+        return
+    
+    # determine the next selection
+    nx = x if x is not None else prev[0]
+    ny = y if y is not None else prev[1]
+    ndir = direction if direction is not None else prev[2]
+    
+    # update the selection of the clue tool when the grid selection changes
+    grid = puzzle.grid
+    clue_tool = e_tools["clue"]
+    if grid.is_part_of_word(nx, ny, ndir):
+        p, q = grid.get_start_word(nx, ny, ndir)
+        clue_tool.select(p, q, ndir)
+    else:
+        clue_tool.deselect()
+    set_overlay(window, puzzle, e_settings, None)
+    _render_cells(puzzle, grid.slot(*prev), e_settings, window.drawing_area, editor=False)
+    e_settings.selection = e_settings.selection._replace(x=nx, y=ny, direction=ndir)
+    _render_cells(puzzle, grid.slot(nx, ny, ndir), e_settings, window.drawing_area, editor=True)
+    if full_update:
+        window.update_window()
+
+def set_overlay(window, puzzle, e_settings, word=None):
+    """
+    Display the word in the selected slot without storing it the grid.
+    If the word is None, the overlay will be cleared.
+    """
+    x, y, d = e_settings.selection
+    cells = compute_overlay(puzzle.grid, word, x, y, d)
+    old = puzzle.view.overlay
+    puzzle.view.overlay = cells
+    render = [(x, y) for x, y, c in (old + cells)]
+    _render_cells(puzzle, render, e_settings, window.drawing_area)
+
+def on_arrow_key(window, puzzle, e_settings, dx, dy):
+    """Move the selection to an available nearby cell."""
+    nx, ny = e_settings.selection.x + dx, e_settings.selection.y + dy
+    if puzzle.grid.is_available(nx, ny):
+        set_selection(window, puzzle, e_settings, nx, ny)
+
+def on_backspace(window, puzzle, e_settings):
+    """Remove a character in the current or previous cell."""
+    x, y, direction = e_settings.selection
+    grid = puzzle.grid
+    transform_grid = window.transform_grid
+    modify_char = transform.modify_char
+    
+    # remove character in selected cell if it has one
+    if grid.data[y][x]["char"] != "":
+        transform_grid(modify_char, x=x, y=y, next_char="")
+        #self._check_blacklist_for_cell(x, y)
+        _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
+    else:
+        # remove character in previous cell if needed and move selection
+        if direction == "across":
+            x -= 1
+        elif direction == "down":
+            y -=1
+        if grid.is_available(x, y):
+            if grid.data[y][x]["char"] != "":
+                transform_grid(modify_char, x=x, y=y, next_char="")
+            #self._check_blacklist_for_cell(x, y)
+            set_selection(window, puzzle, e_settings, x, y)
+
+def insert(window, puzzle, e_settings, word):
+    """Insert a word in the selected slot."""
+    if e_settings.settings["locked_grid"]:
+        return
+    x, y, d = e_settings.selection
+    grid = puzzle.grid
+    if not grid.is_available(x, y):
+        return
+    cells = compute_insert(grid, word, x, y, d)
+    if not cells:
+        return
+    window.transform_grid(transform.modify_chars, chars=cells)
+
+def compute_highlights(grid, f=None, arg=None, clear=False):
+    """Compute the cells to highlight according to the specified function."""
+    cells = []
+    if not clear:
+        if f == "length":
+            cells = get_length_slots(grid, arg)
+        elif f == "char":
+            cells = get_char_slots(grid, arg)
+        elif f == "open":
+            cells = get_open_slots(grid)
+    return cells
+
+def highlight_cells(window, puzzle, e_settings, f=None, arg=None, clear=False):
+    """
+    Highlight cells according to a specified function.
+    Use clear=True to clear the highlights.
+    """
+    cells = compute_highlights(puzzle.grid, f, arg, clear)
+    old = puzzle.view.highlights
+    puzzle.view.highlights = cells
+    render = list(set(expand_slots(old + cells)))
+    _render_cells(puzzle, render, e_settings, window.drawing_area)
+    return cells
+
 class Editor(gtk.HBox):
     def __init__(self, palabra_window, drawing_area):
         gtk.HBox.__init__(self)
         self.palabra_window = palabra_window
-        self.drawing_area = drawing_area
-        self.tools = {}
         self.blacklist = []
-        self.force_redraw = True
         self.fill_options = {}
         events = {"expose_event": self.on_expose_event
             , "button_press_event": self.on_button_press_event
-            , "button_release_event": self.on_button_release_event
+            , "button_release_event": on_button_release_event
             , "motion_notify_event": self.on_motion_notify_event
-            , "key_press_event": self.on_key_press_event
-            , "key_release_event": self.on_key_release_event
+            , "key_press_event": on_key_press_event
+            , "key_release_event": (on_key_release_event, self.palabra_window, self.puzzle, e_settings)
         }
-        self.ids = configure_drawing_area(self.drawing_area, events)
+        self.ids = configure_drawing_area(self.palabra_window.drawing_area, events)
+        self.force_redraw = True
         
     def get_puzzle(self):
         return self.palabra_window.puzzle_manager.current_puzzle
@@ -484,7 +694,7 @@ class Editor(gtk.HBox):
     puzzle = property(get_puzzle)
     
     def _render_cells(self, cells, editor=True):
-        _render_cells(self.puzzle, cells, e_settings, self.drawing_area, editor)
+        _render_cells(self.puzzle, cells, e_settings, self.palabra_window.drawing_area, editor)
         
     def on_expose_event(self, drawing_area, event):
         """Render the main editing component."""
@@ -496,7 +706,7 @@ class Editor(gtk.HBox):
             self.puzzle.view.grid = self.puzzle.grid
             self.force_redraw = False
             self._render_cells(list(self.puzzle.grid.cells()), editor=True)
-        context = self.drawing_area.window.cairo_create()
+        context = self.palabra_window.drawing_area.window.cairo_create()
         context.set_source(e_settings.pattern)
         context.paint()
         return True
@@ -587,11 +797,6 @@ class Editor(gtk.HBox):
         menu.show_all()
         menu.popup(None, None, None, event.button, event.time)
         
-    def on_button_release_event(self, drawing_area, event):
-        if 1 <= event.button <= 3:
-            mouse_buttons_down[event.button - 1] = False
-        return True
-        
     def on_motion_notify_event(self, drawing_area, event):
         if event.is_hint:
             ex, ey, estate = event.window.get_pointer()
@@ -631,25 +836,13 @@ class Editor(gtk.HBox):
         Highlight cells according to a specified function.
         Use clear=True to clear the highlights.
         """
-        cells = []
-        if not clear:
-            grid = self.puzzle.grid
-            if f == "length":
-                cells = get_length_slots(grid, arg)
-            elif f == "char":
-                cells = get_char_slots(grid, arg)
-            elif f == "open":
-                cells = get_open_slots(grid)
-        old = self.puzzle.view.highlights
-        self.puzzle.view.highlights = cells
-        self._render_cells(list(set(expand_slots(old + cells))))
-        return cells
+        return highlight_cells(self.palabra_window, self.puzzle, e_settings, f, arg, clear)
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
         p, q = self.puzzle.grid.get_start_word(*e_settings.selection)
-        self.tools["clue"].load_items(self.puzzle)
-        self.tools["clue"].select(p, q, e_settings.selection[2])
+        e_tools["clue"].load_items(self.puzzle)
+        e_tools["clue"].select(p, q, e_settings.selection[2])
         
     def refresh_words(self, force_refresh=False):
         """
@@ -658,7 +851,7 @@ class Editor(gtk.HBox):
         """
         result = search(self.palabra_window.wordlists, self.puzzle.grid
             , e_settings.selection, force_refresh)
-        self.tools["word"].display_words(result)
+        e_tools["word"].display_words(result)
         
     def fill(self):
         for path, wordlist in self.palabra_window.wordlists.items():
@@ -679,140 +872,19 @@ class Editor(gtk.HBox):
         
     def insert(self, word):
         """Insert a word in the selected slot."""
-        if e_settings.settings["locked_grid"]:
-            return
-        x, y, d = e_settings.selection
-        grid = self.puzzle.grid
-        if not grid.is_available(x, y):
-            return
-        cells = compute_insert(grid, word, x, y, d)
-        if not cells:
-            return
-        self.palabra_window.transform_grid(transform.modify_chars, chars=cells)
+        insert(self.palabra_window, self.puzzle, e_settings, word)
             
     def set_overlay(self, word=None):
         """
         Display the word in the selected slot without storing it the grid.
         If the word is None, the overlay will be cleared.
         """
-        x, y, d = e_settings.selection
-        cells = compute_overlay(self.puzzle.grid, word, x, y, d)
-        old = self.puzzle.view.overlay
-        self.puzzle.view.overlay = cells
-        self._render_cells([(x, y) for x, y, c in (old + cells)])
+        set_overlay(self.palabra_window, self.puzzle, e_settings, word)
             
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
-        blocks = transform_blocks(self.puzzle.grid, e_settings.settings["symmetries"], x, y, status)
-        if not blocks:
-            return
-        self.palabra_window.transform_grid(transform.modify_blocks, blocks=blocks)
-        if (e_settings.selection.x, e_settings.selection.y, True) in blocks:
-            self.set_selection(-1, -1)
-        self._render_cells([(x, y) for x, y, status in blocks])
-
-    # needed to capture the press of a tab button
-    # so focus won't switch to the toolbar
-    def on_key_press_event(self, drawing_area, event):
-        return True
-        
-    def on_key_release_event(self, drawing_area, event):
-        # prevent conflicts with menu shortcut keys
-        if ((event.state & gtk.gdk.SHIFT_MASK) or
-            (event.state & gtk.gdk.CONTROL_MASK)):
-            return True
-        key = event.keyval
-        grid = self.puzzle.grid
-        if key == gtk.keysyms.BackSpace and not e_settings.settings["locked_grid"]:
-            self.on_backspace()
-        elif key == gtk.keysyms.Tab:
-            self.set_selection(other_dir=True)
-        elif key == gtk.keysyms.Home:
-            self.set_selection(*get_cell_of_slot(grid, e_settings.selection, "start"))
-        elif key == gtk.keysyms.End:
-            self.set_selection(*get_cell_of_slot(grid, e_settings.selection, "end"))
-        elif key == gtk.keysyms.Left:
-            self.on_arrow_key(-1, 0)
-        elif key == gtk.keysyms.Up:
-            self.on_arrow_key(0, -1)
-        elif key == gtk.keysyms.Right:
-            self.on_arrow_key(1, 0)
-        elif key == gtk.keysyms.Down:
-            self.on_arrow_key(0, 1)
-        elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
-            self.on_delete()
-        elif not e_settings.settings["locked_grid"]:
-            self.on_typing(key)
-        return True
-        
-    def on_backspace(self):
-        """Remove a character in the current or previous cell."""
-        x, y, direction = e_settings.selection
-        grid = self.puzzle.grid
-        transform_grid = self.palabra_window.transform_grid
-        modify_char = transform.modify_char
-        
-        # remove character in selected cell if it has one
-        if grid.data[y][x]["char"] != "":
-            transform_grid(modify_char, x=x, y=y, next_char="")
-            self._check_blacklist_for_cell(x, y)
-            self._render_cells([(x, y)])
-        else:
-            # remove character in previous cell if needed and move selection
-            if direction == "across":
-                x -= 1
-            elif direction == "down":
-                y -=1
-            if grid.is_available(x, y):
-                if grid.data[y][x]["char"] != "":
-                    transform_grid(modify_char, x=x, y=y, next_char="")
-                self._check_blacklist_for_cell(x, y)
-                self.set_selection(x, y)
+        r_transform_blocks(self.palabra_window, self.puzzle, e_settings, x, y, status)
             
-    def on_arrow_key(self, dx, dy):
-        """Move the selection to an available nearby cell."""
-        nx, ny = e_settings.selection.x + dx, e_settings.selection.y + dy
-        if self.puzzle.grid.is_available(nx, ny):
-            self.set_selection(nx, ny)
-        
-    def on_delete(self):
-        """Remove the character in the selected cell."""
-        x, y = e_settings.selection.x, e_settings.selection.y
-        if self.puzzle.grid.get_char(x, y) != "":
-            self.palabra_window.transform_grid(transform.modify_char
-                , x=x
-                , y=y
-                , next_char="")
-            self._check_blacklist_for_cell(x, y)
-            self._render_cells([(x, y)])
-        
-    def on_typing(self, keyval):
-        """Place an alphabetical character in the grid and move the selection."""
-        valid = gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period
-        if not valid:
-            return
-        x, y, direction = e_settings.selection
-        grid = self.puzzle.grid
-        if not grid.is_valid(x, y):
-            return
-        if keyval == gtk.keysyms.period:
-            self.transform_blocks(x, y, True)
-        else:
-            c = chr(keyval).capitalize()
-            if c != grid.get_char(x, y):
-                self.palabra_window.transform_grid(transform.modify_char
-                        , x=x
-                        , y=y
-                        , next_char=c)
-                self._check_blacklist_for_cell(x, y)
-        nx = x + (1 if direction == "across" else 0)
-        ny = y + (1 if direction == "down" else 0)
-        cells = [(x, y)]
-        if grid.is_available(nx, ny):
-            e_settings.selection = e_settings.selection._replace(x=nx, y=ny)
-            cells += [(nx, ny)]
-        self._render_cells(cells)
-                
     def _check_blacklist_for_cell(self, x, y):
         """
         Check whether the cell (x, y) is part of a blacklisted word.
@@ -865,46 +937,14 @@ class Editor(gtk.HBox):
         self.puzzle.view.grid = self.puzzle.grid
         self.puzzle.view.properties.grid = self.puzzle.grid
         size = self.puzzle.view.properties.visual_size()
-        self.drawing_area.set_size_request(*size)
+        self.palabra_window.drawing_area.set_size_request(*size)
 
     def set_selection(self, x=None, y=None, direction=None, full_update=True, other_dir=False):
         """
         Select (x, y), the direction or both.
         Use other_dir to switch the typing direction to the other direction.
         """
-        if other_dir:
-            direction = {"across": "down", "down": "across"}[e_settings.selection.direction]
-        prev = e_settings.selection
-        
-        # determine whether updating is needed
-        has_xy = x is not None and y is not None
-        has_dir = direction is not None
-        if has_xy and not has_dir and (x, y) == (prev[0], prev[1]):
-            return
-        if not has_xy and has_dir and direction == prev[2]:
-            return
-        if has_xy and has_dir and (x, y, direction) == prev:
-            return
-        
-        # determine the next selection
-        nx = x if x is not None else prev[0]
-        ny = y if y is not None else prev[1]
-        ndir = direction if direction is not None else prev[2]
-        
-        # update the selection of the clue tool when the grid selection changes
-        grid = self.puzzle.grid
-        clue_tool = self.tools["clue"]
-        if grid.is_part_of_word(nx, ny, ndir):
-            p, q = grid.get_start_word(nx, ny, ndir)
-            clue_tool.select(p, q, ndir)
-        else:
-            clue_tool.deselect()
-        self.set_overlay(None)
-        self._render_cells(self.puzzle.grid.slot(*prev), editor=False)
-        e_settings.selection = e_settings.selection._replace(x=nx, y=ny, direction=ndir)
-        self._render_cells(self.puzzle.grid.slot(nx, ny, ndir), editor=True)
-        if full_update:
-            self.palabra_window.update_window()
+        set_selection(self.palabra_window, self.puzzle, e_settings, x, y, direction, full_update, other_dir)
         
     def get_selection(self):
         """Return the (x, y) of the selected cell."""

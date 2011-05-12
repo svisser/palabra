@@ -41,7 +41,7 @@ import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow
-from editor import cleanup_drawing_area, e_settings, Editor, FillTool, WordTool
+from editor import cleanup_drawing_area, e_settings, e_tools, Editor, FillTool, WordTool
 from files import (
     FILETYPES,
     ParserError,
@@ -150,9 +150,9 @@ class PalabraWindow(gtk.Window):
         self.drawing_area.queue_draw()
         
         self.editor = Editor(self, self.drawing_area)
-        self.editor.tools["clue"] = ClueTool(self.editor)
-        self.editor.tools["fill"] = FillTool(self.editor)
-        self.editor.tools["word"] = WordTool(self.editor)
+        e_tools["clue"] = ClueTool(self.editor)
+        e_tools["fill"] = FillTool(self.editor)
+        e_tools["word"] = WordTool(self.editor)
         
         options_hbox = gtk.HBox(False, 0)
         options_hbox.set_border_width(12)
@@ -177,20 +177,20 @@ class PalabraWindow(gtk.Window):
         tabs.set_show_border(False)
         tabs.set_property("tab-hborder", 16)
         tabs.set_property("tab-vborder", 8)
-        tool = self.editor.tools["word"].create()
+        tool = e_tools["word"].create()
         tabs.append_page(tool, gtk.Label(u"Word"))
-        tool = self.editor.tools["fill"].create()
+        tool = e_tools["fill"].create()
         tabs.append_page(tool, gtk.Label(u"Fill"))
-        tool = self.editor.tools["clue"].create(puzzle)
+        tool = e_tools["clue"].create(puzzle)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
             if num == 0:
-                word = self.editor.tools["word"].get_selected_word()
+                word = e_tools["word"].get_selected_word()
                 self.editor.set_overlay(word)
                 self.update_window()
             else:
                 self.editor.set_overlay(None)
-                self.editor.tools["word"].deselect()
+                e_tools["word"].deselect()
         tabs.connect("switch-page", on_switch_page)
         
         paned = gtk.HPaned()
