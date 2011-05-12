@@ -369,6 +369,60 @@ def cleanup_drawing_area(widget, ids):
     for i in ids:
         widget.disconnect(i)
 
+def compute_warnings_of_cells(grid, cells, settings):
+    """Determine undesired cells."""
+    lengths = {}
+    starts = {}
+    warn_unchecked = settings[constants.WARN_UNCHECKED]
+    warn_consecutive = settings[constants.WARN_CONSECUTIVE]
+    warn_two_letter = settings[constants.WARN_TWO_LETTER]
+    check_count = grid.get_check_count
+    width, height = grid.size
+    if warn_unchecked or warn_consecutive:
+        counts = grid.get_check_count_all()
+    if warn_two_letter:
+        get_start_word = grid.get_start_word
+        in_direction = grid.in_direction
+        word_length = grid.word_length
+    for p, q in cells:
+        if warn_unchecked:
+            # Color cells that are unchecked. Isolated cells are also colored.
+            if 0 <= counts[p, q] <= 1:
+                yield p, q
+                continue
+        if warn_consecutive:
+            # Color consecutive (two or more) unchecked cells.
+            if not (0 <= counts[p, q] <= 1):
+                continue
+            warn = False
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                if not (0 <= p + dx < width and 0 <= q + dy < height):
+                    continue
+                if 0 <= counts[p + dx, q + dy] <= 1:
+                    warn = True
+                    break
+            if warn:
+                yield p, q
+                continue
+        if warn_two_letter:
+            # Color words with length two.
+            warn = False
+            for d in ["across", "down"]:
+                if (p, q, d) in starts:
+                    sx, sy = starts[p, q, d]
+                else:
+                    sx, sy = get_start_word(p, q, d)
+                    starts[p, q, d] = sx, sy
+                    for zx, zy in in_direction(sx, sy, d):
+                        starts[zx, zy, d] = sx, sy
+                    lengths[sx, sy, d] = word_length(sx, sy, d)
+                if lengths[sx, sy, d] == 2:
+                    warn = True
+                    break
+            if warn:
+                yield p, q
+                continue
+
 # cells = 1 cell or all cells of grid
 def compute_editor_of_cell(cells, puzzle, e_settings):
     """Compute cells that have editor related colors."""
@@ -380,7 +434,7 @@ def compute_editor_of_cell(cells, puzzle, e_settings):
 
     # warnings for undesired cells
     render = []
-    for wx, wy in view.render_warnings_of_cells(cells):
+    for wx, wy in compute_warnings_of_cells(grid, cells, e_settings.warnings):
         render.append((wx, wy, "color_warning"))
     
     # blacklist
@@ -442,6 +496,9 @@ class EditorSettings:
             "symmetries": constants.SYM_180
             , "locked_grid": False
         }
+        self.warnings = {}
+        for w in constants.WARNINGS:
+            self.warnings[w] = False
 e_settings = EditorSettings()
 
 e_tools = {}

@@ -655,59 +655,6 @@ class GridView:
                 ctx_rel_line_to(rdx, rdy)
         ctx_stroke()
         
-    def render_warnings_of_cells(self, cells):
-        """Determine undesired cells."""
-        lengths = {}
-        starts = {}
-        warn_unchecked = self.settings["warn_unchecked_cells"]
-        warn_consecutive = self.settings["warn_consecutive_unchecked"]
-        warn_two_letter = self.settings["warn_two_letter_words"]
-        check_count = self.grid.get_check_count
-        if warn_unchecked or warn_consecutive:
-            counts = self.grid.get_check_count_all()
-        if warn_two_letter:
-            get_start_word = self.grid.get_start_word
-            in_direction = self.grid.in_direction
-            word_length = self.grid.word_length
-        for p, q in cells:
-            if warn_unchecked:
-                # Color cells that are unchecked. Isolated cells are also colored.
-                if 0 <= counts[p, q] <= 1:
-                    yield p, q
-                    continue
-            if warn_consecutive:
-                # Color consecutive (two or more) unchecked cells.
-                warn = False
-                if 0 <= counts[p, q] <= 1:
-                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                        if not (0 <= p + dx < self.grid.width
-                            and 0 <= q + dy < self.grid.height):
-                            continue
-                        if 0 <= counts[p + dx, q + dy] <= 1:
-                            warn = True
-                            break
-                if warn:
-                    yield p, q
-                    continue
-            if warn_two_letter:
-                # Color words with length two.
-                warn = False
-                for d in ["across", "down"]:
-                    if (p, q, d) in starts:
-                        sx, sy = starts[p, q, d]
-                    else:
-                        sx, sy = get_start_word(p, q, d)
-                        starts[p, q, d] = sx, sy
-                        for zx, zy in in_direction(sx, sy, d):
-                            starts[zx, zy, d] = sx, sy
-                        lengths[sx, sy, d] = word_length(sx, sy, d)
-                    if lengths[sx, sy, d] == 2:
-                        warn = True
-                        break
-                if warn:
-                    yield p, q
-                    continue
-        
     def render_locations(self, context, cells):
         """Render one or more cells."""
         has_padding = self.settings["has_padding"]

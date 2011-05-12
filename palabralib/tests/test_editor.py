@@ -28,6 +28,9 @@ class EditorTestCase(unittest.TestCase):
         self.puzzle = Puzzle(self.grid)
         self.e_settings = editor.EditorSettings()
         self.e_settings.selection = editor.Selection(0, 0, "across")
+        self.warnings = {}
+        for w in constants.WARNINGS:
+            self.warnings[w] = False
         
     def testCharSlots(self):
         slots = editor.get_char_slots(self.grid, 'K')
@@ -202,3 +205,50 @@ class EditorTestCase(unittest.TestCase):
         self.assertTrue((3, 0, "color_primary_active") in result)
         cell = (self.grid.width - 4, self.grid.height - 1, "color_secondary_active")
         self.assertTrue(cell in result)
+        
+    def testWarningsTwoLetterAcross(self):
+        g = self.grid
+        g.set_block(2, 0, True)
+        self.warnings[constants.WARN_TWO_LETTER] = True
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertTrue((0, 0) in result)
+        self.assertTrue((1, 0) in result)
+        self.assertTrue(len(result) == 2)
+
+    def testWarningsTwoLetterDown(self):
+        g = self.grid
+        g.set_block(0, 2, True)
+        self.warnings[constants.WARN_TWO_LETTER] = True
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertTrue((0, 0) in result)
+        self.assertTrue((0, 1) in result)
+        self.assertTrue(len(result) == 2)
+    
+    def testWarningsUnchecked(self):
+        g = self.grid
+        g.set_block(1, 0, True)
+        self.warnings[constants.WARN_UNCHECKED] = True
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertTrue((0, 0) in result)
+        self.assertTrue(len(result) == 1)
+        
+    def testWarningsIsolation(self):
+        g = self.grid
+        g.set_block(1, 0, True)
+        g.set_block(0, 1, True)
+        self.warnings[constants.WARN_UNCHECKED] = True
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertTrue((0, 0) in result)
+        self.assertTrue(len(result) == 1)
+    
+    def testWarningsConsecutive(self):
+        g = self.grid
+        g.set_block(1, 0, True)
+        self.warnings[constants.WARN_CONSECUTIVE] = True
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertEquals(result, [])
+        g.set_block(1, 1, True)
+        result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
+        self.assertTrue((0, 0) in result)
+        self.assertTrue((0, 1) in result)
+        self.assertTrue(len(result) == 2)

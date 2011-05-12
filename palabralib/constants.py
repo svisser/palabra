@@ -139,3 +139,9 @@ VIEW_MODE_EXPORT_PDF_PUZZLE = "export_pdf_grid"
 VIEW_MODE_EXPORT_PDF_SOLUTION = "export_pdf_solution"
 VIEW_MODE_PREVIEW_CELL = "preview_cell"
 VIEW_MODE_PREVIEW_SOLUTION = "preview_solution"
+
+# editor warnings
+WARN_UNCHECKED = "warn_unchecked_cells"
+WARN_CONSECUTIVE = "warn_consecutive_unchecked"
+WARN_TWO_LETTER = "warn_two_letter_words"
+WARNINGS = [WARN_UNCHECKED, WARN_CONSECUTIVE, WARN_TWO_LETTER]
