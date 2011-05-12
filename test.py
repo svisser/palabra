@@ -27,6 +27,7 @@
 import unittest
 
 #from palabralib.tests.test_action import ActionTestCase, ActionStackTestCase
+from palabralib.tests.test_editor import EditorTestCase
 from palabralib.tests.test_files import FilesTestCase
 from palabralib.tests.test_grid import GridTestCase, PuzzleTestCase
 from palabralib.tests.test_transform import TransformTestCase
@@ -36,6 +37,7 @@ from palabralib.tests.test_word import WordTestCase
 # ActionTestCase, ActionStackTestCase, FilesTestCase
 cases = [ GridTestCase
     , PuzzleTestCase
+    , EditorTestCase
     , FilesTestCase
     , TransformTestCase
     , ViewTestCase
