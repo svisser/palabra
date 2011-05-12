@@ -18,12 +18,16 @@
 import unittest
 
 from palabralib.grid import Grid
+from palabralib.puzzle import Puzzle
 import palabralib.constants as constants
 import palabralib.editor as editor
 
 class EditorTestCase(unittest.TestCase):
     def setUp(self):
         self.grid = Grid(15, 15)
+        self.puzzle = Puzzle(self.grid)
+        self.e_settings = editor.EditorSettings()
+        self.e_settings.selection = editor.Selection(0, 0, "across")
         
     def testCharSlots(self):
         slots = editor.get_char_slots(self.grid, 'K')
@@ -96,7 +100,7 @@ class EditorTestCase(unittest.TestCase):
 
     def _checkSymms(self, result, expect):
         for c in expect:
-            self.assertEquals(c in result, True)
+            self.assertTrue(c in result)
         self.assertEquals(len(result), len(expect))
 
     def testSymmetryTwo(self):
@@ -145,3 +149,56 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(result, [(0, 0, False)])
         result = editor.transform_blocks(self.grid, [constants.SYM_180], 14, 14, False)
         self.assertEquals(result, [(0, 0, False)])
+        
+    def testComputeWordCellsNone(self):
+        o = editor.compute_word_cells(self.grid, None, 0, 0, "across")
+        self.assertEquals(o, [])
+        
+    def testComputeWordCellsOne(self):
+        o = editor.compute_word_cells(self.grid, "palabra", 0, 0, "across")
+        expect = [(0, 0, 'P'), (1, 0, 'A'), (2, 0, 'L'), (3, 0, 'A'), (4, 0, 'B'), (5, 0, 'R'), (6, 0, 'A')]
+        self.assertEquals(o, expect)
+        
+    def testComputeWordCellsTwo(self):
+        self.grid.set_char(0, 0, 'P')
+        self.grid.set_char(3, 0, 'A')
+        o = editor.compute_word_cells(self.grid, "palabra", 0, 0, "across")
+        expect = [(1, 0, 'A'), (2, 0, 'L'), (4, 0, 'B'), (5, 0, 'R'), (6, 0, 'A')]
+        self.assertEquals(o, expect)
+        o = editor.compute_word_cells(self.grid, "PALABRA", 0, 0, "across")
+        expect = [(1, 0, 'A'), (2, 0, 'L'), (4, 0, 'B'), (5, 0, 'R'), (6, 0, 'A')]
+        self.assertEquals(o, expect)
+        
+    def testSelection(self):
+        for i in xrange(self.grid.width):
+            result = editor.compute_editor_of_cell([(i, 0)], self.puzzle, self.e_settings)
+            self.assertTrue((i, 0, "color_current_word") in result)
+            if i == 0:
+                self.assertTrue((i, 0, "color_primary_selection") in result)
+                
+    def testSelectionTwo(self):
+        """Cells behind a block are not part of the selection."""
+        self.grid.set_block(5, 0, True)
+        result = editor.compute_editor_of_cell([(6, 0)], self.puzzle, self.e_settings)
+        self.assertEquals(result, [])
+        
+    def testSelectionThree(self):
+        """Cells behind a void are not part of the selection."""
+        self.grid.set_void(5, 0, True)
+        result = editor.compute_editor_of_cell([(6, 0)], self.puzzle, self.e_settings)
+        self.assertEquals(result, [])
+        
+    def testCurrentOne(self):
+        self.e_settings.current = (1, 0)
+        self.e_settings.settings["symmetries"] = [constants.SYM_180]
+        result = editor.compute_editor_of_cell([(1, 0)], self.puzzle, self.e_settings)
+        self.assertTrue((1, 0, "color_primary_active") in result)
+        
+    def testCurrentTwo(self):
+        self.e_settings.current = (3, 0)
+        self.e_settings.settings["symmetries"] = [constants.SYM_180]
+        cells = [(3, 0), (self.grid.width - 4, self.grid.height - 1)]
+        result = editor.compute_editor_of_cell(cells, self.puzzle, self.e_settings)
+        self.assertTrue((3, 0, "color_primary_active") in result)
+        cell = (self.grid.width - 4, self.grid.height - 1, "color_secondary_active")
+        self.assertTrue(cell in result)

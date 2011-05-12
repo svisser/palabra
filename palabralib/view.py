@@ -655,7 +655,7 @@ class GridView:
                 ctx_rel_line_to(rdx, rdy)
         ctx_stroke()
         
-    def render_warnings_of_cells(self, context, cells):
+    def render_warnings_of_cells(self, cells):
         """Determine undesired cells."""
         lengths = {}
         starts = {}

@@ -1396,3 +1396,11 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(s, result)
         s = g.generate_diagonals(1)
         self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 7)
+        
+    def testCellOfSlot(self):
+        g = Grid(5, 5)
+        g.set_block(0, 0, True)
+        self.assertEquals(g.get_cell_of_slot((3, 0, "across"), "start"), (1, 0))
+        self.assertEquals(g.get_cell_of_slot((3, 0, "across"), "end"), (4, 0))
+        self.assertEquals(g.get_cell_of_slot((3, 0, "down"), "start"), (3, 0))
+        self.assertEquals(g.get_cell_of_slot((3, 0, "down"), "end"), (3, 4))

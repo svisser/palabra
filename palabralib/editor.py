@@ -101,25 +101,13 @@ def transform_blocks(grid, symms, x, y, status):
     cells = [(x, y)] + apply_symmetry(grid, symms, x, y)
     return [(p, q, status) for p, q in cells if status != grid.data[q][p]["block"]]
 
-def compute_overlay(grid, word, x, y, d):
+def compute_word_cells(grid, word, x, y, d):
     """Compute the cells and the characters that are part of the overlay."""
     if word is None:
         return []
     p, q = grid.get_start_word(x, y, d)
     result = decompose_word(word, p, q, d)
     return [(x, y, c.upper()) for x, y, c in result if grid.data[y][x]["char"] == ""]
-
-def get_cell_of_slot(grid, slot, target):
-    if target == "start":
-        return grid.get_start_word(*slot)
-    elif target == "end":
-        return grid.get_end_word(*slot)
-    return None
-    
-def compute_insert(grid, word, x, y, d):
-    p, q = grid.get_start_word(x, y, d)
-    chars = decompose_word(word, p, q, d)
-    return [(x, y, c.upper()) for x, y, c in chars if grid.data[y][x]["char"] != c.upper()]
 
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
@@ -382,8 +370,8 @@ def cleanup_drawing_area(widget, ids):
         widget.disconnect(i)
 
 # cells = 1 cell or all cells of grid
-def _render_editor_of_cell(context, cells, puzzle, e_settings):
-    """Render everything editor related colors for cells."""
+def compute_editor_of_cell(cells, puzzle, e_settings):
+    """Compute cells that have editor related colors."""
     grid = puzzle.grid
     view = puzzle.view
     selection = e_settings.selection
@@ -392,46 +380,36 @@ def _render_editor_of_cell(context, cells, puzzle, e_settings):
 
     # warnings for undesired cells
     render = []
-    for wx, wy in view.render_warnings_of_cells(context, cells):
-        r, g, b = read_pref_color("color_warning")
-        render.append((wx, wy, r, g, b))
+    for wx, wy in view.render_warnings_of_cells(cells):
+        render.append((wx, wy, "color_warning"))
     
     # blacklist
     for p, q in cells:
         if view.settings["warn_blacklist"] and False: # TODO until ready
             for bx, by, direction, length in self.blacklist:
                 if direction == "across" and bx <= p < bx + length and by == q:
-                    render.append((p, q, r, g, b))
+                    render.append((p, q, "color_warning"))
                 elif direction == "down" and by <= q < by + length and bx == p:
-                    render.append((p, q, r, g, b))
+                    render.append((p, q, "color_warning"))
     
     # selection line
-    sx, sy, sdir = selection
-    r, g, b = read_pref_color("color_current_word")
-    startx, starty = grid.get_start_word(sx, sy, sdir)
-    for i, j in grid.in_direction(startx, starty, sdir):
-        if (i, j) in cells:
-            render.append((i, j, r, g, b))
+    render.extend([(i, j, "color_current_word") for i, j in grid.slot(*selection) if (i, j) in cells])
     
     cx, cy = current
-    symms = apply_symmetry(grid, symmetries, cx, cy)
     for p, q in cells:
         # selection cell
-        if (p, q) == (sx, sy):
-            r, g, b = read_pref_color("color_primary_selection")
-            render.append((p, q, r, g, b))
+        if (p, q) == (selection.x, selection.y):
+            render.append((p, q, "color_primary_selection"))
             
         # current cell and symmetrical cells
         if 0 <= cx < grid.width and 0 <= cy < grid.height:
-            if (p, q) in symms:
-                r, g, b = read_pref_color("color_secondary_active")
-                render.append((p, q, r, g, b))
+            if (p, q) in apply_symmetry(grid, symmetries, cx, cy):
+                render.append((p, q, "color_secondary_active"))
             
             # draw current cell last to prevent
             # symmetrical cells from overlapping it
             if (p, q) == current:
-                r, g, b = read_pref_color("color_primary_active")
-                render.append((p, q, r, g, b))
+                render.append((p, q, "color_primary_active"))
     return render
 
 def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
@@ -443,8 +421,12 @@ def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
     cs = [c for c in cells if grid.is_valid(*c)]
     view.render_bottom(context, cs)
     if editor:
-        r = _render_editor_of_cell(context, cs, puzzle, e_settings)
-        view.render_locations(context, r)
+        e_cells = compute_editor_of_cell(cs, puzzle, e_settings)
+        render = []
+        for x, y, code in e_cells:
+            r, g, b = read_pref_color(code)
+            render.append((x, y, r, g, b))
+        view.render_locations(context, render)
     view.render_top(context, cs)
     context = drawing_area.window.cairo_create()
     context.set_source(e_settings.pattern)
@@ -486,9 +468,11 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     elif key == gtk.keysyms.Tab:
         set_selection(window, puzzle, e_settings, other_dir=True)
     elif key == gtk.keysyms.Home:
-        set_selection(window, puzzle, e_settings, *get_cell_of_slot(grid, e_settings.selection, "start"))
+        cell = grid.get_cell_of_slot(e_settings.selection, "start")
+        set_selection(window, puzzle, e_settings, *cell)
     elif key == gtk.keysyms.End:
-        set_selection(window, puzzle, e_settings, *get_cell_of_slot(grid, e_settings.selection, "end"))
+        cell = grid.get_cell_of_slot(e_settings.selection, "end")
+        set_selection(window, puzzle, e_settings, *cell)
     elif key == gtk.keysyms.Left:
         on_arrow_key(window, puzzle, e_settings, -1, 0)
     elif key == gtk.keysyms.Up:
@@ -595,7 +579,7 @@ def set_overlay(window, puzzle, e_settings, word=None):
     If the word is None, the overlay will be cleared.
     """
     x, y, d = e_settings.selection
-    cells = compute_overlay(puzzle.grid, word, x, y, d)
+    cells = compute_word_cells(puzzle.grid, word, x, y, d)
     old = puzzle.view.overlay
     puzzle.view.overlay = cells
     render = [(x, y) for x, y, c in (old + cells)]
@@ -631,15 +615,12 @@ def on_backspace(window, puzzle, e_settings):
             #self._check_blacklist_for_cell(x, y)
             set_selection(window, puzzle, e_settings, x, y)
 
-def insert(window, puzzle, e_settings, word):
+def insert(window, grid, slot, word):
     """Insert a word in the selected slot."""
-    if e_settings.settings["locked_grid"]:
-        return
-    x, y, d = e_settings.selection
-    grid = puzzle.grid
+    x, y, d = slot
     if not grid.is_available(x, y):
         return
-    cells = compute_insert(grid, word, x, y, d)
+    cells = compute_word_cells(grid, word, x, y, d)
     if not cells:
         return
     window.transform_grid(transform.modify_chars, chars=cells)
@@ -868,7 +849,9 @@ class Editor(gtk.HBox):
         
     def insert(self, word):
         """Insert a word in the selected slot."""
-        insert(self.palabra_window, self.puzzle, e_settings, word)
+        if e_settings.settings["locked_grid"]:
+            return
+        insert(self.palabra_window, self.puzzle.grid, e_settings.selection, word)
             
     def set_overlay(self, word=None):
         """
