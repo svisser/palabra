@@ -18,6 +18,7 @@
 import os
 
 # application data
+TITLE = "Palabra"
 VERSION = "0.1.6"
 WEBSITE = "http://bitbucket.org/svisser/palabra"
 

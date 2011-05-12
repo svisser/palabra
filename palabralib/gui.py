@@ -82,7 +82,7 @@ def create_splash():
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
-        self.set_title("Palabra")
+        self.set_title(constants.TITLE)
         self.set_size_request(800, 600)
         
         self.puzzle_toggle_items = []
@@ -306,11 +306,11 @@ class PalabraWindow(gtk.Window):
             dialog.destroy()
             
     def update_title(self, path=None):
-        title = u"Unsaved puzzle - Palabra"
+        title = u"Unsaved puzzle - " + constants.TITLE
         if path is not None:
             filename_start = path.rfind(os.sep) + 1
             filename = path[filename_start:]
-            title = ''.join([filename, u" - Palabra"])
+            title = ''.join([filename, u" - ", constants.TITLE])
         self.set_title(title)
     
     def save_puzzle(self, save_as=False):
@@ -765,7 +765,7 @@ class PalabraWindow(gtk.Window):
     def update_window(self, content_changed=False, transform=constants.TRANSFORM_STRUCTURE):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:
-            self.set_title(u"Palabra")
+            self.set_title(constants.TITLE)
             self.pop_status(constants.STATUS_GRID)
         else:
             selection = self.get_selection()
@@ -776,7 +776,8 @@ class PalabraWindow(gtk.Window):
                 # if grid structure changes, set selection again
                 # (it may have changed)
                 if selection is not None:
-                    self.set_selection(*selection)
+                    sel_x, sel_y = selection
+                    self.set_selection(x=sel_x, y=sel_y)
             if selection is not None:
                 sel_x, sel_y = selection
                 valid = puzzle.grid.is_valid(sel_x, sel_y)
@@ -1230,8 +1231,8 @@ class PalabraWindow(gtk.Window):
         
     def on_help_about_activate(self, widget, data=None):
         dialog = gtk.AboutDialog()
-        dialog.set_title(u"About Palabra")
-        dialog.set_program_name(u"Palabra")
+        dialog.set_title(u"About " + constants.TITLE)
+        dialog.set_program_name(constants.TITLE)
         dialog.set_comments(u"Crossword creation software")
         dialog.set_version(constants.VERSION)
         dialog.set_authors([u"Simeon Visser <simeonvisser@gmail.com>"])
