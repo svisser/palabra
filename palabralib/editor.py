@@ -98,15 +98,11 @@ def transform_blocks(grid, symms, x, y, status):
     """Determine cells that need to modified a block at (x, y) and its symmetrical cells."""
     if not grid.is_valid(x, y):
         return []
-    blocks = []
-    if status != grid.data[y][x]["block"]:
-        blocks.append((x, y, status))
-    for p, q in apply_symmetry(grid, symms, x, y):
-        if status != grid.data[q][p]["block"]:
-            blocks.append((p, q, status))
-    return blocks
+    cells = [(x, y)] + apply_symmetry(grid, symms, x, y)
+    return [(p, q, status) for p, q in cells if status != grid.data[q][p]["block"]]
 
 def compute_overlay(grid, word, x, y, d):
+    """Compute the cells and the characters that are part of the overlay."""
     if word is None:
         return []
     p, q = grid.get_start_word(x, y, d)
