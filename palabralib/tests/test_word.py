@@ -272,4 +272,5 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(clist.find_by_pattern("*o*")), 2)
         self.assertEquals(len(clist.find_by_pattern("?o*")), 2)
         self.assertEquals(clist.find_by_pattern("W"), ["w"])
+        self.assertEquals(clist.find_by_pattern("w(!@@#$%??"), ["woo"])
         cPalabra.postprocess()

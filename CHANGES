@@ -10,6 +10,7 @@ This is a list of changes since the initial release of Palabra.
 * Added ability to show words of selected length in properties window.
 * Added various options for export to PDF.
 * Added button in new puzzle window for finding grids with specified words.
+* Added dialog for finding words using basic regex.
 
 0.1.5 (April 19, 2011)
 * XPF 1.0 is supported (except right-to-left editing)

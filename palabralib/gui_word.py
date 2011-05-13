@@ -24,6 +24,8 @@ class FindWordsDialog(gtk.Dialog):
     def __init__(self, parent):
         gtk.Dialog.__init__(self, u"Find word", parent, gtk.DIALOG_MODAL)
         self.wordlists = parent.wordlists
+        self.sort_option = 0
+        self.pattern = None
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
@@ -35,7 +37,7 @@ class FindWordsDialog(gtk.Dialog):
         self.store = gtk.ListStore(str)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("", cell, text=0)
+        column = gtk.TreeViewColumn("", cell, markup=0)
         self.tree.append_column(column)
         self.tree.set_headers_visible(False)
         scrolled_window = gtk.ScrolledWindow()
@@ -43,17 +45,36 @@ class FindWordsDialog(gtk.Dialog):
         scrolled_window.add(self.tree)
         scrolled_window.set_size_request(300, 300)
         main.pack_start(scrolled_window, True, True, 0)
+        
+        sort_hbox = gtk.HBox(False, 6)
+        label = gtk.Label("Sort by:")
+        label.set_alignment(0, 0.5)
+        sort_hbox.pack_start(label, False, False, 0)
+        def on_sort_changed(combo):
+            self.sort_option = combo.get_active()
+            self.launch_pattern(self.pattern)
+        combo = gtk.combo_box_new_text()
+        for t in ["Alphabet", "Length"]:
+            combo.append_text(t)
+        combo.set_active(self.sort_option)
+        combo.connect("changed", on_sort_changed)
+        sort_hbox.pack_start(combo, True, True, 0)
+        
+        main.pack_start(sort_hbox, False, False, 0)
         hbox.pack_start(main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words)
+        self.launch_pattern(None)
         
     def on_entry_changed(self, widget):
         glib.source_remove(self.timer)
+        self.launch_pattern(widget.get_text().strip())
+        
+    def launch_pattern(self, pattern=None):
         self.store.clear()
-        self.store.append(["Loading..."])
-        word = widget.get_text().strip()
-        self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, word)
+        if pattern is not None:
+            self.store.append(["Loading..."])
+        self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, pattern)
         
     def find_words(self, pattern=None):
         if pattern is None:
@@ -61,8 +82,10 @@ class FindWordsDialog(gtk.Dialog):
         result = []
         for p, wlist in self.wordlists.items():
             result.extend(wlist.find_by_pattern(pattern))
-        result.sort()
+        if self.sort_option == 0:
+            result.sort()
+        self.pattern = pattern
         self.store.clear()
         for s in result:
-            self.store.append([s])
+            self.store.append(['<span font_desc="Monospace 12">' + s + '</span>'])
         return False
