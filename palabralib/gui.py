@@ -63,7 +63,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import create_wordlists, WordListEditor
+from word import create_wordlists, WordListEditor, FindWordsDialog
 
 def create_splash():
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -1159,15 +1159,14 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def activate(item):
-            from word import AnagramDialog
-            w = AnagramDialog(self)
+            w = FindWordsDialog(self)
             w.show_all()
             w.run()
             w.destroy()
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"View partial words")
+            , u"Find words in wordlists according to a pattern")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem(u"_Partial Words", True)
+        item = gtk.MenuItem(u"_Find words", True)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)

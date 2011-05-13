@@ -19,6 +19,7 @@ import copy
 import glib
 import gtk
 import os
+import re
 import time
 from operator import itemgetter
 
@@ -27,6 +28,52 @@ import constants
 import preferences
 
 INPUT_DELAY = 500
+
+class FindWordsDialog(gtk.Dialog):
+    def __init__(self, parent):
+        gtk.Dialog.__init__(self, u"Find word", parent, gtk.DIALOG_MODAL)
+        self.wordlists = parent.wordlists
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        entry = gtk.Entry()
+        entry.connect("changed", self.on_buffer_changed)
+        main.pack_start(entry, False, False, 0)
+        self.store = gtk.ListStore(str)
+        self.tree = gtk.TreeView(self.store)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("", cell, text=0)
+        self.tree.append_column(column)
+        self.tree.set_headers_visible(False)
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add(self.tree)
+        scrolled_window.set_size_request(300, 300)
+        main.pack_start(scrolled_window, True, True, 0)
+        hbox.pack_start(main, True, True, 0)
+        self.vbox.pack_start(hbox, True, True, 0)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.timer = glib.timeout_add(INPUT_DELAY, self.find_words)
+        
+    def on_buffer_changed(self, widget):
+        glib.source_remove(self.timer)
+        self.store.clear()
+        self.store.append(["Loading..."])
+        word = widget.get_text().strip()
+        self.timer = glib.timeout_add(INPUT_DELAY, self.find_words, word)
+        
+    def find_words(self, pattern=None):
+        if pattern is not None:
+            result = []
+            for p, wlist in self.wordlists.items():
+                result.extend(wlist.find_by_pattern(pattern))
+            result.sort()
+            self.store.clear()
+            for s in result:
+                self.store.append([s])
+        return False
 
 class AnagramDialog(gtk.Dialog):
     def __init__(self, parent):
@@ -48,9 +95,9 @@ class AnagramDialog(gtk.Dialog):
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Contained words", cell, text=0)
         self.tree.append_column(column)
-        scrolled_window = gtk.ScrolledWindow(None, None)
+        scrolled_window = gtk.ScrolledWindow()
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add_with_viewport(self.tree)
+        scrolled_window.add(self.tree)
         scrolled_window.set_size_request(300, 300)
         main.pack_start(scrolled_window, True, True, 0)
         hbox.pack_start(main, True, True, 0)
@@ -59,23 +106,16 @@ class AnagramDialog(gtk.Dialog):
         
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
-        self.timer = glib.timeout_add(INPUT_DELAY, self.load_contained_words)
+        self.timer = glib.timeout_add(INPUT_DELAY, self.find_words)
         
     def on_buffer_changed(self, widget):
         glib.source_remove(self.timer)
         self.store.clear()
         self.store.append(["Loading..."])
         word = widget.get_text().strip()
-        self.timer = glib.timeout_add(INPUT_DELAY, self.load_contained_words, word)
+        self.timer = glib.timeout_add(INPUT_DELAY, self.find_words, word)
         
     def load_contained_words(self, word=None):
-        import pstats
-        import cProfile
-        cProfile.runctx('self._load_contained_words(word)', globals(), locals(), filename='fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('time').print_stats(20)
-
-    def _load_contained_words(self, word=None):
         if word is None:
             return
         self.store.clear()
@@ -84,10 +124,21 @@ class AnagramDialog(gtk.Dialog):
         result = [extract(counts, s) for s in strings]
         pairs = [(w1, ''.join(w2)) for w1, w2 in result if len(w2) > 1]
         f_result = verify_contained_words(self.wordlists, pairs)
-        self.store.clear()
-        for s1, s2 in f_result:
-            self.store.append([s1 + " (" + s2 + ")"])
+        self._display([s1 + " (" + s2 + ")" for s1, s2 in f_result])
         return False
+        
+    def find_words(self, pattern=None):
+        if pattern is not None:
+            result = []
+            for p, wlist in self.wordlists.items():
+                result.extend(wlist.find_by_pattern(pattern))
+            self._display(result)
+        return False
+        
+    def _display(self, strings):
+        self.store.clear()
+        for s in strings:
+            self.store.append([s])
 
 def extract(counts, s):
     chars = []
@@ -374,6 +425,23 @@ class CWordList:
             words = [item for item in words if " " not in item[0]]
         self.words = cPalabra.preprocess(words, index)
         self.index = index
+        
+    def find_by_pattern(self, pattern):
+        """
+        Find all words that match the specified pattern.
+        ? = one character
+        * = zero or more characters
+        """
+        ord_a, ord_z = ord("a"), ord("z")
+        pattern = ''.join([c for c in pattern if ord_a <= ord(c) <= ord_z or c in ['*', '?']])
+        pattern = pattern.replace("?", ".")
+        pattern = pattern.replace("*", ".*")
+        regex = pattern + "$"
+        result = []
+        for l, words in self.words.items():
+            prog = re.compile(regex)
+            result.extend([w for w in words if prog.match(w)])
+        return result
         
     def has_matches(self, length, constraints, words=None):
         """
