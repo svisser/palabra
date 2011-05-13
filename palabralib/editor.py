@@ -591,7 +591,13 @@ def compute_selection(prev, x=None, y=None, direction=None, other_dir=False):
     ndir = direction if direction is not None else prev[2]
     return nx, ny, ndir
 
-def set_selection(window, puzzle, e_settings, x=None, y=None, direction=None, full_update=True, other_dir=False):
+def set_selection(window, puzzle, e_settings
+    , x=None
+    , y=None
+    , direction=None
+    , full_update=True
+    , other_dir=False
+    , selection_changed=True):
     """
     Select (x, y), the direction or both.
     Use other_dir to switch the typing direction to the other direction.
@@ -607,7 +613,8 @@ def set_selection(window, puzzle, e_settings, x=None, y=None, direction=None, fu
         clue_tool.select(p, q, ndir)
     else:
         clue_tool.deselect()
-    set_overlay(window, puzzle, e_settings, None)
+    if selection_changed:
+        set_overlay(window, puzzle, e_settings, None)
     _render_cells(puzzle, grid.slot(*prev), e_settings, window.drawing_area, editor=False)
     e_settings.selection = e_settings.selection._replace(x=nx, y=ny, direction=ndir)
     _render_cells(puzzle, grid.slot(nx, ny, ndir), e_settings, window.drawing_area, editor=True)
@@ -959,12 +966,18 @@ class Editor(gtk.HBox):
         size = self.puzzle.view.properties.visual_size()
         self.palabra_window.drawing_area.set_size_request(*size)
 
-    def set_selection(self, x=None, y=None, direction=None, full_update=True, other_dir=False):
+    def set_selection(self
+        , x=None
+        , y=None
+        , direction=None
+        , full_update=True
+        , other_dir=False
+        , selection_changed=True):
         """
         Select (x, y), the direction or both.
         Use other_dir to switch the typing direction to the other direction.
         """
-        set_selection(self.palabra_window, self.puzzle, e_settings, x, y, direction, full_update, other_dir)
+        set_selection(self.palabra_window, self.puzzle, e_settings, x, y, direction, full_update, other_dir, selection_changed)
         
     def get_selection(self):
         """Return the (x, y) of the selected cell."""

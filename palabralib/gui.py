@@ -201,15 +201,20 @@ class PalabraWindow(gtk.Window):
         self.panel.pack_start(paned, True, True, 0)
         self.panel.show_all()
         
-    def get_selection(self):
-        try:
-            return self.editor.get_selection()
-        except AttributeError:
-            return None
+    def get_selection(self, slot=False):
+        x, y, d = e_settings.selection
+        if slot:
+            puzzle = self.puzzle_manager.current_puzzle
+            sx, sy = puzzle.grid.get_start_word(x, y, d)
+            return (x, y, d, puzzle.grid.word_length(sx, sy, d))
+        return (x, y)
             
-    def set_selection(self, x, y, direction=None):
+    def set_selection(self, x, y, direction=None, selection_changed=True):
         try:
-            self.editor.set_selection(x, y, direction)
+            self.editor.set_selection(x=x
+                , y=y
+                , direction=direction
+                , selection_changed=selection_changed)
         except AttributeError:
             pass
         
@@ -731,8 +736,10 @@ class PalabraWindow(gtk.Window):
             self.transform_grid(transform, x=sel_x, y=sel_y)
     
     def transform_grid(self, transform, **args):
+        pre_slot = self.get_selection(slot=True)
         puzzle = self.puzzle_manager.current_puzzle
         transform(puzzle, **args)
+        selection_changed = pre_slot != self.get_selection(slot=True)
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid))
         # TODO catch all, should not be needed
         if puzzle.grid.lines:
@@ -745,7 +752,7 @@ class PalabraWindow(gtk.Window):
             t = transform.type
         except AttributeError:
             t = constants.TRANSFORM_STRUCTURE
-        self.update_window(True, transform=t)        
+        self.update_window(True, transform=t, selection_changed=selection_changed)
         
     def transform_clues(self, transform, **args):
         puzzle = self.puzzle_manager.current_puzzle
@@ -762,7 +769,10 @@ class PalabraWindow(gtk.Window):
         self.undo_tool_item.set_sensitive(has_undo)
         self.redo_tool_item.set_sensitive(has_redo)
         
-    def update_window(self, content_changed=False, transform=constants.TRANSFORM_STRUCTURE):
+    def update_window(self
+        , content_changed=False
+        , transform=constants.TRANSFORM_STRUCTURE
+        , selection_changed=True):
         puzzle = self.puzzle_manager.current_puzzle
         if puzzle is None:
             self.set_title(constants.TITLE)
@@ -777,7 +787,7 @@ class PalabraWindow(gtk.Window):
                 # (it may have changed)
                 if selection is not None:
                     sel_x, sel_y = selection
-                    self.set_selection(x=sel_x, y=sel_y)
+                    self.set_selection(x=sel_x, y=sel_y, selection_changed=selection_changed)
             if selection is not None:
                 sel_x, sel_y = selection
                 valid = puzzle.grid.is_valid(sel_x, sel_y)
