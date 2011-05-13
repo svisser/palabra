@@ -181,10 +181,15 @@ def write_config_file(filename=constants.CONFIG_FILE_LOCATION):
     with open(filename, "w") as f:
         f.write(contents)
 
-def read_pref_color(key):
-    r = prefs[key + "_red"] / 65535.0
-    g = prefs[key + "_green"] / 65535.0
-    b = prefs[key + "_blue"] / 65535.0
+def read_pref_color(key, divide=True):
+    if divide:
+        r = prefs[key + "_red"] / 65535.0
+        g = prefs[key + "_green"] / 65535.0
+        b = prefs[key + "_blue"] / 65535.0
+    else:
+        r = prefs[key + "_red"]
+        g = prefs[key + "_green"]
+        b = prefs[key + "_blue"]
     return r, g, b
 
 def prefs_to_word_files(prefs):
@@ -340,9 +345,7 @@ class PreferencesWindow(gtk.Dialog):
         color_table.set_col_spacings(6)
         main.pack_start(color_table, False, False, 0)
         
-        color1 = gtk.gdk.Color(prefs["color_primary_selection_red"]
-            , prefs["color_primary_selection_green"]
-            , prefs["color_primary_selection_blue"])
+        color1 = gtk.gdk.Color(*read_pref_color(constants.COLOR_PRIMARY_SELECTION, False))
         self.color1_button = gtk.ColorButton()
         self.color1_button.set_color(color1)
         self.color1_button.connect("color-set"
@@ -353,9 +356,7 @@ class PreferencesWindow(gtk.Dialog):
         color_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
         color_table.attach(self.color1_button, 1, 2, 0, 1, 0, 0)
         
-        color3 = gtk.gdk.Color(prefs["color_current_word_red"]
-            , prefs["color_current_word_green"]
-            , prefs["color_current_word_blue"])
+        color3 = gtk.gdk.Color(*read_pref_color(constants.COLOR_CURRENT_WORD, False))
         self.color3_button = gtk.ColorButton()
         self.color3_button.set_color(color3)
         self.color3_button.connect("color-set"
@@ -366,9 +367,7 @@ class PreferencesWindow(gtk.Dialog):
         color_table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
         color_table.attach(self.color3_button, 1, 2, 1, 2, 0, 0)
         
-        color2 = gtk.gdk.Color(prefs["color_primary_active_red"]
-            , prefs["color_primary_active_green"]
-            , prefs["color_primary_active_blue"])
+        color2 = gtk.gdk.Color(*read_pref_color(constants.COLOR_PRIMARY_ACTIVE, False))
         self.color2_button = gtk.ColorButton()
         self.color2_button.set_color(color2)
         self.color2_button.connect("color-set"
@@ -379,9 +378,7 @@ class PreferencesWindow(gtk.Dialog):
         color_table.attach(align, 0, 1, 2, 3, gtk.FILL, gtk.FILL)
         color_table.attach(self.color2_button, 1, 2, 2, 3, 0, 0)
         
-        color4 = gtk.gdk.Color(prefs["color_secondary_active_red"]
-            , prefs["color_secondary_active_green"]
-            , prefs["color_secondary_active_blue"])
+        color4 = gtk.gdk.Color(*read_pref_color(constants.COLOR_SECONDARY_ACTIVE, False))
         self.color4_button = gtk.ColorButton()
         self.color4_button.set_color(color4)
         self.color4_button.connect("color-set"
