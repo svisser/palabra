@@ -162,7 +162,10 @@ def css_to_strs(css=None):
     return None if css is None else [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
 
 def search_wordlists(wordlists, length, constraints, more=None):
-    indices = [item.index for p, item in wordlists.items()]
+    if isinstance(wordlists, dict): # TODO remove
+        indices = [item.index for p, item in wordlists.items()]
+    elif isinstance(wordlists, list):
+        indices = [item.index for item in wordlists]
     result = cPalabra.search(length
         , cs_to_str(length, constraints)
         , css_to_strs(more), indices)

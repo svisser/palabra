@@ -21,7 +21,11 @@ import unittest
 
 import palabralib.cPalabra as cPalabra
 from palabralib.constants import MAX_WORD_LISTS, MAX_WORD_LENGTH
-from palabralib.word import CWordList, create_wordlists
+from palabralib.word import (
+    CWordList,
+    create_wordlists,
+    search_wordlists,
+)
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
@@ -244,7 +248,7 @@ class WordTestCase(unittest.TestCase):
     def testReadWordsWithRank(self):
         LOC = "palabralib/tests/test_wordlist.txt"
         with open(LOC, 'w') as f:
-            f.write("worda\nwordb,0\nwordc , 100")
+            f.write("worda\nwordb,0\nwordc , 100\nwordd, 500, is_wrong")
         clist = CWordList(LOC)
         words = [w for w, b in clist.search(5, [])]
         self.assertEquals(words, ["worda", "wordb", "wordc"])
@@ -256,10 +260,24 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(clist.search(8, [])), 1)
         cPalabra.postprocess()
         
-    def testCompound(self):
+    def testCompoundOne(self):
+        LOC = "palabralib/tests/test_wordlist.txt"
+        with open(LOC, 'w') as f:
+            f.write("word spaces")
+        clist = CWordList(LOC)
+        self.assertEquals(clist.search(10, []), [])
+        self.assertEquals(clist.search(11, []), [])
+        cPalabra.postprocess()
+        
+    def testCompoundTwo(self):
         clist = CWordList(["a a"])
-        self.assertEquals(len(clist.search(2, [])), 0)
-        self.assertEquals(len(clist.search(3, [])), 0)
+        self.assertEquals(clist.search(2, []), [])
+        self.assertEquals(clist.search(3, []), [])
+        cPalabra.postprocess()
+        
+    def testEmpty(self):
+        clist = CWordList([""])
+        self.assertEquals(clist.search(0, []), [])
         cPalabra.postprocess()
         
     def testFindPattern(self):
@@ -293,4 +311,19 @@ class WordTestCase(unittest.TestCase):
             prefs.append({'path': {'value': 'P'}, 'name': {'value': 'N'}})
         result = create_wordlists(prefs)
         self.assertEquals(len(result), MAX_WORD_LISTS)
+        cPalabra.postprocess()
+        
+    def testSearchWordlists(self):
+        w1 = CWordList(["worda"], index=0)
+        w2 = CWordList(["wordb"], index=1)
+        wordlists = [w1, w2]
+        words = [w for w, b in search_wordlists(wordlists, 5, [])]
+        self.assertTrue("worda" in words)
+        self.assertTrue("wordb" in words)
+        words = [w for w, b in search_wordlists([w1], 5, [])]
+        self.assertTrue("worda" in words)
+        self.assertTrue("wordb" not in words)
+        words = [w for w, b in search_wordlists([w2], 5, [])]
+        self.assertTrue("worda" not in words)
+        self.assertTrue("wordb" in words)
         cPalabra.postprocess()
