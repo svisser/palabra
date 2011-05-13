@@ -626,20 +626,21 @@ class GridView:
     def render_locations(self, context, cells):
         """Render one or more cells."""
         has_padding = self.settings["has_padding"]
+        mx, my = self.properties.margin
         if has_padding:
-            context.translate(*self.properties.margin)
+            context.translate(mx, my)
         screen_xs, screen_ys = self.comp_screen()
+        size = self.properties["cell", "size"]
         for x, y, r, g, b in cells:
             context.set_source_rgb(r, g, b)
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
             bx = screen_xs[x] - 0.5
             by = screen_ys[y] - 0.5
-            bsize = self.properties["cell", "size"] + 1
+            bsize = size + 1
             context.rectangle(bx, by, bsize, bsize)
             context.fill()
         if has_padding:
-            mx, my = self.properties.margin
             context.translate(-1 * mx, -1 * my)
         
     # needs manual queue_draw() on drawing_area afterwards
