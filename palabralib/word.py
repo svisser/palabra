@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
-import gobject
+import glib
 import gtk
 import os
 import time
@@ -25,6 +25,8 @@ from operator import itemgetter
 import cPalabra
 import constants
 import preferences
+
+INPUT_DELAY = 500
 
 class AnagramDialog(gtk.Dialog):
     def __init__(self, parent):
@@ -38,18 +40,18 @@ class AnagramDialog(gtk.Dialog):
         main.set_spacing(18)
         
         entry = gtk.Entry()
-        entry.connect("changed", self.on_input_changed)
+        entry.connect("changed", self.on_buffer_changed)
         main.pack_start(entry, False, False, 0)
         
         self.store = gtk.ListStore(str)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Partial words", cell, text=0)
+        column = gtk.TreeViewColumn(u"Contained words", cell, text=0)
         self.tree.append_column(column)
-        self.tree.set_size_request(300, 300)
         scrolled_window = gtk.ScrolledWindow(None, None)
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(self.tree)
+        scrolled_window.set_size_request(300, 300)
         main.pack_start(scrolled_window, True, True, 0)
         hbox.pack_start(main, True, True, 0)
         
@@ -57,33 +59,47 @@ class AnagramDialog(gtk.Dialog):
         
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
-    def on_input_changed(self, widget):
-        word = widget.get_text().strip()
-        if len(word) >= 3:
-            import pstats
-            import cProfile
-            cProfile.runctx('self.load_partial_words(word)', globals(), locals(), filename='fooprof')
-            p = pstats.Stats('fooprof')
-            p.sort_stats('time').print_stats(20)
-            p.print_callers()
+        self.timer = glib.timeout_add(INPUT_DELAY, self.load_contained_words)
         
-    def load_partial_words(self, word):
+    def on_buffer_changed(self, widget):
+        glib.source_remove(self.timer)
         self.store.clear()
         self.store.append(["Loading..."])
-        counts, strings = get_partial_words(self.wordlists, word)
-        counts = dict(counts)
+        word = widget.get_text().strip()
+        self.timer = glib.timeout_add(INPUT_DELAY, self.load_contained_words, word)
+        
+    def load_contained_words(self, word=None):
+        import pstats
+        import cProfile
+        cProfile.runctx('self._load_contained_words(word)', globals(), locals(), filename='fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('time').print_stats(20)
+
+    def _load_contained_words(self, word=None):
+        if word is None:
+            return
         self.store.clear()
-        for s in strings:
-            chars = []
-            s_counts = {}
-            for c in s:
-                if c not in s_counts:
-                    s_counts[c] = 1
-                else:
-                    s_counts[c] += 1
-                if c not in counts or s_counts[c] > counts[c]:
-                    chars.append(c)
-            self.store.append([s + " (" + ''.join(chars) + ")"])
+        counts, strings = get_contained_words(self.wordlists, word)
+        counts = dict(counts)
+        result = [extract(counts, s) for s in strings]
+        pairs = [(w1, ''.join(w2)) for w1, w2 in result if len(w2) > 1]
+        f_result = verify_contained_words(self.wordlists, pairs)
+        self.store.clear()
+        for s1, s2 in f_result:
+            self.store.append([s1 + " (" + s2 + ")"])
+        return False
+
+def extract(counts, s):
+    chars = []
+    s_counts = {}
+    for c in s:
+        if c not in s_counts:
+            s_counts[c] = 1
+        else:
+            s_counts[c] += 1
+        if c not in counts or s_counts[c] > counts[c]:
+            chars.append(c)
+    return s, chars
 
 class NewWordListDialog(gtk.Dialog):
     def __init__(self, parent):
@@ -283,13 +299,27 @@ def produce_word_counts(word):
             counts[c] += 1
     return counts
     
-def get_partial_words(wordlists, word):
+def get_contained_words(wordlists, word):
+    """
+    Produce all words w, where len(w) > len(word), such that
+    all characters of word are found in w.
+    """
     c_items = produce_word_counts(word).items()
     result = []
     for p, wlist in wordlists.items():
         for l in xrange(len(word) + 1, constants.MAX_WORD_LENGTH):
-            result.extend(cPalabra.get_partial_words(wlist.index, l, c_items, len(c_items)))
+            result.extend(cPalabra.get_contained_words(wlist.index, l, c_items, len(c_items)))
     return c_items, result
+    
+def verify_contained_words(wordlists, pairs):
+    """
+    Given pairs (a, b), produce all pairs such that all
+    characters of b are found in a word of a wordlist.
+    """
+    result = []
+    for p, wlist in wordlists.items():
+        result.extend(cPalabra.verify_contained_words(wlist.index, pairs))
+    return result
 
 def create_wordlists(word_files):
     wordlists = {}

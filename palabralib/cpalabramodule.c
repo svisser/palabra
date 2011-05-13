@@ -959,8 +959,23 @@ cPalabra_compute_counts(PyObject *self, PyObject *args) {
     return result;
 }
 
+int read_counts(char *counts_c, int *counts_i, PyObject *counts) {
+    Py_ssize_t n_counts = PyList_Size(counts);
+    int i;
+    for (i = 0; i < n_counts; i++) {
+        PyObject *c_item = PyList_GetItem(counts, i);
+        char *c_c;
+        const int c_i;
+        if (!PyArg_ParseTuple(c_item, "si", &c_c, &c_i))
+            return 0;
+        counts_c[i] = c_c[0];
+        counts_i[i] = c_i;
+    }
+    return 1;
+}
+
 static PyObject*
-cPalabra_get_partial_words(PyObject *self, PyObject *args) {
+cPalabra_get_contained_words(PyObject *self, PyObject *args) {
     const int index;
     const int length;
     PyObject *counts;
@@ -969,20 +984,13 @@ cPalabra_get_partial_words(PyObject *self, PyObject *args) {
         return NULL;
     char counts_c[counts_length];
     int counts_i[counts_length];
+    if (!read_counts(counts_c, counts_i, counts))
+        return NULL;
+    
     char cons_str[length + 1];
     int i;
     for (i = 0; i < length; i++) {
         cons_str[i] = '.';
-    }
-    Py_ssize_t n_counts = PyList_Size(counts);
-    for (i = 0; i < n_counts; i++) {
-        PyObject *c_item = PyList_GetItem(counts, i);
-        char *c_c;
-        const int c_i;
-        if (!PyArg_ParseTuple(c_item, "si", &c_c, &c_i))
-            return NULL;
-        counts_c[i] = c_c[0];
-        counts_i[i] = c_i;
     }
     cons_str[length] = '\0';
     PyObject *result = PyList_New(0);
@@ -1011,6 +1019,39 @@ cPalabra_get_partial_words(PyObject *self, PyObject *args) {
     return result;
 }
 
+static PyObject*
+cPalabra_verify_contained_words(PyObject *self, PyObject *args) {
+    const int index;
+    PyObject *pairs;
+    if (!PyArg_ParseTuple(args, "iO", &index, &pairs))
+        return NULL;
+    int test = 0;    
+    PyObject *result = PyList_New(0);
+    Py_ssize_t p;
+    for (p = 0; p < PyList_Size(pairs); p++) {
+        PyObject *pair = PyList_GET_ITEM(pairs, p);
+        PyObject *w1;
+        PyObject *w2;
+        if (!PyArg_ParseTuple(pair, "OO", &w1, &w2))
+            return NULL;
+        char *w1_word = PyString_AsString(w1);
+        char *w2_word = PyString_AsString(w2);
+        
+        test++;
+        PyObject *res = find_matches_i(index, w2_word);
+        Py_ssize_t mm;
+        for (mm = 0; mm < PyList_Size(res); mm++) {
+            char *mm_word = PyString_AS_STRING(PyList_GET_ITEM(res, mm));
+            PyObject* item = Py_BuildValue("(ss)", w1_word, mm_word);
+            PyList_Append(result, item);
+            Py_DECREF(item);
+        }
+        if (test == 1000) break;
+    }
+    printf("TEST %i\n", test);
+    return result;
+}
+
 static PyMethodDef methods[] = {
     {"has_matches",  cPalabra_has_matches, METH_VARARGS, "has_matches"},
     {"search", cPalabra_search, METH_VARARGS, "search"},
@@ -1023,7 +1064,8 @@ static PyMethodDef methods[] = {
     {"compute_render_lines", cPalabra_compute_render_lines, METH_VARARGS, "compute_render_lines"},
     {"compute_distances", cPalabra_compute_distances, METH_VARARGS, "compute_distances"},
     {"compute_counts", cPalabra_compute_counts, METH_VARARGS, "compute_counts"},
-    {"get_partial_words", cPalabra_get_partial_words, METH_VARARGS, "get_partial_words"},
+    {"get_contained_words", cPalabra_get_contained_words, METH_VARARGS, "get_contained_words"},
+    {"verify_contained_words", cPalabra_verify_contained_words, METH_VARARGS, "verify_contained_words"},
     {NULL, NULL, 0, NULL}
 };
 

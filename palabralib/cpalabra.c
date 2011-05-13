@@ -19,6 +19,67 @@ PyObject* find_matches(PyObject *list, Tptr p, char *s)
     return list;
 }
 
+void read_counts_str(char *counts_c, int *counts_i, char *s) {
+    const int length = strlen(s);
+    int i;
+    for (i = 0; i < length; i++) {
+        char c = *(s + i);
+        int j = 0;
+        for (j = 0; j < length; j++) {
+            if (counts_c[j] == ' ') {
+                counts_c[j] = c;
+                counts_i[j] = 1;
+                break;
+            } else if (counts_c[j] == c) {
+                counts_i[j]++;
+                break;
+            }
+        }
+    }
+}
+
+PyObject *find_matches_i(int index, char *s) {
+    const int length = strlen(s);
+    char counts_c[length];
+    int counts_i[length];
+    int k;
+    for (k = 0; k < length; k++) {
+        counts_c[k] = ' ';
+        counts_i[k] = 0;
+    }
+    read_counts_str(counts_c, counts_i, s);
+    char cons_str[length + 1];
+    int i;
+    for (i = 0; i < length; i++) {
+        cons_str[i] = '.';
+    }
+    cons_str[length] = '\0';
+    PyObject *result = PyList_New(0);
+    PyObject *mwords = PyList_New(0);
+    mwords = find_matches(mwords, trees[index][length], cons_str);
+    Py_ssize_t m;
+    for (m = 0; m < PyList_Size(mwords); m++) {
+        char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
+        int ok = 0;
+        for (i = 0; i < length; i++) {
+            int count = 0;
+            int j;
+            for (j = 0; j < length; j++) {
+                if (word[j] == counts_c[i]) count++;
+            }
+            if (count == counts_i[i]) {
+                ok++;
+            }
+        }
+        if (ok == length) {
+            PyObject *py_word = PyString_FromString(word);
+            PyList_Append(result, py_word);
+            Py_DECREF(py_word);
+        }
+    }
+    return result;
+}
+
 // 1 = ok, 0 = not ok
 int check_intersect(char *word, char **cs, int length, Sptr *results) {
     int c;
