@@ -1263,8 +1263,8 @@ def main(argv=None):
         print "Loading wordlists..."
         wordlists = create_wordlists(preferences.prefs["word_files"])
         print "Loading pattern files..."
-        patternfiles = constants.STANDARD_PATTERN_FILES + preferences.prefs["pattern_files"]
-        patterns = read_containers(patternfiles)
+        fs = constants.STANDARD_PATTERN_FILES + preferences.prefs[constants.PREF_PATTERN_FILES]
+        patterns = read_containers(fs)
         
         palabra = PalabraWindow()
         palabra.wordlists = wordlists

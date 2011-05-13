@@ -18,7 +18,6 @@
 import cPickle
 
 from grid import Grid
-import preferences
 
 class State:
     def __init__(self, source, clue_slot=None):

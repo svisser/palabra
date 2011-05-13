@@ -150,11 +150,14 @@ WARNINGS = [WARN_UNCHECKED, WARN_CONSECUTIVE, WARN_TWO_LETTER]
 COLOR_WARNING = "color_warning"
 COLOR_CURRENT_WORD = "color_current_word"
 COLOR_PRIMARY_SELECTION = "color_primary_selection"
-COLOR_SECONDARY_ACTIVE = "color_secondary_active"
 COLOR_PRIMARY_ACTIVE = "color_primary_active"
+COLOR_SECONDARY_ACTIVE = "color_secondary_active"
 
 INPUT_DELAY = 500
 
 PREF_COPY_BEFORE_SAVE = "backup_copy_before_save"
 PREF_INITIAL_HEIGHT = "new_initial_height"
 PREF_INITIAL_WIDTH = "new_initial_width"
+PREF_UNDO_STACK_SIZE = "undo_stack_size"
+PREF_UNDO_FINITE_STACK = "undo_use_finite_stack"
+PREF_PATTERN_FILES = "pattern_files"

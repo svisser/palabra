@@ -27,74 +27,98 @@ import grid
 
 import ConfigParser
 
-color_schemes_order = ["yellow", "red", "green", "blue", "purple", "cyan"]
-color_schemes = {}
-color_schemes["yellow"] = {"title": "Yellow"
-    ,"primary_selection": (65535, 65535, 16383)
-    ,"primary_active":    (65535, 65535, 16383)
-    ,"secondary_active":  (65535, 65535, 49152)
-    ,"current_word":      (65535, 65535, 49152)
-    }
-color_schemes["red"] = {"title": "Red"
-    ,"primary_selection": (65535, 16383, 16383)
-    ,"primary_active":    (65535, 16383, 16383)
-    ,"secondary_active":  (65535, 49152, 49152)
-    ,"current_word":      (65535, 49152, 49152)
-    }
-color_schemes["green"] = {"title": "Green"
-    ,"primary_selection": (16383, 65535, 16383)
-    ,"primary_active":    (16383, 65535, 16383)
-    ,"secondary_active":  (49152, 65535, 49152)
-    ,"current_word":      (49152, 65535, 49152)
-    }
-color_schemes["blue"] = {"title": "Blue"
-    ,"primary_selection": (16383, 16383, 65535)
-    ,"primary_active":    (16383, 16383, 65535)
-    ,"secondary_active":  (49152, 49152, 65535)
-    ,"current_word":      (49152, 49152, 65535)
-    }
-color_schemes["purple"] = {"title": "Purple"
-    ,"primary_selection": (65535, 16383, 65535)
-    ,"primary_active":    (65535, 16383, 65535)
-    ,"secondary_active":  (65535, 49152, 65535)
-    ,"current_word":      (65535, 49152, 65535)
-    }
-color_schemes["cyan"] = {"title": "Cyan"
-    ,"primary_selection": (16383, 65535, 65535)
-    ,"primary_active":    (16383, 65535, 65535)
-    ,"secondary_active":  (49152, 65535, 65535)
-    ,"current_word":      (49152, 65535, 65535)
-    }   
+ColorScheme = namedtuple('ColorScheme', ['title'
+    , 'primary_selection'
+    , 'primary_active'
+    , 'secondary_active'
+    , 'current_word'
+])
+_SCHEME_YELLOW = ColorScheme("Yellow"
+    , (65535, 65535, 16383)
+    , (65535, 65535, 16383)
+    , (65535, 65535, 49152)
+    , (65535, 65535, 49152)
+)
+_SCHEME_RED = ColorScheme("Red"
+    , (65535, 16383, 16383)
+    , (65535, 16383, 16383)
+    , (65535, 49152, 49152)
+    , (65535, 49152, 49152)
+)
+_SCHEME_GREEN = ColorScheme("Green"
+    , (16383, 65535, 16383)
+    , (16383, 65535, 16383)
+    , (49152, 65535, 49152)
+    , (49152, 65535, 49152)
+)
+_SCHEME_BLUE = ColorScheme("Blue"
+    , (16383, 16383, 65535)
+    , (16383, 16383, 65535)
+    , (49152, 49152, 65535)
+    , (49152, 49152, 65535)
+)
+_SCHEME_PURPLE = ColorScheme("Purple"
+    , (65535, 16383, 65535)
+    , (65535, 16383, 65535)
+    , (65535, 49152, 65535)
+    , (65535, 49152, 65535)
+)
+_SCHEME_CYAN = ColorScheme("Cyan"
+    , (16383, 65535, 65535)
+    , (16383, 65535, 65535)
+    , (49152, 65535, 65535)
+    , (49152, 65535, 65535)
+)
+
+COLORS = [('yellow', _SCHEME_YELLOW)
+    , ('red', _SCHEME_RED)
+    , ('green', _SCHEME_GREEN)
+    , ('blue', _SCHEME_BLUE)
+    , ('purple', _SCHEME_PURPLE)
+    , ('cyan', _SCHEME_CYAN)
+]
+D_COLORS = dict(COLORS)
 
 prefs = {}
 
 Preference = namedtuple('Preference', ['value', 'eval', 'type', 'itemtype'])
 
+_COLOR_ATTRS = [
+    (constants.COLOR_PRIMARY_SELECTION, 'primary_selection')
+    , (constants.COLOR_PRIMARY_ACTIVE, 'primary_active')
+    , (constants.COLOR_SECONDARY_ACTIVE, 'secondary_active')
+    , (constants.COLOR_CURRENT_WORD, 'current_word')
+]
+_INT_PREFS = [
+    (constants.PREF_INITIAL_HEIGHT, 15)
+    , (constants.PREF_INITIAL_WIDTH, 15)
+#    , (constants.PREF_UNDO_STACK_SIZE, 50)    
+]
+_BOOL_PREFS = [
+    (constants.PREF_COPY_BEFORE_SAVE, False)
+#    , (constants.PREF_UNDO_FINITE_STACK, True)
+]
+_OTHER_COLOR_PREFS = [
+    (constants.COLOR_WARNING, (65535, 49152, 49152))
+]
+
 DEFAULTS = {}
-DEFAULTS[constants.PREF_COPY_BEFORE_SAVE] = Preference(False, lambda s: "True" in s, "bool", None)
-DEFAULTS[constants.PREF_INITIAL_HEIGHT] = Preference(15, int, "int", None)
-DEFAULTS[constants.PREF_INITIAL_WIDTH] = Preference(15, int, "int", None)
-DEFAULTS["undo_stack_size"] = Preference(50, int, "int", None)
-DEFAULTS["undo_use_finite_stack"] = Preference(True, lambda s: "True" in s, "bool", None)
-DEFAULTS[constants.COLOR_PRIMARY_SELECTION + "_red"] = Preference(color_schemes["yellow"]["primary_selection"][0], int, "int", None)
-DEFAULTS[constants.COLOR_PRIMARY_SELECTION + "_green"] = Preference(color_schemes["yellow"]["primary_selection"][1], int, "int", None)
-DEFAULTS[constants.COLOR_PRIMARY_SELECTION + "_blue"] = Preference(color_schemes["yellow"]["primary_selection"][2], int, "int", None)
+for code, b in _BOOL_PREFS:
+    DEFAULTS[code] = Preference(b, lambda s: "True" in s, "bool", None)
+for code, n in _INT_PREFS:
+    DEFAULTS[code] = Preference(n, int, "int", None)
+for code, attr in _COLOR_ATTRS:
+    DEFAULTS[code + "_red"] = Preference(getattr(D_COLORS["yellow"], attr)[0], int, "int", None)
+    DEFAULTS[code + "_green"] = Preference(getattr(D_COLORS["yellow"], attr)[1], int, "int", None)
+    DEFAULTS[code + "_blue"] = Preference(getattr(D_COLORS["yellow"], attr)[2], int, "int", None)
 #DEFAULTS["color_secondary_selection_red"] = (65535, int)
 #DEFAULTS["color_secondary_selection_green"] = (65535, int)
 #DEFAULTS["color_secondary_selection_blue"] = (49152, int)
-DEFAULTS[constants.COLOR_PRIMARY_ACTIVE + "_red"] = Preference(color_schemes["yellow"]["primary_active"][0], int, "int", None)
-DEFAULTS[constants.COLOR_PRIMARY_ACTIVE + "_green"] = Preference(color_schemes["yellow"]["primary_active"][1], int, "int", None)
-DEFAULTS[constants.COLOR_PRIMARY_ACTIVE + "_blue"] = Preference(color_schemes["yellow"]["primary_active"][2], int, "int", None)
-DEFAULTS[constants.COLOR_SECONDARY_ACTIVE + "_red"] = Preference(color_schemes["yellow"]["secondary_active"][0], int, "int", None)
-DEFAULTS[constants.COLOR_SECONDARY_ACTIVE + "_green"] = Preference(color_schemes["yellow"]["secondary_active"][1], int, "int", None)
-DEFAULTS[constants.COLOR_SECONDARY_ACTIVE + "_blue"] = Preference(color_schemes["yellow"]["secondary_active"][2], int, "int", None)
-DEFAULTS[constants.COLOR_CURRENT_WORD + "_red"] = Preference(color_schemes["yellow"]["current_word"][0], int, "int", None)
-DEFAULTS[constants.COLOR_CURRENT_WORD + "_green"] = Preference(color_schemes["yellow"]["current_word"][1], int, "int", None)
-DEFAULTS[constants.COLOR_CURRENT_WORD + "_blue"] = Preference(color_schemes["yellow"]["current_word"][2], int, "int", None)
-DEFAULTS[constants.COLOR_WARNING + "_red"] = Preference(65535, int, "int", None)
-DEFAULTS[constants.COLOR_WARNING + "_green"] = Preference(49152, int, "int", None)
-DEFAULTS[constants.COLOR_WARNING + "_blue"] = Preference(49152, int, "int", None)
-DEFAULTS["pattern_files"] = Preference([], list, "list", "str")
+for code, color in _OTHER_COLOR_PREFS:
+    DEFAULTS[code + "_red"] = Preference(color[0], int, "int", None)
+    DEFAULTS[code + "_green"] = Preference(color[1], int, "int", None)
+    DEFAULTS[code + "_blue"] = Preference(color[2], int, "int", None)
+DEFAULTS[constants.PREF_PATTERN_FILES] = Preference([], list, "list", "str")
 DEFAULTS["word_files"] = Preference([{"name": {"type": "str", "value": "Default"}
     , "path": {"type": "str", "value": "/usr/share/dict/words"}}], list, "list", "file")
 
@@ -380,8 +404,8 @@ class PreferencesWindow(gtk.Dialog):
         colors_combo = gtk.combo_box_new_text()
         colors_combo.connect("changed", self.on_colors_combo_changed)
         colors_combo.append_text("")
-        for key in color_schemes_order:
-            colors_combo.append_text(color_schemes[key]["title"])
+        for key, value in COLORS:
+            colors_combo.append_text(value.title)
         colors_combo.set_active(0)
         
         align = gtk.Alignment(0, 0.5)
@@ -389,41 +413,26 @@ class PreferencesWindow(gtk.Dialog):
         align.add(gtk.Label(u"Load color scheme:"))
         scheme_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
         scheme_table.attach(colors_combo, 1, 2, 0, 1)
-        
         return main
         
     def on_colors_combo_changed(self, combo, data=None):
         index = combo.get_active()
         if index > 0:
-            scheme = color_schemes[color_schemes_order[index - 1]]
-            for key, value in scheme.items():
-                if key == "primary_selection":
-                    self.color1_button.set_color(gtk.gdk.Color(*value))
-                elif key == "primary_active":
-                    self.color2_button.set_color(gtk.gdk.Color(*value))
-                elif key == "secondary_active":
-                    self.color4_button.set_color(gtk.gdk.Color(*value))
-                elif key == "current_word":
-                    self.color3_button.set_color(gtk.gdk.Color(*value))
+            key, scheme = COLORS[index - 1]
+            self.color1_button.set_color(gtk.gdk.Color(*scheme.primary_selection))
+            self.color2_button.set_color(gtk.gdk.Color(*scheme.primary_active))
+            self.color4_button.set_color(gtk.gdk.Color(*scheme.secondary_active))
+            self.color3_button.set_color(gtk.gdk.Color(*scheme.current_word))
             self.refresh_color_preferences()
 
     def refresh_color_preferences(self):
-        color = self.color1_button.get_color()
-        prefs["color_primary_selection_red"] = color.red
-        prefs["color_primary_selection_green"] = color.green
-        prefs["color_primary_selection_blue"] = color.blue
-        
-        color = self.color2_button.get_color()
-        prefs["color_primary_active_red"] = color.red
-        prefs["color_primary_active_green"] = color.green
-        prefs["color_primary_active_blue"] = color.blue
-        
-        color = self.color4_button.get_color()
-        prefs["color_secondary_active_red"] = color.red
-        prefs["color_secondary_active_green"] = color.green
-        prefs["color_secondary_active_blue"] = color.blue
-        
-        color = self.color3_button.get_color()
-        prefs["color_current_word_red"] = color.red
-        prefs["color_current_word_green"] = color.green
-        prefs["color_current_word_blue"] = color.blue
+        """Load colors of buttons into preferences."""
+        BUTTONS = [(constants.COLOR_PRIMARY_SELECTION, self.color1_button)
+            , (constants.COLOR_PRIMARY_ACTIVE, self.color2_button)
+            , (constants.COLOR_SECONDARY_ACTIVE, self.color4_button)
+            , (constants.COLOR_CURRENT_WORD, self.color3_button)]
+        for code, button in BUTTONS:
+            color = button.get_color()
+            prefs[code + "_red"] = color.red
+            prefs[code + "_green"] = color.green
+            prefs[code + "_blue"] = color.blue

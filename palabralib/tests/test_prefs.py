@@ -42,6 +42,7 @@ class PrefsTestCase(unittest.TestCase):
         self._writeRead()
         for key, pref in DEFAULTS.items():
             self.assertEquals(preferences.prefs[key], pref.value)
+        self.assertEquals(len(preferences.prefs), len(DEFAULTS))
             
     def testBoolPref(self):
         preferences.prefs[constants.PREF_COPY_BEFORE_SAVE] = True
@@ -52,3 +53,8 @@ class PrefsTestCase(unittest.TestCase):
         preferences.prefs[constants.PREF_INITIAL_HEIGHT] = 27
         self._writeRead()
         self.assertEquals(preferences.prefs[constants.PREF_INITIAL_HEIGHT], 27)
+        
+    def testColor(self):
+        preferences.prefs[constants.COLOR_PRIMARY_SELECTION + "_red"] = 1234
+        self._writeRead()
+        self.assertEquals(preferences.prefs[constants.COLOR_PRIMARY_SELECTION + "_red"], 1234)
