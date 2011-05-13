@@ -261,3 +261,15 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(clist.search(2, [])), 0)
         self.assertEquals(len(clist.search(3, [])), 0)
         cPalabra.postprocess()
+        
+    def testFindPattern(self):
+        clist = CWordList(["w", "woo", "word"])
+        self.assertEquals(len(clist.find_by_pattern("*")), 3)
+        self.assertEquals(clist.find_by_pattern("?"), ["w"])
+        self.assertEquals(len(clist.find_by_pattern("w*")), 3)
+        self.assertEquals(clist.find_by_pattern("w*d"), ["word"])
+        self.assertEquals(clist.find_by_pattern("wo"), [])
+        self.assertEquals(len(clist.find_by_pattern("*o*")), 2)
+        self.assertEquals(len(clist.find_by_pattern("?o*")), 2)
+        self.assertEquals(clist.find_by_pattern("W"), ["w"])
+        cPalabra.postprocess()
