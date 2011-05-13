@@ -638,7 +638,6 @@ class GridView:
             bsize = self.properties["cell", "size"] + 1
             context.rectangle(bx, by, bsize, bsize)
             context.fill()
-            self.render_all_lines_of_cell(context, x, y, screen_xs, screen_ys)
         if has_padding:
             mx, my = self.properties.margin
             context.translate(-1 * mx, -1 * my)

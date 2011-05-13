@@ -22,6 +22,7 @@ import gtk
 import pangocairo
 import webbrowser
 from collections import namedtuple
+from itertools import chain
 
 import action
 from appearance import CellPropertiesDialog
@@ -465,7 +466,8 @@ def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
     view = puzzle.view
     view.select_mode(constants.VIEW_MODE_EDITOR)
     context = cairo.Context(e_settings.surface)
-    cs = [c for c in cells if puzzle.grid.is_valid(*c)]
+    width, height = puzzle.grid.size
+    cs = [(x, y) for x, y in cells if 0 <= x < width and 0 <= y < height]
     view.render_bottom(context, cs)
     if editor:
         e_cells = compute_editor_of_cell(cs, puzzle, e_settings)
@@ -612,17 +614,20 @@ def set_selection(window, puzzle, e_settings
     # if selection really changed compared to previous one, clear overlay
     if selection_changed:
         set_overlay(window, puzzle, e_settings, None)
-    _render_cells(puzzle, grid.slot(*prev), e_settings, window.drawing_area, editor=False)
     e_settings.selection = e_settings.selection._replace(x=nx, y=ny, direction=ndir)
-    _render_cells(puzzle, grid.slot(nx, ny, ndir), e_settings, window.drawing_area, editor=True)
     if full_update:
         window.update_window()
+    else:
+        cells = chain(grid.slot(*prev), grid.slot(nx, ny, ndir))
+        _render_cells(puzzle, cells, e_settings, window.drawing_area)
 
 def set_overlay(window, puzzle, e_settings, word=None):
     """
     Display the word in the selected slot without storing it the grid.
     If the word is None, the overlay will be cleared.
     """
+    if not puzzle.view.overlay and word is None:
+        return
     x, y, d = e_settings.selection
     cells = compute_word_cells(puzzle.grid, word, x, y, d)
     old = puzzle.view.overlay
