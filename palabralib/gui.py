@@ -118,7 +118,7 @@ class PalabraWindow(gtk.Window):
         self.connect("delete-event", self.on_delete)
         self.connect("destroy", lambda widget: quit())
         
-        self.wordlists = {}
+        self.wordlists = []
         self.patterns = None
         
         self.blacklist = None
@@ -1140,22 +1140,6 @@ class PalabraWindow(gtk.Window):
         clear_menu.set_submenu(menu)
         return clear_menu
         
-    def on_fill_grid(self):
-        # TODO use all wordlists
-        words = None
-        for path, item in self.wordlists.items():
-            wordlist = item["list"]
-            if wordlist is not None:
-                words = wordlist.words
-        grid = self.puzzle_manager.current_puzzle.grid
-        meta = [(x, y, 0 if d == 'across' else 1
-            , grid.word_length(x, y, d)
-            , grid.gather_constraints(x, y, d))
-            for n, x, y, d in grid.words(True, True)]
-        result = cPalabra.fill(grid, words, meta)
-        if len(result) > 0:
-            self.transform_grid(transform.modify_chars, chars=result[0])
-            
     def create_tools_menu(self):
         menu = gtk.Menu()
         
@@ -1283,9 +1267,7 @@ def main(argv=None):
         patterns = read_containers(patternfiles)
         
         palabra = PalabraWindow()
-        # TODO
-        for i, wlist in enumerate(wordlists):
-            palabra.wordlists[str(i)] = wlist
+        palabra.wordlists = wordlists
         palabra.patterns = patterns
         palabra.show_all()
         if has_splash:

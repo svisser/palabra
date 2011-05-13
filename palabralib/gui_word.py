@@ -88,7 +88,7 @@ class FindWordsDialog(gtk.Dialog):
         if pattern is None:
             return False
         result = []
-        for wlist in self.wordlists.values():
+        for wlist in self.wordlists:
             result.extend([(wlist.path, w) for w in wlist.find_by_pattern(pattern)])
         if self.sort_option == 0:
             result.sort(key=operator.itemgetter(1))
