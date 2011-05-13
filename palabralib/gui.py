@@ -49,7 +49,7 @@ from files import (
     export_puzzle,
     read_containers,
 )
-from gui.word import FindWordsDialog
+from gui_word import FindWordsDialog
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow

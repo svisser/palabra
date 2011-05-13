@@ -17,6 +17,7 @@
 
 import gtk
 import glib
+import operator
 
 import constants
 
@@ -31,19 +32,26 @@ class FindWordsDialog(gtk.Dialog):
         hbox.set_spacing(18)
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
+        label = gtk.Label("Use ? for an unknown letter and * for zero or more unknown letters.")
+        label.set_alignment(0, 0.5)
+        main.pack_start(label, False, False, 0)
         entry = gtk.Entry()
         entry.connect("changed", self.on_entry_changed)
         main.pack_start(entry, False, False, 0)
-        self.store = gtk.ListStore(str)
+        self.store = gtk.ListStore(str, str)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("", cell, markup=0)
+        column = gtk.TreeViewColumn("Word", cell, markup=0)
+        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        column.set_fixed_width(250)
         self.tree.append_column(column)
-        self.tree.set_headers_visible(False)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("Wordlist", cell, markup=1)
+        self.tree.append_column(column)
         scrolled_window = gtk.ScrolledWindow()
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add(self.tree)
-        scrolled_window.set_size_request(300, 300)
+        scrolled_window.set_size_request(-1, 300)
         main.pack_start(scrolled_window, True, True, 0)
         
         sort_hbox = gtk.HBox(False, 6)
@@ -73,7 +81,7 @@ class FindWordsDialog(gtk.Dialog):
     def launch_pattern(self, pattern=None):
         self.store.clear()
         if pattern is not None:
-            self.store.append(["Loading..."])
+            self.store.append(["Loading...", ''])
         self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, pattern)
         
     def find_words(self, pattern=None):
@@ -81,11 +89,13 @@ class FindWordsDialog(gtk.Dialog):
             return False
         result = []
         for p, wlist in self.wordlists.items():
-            result.extend(wlist.find_by_pattern(pattern))
+            result.extend([(p, w) for w in wlist.find_by_pattern(pattern)])
         if self.sort_option == 0:
-            result.sort()
+            result.sort(key=operator.itemgetter(1))
         self.pattern = pattern
         self.store.clear()
-        for s in result:
-            self.store.append(['<span font_desc="Monospace 12">' + s + '</span>'])
+        for p, s in result:
+            t1 = '<span font_desc="Monospace 12">' + s + '</span>'
+            t2 = '<span foreground="gray">' + p + '</span>'
+            self.store.append([t1, t2])
         return False
