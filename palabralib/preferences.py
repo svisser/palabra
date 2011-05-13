@@ -92,7 +92,7 @@ defaults[constants.COLOR_WARNING + "_red"] = (65535, int, "int")
 defaults[constants.COLOR_WARNING + "_green"] = (49152, int, "int")
 defaults[constants.COLOR_WARNING + "_blue"] = (49152, int, "int")
 defaults["pattern_files"] = ([], list, "list", "str")
-defaults["word_files"] = ([{"name": {"type": "str", "value": "default"}
+defaults["word_files"] = ([{"name": {"type": "str", "value": "Default"}
     , "path": {"type": "str", "value": "/usr/share/dict/words"}}], list, "list", "file")
 
 def read_config_file():

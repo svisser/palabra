@@ -89,14 +89,15 @@ class FindWordsDialog(gtk.Dialog):
             return False
         result = []
         for wlist in self.wordlists:
-            result.extend([(wlist.path, w) for w in wlist.find_by_pattern(pattern)])
+            name = wlist.name if wlist.name is not None else wlist.path
+            result.extend([(name, w) for w in wlist.find_by_pattern(pattern)])
         if self.sort_option == 0:
             result.sort(key=operator.itemgetter(1))
         self.pattern = pattern
         self.store.clear()
-        for path, s in result:
+        for name, s in result:
             t1 = '<span font_desc="Monospace 12">' + s + '</span>'
-            t2 = '<span foreground="gray">' + path + '</span>'
+            t2 = '<span foreground="gray">' + name + '</span>'
             self.store.append([t1, t2])
         return False
 
