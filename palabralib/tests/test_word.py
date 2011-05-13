@@ -37,27 +37,6 @@ class WordTestCase(unittest.TestCase):
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
         
-    def testHasMatchesOneWord(self):
-        clist = CWordList([self.word])
-        check = clist.has_matches(self.length, self.constraints)
-        self.assertEquals(check, True)
-        check = clist.has_matches(self.length, [])
-        self.assertEquals(check, True)
-        for i in xrange(self.length):
-            for j in xrange(i, self.length):
-                check = clist.has_matches(self.length, self.constraints[i:j])
-                self.assertEquals(check, True)
-        cPalabra.postprocess()
-                
-    def testHasMatchesMultiple(self):
-        clist = CWordList([self.word, self.word2])
-        cs = [(0, "p"), (1, "a")]
-        self.assertEquals(clist.has_matches(self.length, []), True)
-        self.assertEquals(clist.has_matches(self.length2, []), True)
-        self.assertEquals(clist.has_matches(self.length, cs), True)
-        self.assertEquals(clist.has_matches(self.length2, cs), True)
-        cPalabra.postprocess()
-    
     def testSearchBasic(self):
         clist = CWordList([self.word])
         for w in clist.search(self.length, []):
@@ -110,10 +89,6 @@ class WordTestCase(unittest.TestCase):
     
     def testBasic(self):
         self.basic = CWordList(["koala", "kangaroo", "aardvark", "loophole", "outgoing"])
-        for l in xrange(64):
-            self.assertEquals(self.basic.has_matches(l, []), l in [5, 8])
-        self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'a')]), True)
-        self.assertEquals(self.basic.has_matches(5, [(0, 'k'), (4, 'b')]), False)
         self.assertEquals([w for w in self.basic.search(5, [], None)], [("koala", True)])
         self.assertEquals([w for w in self.basic.search(6, [], None)], [])
         css_eight = [(0, 8, []), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
@@ -186,10 +161,6 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len([w for w in clist.search(4, [], None)]), 0)
         css = [(0, 4, []), (0, 5, []), (0, 6, []), (0, 7, [])]
         self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)
-        for x in xrange(35):
-            self.assertEquals(clist.has_matches(x, []), False)
-            for c in string.ascii_lowercase:
-                self.assertEquals(clist.has_matches(x, [(0, c)]), False)
         # identical css, for testing skipping in C code
         css = [(0, 4, []), (0, 5, []), (0, 4, []), (0, 5, [])]
         self.assertEquals(len([w for w in clist.search(4, [], css)]), 0)

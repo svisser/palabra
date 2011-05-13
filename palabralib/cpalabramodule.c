@@ -19,47 +19,6 @@
 #include <Python.h>
 #include "cpalabra.h"
 
-// return 1 if a word exists that matches the constraints, 0 otherwise
-static int
-cPalabra_calc_has_matches(PyObject *words, const int length, PyObject *constraints) {
-    char cs[MAX_WORD_LENGTH];
-    if (process_constraints(constraints, cs) == 1)
-        return 2;
-    Py_ssize_t w;
-    for (w = 0; w < PyList_Size(words); w++) {
-        PyObject *item = PyList_GetItem(words, w);
-        char *word = PyString_AsString(item);
-        if (length == PyString_Size(item) && check_constraints(word, cs)) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static PyObject*
-cPalabra_has_matches(PyObject *self, PyObject *args)
-{
-    PyObject *words;
-    const int length;
-    PyObject *constraints;
-    if (!PyArg_ParseTuple(args, "OiO", &words, &length, &constraints))
-        return NULL;
-    if (!PyList_Check(words)) {
-        PyErr_SetString(PyExc_TypeError, "cPalabra.has_matches expects a list as first argument.");
-        return NULL;
-    }
-    if (!PyList_Check(constraints)) {
-        PyErr_SetString(PyExc_TypeError, "cPalabra.has_matches expects a list as third argument");
-        return NULL;
-    }
-    int has_matches = cPalabra_calc_has_matches(words, length, constraints);
-    if (has_matches == 2)
-        return NULL;
-    if (has_matches == 1)
-        Py_RETURN_TRUE;
-    Py_RETURN_FALSE;
-}
-
 static PyObject*
 cPalabra_search(PyObject *self, PyObject *args) {
     const int length;
@@ -1053,7 +1012,6 @@ cPalabra_verify_contained_words(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef methods[] = {
-    {"has_matches",  cPalabra_has_matches, METH_VARARGS, "has_matches"},
     {"search", cPalabra_search, METH_VARARGS, "search"},
     {"preprocess", cPalabra_preprocess, METH_VARARGS, "preprocess"},
     {"postprocess", cPalabra_postprocess, METH_VARARGS, "postprocess"},

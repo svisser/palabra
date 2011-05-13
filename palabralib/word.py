@@ -216,13 +216,6 @@ class CWordList:
             result.extend([w for w in words if prog.match(w)])
         return result
         
-    def has_matches(self, length, constraints, words=None):
-        """
-        Return True when a word exists that matches the constraints and the length.
-        """
-        ws = self.words[length] if words is None else words
-        return cPalabra.has_matches(ws, length, constraints)
-        
     def search(self, length, constraints, more=None):
         """
         Search for words that match the given criteria.
