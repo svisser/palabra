@@ -49,6 +49,7 @@ from files import (
     export_puzzle,
     read_containers,
 )
+from gui_word import FindWordsDialog
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow
@@ -63,7 +64,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import create_wordlists, WordListEditor, FindWordsDialog
+from word import create_wordlists, WordListEditor
 
 def create_splash():
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)

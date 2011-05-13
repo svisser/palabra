@@ -152,3 +152,5 @@ COLOR_CURRENT_WORD = "color_current_word"
 COLOR_PRIMARY_SELECTION = "color_primary_selection"
 COLOR_SECONDARY_ACTIVE = "color_secondary_active"
 COLOR_PRIMARY_ACTIVE = "color_primary_active"
+
+INPUT_DELAY = 500

@@ -27,54 +27,6 @@ import cPalabra
 import constants
 import preferences
 
-INPUT_DELAY = 500
-
-class FindWordsDialog(gtk.Dialog):
-    def __init__(self, parent):
-        gtk.Dialog.__init__(self, u"Find word", parent, gtk.DIALOG_MODAL)
-        self.wordlists = parent.wordlists
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        main = gtk.VBox(False, 0)
-        main.set_spacing(18)
-        entry = gtk.Entry()
-        entry.connect("changed", self.on_buffer_changed)
-        main.pack_start(entry, False, False, 0)
-        self.store = gtk.ListStore(str)
-        self.tree = gtk.TreeView(self.store)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("", cell, text=0)
-        self.tree.append_column(column)
-        self.tree.set_headers_visible(False)
-        scrolled_window = gtk.ScrolledWindow()
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add(self.tree)
-        scrolled_window.set_size_request(300, 300)
-        main.pack_start(scrolled_window, True, True, 0)
-        hbox.pack_start(main, True, True, 0)
-        self.vbox.pack_start(hbox, True, True, 0)
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.timer = glib.timeout_add(INPUT_DELAY, self.find_words)
-        
-    def on_buffer_changed(self, widget):
-        glib.source_remove(self.timer)
-        self.store.clear()
-        self.store.append(["Loading..."])
-        word = widget.get_text().strip()
-        self.timer = glib.timeout_add(INPUT_DELAY, self.find_words, word)
-        
-    def find_words(self, pattern=None):
-        if pattern is not None:
-            result = []
-            for p, wlist in self.wordlists.items():
-                result.extend(wlist.find_by_pattern(pattern))
-            result.sort()
-            self.store.clear()
-            for s in result:
-                self.store.append([s])
-        return False
-
 class AnagramDialog(gtk.Dialog):
     def __init__(self, parent):
         gtk.Dialog.__init__(self, u"Find anagrams", parent, gtk.DIALOG_MODAL)
@@ -433,13 +385,13 @@ class CWordList:
         * = zero or more characters
         """
         ord_a, ord_z = ord("a"), ord("z")
+        pattern = pattern.lower()
         pattern = ''.join([c for c in pattern if ord_a <= ord(c) <= ord_z or c in ['*', '?']])
         pattern = pattern.replace("?", ".")
         pattern = pattern.replace("*", ".*")
-        regex = pattern + "$"
+        prog = re.compile(pattern + "$")
         result = []
         for l, words in self.words.items():
-            prog = re.compile(regex)
             result.extend([w for w in words if prog.match(w)])
         return result
         
