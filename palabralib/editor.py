@@ -555,13 +555,9 @@ def on_typing(window, puzzle, keyval, e_settings):
                     , y=y
                     , next_char=c)
             #self._check_blacklist_for_cell(x, y)
-    nx = x + (1 if direction == "across" else 0)
-    ny = y + (1 if direction == "down" else 0)
-    cells = [(x, y)]
-    if grid.is_available(nx, ny):
-        e_settings.selection = e_settings.selection._replace(x=nx, y=ny)
-        cells += [(nx, ny)]
-    _render_cells(puzzle, cells, e_settings, window.drawing_area)
+    dx = 1 if direction == "across" else 0
+    dy = 1 if direction == "down" else 0
+    apply_selection_delta(window, puzzle, e_settings, dx, dy)
 
 def r_transform_blocks(window, puzzle, e_settings, x, y, status):
     """Place or remove a block at (x, y) and its symmetrical cells."""
@@ -613,6 +609,7 @@ def set_selection(window, puzzle, e_settings
         clue_tool.select(p, q, ndir)
     else:
         clue_tool.deselect()
+    # if selection really changed compared to previous one, clear overlay
     if selection_changed:
         set_overlay(window, puzzle, e_settings, None)
     _render_cells(puzzle, grid.slot(*prev), e_settings, window.drawing_area, editor=False)
@@ -656,7 +653,7 @@ def on_backspace(window, puzzle, e_settings):
         if direction == "across":
             x -= 1
         elif direction == "down":
-            y -=1
+            y -= 1
         if grid.is_available(x, y):
             if grid.data[y][x]["char"] != "":
                 transform_grid(modify_char, x=x, y=y, next_char="")
