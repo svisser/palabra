@@ -49,7 +49,7 @@ from files import (
     export_puzzle,
     read_containers,
 )
-from gui_word import FindWordsDialog
+from gui_word import FindWordsDialog, WordListEditor
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow
@@ -64,7 +64,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import create_wordlists, WordListEditor
+from word import create_wordlists
 
 def create_splash():
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -1283,7 +1283,9 @@ def main(argv=None):
         patterns = read_containers(patternfiles)
         
         palabra = PalabraWindow()
-        palabra.wordlists.update(wordlists)
+        # TODO
+        for i, wlist in enumerate(wordlists):
+            palabra.wordlists[str(i)] = wlist
         palabra.patterns = patterns
         palabra.show_all()
         if has_splash:

@@ -166,6 +166,16 @@ def read_pref_color(key):
     b = prefs[key + "_blue"] / 65535.0
     return r, g, b
 
+def prefs_to_word_files(prefs):
+    files = []
+    for i, data in enumerate(prefs):
+        if i >= constants.MAX_WORD_LISTS:
+            break
+        name = data["name"]["value"]
+        path = data["path"]["value"]
+        files.append((i, path, name))
+    return files
+
 class PreferencesWindow(gtk.Dialog):
     def __init__(self, palabra_window):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT

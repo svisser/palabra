@@ -20,8 +20,8 @@ import string
 import unittest
 
 import palabralib.cPalabra as cPalabra
-from palabralib.constants import MAX_WORD_LENGTH
-from palabralib.word import CWordList
+from palabralib.constants import MAX_WORD_LISTS, MAX_WORD_LENGTH
+from palabralib.word import CWordList, create_wordlists
 
 class WordTestCase(unittest.TestCase):
     def setUp(self):
@@ -273,4 +273,24 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(clist.find_by_pattern("?o*")), 2)
         self.assertEquals(clist.find_by_pattern("W"), ["w"])
         self.assertEquals(clist.find_by_pattern("w(!@@#$%??"), ["woo"])
+        cPalabra.postprocess()
+        
+    def testCreateWordLists(self):
+        w1 = {'path': {'value': '/the/path'}, 'name': {'value': 'the name'}}
+        w2 = {'path': {'value': '/somewhere/else'}, 'name': {'value': 'the name 2'}}
+        prefs = [w1, w2]
+        result = create_wordlists(prefs)
+        self.assertEquals(len(result), 2)
+        self.assertEquals(result[0].name, "the name")
+        self.assertEquals(result[0].path, "/the/path")
+        self.assertEquals(result[1].name, "the name 2")
+        self.assertEquals(result[1].path, "/somewhere/else")
+        self.assertTrue(result[0].index != result[1].index)
+        
+    def testCreateWordListsCapAtMax(self):
+        prefs = []
+        for n in xrange(MAX_WORD_LISTS + 10):
+            prefs.append({'path': {'value': 'P'}, 'name': {'value': 'N'}})
+        result = create_wordlists(prefs)
+        self.assertEquals(len(result), MAX_WORD_LISTS)
         cPalabra.postprocess()
