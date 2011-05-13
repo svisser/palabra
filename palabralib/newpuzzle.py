@@ -40,8 +40,8 @@ class SizeComponent(gtk.VBox):
         
         size_vbox = gtk.VBox(False, 0)
         
-        initial_width = preferences.prefs["new_initial_width"]
-        initial_height = preferences.prefs["new_initial_height"]
+        initial_width = preferences.prefs[constants.PREF_INITIAL_WIDTH]
+        initial_height = preferences.prefs[constants.PREF_INITIAL_HEIGHT]
         
         adj = gtk.Adjustment(initial_width
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)

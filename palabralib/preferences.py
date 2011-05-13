@@ -17,6 +17,7 @@
 
 import gtk
 import os
+from collections import namedtuple
 
 from lxml import etree
 
@@ -67,38 +68,40 @@ color_schemes["cyan"] = {"title": "Cyan"
 
 prefs = {}
 
-defaults = {}
-defaults["backup_copy_before_save"] = (False, lambda s: "True" in s, "bool")
-defaults["new_initial_height"] = (15, int, "int")
-defaults["new_initial_width"] = (15, int, "int")
-defaults["undo_stack_size"] = (50, int, "int")
-defaults["undo_use_finite_stack"] = (True, lambda s: "True" in s, "bool")
-defaults[constants.COLOR_PRIMARY_SELECTION + "_red"] = (color_schemes["yellow"]["primary_selection"][0], int, "int")
-defaults[constants.COLOR_PRIMARY_SELECTION + "_green"] = (color_schemes["yellow"]["primary_selection"][1], int, "int")
-defaults[constants.COLOR_PRIMARY_SELECTION + "_blue"] = (color_schemes["yellow"]["primary_selection"][2], int, "int")
-#defaults["color_secondary_selection_red"] = (65535, int)
-#defaults["color_secondary_selection_green"] = (65535, int)
-#defaults["color_secondary_selection_blue"] = (49152, int)
-defaults[constants.COLOR_PRIMARY_ACTIVE + "_red"] = (color_schemes["yellow"]["primary_active"][0], int, "int")
-defaults[constants.COLOR_PRIMARY_ACTIVE + "_green"] = (color_schemes["yellow"]["primary_active"][1], int, "int")
-defaults[constants.COLOR_PRIMARY_ACTIVE + "_blue"] = (color_schemes["yellow"]["primary_active"][2], int, "int")
-defaults[constants.COLOR_SECONDARY_ACTIVE + "_red"] = (color_schemes["yellow"]["secondary_active"][0], int, "int")
-defaults[constants.COLOR_SECONDARY_ACTIVE + "_green"] = (color_schemes["yellow"]["secondary_active"][1], int, "int")
-defaults[constants.COLOR_SECONDARY_ACTIVE + "_blue"] = (color_schemes["yellow"]["secondary_active"][2], int, "int")
-defaults[constants.COLOR_CURRENT_WORD + "_red"] = (color_schemes["yellow"]["current_word"][0], int, "int")
-defaults[constants.COLOR_CURRENT_WORD + "_green"] = (color_schemes["yellow"]["current_word"][1], int, "int")
-defaults[constants.COLOR_CURRENT_WORD + "_blue"] = (color_schemes["yellow"]["current_word"][2], int, "int")
-defaults[constants.COLOR_WARNING + "_red"] = (65535, int, "int")
-defaults[constants.COLOR_WARNING + "_green"] = (49152, int, "int")
-defaults[constants.COLOR_WARNING + "_blue"] = (49152, int, "int")
-defaults["pattern_files"] = ([], list, "list", "str")
-defaults["word_files"] = ([{"name": {"type": "str", "value": "Default"}
+Preference = namedtuple('Preference', ['value', 'eval', 'type', 'itemtype'])
+
+DEFAULTS = {}
+DEFAULTS[constants.PREF_COPY_BEFORE_SAVE] = Preference(False, lambda s: "True" in s, "bool", None)
+DEFAULTS[constants.PREF_INITIAL_HEIGHT] = Preference(15, int, "int", None)
+DEFAULTS[constants.PREF_INITIAL_WIDTH] = Preference(15, int, "int", None)
+DEFAULTS["undo_stack_size"] = Preference(50, int, "int", None)
+DEFAULTS["undo_use_finite_stack"] = Preference(True, lambda s: "True" in s, "bool", None)
+DEFAULTS[constants.COLOR_PRIMARY_SELECTION + "_red"] = Preference(color_schemes["yellow"]["primary_selection"][0], int, "int", None)
+DEFAULTS[constants.COLOR_PRIMARY_SELECTION + "_green"] = Preference(color_schemes["yellow"]["primary_selection"][1], int, "int", None)
+DEFAULTS[constants.COLOR_PRIMARY_SELECTION + "_blue"] = Preference(color_schemes["yellow"]["primary_selection"][2], int, "int", None)
+#DEFAULTS["color_secondary_selection_red"] = (65535, int)
+#DEFAULTS["color_secondary_selection_green"] = (65535, int)
+#DEFAULTS["color_secondary_selection_blue"] = (49152, int)
+DEFAULTS[constants.COLOR_PRIMARY_ACTIVE + "_red"] = Preference(color_schemes["yellow"]["primary_active"][0], int, "int", None)
+DEFAULTS[constants.COLOR_PRIMARY_ACTIVE + "_green"] = Preference(color_schemes["yellow"]["primary_active"][1], int, "int", None)
+DEFAULTS[constants.COLOR_PRIMARY_ACTIVE + "_blue"] = Preference(color_schemes["yellow"]["primary_active"][2], int, "int", None)
+DEFAULTS[constants.COLOR_SECONDARY_ACTIVE + "_red"] = Preference(color_schemes["yellow"]["secondary_active"][0], int, "int", None)
+DEFAULTS[constants.COLOR_SECONDARY_ACTIVE + "_green"] = Preference(color_schemes["yellow"]["secondary_active"][1], int, "int", None)
+DEFAULTS[constants.COLOR_SECONDARY_ACTIVE + "_blue"] = Preference(color_schemes["yellow"]["secondary_active"][2], int, "int", None)
+DEFAULTS[constants.COLOR_CURRENT_WORD + "_red"] = Preference(color_schemes["yellow"]["current_word"][0], int, "int", None)
+DEFAULTS[constants.COLOR_CURRENT_WORD + "_green"] = Preference(color_schemes["yellow"]["current_word"][1], int, "int", None)
+DEFAULTS[constants.COLOR_CURRENT_WORD + "_blue"] = Preference(color_schemes["yellow"]["current_word"][2], int, "int", None)
+DEFAULTS[constants.COLOR_WARNING + "_red"] = Preference(65535, int, "int", None)
+DEFAULTS[constants.COLOR_WARNING + "_green"] = Preference(49152, int, "int", None)
+DEFAULTS[constants.COLOR_WARNING + "_blue"] = Preference(49152, int, "int", None)
+DEFAULTS["pattern_files"] = Preference([], list, "list", "str")
+DEFAULTS["word_files"] = Preference([{"name": {"type": "str", "value": "Default"}
     , "path": {"type": "str", "value": "/usr/share/dict/words"}}], list, "list", "file")
 
-def read_config_file():
+def read_config_file(filename=constants.CONFIG_FILE_LOCATION):
     props = {}
     try:
-        doc = etree.parse(constants.CONFIG_FILE_LOCATION)
+        doc = etree.parse(filename)
         root = doc.getroot()
         version = root.get("version")
         for p in root:
@@ -120,45 +123,39 @@ def read_config_file():
                 props[name] = values
     except (etree.XMLSyntaxError, IOError):
         print "Warning: No configuration file found, using defaults instead."
-    for key, value in defaults.items():
-        prefs[key] = value[1](props[key]) if key in props else value[0]
+    for key, pref in DEFAULTS.items():
+        prefs[key] = pref.eval(props[key]) if key in props else value[0]
 
-def write_config_file():
+def write_config_file(filename=constants.CONFIG_FILE_LOCATION):
     root = etree.Element("palabra-preferences")
     root.set("version", constants.VERSION)
-    
-    keys = defaults.keys()
+    keys = DEFAULTS.keys()
     keys.sort()
     for key in keys:
+        pref = DEFAULTS[key]
         e = etree.SubElement(root, "preference")
-        
-        t = defaults[key][2]
-        e.set("type", t)
+        e.set("type", pref.type)
         e.set("name", key)
-        
-        data = prefs[key] if key in prefs else defaults[key][0]
-        if t in ["int", "bool"]:
+        data = prefs[key] if key in prefs else pref.value
+        if pref.type in ["int", "bool"]:
             e.text = str(data)
-        elif t == "list":
+        elif pref.type == "list":
             for v in data:
                 f = etree.SubElement(e, "preference-item")
-                f.set("type", defaults[key][3])
-                if defaults[key][3] == "str":
+                f.set("type", pref.itemtype)
+                if pref.itemtype == "str":
                     f.text = str(v)
-                elif defaults[key][3] == "file":
+                elif pref.itemtype == "file":
                     for k0, v0 in v.items():
                         g = etree.SubElement(f, "preference-item")
                         g.set("name", k0)
                         g.set("type", v0["type"])
                         g.text = v0["value"]
-    
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
         os.mkdir(constants.APPLICATION_DIRECTORY)
-    
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    f = open(constants.CONFIG_FILE_LOCATION, "w")
-    f.write(contents)
-    f.close()
+    with open(filename, "w") as f:
+        f.write(contents)
 
 def read_pref_color(key):
     r = prefs[key + "_red"] / 65535.0
@@ -263,15 +260,15 @@ class PreferencesWindow(gtk.Dialog):
         main.pack_start(size_table, False, False, 0)
         
         def on_new_width_changed(spinner):
-            prefs["new_initial_width"] = spinner.get_value_as_int()
-        adj = gtk.Adjustment(prefs["new_initial_width"]
+            prefs[constants.PREF_INITIAL_WIDTH] = spinner.get_value_as_int()
+        adj = gtk.Adjustment(prefs[constants.PREF_INITIAL_WIDTH]
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         new_width_spinner = gtk.SpinButton(adj, 0.0, 0)
         new_width_spinner.connect("value-changed", on_new_width_changed)
         
         def on_new_height_changed(spinner):
-            prefs["new_initial_height"] = spinner.get_value_as_int()
-        adj = gtk.Adjustment(prefs["new_initial_height"]
+            prefs[constants.PREF_INITIAL_HEIGHT] = spinner.get_value_as_int()
+        adj = gtk.Adjustment(prefs[constants.PREF_INITIAL_HEIGHT]
             , constants.MINIMUM_WIDTH, constants.MAXIMUM_WIDTH, 1, 0, 0)
         new_height_spinner = gtk.SpinButton(adj, 0.0, 0)
         new_height_spinner.connect("value-changed", on_new_height_changed)
@@ -294,9 +291,9 @@ class PreferencesWindow(gtk.Dialog):
         main.pack_start(label, False, False, 6)
         
         def callback(widget, data=None):
-            prefs["backup_copy_before_save"] = widget.get_active()
+            prefs[constants.PREF_COPY_BEFORE_SAVE] = widget.get_active()
         backup_button = gtk.CheckButton(u"Create a backup copy of files before saving")
-        backup_button.set_active(prefs["backup_copy_before_save"])
+        backup_button.set_active(prefs[constants.PREF_COPY_BEFORE_SAVE])
         backup_button.connect("toggled", callback)
         
         align = gtk.Alignment(0, 0.5)

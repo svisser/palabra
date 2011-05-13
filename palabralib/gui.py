@@ -321,7 +321,7 @@ class PalabraWindow(gtk.Window):
     
     def save_puzzle(self, save_as=False):
         puzzle = self.puzzle_manager.current_puzzle
-        backup = preferences.prefs["backup_copy_before_save"]
+        backup = preferences.prefs[constants.PREF_COPY_BEFORE_SAVE]
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
             title = u"Save puzzle"
             if save_as:
