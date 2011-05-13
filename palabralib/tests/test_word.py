@@ -318,12 +318,9 @@ class WordTestCase(unittest.TestCase):
         w2 = CWordList(["wordb"], index=1)
         wordlists = [w1, w2]
         words = [w for w, b in search_wordlists(wordlists, 5, [])]
-        self.assertTrue("worda" in words)
-        self.assertTrue("wordb" in words)
+        self.assertEquals(["worda", "wordb"], words)
         words = [w for w, b in search_wordlists([w1], 5, [])]
-        self.assertTrue("worda" in words)
-        self.assertTrue("wordb" not in words)
+        self.assertEquals(["worda"], words)
         words = [w for w, b in search_wordlists([w2], 5, [])]
-        self.assertTrue("worda" not in words)
-        self.assertTrue("wordb" in words)
+        self.assertEquals(["wordb"], words)
         cPalabra.postprocess()
