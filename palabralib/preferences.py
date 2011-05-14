@@ -82,6 +82,7 @@ D_COLORS = dict(COLORS)
 prefs = {}
 
 Preference = namedtuple('Preference', ['value', 'eval', 'type', 'itemtype'])
+PreferenceFile = namedtuple('PreferenceFile', ['path', 'name'])
 
 _COLOR_ATTRS = [
     (constants.COLOR_PRIMARY_SELECTION, 'primary_selection')
@@ -89,17 +90,27 @@ _COLOR_ATTRS = [
     , (constants.COLOR_SECONDARY_ACTIVE, 'secondary_active')
     , (constants.COLOR_CURRENT_WORD, 'current_word')
 ]
+_OTHER_COLOR_PREFS = [
+    (constants.COLOR_WARNING, (65535, 49152, 49152))
+]
 _INT_PREFS = [
     (constants.PREF_INITIAL_HEIGHT, 15)
     , (constants.PREF_INITIAL_WIDTH, 15)
 #    , (constants.PREF_UNDO_STACK_SIZE, 50)    
 ]
+for k, color in (_COLOR_ATTRS + _OTHER_COLOR_PREFS):
+    if isinstance(color, tuple):
+        r, g, b = color
+    else:
+        r, g, b = getattr(D_COLORS["yellow"], color)
+    _INT_PREFS.extend([(k + "_red", r), (k + "_green", g), (k + "_blue", b)])
 _BOOL_PREFS = [
     (constants.PREF_COPY_BEFORE_SAVE, False)
 #    , (constants.PREF_UNDO_FINITE_STACK, True)
 ]
-_OTHER_COLOR_PREFS = [
-    (constants.COLOR_WARNING, (65535, 49152, 49152))
+_FILE_PREFS = [
+    (constants.PREF_WORD_FILES, [PreferenceFile("/usr/share/dict/words", "Default")])
+    , (constants.PREF_PATTERN_FILES, [])
 ]
 
 DEFAULTS = {}
@@ -107,22 +118,31 @@ for code, b in _BOOL_PREFS:
     DEFAULTS[code] = Preference(b, lambda s: "True" in s, "bool", None)
 for code, n in _INT_PREFS:
     DEFAULTS[code] = Preference(n, int, "int", None)
-for code, attr in _COLOR_ATTRS:
-    DEFAULTS[code + "_red"] = Preference(getattr(D_COLORS["yellow"], attr)[0], int, "int", None)
-    DEFAULTS[code + "_green"] = Preference(getattr(D_COLORS["yellow"], attr)[1], int, "int", None)
-    DEFAULTS[code + "_blue"] = Preference(getattr(D_COLORS["yellow"], attr)[2], int, "int", None)
-#DEFAULTS["color_secondary_selection_red"] = (65535, int)
-#DEFAULTS["color_secondary_selection_green"] = (65535, int)
-#DEFAULTS["color_secondary_selection_blue"] = (49152, int)
-for code, color in _OTHER_COLOR_PREFS:
-    DEFAULTS[code + "_red"] = Preference(color[0], int, "int", None)
-    DEFAULTS[code + "_green"] = Preference(color[1], int, "int", None)
-    DEFAULTS[code + "_blue"] = Preference(color[2], int, "int", None)
-DEFAULTS[constants.PREF_PATTERN_FILES] = Preference([], list, "list", "str")
-DEFAULTS["word_files"] = Preference([{"name": {"type": "str", "value": "Default"}
-    , "path": {"type": "str", "value": "/usr/share/dict/words"}}], list, "list", "file")
+for code, files in _FILE_PREFS:
+    result = []
+    for f in files:
+        result.append({"path": {"type": "str", "value": f.path}
+            , "name": {"type": "str", "value": f.name}
+        })
+    DEFAULTS[code] = Preference(result, list, "list", "file")
 
-def read_config_file(filename=constants.CONFIG_FILE_LOCATION):
+def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
+    """
+    Read the user's configuration file if it exists.
+    Otherwise, use default values.
+    """
+    def parse_list(elem):
+        values = []
+        for c in elem:
+            if c.get("type") == "file":
+                value = {}
+                for c2 in c:
+                    d = {"type": c2.get("type"), "value": c2.text}
+                    value[c2.get("name")] = d
+            else:
+                value = c.text
+            values.append(value)
+        return values
     props = {}
     try:
         doc = etree.parse(filename)
@@ -134,23 +154,17 @@ def read_config_file(filename=constants.CONFIG_FILE_LOCATION):
             if t in ["int", "bool"]:
                 props[name] = p.text
             elif t == "list":
-                values = []
-                for child in p:
-                    ts = child.get("type")
-                    if ts == "file":
-                        value = {}
-                        for child2 in child:
-                            value[child2.get("name")] = {"type": child2.get("type"), "value": child2.text}
-                    else:
-                        value = child.text
-                    values.append(value)
-                props[name] = values
+                props[name] = parse_list(p)
     except (etree.XMLSyntaxError, IOError):
-        print "Warning: No configuration file found, using defaults instead."
+        if warnings:
+            print "Warning: No configuration file found, using defaults instead."
     for key, pref in DEFAULTS.items():
-        prefs[key] = pref.eval(props[key]) if key in props else value[0]
+        prefs[key] = pref.eval(props[key]) if key in props else pref.value
 
 def write_config_file(filename=constants.CONFIG_FILE_LOCATION):
+    """
+    Write the user's configuration file with the user's preferences or default values.
+    """
     root = etree.Element("palabra-preferences")
     root.set("version", constants.VERSION)
     keys = DEFAULTS.keys()
@@ -201,6 +215,12 @@ def prefs_to_word_files(prefs):
         path = data["path"]["value"]
         files.append((i, path, name))
     return files
+
+_COLOR_BUTTONS = [(constants.COLOR_PRIMARY_SELECTION, u"Selected cell:", 'color1_button')
+    , (constants.COLOR_CURRENT_WORD, u"Selected word:", 'color3_button')
+    , (constants.COLOR_PRIMARY_ACTIVE, u"Cell under mouse pointer:", 'color2_button')
+    , (constants.COLOR_SECONDARY_ACTIVE, u"Symmetrical cells:", 'color4_button')
+]
 
 class PreferencesWindow(gtk.Dialog):
     def __init__(self, palabra_window):
@@ -257,16 +277,12 @@ class PreferencesWindow(gtk.Dialog):
 
     def on_tree_clicked(self, treeview, event):
         if event.button == 1:
-            x = int(event.x)
-            y = int(event.y)
-            
+            x, y = int(event.x), int(event.y)
             item = treeview.get_path_at_pos(x, y)
             if item is not None:
                 path, col, cellx, celly = item
-                
                 if self.current_item is not None:
                     self.preference_window.remove(self.current_item)
-                
                 self._selection_component(path[0])
                 
     def _selection_component(self, index):
@@ -345,50 +361,18 @@ class PreferencesWindow(gtk.Dialog):
         color_table.set_col_spacings(6)
         main.pack_start(color_table, False, False, 0)
         
-        color1 = gtk.gdk.Color(*read_pref_color(constants.COLOR_PRIMARY_SELECTION, False))
-        self.color1_button = gtk.ColorButton()
-        self.color1_button.set_color(color1)
-        self.color1_button.connect("color-set"
-            , lambda button: self.refresh_color_preferences())
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label(u"Selected cell:"))
-        color_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
-        color_table.attach(self.color1_button, 1, 2, 0, 1, 0, 0)
-        
-        color3 = gtk.gdk.Color(*read_pref_color(constants.COLOR_CURRENT_WORD, False))
-        self.color3_button = gtk.ColorButton()
-        self.color3_button.set_color(color3)
-        self.color3_button.connect("color-set"
-            , lambda button: self.refresh_color_preferences())
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label(u"Selected word:"))
-        color_table.attach(align, 0, 1, 1, 2, gtk.FILL, gtk.FILL)
-        color_table.attach(self.color3_button, 1, 2, 1, 2, 0, 0)
-        
-        color2 = gtk.gdk.Color(*read_pref_color(constants.COLOR_PRIMARY_ACTIVE, False))
-        self.color2_button = gtk.ColorButton()
-        self.color2_button.set_color(color2)
-        self.color2_button.connect("color-set"
-            , lambda button: self.refresh_color_preferences())
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label(u"Cell under mouse pointer:"))
-        color_table.attach(align, 0, 1, 2, 3, gtk.FILL, gtk.FILL)
-        color_table.attach(self.color2_button, 1, 2, 2, 3, 0, 0)
-        
-        color4 = gtk.gdk.Color(*read_pref_color(constants.COLOR_SECONDARY_ACTIVE, False))
-        self.color4_button = gtk.ColorButton()
-        self.color4_button.set_color(color4)
-        self.color4_button.connect("color-set"
-            , lambda button: self.refresh_color_preferences())
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label(u"Symmetrical cells:"))
-        color_table.attach(align, 0, 1, 3, 4, gtk.FILL, gtk.FILL)
-        color_table.attach(self.color4_button, 1, 2, 3, 4, 0, 0)
-        
+        for i, (code, label, button) in enumerate(_COLOR_BUTTONS):
+            color = gtk.gdk.Color(*read_pref_color(code, False))
+            setattr(self, button, gtk.ColorButton())
+            getattr(self, button).set_color(color)
+            getattr(self, button).connect("color-set"
+                , lambda button: self.refresh_color_preferences())
+            align = gtk.Alignment(0, 0.5)
+            align.set_padding(0, 0, 12, 0)
+            align.add(gtk.Label(label))
+            color_table.attach(align, 0, 1, i, i + 1, gtk.FILL, gtk.FILL)
+            color_table.attach(getattr(self, button), 1, 2, i, i + 1, 0, 0)
+
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup(u"<b>Color schemes</b>")
@@ -424,12 +408,8 @@ class PreferencesWindow(gtk.Dialog):
 
     def refresh_color_preferences(self):
         """Load colors of buttons into preferences."""
-        BUTTONS = [(constants.COLOR_PRIMARY_SELECTION, self.color1_button)
-            , (constants.COLOR_PRIMARY_ACTIVE, self.color2_button)
-            , (constants.COLOR_SECONDARY_ACTIVE, self.color4_button)
-            , (constants.COLOR_CURRENT_WORD, self.color3_button)]
-        for code, button in BUTTONS:
-            color = button.get_color()
+        for code, label, button in _COLOR_BUTTONS:
+            color = getattr(self, button).get_color()
             prefs[code + "_red"] = color.red
             prefs[code + "_green"] = color.green
             prefs[code + "_blue"] = color.blue

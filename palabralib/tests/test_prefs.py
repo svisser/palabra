@@ -43,6 +43,11 @@ class PrefsTestCase(unittest.TestCase):
         for key, pref in DEFAULTS.items():
             self.assertEquals(preferences.prefs[key], pref.value)
         self.assertEquals(len(preferences.prefs), len(DEFAULTS))
+        
+    def testMissingFile(self):
+        read_config_file(filename="/does/not/exist", warnings=False)
+        for key, pref in DEFAULTS.items():
+            self.assertEquals(preferences.prefs[key], pref.value)
             
     def testBoolPref(self):
         preferences.prefs[constants.PREF_COPY_BEFORE_SAVE] = True
@@ -58,3 +63,16 @@ class PrefsTestCase(unittest.TestCase):
         preferences.prefs[constants.COLOR_PRIMARY_SELECTION + "_red"] = 1234
         self._writeRead()
         self.assertEquals(preferences.prefs[constants.COLOR_PRIMARY_SELECTION + "_red"], 1234)
+        
+    def testReadColor(self):
+        preferences.prefs["TEST_red"] = 12345.0
+        preferences.prefs["TEST_green"] = 23456.0
+        preferences.prefs["TEST_blue"] = 34567.0
+        r, g, b = preferences.read_pref_color("TEST", divide=True)
+        self.assertTrue(0 <= r <= 1)
+        self.assertTrue(0 <= g <= 1)
+        self.assertTrue(0 <= b <= 1)
+        r, g, b = preferences.read_pref_color("TEST", divide=False)
+        self.assertEquals(r, 12345.0)
+        self.assertEquals(g, 23456.0)
+        self.assertEquals(b, 34567.0)
