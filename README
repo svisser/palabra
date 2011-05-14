@@ -81,7 +81,7 @@ Jump to the last cell of a slot:
 File formats
 ============
 
-Palabra supports the file formats XPF and ipuz.
+Palabra supports the file formats XPF and ipuz (experimental).
 
 - XFP (http://xwordinfo.com/xpf)
 - ipuz (http://www.ipuz.org/)
@@ -90,8 +90,7 @@ ipuz is a trademark of Puzzazz, Inc., used with permission.
 
 Note: All information can currently be saved with XPF while
 not all information (such as explanations for clues) can currently
-be saved with ipuz. Furthermore, more testing is needed to assure
-full compliance with these standards.
+be saved with ipuz.
 
 Contact
 =======

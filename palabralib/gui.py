@@ -1161,7 +1161,7 @@ class PalabraWindow(gtk.Window):
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Find words in wordlists according to a pattern")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem(u"_Find words", True)
+        item = gtk.MenuItem(u"_Find words...", True)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)
