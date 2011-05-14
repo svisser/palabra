@@ -345,7 +345,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         a_count, d_count = len(stream["across"]), len(stream["down"])
         r_columns = []
         offset = 0
-        incl_a_header = incl_d_header = False
+        incl_a_header = False
+        incl_d_header = False
         clue_header_across = content["clue_header_across"]
         clue_header_down = content["clue_header_down"]
         clue_markup_across = content["clue_markup"]["across"]
@@ -360,10 +361,13 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             lay_get_pixel_size = layout.get_pixel_size
             lay_set_markup = layout.set_markup
             text = ''
-            done = totally_done = False
-            count = step_size = 32
-            has_a_header = has_d_header = False
+            done = False
+            totally_done = False
+            count = 32
+            step_size = 32
             while not done:
+                has_a_header = False
+                has_d_header = False
                 a_clues = []
                 d_clues = []
                 if offset > a_count:
@@ -397,7 +401,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 n_clues = len(a_clues + d_clues)
                 if l_h <= h:
                     if offset + n_clues == a_count + d_count:
-                        done = totally_done = True
+                        done = True
+                        totally_done = True
                     else:
                         count += step_size
                 elif l_h > h:
