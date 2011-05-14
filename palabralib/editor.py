@@ -32,7 +32,10 @@ from grid import Grid, decompose_word
 from preferences import read_pref_color
 import transform
 from view import GridPreview, DEFAULTS_CELL
-from word import CWordList, search_wordlists, analyze_words
+from word import (CWordList,
+    search_wordlists,
+    analyze_words,
+)
 import cPalabra
 
 DEFAULT_FILL_OPTIONS = {

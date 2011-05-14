@@ -154,22 +154,26 @@ def create_wordlists(prefs):
         files.append((i, data["path"]["value"], data["name"]["value"]))
     return [CWordList(path, index=i, name=name) for i, path, name in files]
 
-def cs_to_str(l, cs):
-    result = ['.' for i in xrange(l)]
-    for (i, c) in cs:
-        result[i] = c
-    return ''.join(result)
-
-def css_to_strs(css=None):
-    return None if css is None else [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
-
 def search_wordlists(wordlists, length, constraints, more=None):
+    """
+    Search the specified wordlists for words that match
+    the constraints and the given length.
+    """
+    def cs_to_str(l, cs):
+        result = ['.' for i in xrange(l)]
+        for (i, c) in cs:
+            result[i] = c
+        return ''.join(result)
+    def css_to_strs(css=None):
+        return None if css is None else [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
+    if isinstance(constraints, list):
+        constraints = cs_to_str(length, constraints)
+    if isinstance(more, list):
+        more = css_to_strs(more)
     indices = [item.index for item in wordlists]
-    result = cPalabra.search(length
-        , cs_to_str(length, constraints)
-        , css_to_strs(more), indices)
+    result = cPalabra.search(length, constraints, more, indices)
     if len(indices) > 1:
-        result.sort()
+        result.sort(key=itemgetter(0))
     return result
     
 def analyze_words(grid, g_words, g_cs, g_lengths, words):
@@ -238,6 +242,4 @@ class CWordList:
         
         Words are returned in alphabetical order.
         """
-        return cPalabra.search(length
-            , cs_to_str(length, constraints)
-            , css_to_strs(more), [self.index])
+        return search_wordlists([self], length, constraints, more)
