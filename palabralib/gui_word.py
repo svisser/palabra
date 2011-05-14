@@ -81,7 +81,7 @@ class FindWordsDialog(gtk.Dialog):
         
     def launch_pattern(self, pattern=None):
         self.store.clear()
-        if pattern is not None:
+        if pattern is not None and len(pattern) > 0:
             self.store.append(["Loading...", ''])
         self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, pattern)
         
