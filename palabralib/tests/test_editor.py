@@ -17,6 +17,7 @@
 
 import unittest
 
+import palabralib.cPalabra as cPalabra
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
 import palabralib.constants as constants
@@ -31,6 +32,7 @@ class EditorTestCase(unittest.TestCase):
         self.warnings = {}
         for w in constants.WARNINGS:
             self.warnings[w] = False
+        cPalabra.preprocess_all()
         
     def testCharSlots(self):
         slots = editor.get_char_slots(self.grid, 'K')
@@ -346,3 +348,38 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(l, 5)
         self.assertEquals(len(cs), 5)
         self.assertEquals(len(more), 5)
+        
+    def testAttempFill(self):
+        g = Grid(5, 5)
+        g2 = editor.attempt_fill(g, ["koala"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 5)
+        g = Grid(5, 5)
+        g2 = editor.attempt_fill(g, ["koala", "steam"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 10)
+        cPalabra.postprocess()
+        
+    def testAttempFillTwo(self):
+        g = Grid(5, 5)
+        g2 = editor.attempt_fill(g, ["doesnotfit"])
+        self.assertEquals(g, g2)
+        cPalabra.postprocess()
+        
+    def testAttempFillIntersect(self):
+        g = Grid(3, 3)
+        g.set_block(1, 1, True)
+        g.set_block(2, 2, True)
+        g2 = editor.attempt_fill(g, ["foo", "fix"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 5)
+        cPalabra.postprocess()
+        
+    def testAttemptFillIntersectTwo(self):
+        # A B C
+        # D   F
+        # E H G
+        g = Grid(3, 3)
+        g.set_block(1, 1, True)
+        g2 = editor.attempt_fill(g, ["abc", "ade", "cfg", "ehg"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 8)
+        cPalabra.postprocess()
+        
+    # also test for ["aab", "aab", "baa", "baa"]

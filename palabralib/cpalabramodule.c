@@ -83,6 +83,19 @@ cPalabra_search(PyObject *self, PyObject *args) {
 }
 
 static PyObject*
+cPalabra_preprocess_all(PyObject *self, PyObject *args) {
+    // make sure each tree is initialized
+    int n;
+    for (n = 0; n < MAX_WORD_LISTS + 1; n++) {
+        int m;
+        for (m = 0; m < MAX_WORD_LENGTH; m++) {
+            trees[n][m] = NULL;
+        }
+    }
+    return Py_None;
+}
+
+static PyObject*
 cPalabra_preprocess(PyObject *self, PyObject *args) {
     PyObject *words;
     const int index;
@@ -136,11 +149,12 @@ static PyObject*
 cPalabra_postprocess(PyObject *self, PyObject *args) {
     int i;
     for (i = 0; i < MAX_WORD_LISTS + 1; i++) {
+        if (trees[i] == NULL) continue;
         int m;
         for (m = 0; m < MAX_WORD_LENGTH; m++) {
             if (trees[i][m] != NULL) {
                 free_tree(trees[i][m]);
-                free(trees[i][m]);
+                PyMem_Free(trees[i][m]);
             }
         }
     }
@@ -306,6 +320,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         } else {
             index = find_slot(slots, n_slots, order);
         }
+        printf("Index: %i\n", index);
         if (index < 0) break;
         Slot *slot = &slots[index];
         if (DEBUG) {
@@ -318,34 +333,40 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         }
         
         char *cs_i[slot->length];
-        int offsets[slot->length];
-        for (m = 0; m < n_slots; m++) {
-            if (is_intersecting(slot, &slots[m])) {
-                int index = 0;
-                int offset = 0;
-                if (slot->dir == DIR_ACROSS) {
-                    index = slots[m].x - slot->x;
-                    offset = slot->y - slots[m].y;
-                } else {
-                    index = (&slots[m])->y - slot->y;
-                    offset = slot->x - (&slots[m])->x;
-                }
-                offsets[index] = offset;
-                cs_i[index] = get_constraints(cgrid, width, height, &slots[m]);
-            }
+        for (m = 0; m < slot->length; m++) {
+            cs_i[m] = NULL;
         }
+        int offsets[slot->length];
+        Sptr results[slot->length];
         int skipped[slot->length];
         int t;
         for (t = 0; t < slot->length; t++) {
             skipped[t] = 0;
+            results[t] = NULL;
         }
-        Sptr results[slot->length];
-        analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length);
+        if (!OPTION_NICE) {
+            for (m = 0; m < n_slots; m++) {
+                if (is_intersecting(slot, &slots[m])) {
+                    int index = 0;
+                    int offset = 0;
+                    if (slot->dir == DIR_ACROSS) {
+                        index = slots[m].x - slot->x;
+                        offset = slot->y - slots[m].y;
+                    } else {
+                        index = (&slots[m])->y - slot->y;
+                        offset = slot->x - (&slots[m])->x;
+                    }
+                    offsets[index] = offset;
+                    cs_i[index] = get_constraints(cgrid, width, height, &slots[m]);
+                }
+            }
+            analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length);
+        }
         
         int is_word_ok = 1;
         
         char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
-        //printf("Candidate BEFORE: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        printf("Candidate BEFORE: %s (%i %i %i) from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
         
         if (word && OPTION_DUPLICATE) {
             while (1) {
@@ -362,11 +383,13 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (!next) break;
             }
         }
-        //printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
-        PyMem_Free(cs);
+        if (cs != NULL) {
+            PyMem_Free(cs);
+        }
         for (m = 0; m < slot->length; m++) {
-            if (cs_i[m]) {
+            if (cs_i[m] != NULL) {
                 PyMem_Free(cs_i[m]);
             }
         }
@@ -378,6 +401,10 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             }
         }
         
+        int is_backtrack = 0;
+        if (!word) {
+            is_backtrack = 1;
+        }
         if (word) {
             int affected[slot->length];
             int k;
@@ -404,23 +431,47 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     if (is_empty) {
                         cgrid[cx + cy * height].c = CONSTRAINT_EMPTY;
                     }
-                    if (count == 0 && !OPTION_NICE) {
-                        is_word_ok = 0;
+                    // words are not ok when intersecting slot has nothing
+                    if (!OPTION_NICE && count == 0) {
+                        is_backtrack = 1;
                     }
                 }
             }
-            if (is_word_ok) {
+            if (!is_backtrack) {
                 for (k = 0; k < slot->length; k++) {
                     int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
                     int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
                     cgrid[cx + cy * height].c = word[k];
-                    int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
-                    (&slots[affected[k]])->count = count;
+                    if (affected[k] >= 0) {
+                        int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
+                        (&slots[affected[k]])->count = count;
+                    }
                 }
-            } else {
-                slot->offset += 1;
             }
-        } else {
+            if (OPTION_NICE) {
+                // words are not ok when no slot has any count > 0 anymore
+                int has_pos_count = 0;
+                for (t = 0; t < n_slots; t++) {
+                    printf("Count %i for %i %i %i | %i\n", slots[t].count, slots[t].x, slots[t].y, slots[t].dir, slots[t].done);
+                }
+                for (t = 0; t < n_slots; t++) {
+                    if (t == index) continue;
+                    if (!slots[t].done && slots[t].count > 0) {
+                        printf("Pos count 1 for %i %i %i\n", slots[t].x, slots[t].y, slots[t].dir);
+                        has_pos_count = 1;
+                        break;
+                    }
+                }
+                printf("Checking pos count %i\n", has_pos_count);
+                if (!has_pos_count) {
+                    is_backtrack = 0;
+                }
+                printf("%i %i %i now has offset %i\n", slot->x, slot->y, slot->dir, slot->offset);
+                //attempts += 20;
+            }
+        }
+        if (is_backtrack) {
+            printf("Backtracking\n");
             is_word_ok = 0;
             if (n_done_slots > 0) {
                 if (OPTION_NICE ? n_done_slots == NICE_COUNT : n_done_slots > best_n_done_slots) {
@@ -1012,6 +1063,7 @@ cPalabra_verify_contained_words(PyObject *self, PyObject *args) {
 static PyMethodDef methods[] = {
     {"search", cPalabra_search, METH_VARARGS, "search"},
     {"preprocess", cPalabra_preprocess, METH_VARARGS, "preprocess"},
+    {"preprocess_all", cPalabra_preprocess_all, METH_VARARGS, "preprocess_all"},
     {"postprocess", cPalabra_postprocess, METH_VARARGS, "postprocess"},
     {"is_available",  cPalabra_is_available, METH_VARARGS, "is_available"},
     {"assign_numbers", cPalabra_assign_numbers, METH_VARARGS, "assign_numbers"},

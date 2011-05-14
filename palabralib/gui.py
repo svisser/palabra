@@ -97,7 +97,6 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
-        #self.menubar.append(self.create_fill_menu())
         #self.menubar.append(self.create_word_menu())
         #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_tools_menu())
@@ -190,8 +189,8 @@ class PalabraWindow(gtk.Window):
         tabs.set_property("tab-vborder", 8)
         tool = e_tools["word"].create()
         tabs.append_page(tool, gtk.Label(u"Word"))
-        #tool = e_tools["fill"].create()
-        #tabs.append_page(tool, gtk.Label(u"Fill"))
+        tool = e_tools["fill"].create()
+        tabs.append_page(tool, gtk.Label(u"Fill"))
         tool = e_tools["clue"].create(puzzle)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
@@ -1170,19 +1169,6 @@ class PalabraWindow(gtk.Window):
         tool_menu = gtk.MenuItem(u"_Tools", True)
         tool_menu.set_submenu(menu)
         return tool_menu
-        
-    def create_fill_menu(self):
-        menu = gtk.Menu()
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.on_fill_grid()
-            , u"Fill the grid with words from the available word lists"
-            , title="_Fill grid"
-            , is_puzzle_sensitive=True))
-        
-        fill_menu = gtk.MenuItem(u"_Fill", True)
-        fill_menu.set_submenu(menu)
-        return fill_menu
     
     def create_word_menu(self):
         menu = gtk.Menu()
@@ -1271,6 +1257,7 @@ def main(argv=None):
         print "Reading configuration file..."
         read_config_file()
         print "Loading wordlists..."
+        cPalabra.preprocess_all()
         wordlists = create_wordlists(preferences.prefs["word_files"])
         print "Loading pattern files..."
         fs = constants.STANDARD_PATTERN_FILES + preferences.prefs[constants.PREF_PATTERN_FILES]

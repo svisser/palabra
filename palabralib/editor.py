@@ -146,7 +146,10 @@ def fill(grid, words, fill_options):
     return cPalabra.fill(grid, words, meta, fill_options)
 
 def attempt_fill(grid, words):
-    """Return a grid with possibly the given words filled in."""
+    """
+    Return a grid with possibly the given words filled in.
+    This is not intended as full-blown search so keep len(words) small.
+    """ 
     clist = CWordList(words, index=constants.MAX_WORD_LISTS)
     options = {}
     options.update(DEFAULT_FILL_OPTIONS)

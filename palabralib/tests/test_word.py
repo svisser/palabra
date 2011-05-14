@@ -32,10 +32,14 @@ class WordTestCase(unittest.TestCase):
         self.word = "palabra"
         self.length = len(self.word)
         self.constraints = [(i, self.word[i]) for i in xrange(self.length)]
-        
         self.word2 = "parrot"
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
+        cPalabra.preprocess_all()
+        
+    def testPostprocess(self):
+        # must not fail when nothing was allocated
+        cPalabra.postprocess()
         
     def testSearchBasic(self):
         clist = CWordList([self.word])
