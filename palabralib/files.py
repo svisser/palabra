@@ -415,8 +415,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 break
         pages = []
         for p, x, y, w, h, text in r_columns:
-            if page not in pages:
-                pages.append(page)
+            if p not in pages:
+                pages.append(p)
         def render_page(page):
             for p, x, y, w, h, text in r_columns:
                 if p != page:
