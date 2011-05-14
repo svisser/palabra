@@ -284,6 +284,14 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(result), MAX_WORD_LISTS)
         cPalabra.postprocess()
         
+    def testCreateWordListsUniqueIndices(self):
+        prefs = []
+        for n in xrange(MAX_WORD_LISTS):
+            prefs.append({'path': {'value': 'P'}, 'name': {'value': 'N'}})
+        result = create_wordlists(prefs)
+        self.assertEquals(len(set([item.index for item in result])), MAX_WORD_LISTS)
+        cPalabra.postprocess()
+        
     def testSearchWordlists(self):
         w1 = CWordList(["worda"], index=0)
         w2 = CWordList(["wordb"], index=1)

@@ -25,8 +25,6 @@ from operator import itemgetter
 
 import cPalabra
 import constants
-import preferences
-from preferences import prefs_to_word_files
 
 def extract(counts, s):
     chars = []
@@ -145,11 +143,15 @@ def verify_contained_words(wordlists, pairs):
         result.extend(cPalabra.verify_contained_words(wlist.index, pairs))
     return result
 
-def create_wordlists(data):
+def create_wordlists(prefs):
     """
     Convert preference data of word files into CWordLists.
     """
-    files = prefs_to_word_files(data)
+    files = []
+    for i, data in enumerate(prefs):
+        if i >= constants.MAX_WORD_LISTS:
+            break
+        files.append((i, data["path"]["value"], data["name"]["value"]))
     return [CWordList(path, index=i, name=name) for i, path, name in files]
 
 def cs_to_str(l, cs):

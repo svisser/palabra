@@ -205,13 +205,3 @@ def read_pref_color(key, divide=True):
         g = prefs[key + "_green"]
         b = prefs[key + "_blue"]
     return r, g, b
-
-def prefs_to_word_files(prefs):
-    files = []
-    for i, data in enumerate(prefs):
-        if i >= constants.MAX_WORD_LISTS:
-            break
-        name = data["name"]["value"]
-        path = data["path"]["value"]
-        files.append((i, path, name))
-    return files
