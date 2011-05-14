@@ -24,7 +24,7 @@ import constants
 
 class FindWordsDialog(gtk.Dialog):
     def __init__(self, parent):
-        gtk.Dialog.__init__(self, u"Find word", parent, gtk.DIALOG_MODAL)
+        gtk.Dialog.__init__(self, u"Find words", parent, gtk.DIALOG_MODAL)
         self.wordlists = parent.wordlists
         self.sort_option = 0
         self.pattern = None

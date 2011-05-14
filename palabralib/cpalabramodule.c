@@ -424,7 +424,6 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             is_word_ok = 0;
             if (n_done_slots > 0) {
                 if (OPTION_NICE ? n_done_slots == NICE_COUNT : n_done_slots > best_n_done_slots) {
-                    //printf("n_done %i\n", n_done_slots);
                     best_n_done_slots = n_done_slots;
                     Py_XDECREF(best_fill);
                     best_fill = gather_fill(cgrid, width, height);
@@ -451,7 +450,6 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         attempts++;
     }
     if (best_fill == NULL && (OPTION_NICE ? n_done_slots == NICE_COUNT : 1)) {
-        printf ("FILL %i %i\n", n_done_slots, NICE_COUNT);
         best_fill = gather_fill(cgrid, width, height);
     }
     if (best_fill != NULL) {

@@ -36,6 +36,13 @@ from word import (CWordList,
 )
 import cPalabra
 
+DEFAULT_FILL_OPTIONS = {
+    constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
+    , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
+    , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_FALSE
+    , constants.FILL_NICE_COUNT: 0
+}
+
 Selection = namedtuple('Selection', ['x', 'y', 'direction'])
 
 mouse_buttons_down = [False, False, False]

@@ -18,15 +18,9 @@
 import gtk
 
 import constants
+from editor import DEFAULT_FILL_OPTIONS
 from files import get_real_filename
 from gui_word import WordWidget
-
-DEFAULT_FILL_OPTIONS = {
-    constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
-    , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
-    , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_FALSE
-    , constants.FILL_NICE_COUNT: 0
-}
 
 class WordTool:
     def __init__(self, editor):
