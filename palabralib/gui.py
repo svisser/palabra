@@ -41,7 +41,7 @@ import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow
-from editor import cleanup_drawing_area, e_settings, e_tools, Editor
+from editor import e_settings, e_tools, Editor
 from files import (
     FILETYPES,
     ParserError,
@@ -136,22 +136,31 @@ class PalabraWindow(gtk.Window):
     def to_empty_panel(self):
         for widget in self.panel.get_children():
             self.panel.remove(widget)
-        cleanup_drawing_area(self.drawing_area, self.editor.ids)
+        self.drawing_area.unset_flags(gtk.CAN_FOCUS)
+        for i in self.ids:
+            self.drawing_area.disconnect(i)
     
     def to_edit_panel(self):
         self.drawing_area = gtk.DrawingArea()
+        self.drawing_area.set_flags(gtk.CAN_FOCUS)
         self.drawing_area.add_events(
             gtk.gdk.BUTTON_PRESS_MASK
             | gtk.gdk.BUTTON_RELEASE_MASK
             | gtk.gdk.POINTER_MOTION_MASK
             | gtk.gdk.KEY_PRESS_MASK
             | gtk.gdk.KEY_RELEASE_MASK
+            | gtk.gdk.POINTER_MOTION_HINT_MASK
             )
         puzzle = self.puzzle_manager.current_puzzle
         puzzle.view.refresh_visual_size(self.drawing_area)
         self.drawing_area.queue_draw()
-        
-        self.editor = Editor(self, self.drawing_area)
+        self.editor = Editor(self)
+        self.ids = []
+        for k, e in self.editor.EVENTS.items():
+            if isinstance(e, tuple):
+                self.ids.append(self.drawing_area.connect(k, *e))
+            else:
+                self.ids.append(self.drawing_area.connect(k, e))
         e_tools["clue"] = ClueTool(self.editor)
         e_tools["fill"] = FillTool(self.editor)
         e_tools["word"] = WordTool(self.editor)

@@ -348,3 +348,25 @@ class WordWidget(gtk.DrawingArea):
             pcr_layout.set_markup(''.join(markup))
             ctx.move_to(5, n * self.STEP)
             pcr.show_layout(pcr_layout)
+            
+class WordPropertiesDialog(gtk.Dialog):
+    def __init__(self, palabra_window, properties):
+        gtk.Dialog.__init__(self, u"Word properties", palabra_window
+            , gtk.DIALOG_MODAL)
+        self.palabra_window = palabra_window
+        self.set_size_request(384, 256)
+        
+        label = gtk.Label()
+        label.set_markup(''.join(['<b>', properties["word"], '</b>']))
+        
+        main = gtk.VBox(False, 0)
+        main.set_spacing(18)
+        main.pack_start(label, True, True, 0)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
+        self.vbox.add(hbox)

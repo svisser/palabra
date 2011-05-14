@@ -104,28 +104,6 @@ def compute_word_cells(grid, word, x, y, d):
     result = decompose_word(word, p, q, d)
     return [(x, y, c.upper()) for x, y, c in result if grid.data[y][x]["char"] == ""]
 
-class WordPropertiesDialog(gtk.Dialog):
-    def __init__(self, palabra_window, properties):
-        gtk.Dialog.__init__(self, u"Word properties", palabra_window
-            , gtk.DIALOG_MODAL)
-        self.palabra_window = palabra_window
-        self.set_size_request(384, 256)
-        
-        label = gtk.Label()
-        label.set_markup(''.join(['<b>', properties["word"], '</b>']))
-        
-        main = gtk.VBox(False, 0)
-        main.set_spacing(18)
-        main.pack_start(label, True, True, 0)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
-        self.vbox.add(hbox)
-
 def search(wordlists, grid, selection, force_refresh):
     x, y, d = selection
     if not grid.is_available(x, y) and not force_refresh:
@@ -176,22 +154,6 @@ def attempt_fill(grid, words):
 Selection = namedtuple('Selection', ['x', 'y', 'direction'])
 
 mouse_buttons_down = [False, False, False]
-
-def configure_drawing_area(widget, events):
-    widget.set_flags(gtk.CAN_FOCUS)
-    widget.add_events(gtk.gdk.POINTER_MOTION_HINT_MASK)
-    ids = []
-    for k, e in events.items():
-        if isinstance(e, tuple):
-            ids.append(widget.connect(k, *e))
-        else:
-            ids.append(widget.connect(k, e))
-    return ids
-    
-def cleanup_drawing_area(widget, ids):
-    widget.unset_flags(gtk.CAN_FOCUS)
-    for i in ids:
-        widget.disconnect(i)
 
 def compute_warnings_of_cells(grid, cells, settings):
     """Determine undesired cells."""
@@ -522,29 +484,27 @@ def highlight_cells(window, puzzle, e_settings, f=None, arg=None, clear=False):
     _render_cells(puzzle, render, e_settings, window.drawing_area)
     return cells
 
-class Editor(gtk.HBox):
-    def __init__(self, palabra_window, drawing_area):
-        gtk.HBox.__init__(self)
-        self.palabra_window = palabra_window
+class Editor:
+    def __init__(self, window):
+        self.window = window
         self.blacklist = []
         self.fill_options = {}
-        events = {"expose_event": self.on_expose_event
+        self.EVENTS = {"expose_event": self.on_expose_event
             , "button_press_event": self.on_button_press_event
             , "button_release_event": on_button_release_event
             , "motion_notify_event": self.on_motion_notify_event
             , "key_press_event": on_key_press_event
-            , "key_release_event": (on_key_release_event, self.palabra_window, self.puzzle, e_settings)
+            , "key_release_event": (on_key_release_event, self.window, self.puzzle, e_settings)
         }
-        self.ids = configure_drawing_area(self.palabra_window.drawing_area, events)
         self.force_redraw = True
         
     def get_puzzle(self):
-        return self.palabra_window.puzzle_manager.current_puzzle
+        return self.window.puzzle_manager.current_puzzle
         
     puzzle = property(get_puzzle)
     
     def _render_cells(self, cells, editor=True):
-        _render_cells(self.puzzle, cells, e_settings, self.palabra_window.drawing_area, editor)
+        _render_cells(self.puzzle, cells, e_settings, self.window.drawing_area, editor)
         
     def on_expose_event(self, drawing_area, event):
         """Render the main editing component."""
@@ -556,7 +516,7 @@ class Editor(gtk.HBox):
             self.puzzle.view.grid = self.puzzle.grid
             self.force_redraw = False
             self._render_cells(list(self.puzzle.grid.cells()), editor=True)
-        context = self.palabra_window.drawing_area.window.cairo_create()
+        context = self.window.drawing_area.window.cairo_create()
         context.set_source(e_settings.pattern)
         context.paint()
         return True
@@ -593,8 +553,8 @@ class Editor(gtk.HBox):
     
     def _create_popup_menu(self, event, x, y):
         menu = gtk.Menu()
-        update_status = self.palabra_window.update_status
-        pop_status = self.palabra_window.pop_status
+        update_status = self.window.update_status
+        pop_status = self.window.pop_status
         def on_clear_slot_select(item, direction, x, y):
             grid = self.puzzle.grid
             sx, sy = grid.get_start_word(x, y, direction)
@@ -635,7 +595,7 @@ class Editor(gtk.HBox):
             for k in DEFAULTS_CELL:
                 props[k] = puzzle.view.properties.style(x, y)[k]
                 props["defaults"][k] = puzzle.view.properties.style()[k]
-            w = CellPropertiesDialog(self.palabra_window, props)
+            w = CellPropertiesDialog(self.window, props)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
                 puzzle.view.properties.update(x, y, w.gather_appearance().items())
@@ -679,14 +639,14 @@ class Editor(gtk.HBox):
         chars = [(r, s, "") for r, s in grid.slot(x, y, direction)
             if grid.data[s][r]["char"] != '']
         if len(chars) > 0:
-            self.palabra_window.transform_grid(transform.modify_chars, chars=chars)
+            self.window.transform_grid(transform.modify_chars, chars=chars)
             
     def highlight_cells(self, f=None, arg=None, clear=False):
         """
         Highlight cells according to a specified function.
         Use clear=True to clear the highlights.
         """
-        return highlight_cells(self.palabra_window, self.puzzle, e_settings, f, arg, clear)
+        return highlight_cells(self.window, self.puzzle, e_settings, f, arg, clear)
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
@@ -699,21 +659,21 @@ class Editor(gtk.HBox):
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        result = search(self.palabra_window.wordlists, self.puzzle.grid
+        result = search(self.window.wordlists, self.puzzle.grid
             , e_settings.selection, force_refresh)
         e_tools["word"].display_words(result)
         
     def fill(self):
-        for path, wordlist in self.palabra_window.wordlists.items():
+        for path, wordlist in self.window.wordlists.items():
             results = fill(self.puzzle.grid, wordlist.words, self.fill_options)
-            self.palabra_window.transform_grid(transform.modify_chars, chars=results[0])
+            self.window.transform_grid(transform.modify_chars, chars=results[0])
             break
             
     def clue(self, x, y, direction, key, value):
         """
         Update the clue data by creating or updating the latest undo action.
         """
-        self.palabra_window.transform_clues(transform.modify_clue
+        self.window.transform_clues(transform.modify_clue
                 , x=x
                 , y=y
                 , direction=direction
@@ -724,18 +684,18 @@ class Editor(gtk.HBox):
         """Insert a word in the selected slot."""
         if e_settings.settings["locked_grid"]:
             return
-        insert(self.palabra_window, self.puzzle.grid, e_settings.selection, word)
+        insert(self.window, self.puzzle.grid, e_settings.selection, word)
             
     def set_overlay(self, word=None):
         """
         Display the word in the selected slot without storing it the grid.
         If the word is None, the overlay will be cleared.
         """
-        set_overlay(self.palabra_window, self.puzzle, e_settings, word)
+        set_overlay(self.window, self.puzzle, e_settings, word)
             
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
-        r_transform_blocks(self.palabra_window, self.puzzle, e_settings, x, y, status)
+        r_transform_blocks(self.window, self.puzzle, e_settings, x, y, status)
             
     def _check_blacklist_for_cell(self, x, y):
         """
@@ -762,7 +722,7 @@ class Editor(gtk.HBox):
             """Determine the cells that need to be blacklisted."""
             result = []
             word = "".join([c.lower() if c else " " for x, y, c in segment])
-            badwords = self.palabra_window.blacklist.get_substring_matches(word)
+            badwords = self.window.blacklist.get_substring_matches(word)
             for i in xrange(len(word)):
                 for b in badwords:
                     if word[i:i + len(b)] == b:
@@ -789,7 +749,7 @@ class Editor(gtk.HBox):
         self.puzzle.view.grid = self.puzzle.grid
         self.puzzle.view.properties.grid = self.puzzle.grid
         size = self.puzzle.view.properties.visual_size()
-        self.palabra_window.drawing_area.set_size_request(*size)
+        self.window.drawing_area.set_size_request(*size)
 
     def set_selection(self
         , x=None
@@ -802,7 +762,7 @@ class Editor(gtk.HBox):
         Select (x, y), the direction or both.
         Use other_dir to switch the typing direction to the other direction.
         """
-        set_selection(self.palabra_window, self.puzzle, e_settings, x, y, direction, full_update, other_dir, selection_changed)
+        set_selection(self.window, self.puzzle, e_settings, x, y, direction, full_update, other_dir, selection_changed)
         
     def get_selection(self):
         """Return the (x, y) of the selected cell."""
