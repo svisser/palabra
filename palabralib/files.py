@@ -90,13 +90,7 @@ def export_puzzle(puzzle, filename, options):
             , "clue": {"font": "Sans 8"}
             , "page_header": {"font": "Sans 10"}
         })
-        import pstats
-        import cProfile
-        cProfile.runctx('export_to_pdf(puzzle, filename, outputs, settings)', globals(), locals(), filename='fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('time').print_stats(20)
-        p.print_callers()
-        #export_to_pdf(puzzle, filename, outputs, settings)
+        export_to_pdf(puzzle, filename, outputs, settings)
     elif options["format"] == "png":
         export_to_png(puzzle, filename, outputs[0], settings)
 
