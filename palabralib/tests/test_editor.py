@@ -313,3 +313,36 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(next[0], 0)
         self.assertEquals(next[1], 2)
         self.assertEquals(next[2], "across")
+        
+    def testSearchArgsOne(self):
+        g = Grid(5, 5)
+        l, cs, more = editor.compute_search_args(g, (0, 0, "across"))
+        self.assertEquals(l, 5)
+        self.assertEquals(cs, [])
+        self.assertEquals(len(more), 5)
+        for i in xrange(5):
+            self.assertEquals(more[i], (0, 5, []))
+            
+    def testSearchArgsInvalid(self):
+        result = editor.compute_search_args(Grid(5, 5), (-1, -1, "across"), True)
+        self.assertEquals(result, None)
+        
+    def testSearchArgsLengthOne(self):
+        g = Grid(5, 5)
+        g.set_block(1, 0, True)
+        result = editor.compute_search_args(g, (0, 0, "across"), True)
+        self.assertEquals(result, None)
+        
+    def testSearchArgsFullyFilledIn(self):
+        g = Grid(5, 5)
+        g.set_char(0, 0, 'A')
+        g.set_char(1, 0, 'A')
+        g.set_char(2, 0, 'A')
+        g.set_char(3, 0, 'A')
+        g.set_char(4, 0, 'A')
+        result = editor.compute_search_args(g, (0, 0, "across"), False)
+        self.assertEquals(result, None)
+        l, cs, more = editor.compute_search_args(g, (0, 0, "across"), True)
+        self.assertEquals(l, 5)
+        self.assertEquals(len(cs), 5)
+        self.assertEquals(len(more), 5)

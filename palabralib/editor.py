@@ -36,6 +36,10 @@ from word import (CWordList,
 )
 import cPalabra
 
+Selection = namedtuple('Selection', ['x', 'y', 'direction'])
+
+mouse_buttons_down = [False, False, False]
+
 def get_char_slots(grid, c):
     return [(x, y, "across", 1) for x, y in grid.cells() if grid.data[y][x]["char"] == c]
     
@@ -104,20 +108,20 @@ def compute_word_cells(grid, word, x, y, d):
     result = decompose_word(word, p, q, d)
     return [(x, y, c.upper()) for x, y, c in result if grid.data[y][x]["char"] == ""]
 
-def search(wordlists, grid, selection, force_refresh):
-    x, y, d = selection
-    if not grid.is_available(x, y) and not force_refresh:
-        return []
+def compute_search_args(grid, slot, force=False):
+    x, y, d = slot
+    if not grid.is_available(x, y):
+        return None
     p, q = grid.get_start_word(x, y, d)
     length = grid.word_length(p, q, d)
-    if length <= 1 and not force_refresh:
-        return []
+    if length <= 1:
+        return None
     constraints = grid.gather_constraints(p, q, d)
-    if len(constraints) == length and not force_refresh:
-        return []
+    if len(constraints) == length and not force:
+        return None
     more = grid.gather_all_constraints(x, y, d)
-    return search_wordlists(wordlists, length, constraints, more)
-    
+    return length, constraints, more
+
 def fill(grid, words, fill_options):
     meta = []
     g_words = [i for i in grid.words(allow_duplicates=True, include_dir=True)]
@@ -150,10 +154,6 @@ def attempt_fill(grid, words):
         transform.modify_chars(g, chars=results[0])
         return g
     return grid
-
-Selection = namedtuple('Selection', ['x', 'y', 'direction'])
-
-mouse_buttons_down = [False, False, False]
 
 def compute_warnings_of_cells(grid, cells, settings):
     """Determine undesired cells."""
@@ -472,7 +472,7 @@ def compute_highlights(grid, f=None, arg=None, clear=False):
             cells = get_open_slots(grid)
     return cells
 
-def highlight_cells(window, puzzle, e_settings, f=None, arg=None, clear=False):
+def highlight_cells(window, puzzle, f=None, arg=None, clear=False):
     """
     Highlight cells according to a specified function.
     Use clear=True to clear the highlights.
@@ -640,13 +640,6 @@ class Editor:
             if grid.data[s][r]["char"] != '']
         if len(chars) > 0:
             self.window.transform_grid(transform.modify_chars, chars=chars)
-            
-    def highlight_cells(self, f=None, arg=None, clear=False):
-        """
-        Highlight cells according to a specified function.
-        Use clear=True to clear the highlights.
-        """
-        return highlight_cells(self.window, self.puzzle, e_settings, f, arg, clear)
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
@@ -659,8 +652,11 @@ class Editor:
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        result = search(self.window.wordlists, self.puzzle.grid
-            , e_settings.selection, force_refresh)
+        args = compute_search_args(self.puzzle.grid, e_settings.selection, force_refresh)
+        if args:
+            result = search_wordlists(self.window.wordlists, *args)
+        else:
+            result = []
         e_tools["word"].display_words(result)
         
     def fill(self):

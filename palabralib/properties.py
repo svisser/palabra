@@ -20,6 +20,7 @@ import operator
 import pangocairo
 
 import constants
+from editor import highlight_cells
 
 class Histogram:
     def __init__(self, totals, width, height):
@@ -81,12 +82,13 @@ class Histogram:
         context.restore()
 
 class PropertiesWindow(gtk.Dialog):
-    def __init__(self, palabra_window, puzzle):
-        gtk.Dialog.__init__(self, u"Puzzle properties", palabra_window
+    def __init__(self, window, puzzle):
+        gtk.Dialog.__init__(self, u"Puzzle properties", window
             , gtk.DIALOG_MODAL)
-        self.palabra_window = palabra_window
+        self.palabra_window = window
         self.puzzle = puzzle
-        self.connect("destroy", lambda widget: self.palabra_window.editor.highlight_cells(clear=True))
+        on_destroy = lambda widget: highlight_cells(window, puzzle, clear=True)
+        self.connect("destroy", on_destroy)
 
         status = puzzle.grid.determine_status(True)
         
@@ -116,7 +118,7 @@ class PropertiesWindow(gtk.Dialog):
         txt = self.determine_words_message(self.puzzle)
         self.words_data.set_text(txt)
         self.words_tab_sel.unselect_all()
-        self.palabra_window.editor.highlight_cells(clear=True)
+        highlight_cells(self.palabra_window, self.puzzle, clear=True)        
     
     def create_general_tab(self, status, puzzle):
         table = gtk.Table(13, 4, False)
@@ -158,7 +160,7 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Checked cells", str(status["checked_count"]), 0, 7)
         create_statistic(table, u"Unchecked cells", str(status["unchecked_count"]), 0, 8)
         def on_open_click(widget, event):
-            self.palabra_window.editor.highlight_cells("open")
+            highlight_cells(self.palabra_window, self.puzzle, f="open")
         create_statistic(table, u"Open cells", str(status["open_count"]), 0, 9, on_open_click)
         
         create_header(table, u"<b>Words</b>", 2, 0)
@@ -223,8 +225,7 @@ class PropertiesWindow(gtk.Dialog):
         self.histogram = Histogram(status["char_counts_total"], 312, 90)
         
         def on_char_click(widget, event, char):
-            self.palabra_window.editor.highlight_cells("char", char)
-        
+            highlight_cells(self.palabra_window, self.puzzle, "char", char)
         for y in xrange(0, 26, 6):
             for x, (char, count) in enumerate(status["char_counts_total"][y:y + 6]):
                 if count == 0:
@@ -374,7 +375,7 @@ class PropertiesWindow(gtk.Dialog):
         store, it = selection.get_selected()
         if it:
             length = store.get_value(it, 0)
-            words = self.palabra_window.editor.highlight_cells("length", length)
+            words = highlight_cells(self.palabra_window, self.puzzle, "length", length)
             if not words:
                 message = self.determine_words_message(self.puzzle)
             else:
