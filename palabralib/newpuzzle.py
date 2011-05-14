@@ -272,7 +272,6 @@ class NewWindow(gtk.Dialog):
         for f, meta, data in palabra_window.patterns:
             if f is not None:
                 self.patterns.append((f, meta, [p.grid for p in data]))
-        self._load_pattern_list(self.files)
         
         file_combo = gtk.combo_box_new_text()
         file_combo.append_text("All files")
@@ -290,9 +289,9 @@ class NewWindow(gtk.Dialog):
         align = gtk.Alignment(0, 0.5, 0, 0)
         align.add(file_combo)
         files_hbox.pack_start(align, False, False, 0)
-        find_button = gtk.Button(u"Find grids")
-        find_button.connect("clicked", self.on_find_patterns)
-        files_hbox.pack_start(find_button, False, False, 0)
+        self.find_button = gtk.Button(u"Find grids")
+        self.find_button.connect("clicked", self.on_find_patterns)
+        files_hbox.pack_start(self.find_button, False, False, 0)
         
         patterns_vbox.pack_start(files_hbox, False, False, 6)
         
@@ -311,10 +310,10 @@ class NewWindow(gtk.Dialog):
         align = gtk.Alignment(0, 0, 1, 1)
         align.set_padding(0, 0, 12, 0)
         align.add(patterns_vbox)
-        
         options_vbox.pack_start(align, True, True, 0)
 
         self.clear_button.set_sensitive(False)
+        self._load_pattern_list(self.files)
         
     def on_file_changed(self, combo):
         index = combo.get_active()
@@ -409,6 +408,7 @@ class NewWindow(gtk.Dialog):
             if g is not None and g.has_chars():
                 gs.append(g)
         self.store.clear()
+        self.find_button.set_sensitive(len(gs) > 0)
         for g in gs:
             blocks = g.count_blocks()
             words = g.count_words()
