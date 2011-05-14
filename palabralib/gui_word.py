@@ -18,6 +18,7 @@
 import gtk
 import glib
 import operator
+import pangocairo
 
 import constants
 
@@ -280,3 +281,70 @@ class WordListEditor(gtk.Dialog):
             name = p["name"]["value"]
             path = p["path"]["value"]
             self.store.append([name, path])
+            
+class WordWidget(gtk.DrawingArea):
+    def __init__(self, editor):
+        super(WordWidget, self).__init__()
+        self.STEP = 24
+        self.selection = None
+        self.editor = editor
+        self.set_words([])
+        self.set_flags(gtk.CAN_FOCUS)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.connect('expose_event', self.expose)
+        self.connect("button_press_event", self.on_button_press)
+        
+    def set_words(self, words):
+        self.words = words
+        self.selection = None
+        self.set_size_request(-1, self.STEP * len(self.words))
+        self.queue_draw()
+        
+    def on_button_press(self, widget, event):
+        offset = self.get_word_offset(event.y)
+        if offset >= len(self.words):
+            self.selection = None
+            self.editor.set_overlay(None)
+            return
+        word = self.words[offset][0]
+        if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
+            self.editor.insert(word)
+            self.selection = None
+            self.editor.set_overlay(None)
+        else:
+            self.selection = offset
+            self.editor.set_overlay(word)
+        self.queue_draw()
+        return True
+            
+    def get_selected_word(self):
+        if self.selection is None:
+            return None
+        return self.words[self.selection][0]
+        
+    def get_word_offset(self, y):
+        return max(0, int(y / self.STEP)) 
+        
+    def expose(self, widget, event):
+        ctx = widget.window.cairo_create()
+        pcr = pangocairo.CairoContext(ctx)
+        pcr_layout = pcr.create_layout()
+        x, y, width, height = event.area
+        ctx.set_source_rgb(65535, 65535, 65535)
+        ctx.rectangle(*event.area)
+        ctx.fill()
+        ctx.set_source_rgb(0, 0, 0)
+        offset = self.get_word_offset(y)
+        n_rows = 30 #(height / self.STEP) + 1
+        for i, (w, h) in enumerate(self.words[offset:offset + n_rows]):
+            n = offset + i
+            color = (0, 0, 0) if h else (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
+            ctx.set_source_rgb(*[c / 65535.0 for c in color])
+            markup = ['''<span font_desc="Monospace 12"''']
+            if n == self.selection:
+                ctx.set_source_rgb(65535, 0, 0)
+                markup += [''' underline="double"''']
+            markup += [">", w, "</span>"]
+            pcr_layout.set_markup(''.join(markup))
+            ctx.move_to(5, n * self.STEP)
+            pcr.show_layout(pcr_layout)

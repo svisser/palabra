@@ -41,7 +41,7 @@ import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow
-from editor import cleanup_drawing_area, e_settings, e_tools, Editor, FillTool, WordTool
+from editor import cleanup_drawing_area, e_settings, e_tools, Editor
 from files import (
     FILETYPES,
     ParserError,
@@ -49,6 +49,7 @@ from files import (
     export_puzzle,
     read_containers,
 )
+from gui_editor import WordTool, FillTool
 from gui_prefs import PreferencesWindow
 from gui_word import FindWordsDialog, WordListEditor
 import grid

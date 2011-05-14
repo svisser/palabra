@@ -89,6 +89,7 @@ class ViewTestCase(unittest.TestCase):
         self.assertEquals(s, t)
         s["circle"] = True
         self.assertNotEquals(s, t)
+        self.assertTrue(s != t)
         
     def testCellProps(self):
         props = self.puzzle.view.properties

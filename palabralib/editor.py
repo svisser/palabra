@@ -17,7 +17,6 @@
 
 import cairo
 import copy
-import gobject
 import gtk
 import pangocairo
 import webbrowser
@@ -27,7 +26,6 @@ from itertools import chain
 import action
 from appearance import CellPropertiesDialog
 import constants
-from files import get_real_filename
 from grid import Grid, decompose_word
 from preferences import read_pref_color
 import transform
@@ -37,13 +35,6 @@ from word import (CWordList,
     analyze_words,
 )
 import cPalabra
-
-DEFAULT_FILL_OPTIONS = {
-    constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
-    , constants.FILL_OPTION_NICE: constants.FILL_NICE_FALSE
-    , constants.FILL_OPTION_DUPLICATE: constants.FILL_DUPLICATE_FALSE
-    , constants.FILL_NICE_COUNT: 0
-}
 
 def get_char_slots(grid, c):
     return [(x, y, "across", 1) for x, y in grid.cells() if grid.data[y][x]["char"] == c]
@@ -134,177 +125,6 @@ class WordPropertiesDialog(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
-
-class WordWidget(gtk.DrawingArea):
-    def __init__(self, editor):
-        super(WordWidget, self).__init__()
-        self.STEP = 24
-        self.selection = None
-        self.editor = editor
-        self.set_words([])
-        self.set_flags(gtk.CAN_FOCUS)
-        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
-        self.connect('expose_event', self.expose)
-        self.connect("button_press_event", self.on_button_press)
-        
-    def set_words(self, words):
-        self.words = words
-        self.selection = None
-        self.set_size_request(-1, self.STEP * len(self.words))
-        self.queue_draw()
-        
-    def on_button_press(self, widget, event):
-        offset = self.get_word_offset(event.y)
-        if offset >= len(self.words):
-            self.selection = None
-            self.editor.set_overlay(None)
-            return
-        word = self.words[offset][0]
-        if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
-            self.editor.insert(word)
-            self.selection = None
-            self.editor.set_overlay(None)
-        else:
-            self.selection = offset
-            self.editor.set_overlay(word)
-        self.queue_draw()
-        return True
-            
-    def get_selected_word(self):
-        if self.selection is None:
-            return None
-        return self.words[self.selection][0]
-        
-    def get_word_offset(self, y):
-        return max(0, int(y / self.STEP)) 
-        
-    def expose(self, widget, event):
-        ctx = widget.window.cairo_create()
-        pcr = pangocairo.CairoContext(ctx)
-        pcr_layout = pcr.create_layout()
-        x, y, width, height = event.area
-        ctx.set_source_rgb(65535, 65535, 65535)
-        ctx.rectangle(*event.area)
-        ctx.fill()
-        ctx.set_source_rgb(0, 0, 0)
-        offset = self.get_word_offset(y)
-        n_rows = 30 #(height / self.STEP) + 1
-        for i, (w, h) in enumerate(self.words[offset:offset + n_rows]):
-            n = offset + i
-            color = (0, 0, 0) if h else (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
-            ctx.set_source_rgb(*[c / 65535.0 for c in color])
-            markup = ['''<span font_desc="Monospace 12"''']
-            if n == self.selection:
-                ctx.set_source_rgb(65535, 0, 0)
-                markup += [''' underline="double"''']
-            markup += [">", w, "</span>"]
-            pcr_layout.set_markup(''.join(markup))
-            ctx.move_to(5, n * self.STEP)
-            pcr.show_layout(pcr_layout)
-
-class WordTool:
-    def __init__(self, editor):
-        self.editor = editor
-        self.show_intersect = False
-        self.show_used = True
-    
-    def create(self):
-        img = gtk.Image()
-        img.set_from_file(get_real_filename("resources/icon1.png"))
-        def on_button_toggled(self, button):
-            self.show_intersect = button.get_active()
-            self.display_words()
-        toggle_button = gtk.ToggleButton()
-        toggle_button.set_property("image", img)
-        toggle_button.set_tooltip_text(u"Show only words with intersecting words")
-        toggle_button.connect("toggled", lambda b: on_button_toggled(self, b))
-        
-        img = gtk.Image()
-        img.set_from_file(get_real_filename("resources/icon2.png"))
-        def on_button2_toggled(self, button):
-            self.show_used = not button.get_active()
-            self.display_words()
-        toggle_button2 = gtk.ToggleButton()
-        toggle_button2.set_property("image", img)
-        toggle_button2.set_tooltip_text(u"Show only unused words")
-        toggle_button2.connect("toggled", lambda b: on_button2_toggled(self, b))
-        
-        buttons = gtk.HButtonBox()
-        buttons.set_layout(gtk.BUTTONBOX_START)
-        buttons.add(toggle_button)
-        buttons.add(toggle_button2)
-        
-        self.main = gtk.VBox(False, 0)
-        self.main.set_spacing(9)
-        self.main.pack_start(buttons, False, False, 0)
-        
-        self.view = WordWidget(self.editor)
-        sw = gtk.ScrolledWindow(None, None)
-        sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        sw.add_with_viewport(self.view)
-        self.main.pack_start(sw, True, True, 0)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(6)
-        hbox.set_spacing(6)
-        hbox.pack_start(self.main, True, True, 0)
-        return hbox
-        
-    def display_words(self, words=None):
-        if words is not None:
-            self.words = words
-        entries = []
-        if not self.show_used:
-            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
-        shown = [row for row in self.words if 
-            not ( (self.show_intersect and not row[1]) or (not self.show_used and row[0] in entries) ) ]
-        self.view.set_words(shown)
-        
-    def get_selected_word(self):
-        return self.view.get_selected_word()
-        
-    def deselect(self):
-        self.view.selection = None
-
-class FillTool:
-    def __init__(self, editor):
-        self.editor = editor
-        self.starts = [
-            (constants.FILL_START_AT_ZERO, "First slot")
-            , (constants.FILL_START_AT_AUTO, "Suitably chosen slot")
-        ]
-        self.editor.fill_options.update(DEFAULT_FILL_OPTIONS)
-        
-    def create(self):
-        main = gtk.VBox(False, 0)
-        main.set_spacing(9)
-        
-        button = gtk.Button("Fill")
-        button.connect("pressed", self.on_button_pressed)
-        main.pack_start(button, False, False, 0)
-        
-        start_combo = gtk.combo_box_new_text()
-        for i, (c, txt) in enumerate(self.starts):
-            start_combo.append_text(txt)
-            if c == self.editor.fill_options[constants.FILL_OPTION_START]:
-                start_combo.set_active(i)
-        def on_start_changed(combo):
-            self.editor.fill_options[constants.FILL_OPTION_START] = self.starts[combo.get_active()][0]
-        start_combo.connect("changed", on_start_changed)
-        
-        label = gtk.Label(u"Start filling from:")
-        label.set_alignment(0, 0.5)
-        main.pack_start(label, False, False, 0)
-        main.pack_start(start_combo, False, False, 0)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(6)
-        hbox.set_spacing(6)
-        hbox.pack_start(main, True, True, 0)
-        return hbox
-        
-    def on_button_pressed(self, button):
-        self.editor.fill()
 
 def search(wordlists, grid, selection, force_refresh):
     x, y, d = selection
