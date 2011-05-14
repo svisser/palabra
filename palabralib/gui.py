@@ -49,6 +49,7 @@ from files import (
     export_puzzle,
     read_containers,
 )
+from gui_prefs import PreferencesWindow
 from gui_word import FindWordsDialog, WordListEditor
 import grid
 from grid import Grid
@@ -56,7 +57,6 @@ from newpuzzle import NewWindow, SizeWindow
 from pattern import PatternFileEditor
 import preferences
 from preferences import (
-    PreferencesWindow,
     write_config_file,
     read_config_file,
 )
