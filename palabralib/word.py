@@ -104,15 +104,22 @@ def check_accidental_word(wordlists, seq):
     result = []
     for s in check:
         r = _check_seq_for_words(wordlists, s)
-        if r is not None:
-            result.append(r)
+        if r:
+            result.extend(r)
     return result
     
-def _check_seq_for_words(wlist, seq):
+def _check_seq_for_words(wordlists, seq):
+    r = []
     s = ''.join([c for x, y, c in seq])
-    for wlist in wordlists:
-        print wlist.find_by_pattern("*" + s + "*")
-    return None
+    s = s.lower()
+    l = len(s)
+    for i in xrange(l):
+        for j in xrange(i, l + 1):
+            q = s[i:j]
+            l_q = len(q)
+            if search_wordlists(wordlists, l_q, q):
+                r.append((i, l_q))
+    return r
 
 def produce_word_counts(word):
     counts = {}

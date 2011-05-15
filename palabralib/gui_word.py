@@ -21,6 +21,7 @@ import operator
 import pangocairo
 
 import constants
+from editor import highlight_cells
 from word import check_accidental_words
 
 class PalabraDialog(gtk.Dialog):
@@ -38,9 +39,11 @@ class PalabraDialog(gtk.Dialog):
 class AccidentalWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
         PalabraDialog.__init__(self, parent, u"View accidental words")
+        self.puzzle = puzzle
         self.wordlists = parent.wordlists
-        self.store = gtk.ListStore(str)
+        self.store = gtk.ListStore(str, int)
         self.tree = gtk.TreeView(self.store)
+        self.tree.get_selection().connect("changed", self.on_selection_changed)
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Word", cell, markup=0)
         self.tree.append_column(column)
@@ -51,7 +54,21 @@ class AccidentalWordsDialog(PalabraDialog):
         self.main.pack_start(scrolled_window, True, True, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
-        print check_accidental_words(self.wordlists, puzzle.grid)
+        destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
+        self.connect("destroy", destroy)
+        
+        self.results = [i for i in check_accidental_words(self.wordlists, puzzle.grid) if len(i) > 1]
+        show = [(''.join([c for x, y, c in r]), i) for i, r in enumerate(self.results)]
+        show.sort(key=operator.itemgetter(0))
+        for s, i in show:
+            s = s.lower()
+            self.store.append([s, i])
+    
+    def on_selection_changed(self, selection):
+        store, it = selection.get_selected()
+        if it is not None:
+            index = self.store[it][1]
+            highlight_cells(self.pwindow, self.puzzle, "cells", [(x, y) for x, y, c in self.results[index]])
 
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):

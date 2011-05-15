@@ -480,6 +480,8 @@ def compute_highlights(grid, f=None, arg=None, clear=False):
             cells = get_char_slots(grid, arg)
         elif f == "open":
             cells = get_open_slots(grid)
+        elif f == "cells":
+            cells = [(x, y, "across", 1) for x, y in arg]
     return cells
 
 def highlight_cells(window, puzzle, f=None, arg=None, clear=False):
