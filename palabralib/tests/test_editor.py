@@ -399,5 +399,20 @@ class EditorTestCase(unittest.TestCase):
         g = Grid(1, 3)
         g2 = editor.attempt_fill(g, ["def"])
         self.assertEquals(g2.count_chars(include_blanks=False), 3)
+        
+    def testAttemptFillVoids(self):
+        g = Grid(3, 3)
+        g.set_void(0, 0, True)
+        g.set_void(2, 2, True)
+        g2 = editor.attempt_fill(g, ["axa", "bxb"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 5)
+        
+    def testAttemptFillAlreadyFilledIn(self):
+        g = Grid(3, 3)
+        g.set_block(1, 1, True)
+        g.set_block(2, 2, True)
+        g.set_char(0, 0, 'A')
+        g2 = editor.attempt_fill(g, ["aaa"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 3)
     # also test for ["aab", "aab", "baa", "baa"]
     # and reverse(["abc", "ade", "cfg", "ehg"])

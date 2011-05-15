@@ -670,8 +670,8 @@ class Editor:
         e_tools["word"].display_words(result)
         
     def fill(self):
-        for path, wordlist in self.window.wordlists.items():
-            results = fill(self.puzzle.grid, wordlist.words, self.fill_options)
+        for wlist in self.window.wordlists:
+            results = fill(self.puzzle.grid, wlist.words, self.fill_options)
             self.window.transform_grid(transform.modify_chars, chars=results[0])
             break
             
