@@ -414,5 +414,18 @@ class EditorTestCase(unittest.TestCase):
         g.set_char(0, 0, 'A')
         g2 = editor.attempt_fill(g, ["aaa"])
         self.assertEquals(g2.count_chars(include_blanks=False), 3)
-    # also test for ["aab", "aab", "baa", "baa"]
-    # and reverse(["abc", "ade", "cfg", "ehg"])
+        
+    def testAttemptFillVarLengths(self):
+        g = Grid(5, 5)
+        for y in xrange(5):
+            for x in xrange(y, 5):
+                g.set_block(x, y, True)
+        g2 = editor.attempt_fill(g, ["aaaa", "bbb", "cc"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 9)
+        
+    def testAttemptFillTwo(self):
+        # A B
+        # D C
+        g = Grid(2, 2)
+        g2 = editor.attempt_fill(g, ["ab", "bc", "dc", "ad"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 4)

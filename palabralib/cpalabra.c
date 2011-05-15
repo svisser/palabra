@@ -107,7 +107,7 @@ int check_intersect(char *word, char **cs, int length, Sptr *results) {
     return n_chars == length;
 }
 
-char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int option_nice) {
+char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int option_nice, int offset) {
     //printf("Finding for %i %i %i from %i with %s\n", slot->x, slot->y, slot->dir, slot->offset, cs);
     Py_ssize_t count = PyList_Size(slot->words);
     Py_ssize_t w;
@@ -117,7 +117,7 @@ char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int optio
         //printf("Considering %s %s\n", word, cs);
         if (check_constraints(word, cs) && (option_nice ? 1 : check_intersect(word, cs_i, slot->length, results))) {
             //printf("checking %s\n", word);
-            if (m_count == slot->offset) {
+            if (m_count == offset) {
                 return word;
             }
             m_count++;
@@ -433,7 +433,7 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
         int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == DIR_ACROSS ? 1 : 0);
         int is_inter_ok = 1;
         if (m >= 0) {
-            is_inter_ok = can_clear_char(cgrid, width, height, slots[m]);
+            is_inter_ok = 1; // TODO can_clear_char(cgrid, width, height, slots[m]);
         }
         Cell *cell = &cgrid[cx + cy * width];
         if (is_inter_ok && cell->c != CONSTRAINT_EMPTY) {
@@ -547,7 +547,14 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
             bslot->count = determine_count(words, cgrid, width, height, bslot);
             bslot->done = 0;
             if (s > iindex) bslot->offset = 0;
-            if (s == iindex) bslot->offset++;
+            if (s == iindex) {
+                bslot->offset++;
+                if (bslot->offset == bslot->count && iindex > 0) {
+                    // if we exhaused all words, backtrack one more
+                    bslot->offset = 0;
+                    iindex -= 1;
+                }
+            }
             // reset offsets of intersecting slots as well
             // the reason is that constraints may change with future words
             // for the blanked slot which means offsets have to be reset

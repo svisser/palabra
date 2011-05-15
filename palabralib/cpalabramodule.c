@@ -243,21 +243,19 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
             PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
             PyObject* block_obj = PyObject_GetItem(cell, PyString_FromString("block"));
-            //PyObject* char_obj = PyObject_GetItem(cell, PyString_FromString("char"));
             PyObject* empty_obj = PyObject_GetItem(cell, PyString_FromString("void"));
             PyObject* number_obj = PyObject_GetItem(cell, PyString_FromString("number"));
             const int is_block = PyObject_IsTrue(block_obj);
             const int is_empty = PyObject_IsTrue(empty_obj);
-            //char* c_str = PyString_AsString(char_obj);
             const int number = PyInt_AsLong(number_obj);
             const int index = x + y * width;
             cgrid[index].top_bar = 0;
             cgrid[index].left_bar = 0;
             cgrid[index].block = is_block;
-            cgrid[index].c = CONSTRAINT_EMPTY; //strlen(c_str) > 0 ? c_str[0] : CONSTRAINT_EMPTY;
+            cgrid[index].c = CONSTRAINT_EMPTY; // chars are read later
             cgrid[index].number = number;
             cgrid[index].empty = is_empty;
-            cgrid[index].fixed = cgrid[index].c == CONSTRAINT_EMPTY ? 0 : 1;
+            cgrid[index].fixed = 0;
         }
     }
 
@@ -291,7 +289,9 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 return NULL;
             int cx = x + (dir == DIR_ACROSS ? offset : 0);
             int cy = y + (dir == DIR_DOWN ? offset : 0);
-            cgrid[cx + cy * width].c = c_c[0];
+            const int index = cx + cy * width;
+            cgrid[index].c = c_c[0];
+            cgrid[index].fixed = 1;
         }
         
         char *cs = get_constraints(cgrid, width, height, &slots[m]);
@@ -379,17 +379,26 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         int is_word_ok = 1;
         
-        char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
+        /*int s;
+        for (s = 0; s < n_slots; s++) {
+            printf("%i %i %i (%i), ", slots[s].x, slots[s].y, slots[s].dir, slots[s].offset);
+        }*/
+        
+        //printf("Trying for %i %i %i\n", slot->x, slot->y, slot->dir);
+        char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE, slot->offset);
         //printf("Candidate BEFORE: %s (%i %i %i) from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
         
         if (word && OPTION_DUPLICATE) {
             while (1) {
+                int next_attempts = 0;
                 int next = 0;
                 for (t = 0; t < n_slots; t++) {
+                    if (!slots[t].done) continue;
                     char *word_t = get_constraints(cgrid, width, height, &slots[t]);
                     if (word_t && strcmp(word, word_t) == 0) {
-                        slot->offset++;
-                        word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
+                        next_attempts++;
+                        //printf("Finding candidate for %i %i %i with offset %i\n", slot->x, slot->y, slot->dir, slot->offset + next_attempts);
+                        word = find_candidate(cs_i, results, slot, cs, OPTION_NICE, slot->offset + next_attempts);
                         next = word != NULL;
                         break;
                     }
@@ -397,7 +406,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (!next) break;
             }
         }
-        //printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        //if (word) printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
         if (cs != NULL) {
             PyMem_Free(cs);
