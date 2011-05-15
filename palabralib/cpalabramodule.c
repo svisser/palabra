@@ -250,7 +250,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             const int is_empty = PyObject_IsTrue(empty_obj);
             char* c_str = PyString_AsString(char_obj);
             const int number = PyInt_AsLong(number_obj);
-            const int index = x + y * height;
+            const int index = x + y * width;
             cgrid[index].top_bar = 0;
             cgrid[index].left_bar = 0;
             cgrid[index].block = is_block;
@@ -326,9 +326,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         if (DEBUG) {
             printf("Searching word for (%i, %i, %s, %i) at index %i: \n", slot->x, slot->y, slot->dir == 0 ? "across" : "down", slot->count, index);
         }
-        printf("Finding for slot %i %i\n", width, height);
         char *cs = get_constraints(cgrid, width, height, slot);
-        printf("Obtained %s\n", cs);
+        //printf("Obtained %s\n", cs);
         if (!cs) {
             printf("Warning: fill failed to obtain constraints.\n");
             return NULL;
@@ -368,7 +367,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         int is_word_ok = 1;
         
         char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE);
-        printf("Candidate BEFORE: %s (%i %i %i) from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
+        //printf("Candidate BEFORE: %s (%i %i %i) from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
         
         if (word && OPTION_DUPLICATE) {
             while (1) {
@@ -385,7 +384,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (!next) break;
             }
         }
-        printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+        //printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
         if (cs != NULL) {
             PyMem_Free(cs);
@@ -427,11 +426,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (affected[k] >= 0) {
                     int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
                     int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
-                    int is_empty = cgrid[cx + cy * height].c == CONSTRAINT_EMPTY;
-                    cgrid[cx + cy * height].c = word[k];
+                    int is_empty = cgrid[cx + cy * width].c == CONSTRAINT_EMPTY;
+                    cgrid[cx + cy * width].c = word[k];
                     int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
                     if (is_empty) {
-                        cgrid[cx + cy * height].c = CONSTRAINT_EMPTY;
+                        cgrid[cx + cy * width].c = CONSTRAINT_EMPTY;
                     }
                     // words are not ok when intersecting slot has nothing
                     if (!OPTION_NICE && count == 0) {
@@ -443,7 +442,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 for (k = 0; k < slot->length; k++) {
                     int cx = slot->x + (slot->dir == DIR_ACROSS ? k : 0);
                     int cy = slot->y + (slot->dir == DIR_DOWN ? k : 0);
-                    cgrid[cx + cy * height].c = word[k];
+                    cgrid[cx + cy * width].c = word[k];
                     if (affected[k] >= 0) {
                         int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
                         (&slots[affected[k]])->count = count;
@@ -476,7 +475,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             slot->done = 1;
             order[n_done_slots] = index;
             n_done_slots++;
-            printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+            //printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         }
         if (n_done_slots == NICE_COUNT) break;
         attempts++;

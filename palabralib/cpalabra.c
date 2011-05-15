@@ -108,13 +108,13 @@ int check_intersect(char *word, char **cs, int length, Sptr *results) {
 }
 
 char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int option_nice) {
-    printf("Finding for %i %i %i from %i with %s\n", slot->x, slot->y, slot->dir, slot->offset, cs);
+    //printf("Finding for %i %i %i from %i with %s\n", slot->x, slot->y, slot->dir, slot->offset, cs);
     Py_ssize_t count = PyList_Size(slot->words);
     Py_ssize_t w;
     Py_ssize_t m_count = 0;
     for (w = 0; w < count; w++) {
         char *word = PyString_AsString(PyList_GetItem(slot->words, w));
-        printf("Considering %s %s\n", word, cs);
+        //printf("Considering %s %s\n", word, cs);
         if (check_constraints(word, cs) && (option_nice ? 1 : check_intersect(word, cs_i, slot->length, results))) {
             //printf("checking %s\n", word);
             if (m_count == slot->offset) {
@@ -416,7 +416,7 @@ int can_clear_char(Cell *cgrid, int width, int height, Slot slot) {
     for (j = 0; j < slot.length; j++) {
         int cx = slot.x + (slot.dir == DIR_ACROSS ? j : 0);
         int cy = slot.y + (slot.dir == DIR_DOWN ? j : 0);
-        if (cgrid[cx + cy * height].c == CONSTRAINT_EMPTY)
+        if (cgrid[cx + cy * width].c == CONSTRAINT_EMPTY)
             return 1;
     }
     return 0;
@@ -426,7 +426,7 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
     Slot slot = slots[index];
     int l;
     for (l = 0; l < slot.length; l++) {
-        if (cgrid[slot.x + slot.y * height].fixed == 1)
+        if (cgrid[slot.x + slot.y * width].fixed == 1)
             continue;
         int cx = slot.x + (slot.dir == DIR_ACROSS ? l : 0);
         int cy = slot.y + (slot.dir == DIR_DOWN ? l : 0);
@@ -435,7 +435,7 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
         if (m >= 0) {
             is_inter_ok = can_clear_char(cgrid, width, height, slots[m]);
         }
-        Cell *cell = &cgrid[cx + cy * height];
+        Cell *cell = &cgrid[cx + cy * width];
         if (is_inter_ok && cell->c != CONSTRAINT_EMPTY) {
             cell->c = CONSTRAINT_EMPTY;
         }
@@ -460,17 +460,15 @@ int is_valid(int x, int y, int width, int height) {
 }
 
 int is_available(Cell *cgrid, int width, int height, int x, int y) {
-    printf("Valid(%i, %i)? %i\n", x, y, is_valid(x, y, width, height));
     if (!is_valid(x, y, width, height)) return 0;
-    int a0 = cgrid[x + y * height].block == 0;
-    int a1 = cgrid[x + y * height].empty == 0;
-    printf("Available(%i, %i)? %i %i\n", x, y, a0, a1);
+    int a0 = cgrid[x + y * width].block == 0;
+    int a1 = cgrid[x + y * width].empty == 0;
     return a0 && a1;
 }
 
 char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     // TODO reduce these malloc calls
-    printf("Constraint search\n");
+    //printf("Constraint search\n");
     char* cs = PyMem_Malloc(slot->length * sizeof(char) + 1);
     if (!cs) {
         return NULL;
@@ -481,15 +479,14 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     int y = slot->y;
     int count = 0;
     while (is_available(cgrid, width, height, x, y)) {
-        printf("Checking %i %i\n", x, y);
-        cs[count] = cgrid[x + y * height].c;
-        if (dx == 1 && is_valid(x + dx, y, width, height) && cgrid[(x + dx) + y * height].left_bar == 1)
+        //printf("Setting %i for %i %i to %c\n", count, x, y, cgrid[x + y * height].c);
+        cs[count] = cgrid[x + y * width].c;
+        if (dx == 1 && is_valid(x + dx, y, width, height) && cgrid[(x + dx) + y * width].left_bar == 1)
             break;
-        if (dy == 1 && is_valid(x, y + dy, width, height) && cgrid[x + (y + dy) * height].top_bar == 1)
+        if (dy == 1 && is_valid(x, y + dy, width, height) && cgrid[x + (y + dy) * width].top_bar == 1)
             break;
         x += dx;
         y += dy;
-        printf("Advanced to: %i %i\n", x, y);
         count++;
     }
     cs[slot->length] = '\0';
@@ -577,7 +574,7 @@ PyObject* gather_fill(Cell *cgrid, int width, int height) {
     PyObject *fill = PyList_New(0);
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-            Cell *cell = &cgrid[x + y * height];
+            Cell *cell = &cgrid[x + y * width];
             if (cell->fixed == 1 || cell->c == CONSTRAINT_EMPTY) continue;
             char cell_c[2];
             cell_c[0] = toupper(cell->c);
