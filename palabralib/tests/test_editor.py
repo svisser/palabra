@@ -429,3 +429,12 @@ class EditorTestCase(unittest.TestCase):
         g = Grid(2, 2)
         g2 = editor.attempt_fill(g, ["ab", "bc", "dc", "ad"])
         self.assertEquals(g2.count_chars(include_blanks=False), 4)
+        
+    def testAttemptFillNine(self):
+        # A B C
+        # D E F
+        # G H I
+        pass # TODO don't run: will create infinite loop
+        #g = Grid(3, 3)
+        #g2 = editor.attempt_fill(g, ["abc", "def", "ghi", "adg", "beh", "cfi"])
+        #self.assertEquals(g2.count_chars(include_blanks=False), 9)
