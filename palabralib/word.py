@@ -77,15 +77,15 @@ def read_wordlist(path):
                 words.add(lower(word))
     return words
     
-def check_accidental_words(grid):
+def check_accidental_words(wordlists, grid):
     accidentals = []
     slots = grid.generate_all_slots()
     for s in slots:
-        for offset, length in check_accidental_word(s):
+        for offset, length in check_accidental_word(wordlists, s):
             accidentals.append(s[offset:offset + length])
     return accidentals
         
-def check_accidental_word(seq):
+def check_accidental_word(wordlists, seq):
     # return (offset, length) pairs
     seqs = [(c if c[2] != constants.MISSING_CHAR else None) for c in seq]
     if False not in [(i is None) for i in seqs]:
@@ -103,13 +103,15 @@ def check_accidental_word(seq):
     check = [i for i in p if len(i) >= 2]
     result = []
     for s in check:
-        r = _check_seq_for_words(s)
+        r = _check_seq_for_words(wordlists, s)
         if r is not None:
             result.append(r)
     return result
     
-def _check_seq_for_words(seq):
-    print seq
+def _check_seq_for_words(wlist, seq):
+    s = ''.join([c for x, y, c in seq])
+    for wlist in wordlists:
+        print wlist.find_by_pattern("*" + s + "*")
     return None
 
 def produce_word_counts(word):

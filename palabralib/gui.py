@@ -51,7 +51,11 @@ from files import (
 )
 from gui_editor import WordTool, FillTool
 from gui_prefs import PreferencesWindow
-from gui_word import FindWordsDialog, WordListEditor
+from gui_word import (
+    AccidentalWordsDialog,
+    FindWordsDialog,
+    WordListEditor,
+)
 import grid
 from grid import Grid
 from newpuzzle import NewWindow, SizeWindow
@@ -1161,10 +1165,26 @@ class PalabraWindow(gtk.Window):
             , u"Find words in wordlists according to a pattern")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem(u"_Find words...", True)
+        item.connect("activate", activate, )
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        
+        def activate(item):
+            w = AccidentalWordsDialog(self, self.puzzle_manager.current_puzzle)
+            w.show_all()
+            w.run()
+            w.destroy()
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , u"View words that accidentally appeared in the grid")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.MenuItem(u"View _accidental words...", True)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)
         menu.append(item)
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
         
         tool_menu = gtk.MenuItem(u"_Tools", True)
         tool_menu.set_submenu(menu)

@@ -21,24 +21,51 @@ import operator
 import pangocairo
 
 import constants
+from word import check_accidental_words
 
-class FindWordsDialog(gtk.Dialog):
-    def __init__(self, parent):
-        gtk.Dialog.__init__(self, u"Find words", parent, gtk.DIALOG_MODAL)
-        self.wordlists = parent.wordlists
-        self.sort_option = 0
-        self.pattern = None
+class PalabraDialog(gtk.Dialog):
+    def __init__(self, pwindow, title):
+        gtk.Dialog.__init__(self, title, pwindow, gtk.DIALOG_MODAL)
+        self.pwindow = pwindow
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        main = gtk.VBox(False, 0)
-        main.set_spacing(18)
-        label = gtk.Label("Use ? for an unknown letter and * for zero or more unknown letters.")
+        self.main = gtk.VBox(False, 0)
+        self.main.set_spacing(18)
+        hbox.pack_start(self.main, True, True, 0)
+        self.vbox.pack_start(hbox, True, True, 0)
+
+class AccidentalWordsDialog(PalabraDialog):
+    def __init__(self, parent, puzzle):
+        PalabraDialog.__init__(self, parent, u"View accidental words")
+        self.wordlists = parent.wordlists
+        self.store = gtk.ListStore(str)
+        self.tree = gtk.TreeView(self.store)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("Word", cell, markup=0)
+        self.tree.append_column(column)
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add(self.tree)
+        scrolled_window.set_size_request(300, 300)
+        self.main.pack_start(scrolled_window, True, True, 0)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+        print check_accidental_words(self.wordlists, puzzle.grid)
+
+class FindWordsDialog(PalabraDialog):
+    def __init__(self, parent):
+        PalabraDialog.__init__(self, parent, u"Find words")
+        self.wordlists = parent.wordlists
+        self.sort_option = 0
+        self.pattern = None
+        
+        label = gtk.Label(u"Use ? for an unknown letter and * for zero or more unknown letters.")
         label.set_alignment(0, 0.5)
-        main.pack_start(label, False, False, 0)
+        self.main.pack_start(label, False, False, 0)
         entry = gtk.Entry()
         entry.connect("changed", self.on_entry_changed)
-        main.pack_start(entry, False, False, 0)
+        self.main.pack_start(entry, False, False, 0)
         self.store = gtk.ListStore(str, str)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
@@ -53,7 +80,7 @@ class FindWordsDialog(gtk.Dialog):
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add(self.tree)
         scrolled_window.set_size_request(-1, 300)
-        main.pack_start(scrolled_window, True, True, 0)
+        self.main.pack_start(scrolled_window, True, True, 0)
         
         sort_hbox = gtk.HBox(False, 6)
         label = gtk.Label("Sort by:")
@@ -68,10 +95,7 @@ class FindWordsDialog(gtk.Dialog):
         combo.set_active(self.sort_option)
         combo.connect("changed", on_sort_changed)
         sort_hbox.pack_start(combo, True, True, 0)
-        
-        main.pack_start(sort_hbox, False, False, 0)
-        hbox.pack_start(main, True, True, 0)
-        self.vbox.pack_start(hbox, True, True, 0)
+        self.main.pack_start(sort_hbox, False, False, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.launch_pattern(None)
         
