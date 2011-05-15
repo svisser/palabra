@@ -80,9 +80,11 @@ def read_wordlist(path):
 def check_accidental_words(wordlists, grid):
     accidentals = []
     slots = grid.generate_all_slots()
-    for s in slots:
+    for d, s in slots:
         for offset, length in check_accidental_word(wordlists, s):
-            accidentals.append(s[offset:offset + length])
+            if (d == "across" or d == "down") and offset == 0 and length == len(s):
+                continue
+            accidentals.append((d, s[offset:offset + length]))
     return accidentals
         
 def check_accidental_word(wordlists, seq):

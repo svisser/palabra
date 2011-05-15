@@ -57,8 +57,8 @@ class AccidentalWordsDialog(PalabraDialog):
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
         
-        self.results = [i for i in check_accidental_words(self.wordlists, puzzle.grid) if len(i) > 1]
-        show = [(''.join([c for x, y, c in r]), i) for i, r in enumerate(self.results)]
+        self.results = [(d, cells) for d, cells in check_accidental_words(self.wordlists, puzzle.grid) if len(cells) > 1]
+        show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(self.results)]
         show.sort(key=operator.itemgetter(0))
         for s, i in show:
             s = s.lower()
@@ -68,7 +68,8 @@ class AccidentalWordsDialog(PalabraDialog):
         store, it = selection.get_selected()
         if it is not None:
             index = self.store[it][1]
-            highlight_cells(self.pwindow, self.puzzle, "cells", [(x, y) for x, y, c in self.results[index]])
+            d, cells = self.results[index]
+            highlight_cells(self.pwindow, self.puzzle, "cells", [(x, y) for x, y, c in cells])
 
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):

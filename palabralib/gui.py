@@ -1176,7 +1176,7 @@ class PalabraWindow(gtk.Window):
             w.run()
             w.destroy()
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"View words that accidentally appeared in the grid")
+            , u"View words that may have accidentally appeared in the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem(u"View _accidental words...", True)
         item.connect("activate", activate)
