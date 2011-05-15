@@ -113,9 +113,10 @@ char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int optio
     Py_ssize_t w;
     Py_ssize_t m_count = 0;
     for (w = 0; w < count; w++) {
-        char *word = PyString_AsString(PyList_GetItem(slot->words, w));        
+        char *word = PyString_AsString(PyList_GetItem(slot->words, w));
+        printf("Considering %s %s\n", word, cs);
         if (check_constraints(word, cs) && (option_nice ? 1 : check_intersect(word, cs_i, slot->length, results))) {
-            printf("checking %s\n", word);
+            //printf("checking %s\n", word);
             if (m_count == slot->offset) {
                 return word;
             }
@@ -459,13 +460,17 @@ int is_valid(int x, int y, int width, int height) {
 }
 
 int is_available(Cell *cgrid, int width, int height, int x, int y) {
-    return cgrid[x + y * height].block == 0
-        && cgrid[x + y * height].empty == 0
-        && is_valid(x, y, width, height);
+    printf("Valid(%i, %i)? %i\n", x, y, is_valid(x, y, width, height));
+    if (!is_valid(x, y, width, height)) return 0;
+    int a0 = cgrid[x + y * height].block == 0;
+    int a1 = cgrid[x + y * height].empty == 0;
+    printf("Available(%i, %i)? %i %i\n", x, y, a0, a1);
+    return a0 && a1;
 }
 
 char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     // TODO reduce these malloc calls
+    printf("Constraint search\n");
     char* cs = PyMem_Malloc(slot->length * sizeof(char) + 1);
     if (!cs) {
         return NULL;
@@ -476,6 +481,7 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     int y = slot->y;
     int count = 0;
     while (is_available(cgrid, width, height, x, y)) {
+        printf("Checking %i %i\n", x, y);
         cs[count] = cgrid[x + y * height].c;
         if (dx == 1 && is_valid(x + dx, y, width, height) && cgrid[(x + dx) + y * height].left_bar == 1)
             break;
@@ -483,6 +489,7 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
             break;
         x += dx;
         y += dy;
+        printf("Advanced to: %i %i\n", x, y);
         count++;
     }
     cs[slot->length] = '\0';
@@ -537,15 +544,28 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
                 continue;
             }
             Slot *bslot = &slots[blank];
-            if (1) {
-                printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
-            }
+            if (0) printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
             cleared++;
             clear_slot(cgrid, width, height, slots, n_slots, blank);
             bslot->count = determine_count(words, cgrid, width, height, bslot);
             bslot->done = 0;
             if (s > iindex) bslot->offset = 0;
             if (s == iindex) bslot->offset++;
+            // reset offsets of intersecting slots as well
+            // the reason is that constraints may change with future words
+            // for the blanked slot which means offsets have to be reset
+            // TODO: improve as we may be throwing away too much info
+            int k;
+            for (k = 0; k < bslot->length; k++) {
+                int cx = bslot->x + (bslot->dir == DIR_ACROSS ? k : 0);
+                int cy = bslot->y + (bslot->dir == DIR_DOWN ? k : 0);
+                int dir = bslot->dir == DIR_ACROSS ? 1 : 0;
+                int indexD = get_slot_index(slots, n_slots, cx, cy, dir);
+                if (indexD >= 0 && indexD != blank) {
+                    (&slots[indexD])->offset = 0;
+                }
+            }
+            
         }
     }
     return cleared;
@@ -659,7 +679,7 @@ inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, 
                 && slots[s].dir == dir
                 && slots[s].length == length
                 && !slots[s].done
-                && slots[s].count > 0
+                //&& slots[s].count > 0
                 && a_lengths[length] < lengths[length]) {
                 return s;
             }
@@ -672,13 +692,13 @@ inline int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, 
     int score = 1000 * (width + height);
     for (t = 0; t < n_slots; t++) {
         int l = slots[t].length;
-        printf("%i %i %i | %i %i\n", slots[t].x, slots[t].y, slots[t].dir, slots[t].done, slots[t].count);
-        if (!slots[t].done && slots[t].count > 0 && a_lengths[l] < lengths[l]) {
+        //printf("%i %i %i | %i %i\n", slots[t].x, slots[t].y, slots[t].dir, slots[t].done, slots[t].count);
+        if (!slots[t].done && /*slots[t].count > 0 &&*/ a_lengths[l] < lengths[l]) {
             int s_x = slots[t].x - c_x;
             int s_y = slots[t].y - c_y;
             int s_score = (s_x >= 0 ? s_x : -1 * s_x) + (s_y >= 0 ? s_y : -1 * s_y) + (slots[t].dir == DIR_DOWN ? 5 : 0);
             if (s_score < score) {
-                printf("Score: %i %i\n", s_score, score);
+                //printf("Score: %i %i\n", s_score, score);
                 index = t;
                 score = s_score;
             }

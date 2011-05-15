@@ -231,8 +231,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     const int OPTION_DUPLICATE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("duplicate")));
     const int NICE_COUNT = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("nice_count")));
 
-    int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
-    int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
+    const int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
+    const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     PyObject* data = PyObject_GetAttrString(grid, "data");
     
     int x;
@@ -246,11 +246,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             PyObject* char_obj = PyObject_GetItem(cell, PyString_FromString("char"));
             PyObject* empty_obj = PyObject_GetItem(cell, PyString_FromString("void"));
             PyObject* number_obj = PyObject_GetItem(cell, PyString_FromString("number"));
-            int is_block = PyObject_IsTrue(block_obj);
-            int is_empty = PyObject_IsTrue(empty_obj);
+            const int is_block = PyObject_IsTrue(block_obj);
+            const int is_empty = PyObject_IsTrue(empty_obj);
             char* c_str = PyString_AsString(char_obj);
-            int number = PyInt_AsLong(number_obj);
-            int index = x + y * height;
+            const int number = PyInt_AsLong(number_obj);
+            const int index = x + y * height;
             cgrid[index].top_bar = 0;
             cgrid[index].left_bar = 0;
             cgrid[index].block = is_block;
@@ -320,13 +320,15 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         } else {
             index = find_slot(slots, n_slots, order);
         }
-        printf("Index: %i\n", index);
+        //printf("Index: %i\n", index);
         if (index < 0) break;
         Slot *slot = &slots[index];
         if (DEBUG) {
             printf("Searching word for (%i, %i, %s, %i) at index %i: \n", slot->x, slot->y, slot->dir == 0 ? "across" : "down", slot->count, index);
         }
+        printf("Finding for slot %i %i\n", width, height);
         char *cs = get_constraints(cgrid, width, height, slot);
+        printf("Obtained %s\n", cs);
         if (!cs) {
             printf("Warning: fill failed to obtain constraints.\n");
             return NULL;
@@ -448,30 +450,9 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     }
                 }
             }
-            if (OPTION_NICE) {
-                // words are not ok when no slot has any count > 0 anymore
-                int has_pos_count = 0;
-                for (t = 0; t < n_slots; t++) {
-                    printf("Count %i for %i %i %i | %i\n", slots[t].count, slots[t].x, slots[t].y, slots[t].dir, slots[t].done);
-                }
-                for (t = 0; t < n_slots; t++) {
-                    if (t == index) continue;
-                    if (!slots[t].done && slots[t].count > 0) {
-                        printf("Pos count 1 for %i %i %i\n", slots[t].x, slots[t].y, slots[t].dir);
-                        has_pos_count = 1;
-                        break;
-                    }
-                }
-                printf("Checking pos count %i\n", has_pos_count);
-                if (!has_pos_count) {
-                    is_backtrack = 0;
-                }
-                printf("%i %i %i now has offset %i\n", slot->x, slot->y, slot->dir, slot->offset);
-                //attempts += 20;
-            }
         }
         if (is_backtrack) {
-            printf("Backtracking\n");
+            //printf("Backtracking\n");
             is_word_ok = 0;
             if (n_done_slots > 0) {
                 if (OPTION_NICE ? n_done_slots == NICE_COUNT : n_done_slots > best_n_done_slots) {
@@ -495,7 +476,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             slot->done = 1;
             order[n_done_slots] = index;
             n_done_slots++;
-            //printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
+            printf("Filled in: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         }
         if (n_done_slots == NICE_COUNT) break;
         attempts++;

@@ -376,10 +376,28 @@ class EditorTestCase(unittest.TestCase):
         # A B C
         # D   F
         # E H G
+        words = ["abc", "ade", "cfg", "ehg"]
         g = Grid(3, 3)
         g.set_block(1, 1, True)
-        g2 = editor.attempt_fill(g, ["abc", "ade", "cfg", "ehg"])
+        g2 = editor.attempt_fill(g, words)
         self.assertEquals(g2.count_chars(include_blanks=False), 8)
+        counts = dict([(g2.data[y][x]["char"], 1) for x, y in g2.cells() if not g2.data[y][x]["block"]])
+        self.assertEquals(len(counts), 8)
+        words.reverse()
+        g3 = editor.attempt_fill(g, words)
+        self.assertEquals(g2.count_chars(include_blanks=False), 8)
+        counts = dict([(g2.data[y][x]["char"], 1) for x, y in g3.cells() if not g2.data[y][x]["block"]])
+        self.assertEquals(len(counts), 8)
         cPalabra.postprocess()
         
+    def testAttemptFillNoIntersectingAcross(self):
+        g = Grid(3, 1)
+        g2 = editor.attempt_fill(g, ["abc"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 3)
+        
+    def testAttemptFillNoIntersectingDown(self):
+        g = Grid(1, 3)
+        g2 = editor.attempt_fill(g, ["def"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 3)
     # also test for ["aab", "aab", "baa", "baa"]
+    # and reverse(["abc", "ade", "cfg", "ehg"])
