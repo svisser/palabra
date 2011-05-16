@@ -43,6 +43,20 @@ class AccidentalWordsDialog(PalabraDialog):
         PalabraDialog.__init__(self, parent, u"View accidental words")
         self.puzzle = puzzle
         self.wordlists = parent.wordlists
+        self.index = 0
+        wlist_hbox = gtk.HBox(False, 0)
+        label = gtk.Label(u"Check for words in list:")
+        label.set_alignment(0, 0.5)
+        wlist_hbox.pack_start(label, True, True, 0)
+        combo = gtk.combo_box_new_text()
+        for wlist in self.wordlists:
+            combo.append_text(wlist.name)
+        combo.set_active(self.index)    
+        def on_wordlist_changed(widget):
+            self.index = widget.get_active()
+        combo.connect("changed",on_wordlist_changed)
+        wlist_hbox.pack_start(combo, False, False, 0)
+        self.main.pack_start(wlist_hbox, False, False, 0)
         self.store = gtk.ListStore(str, int)
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
@@ -68,7 +82,8 @@ class AccidentalWordsDialog(PalabraDialog):
         self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT, self.load_words, grid)
         
     def load_words(self, grid):
-        self.results = [(d, cells) for d, cells in check_accidental_words(self.wordlists, grid) if len(cells) > 1]
+        wlists = [self.wordlists[self.index]]
+        self.results = [(d, cells) for d, cells in check_accidental_words(wlists, grid) if len(cells) > 1]
         show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(self.results)]
         show.sort(key=operator.itemgetter(0))
         self.store.clear()
