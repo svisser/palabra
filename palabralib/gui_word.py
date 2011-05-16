@@ -70,7 +70,8 @@ class AccidentalWordsDialog(PalabraDialog):
         show.sort(key=operator.itemgetter(0))
         self.store.clear()
         for s, i in show:
-            self.store.append([s.lower(), i])
+            t1 = '<span font_desc="Monospace 12">' + s.lower() + '</span>'
+            self.store.append([t1, i])
     
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
