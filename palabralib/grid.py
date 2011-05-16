@@ -589,7 +589,6 @@ class Grid:
             return self.get_start_word(*slot)
         elif target == "end":
             return self.get_end_word(*slot)
-        return None
         
     def count_words(self):
         """Return the number of words in the grid."""
