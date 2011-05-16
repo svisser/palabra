@@ -1453,3 +1453,21 @@ class GridTestCase(unittest.TestCase):
         self.assertTrue(("ne", [(0, 1, 'B'), (1, 0, 'A')]) in slots)
         seq = [(0, 1, 'B'), (1, 2, 'C'), (2, 3, constants.MISSING_CHAR), (3, 4, constants.MISSING_CHAR)]
         self.assertTrue(("se", seq) in slots)
+        
+    def testGenerateAllSlotsLengthOne(self):
+        # _ _ _
+        # _ A _
+        # _ _ _
+        g = Grid(3, 3)
+        g.set_char(1, 1, 'A')
+        slots = g.generate_all_slots()
+        dirs_with_a = [d for d, cells in slots if (1, 1, 'A') in cells]
+        self.assertEquals(len(dirs_with_a), 8)
+        self.assertTrue("across" in dirs_with_a)
+        self.assertTrue("down" in dirs_with_a)
+        self.assertTrue("acrossr" in dirs_with_a)
+        self.assertTrue("downr" in dirs_with_a)
+        self.assertTrue("ne" in dirs_with_a)
+        self.assertTrue("se" in dirs_with_a)
+        self.assertTrue("sw" in dirs_with_a)
+        self.assertTrue("nw" in dirs_with_a)
