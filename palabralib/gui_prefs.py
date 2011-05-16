@@ -24,6 +24,7 @@ _COLOR_BUTTONS = [(constants.COLOR_PRIMARY_SELECTION, u"Selected cell:", 'color1
     , (constants.COLOR_CURRENT_WORD, u"Selected word:", 'color3_button')
     , (constants.COLOR_PRIMARY_ACTIVE, u"Cell under mouse pointer:", 'color2_button')
     , (constants.COLOR_SECONDARY_ACTIVE, u"Symmetrical cells:", 'color4_button')
+    , (constants.COLOR_HIGHLIGHT, u"Highlighted cells", 'color5_button')
 ]
 
 class PreferencesWindow(gtk.Dialog):
@@ -208,6 +209,7 @@ class PreferencesWindow(gtk.Dialog):
             self.color2_button.set_color(gtk.gdk.Color(*scheme.primary_active))
             self.color4_button.set_color(gtk.gdk.Color(*scheme.secondary_active))
             self.color3_button.set_color(gtk.gdk.Color(*scheme.current_word))
+            self.color5_button.set_color(gtk.gdk.Color(*scheme.highlight))
             self.refresh_color_preferences()
 
     def refresh_color_preferences(self):

@@ -32,42 +32,49 @@ ColorScheme = namedtuple('ColorScheme', ['title'
     , 'primary_active'
     , 'secondary_active'
     , 'current_word'
+    , 'highlight'
 ])
 _SCHEME_YELLOW = ColorScheme("Yellow"
     , (65535, 65535, 16383)
     , (65535, 65535, 16383)
     , (65535, 65535, 49152)
     , (65535, 65535, 49152)
+    , (65535, 65535, 16383)
 )
 _SCHEME_RED = ColorScheme("Red"
     , (65535, 16383, 16383)
     , (65535, 16383, 16383)
     , (65535, 49152, 49152)
     , (65535, 49152, 49152)
+    , (65535, 16383, 16383)
 )
 _SCHEME_GREEN = ColorScheme("Green"
     , (16383, 65535, 16383)
     , (16383, 65535, 16383)
     , (49152, 65535, 49152)
     , (49152, 65535, 49152)
+    , (16383, 65535, 16383)
 )
 _SCHEME_BLUE = ColorScheme("Blue"
     , (16383, 16383, 65535)
     , (16383, 16383, 65535)
     , (49152, 49152, 65535)
     , (49152, 49152, 65535)
+    , (16383, 16383, 65535)
 )
 _SCHEME_PURPLE = ColorScheme("Purple"
     , (65535, 16383, 65535)
     , (65535, 16383, 65535)
     , (65535, 49152, 65535)
     , (65535, 49152, 65535)
+    , (65535, 16383, 65535)
 )
 _SCHEME_CYAN = ColorScheme("Cyan"
     , (16383, 65535, 65535)
     , (16383, 65535, 65535)
     , (49152, 65535, 65535)
     , (49152, 65535, 65535)
+    , (16383, 65535, 65535)
 )
 
 COLORS = [('yellow', _SCHEME_YELLOW)
@@ -89,10 +96,10 @@ _COLOR_ATTRS = [
     , (constants.COLOR_PRIMARY_ACTIVE, 'primary_active')
     , (constants.COLOR_SECONDARY_ACTIVE, 'secondary_active')
     , (constants.COLOR_CURRENT_WORD, 'current_word')
+    , (constants.COLOR_HIGHLIGHT, 'highlight')
 ]
 _OTHER_COLOR_PREFS = [
     (constants.COLOR_WARNING, (65535, 49152, 49152))
-    , (constants.COLOR_HIGHLIGHT, (65535, 65535, 16383))
 ]
 _INT_PREFS = [
     (constants.PREF_INITIAL_HEIGHT, 15)
