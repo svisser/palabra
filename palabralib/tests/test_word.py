@@ -584,3 +584,29 @@ class WordTestCase(unittest.TestCase):
         result = word.check_accidental_words([clist1, clist2], g)
         self.assertEquals(len(result), 4)
         cPalabra.postprocess()
+        
+    def testAccidentalEntries(self):
+        seq1 = ("across", [(0, 0, 'A'), (1, 0, 'B'), (2, 0, 'C')])
+        seq2 = ("down", [(3, 3, 'D'), (3, 4, 'E'), (3, 5, 'F')])
+        seqs = [seq1, seq2]
+        entries = list(word.accidental_entries(seqs))
+        self.assertEquals(len(entries), 2)
+        s0, count0, indices0 = entries[0]
+        s1, count1, indices1 = entries[1]
+        self.assertEquals(s0, "ABC")
+        self.assertEquals(s1, "DEF")
+        self.assertEquals(count0, 1)
+        self.assertEquals(count1, 1)
+        self.assertEquals(indices0, str(0))
+        self.assertEquals(indices1, str(1))
+        
+    def testAccidentalEntriesDuplicate(self):
+        seq1 = ("across", [(0, 0, 'A'), (1, 0, 'B'), (2, 0, 'C')])
+        seq2 = ("down", [(3, 3, 'A'), (3, 4, 'B'), (3, 5, 'C')])
+        seqs = [seq1, seq2]
+        entries = list(word.accidental_entries(seqs, True))
+        self.assertEquals(len(entries), 1)
+        s0, count0, indices0 = entries[0]
+        self.assertEquals(s0, "ABC")
+        self.assertEquals(count0, 2)
+        self.assertEquals(indices0, "0,1")
