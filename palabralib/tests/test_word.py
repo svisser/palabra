@@ -253,7 +253,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(clist.search(3, []), [])
         cPalabra.postprocess()
         
-    def testEmpty(self):
+    def testEmptyWord(self):
         clist = CWordList([""])
         self.assertEquals(clist.search(0, []), [])
         cPalabra.postprocess()
