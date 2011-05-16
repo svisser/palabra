@@ -1,6 +1,9 @@
 
 This is a list of changes since the initial release of Palabra.
 
+0.1.7 (unreleased)
+* Added button in new puzzle window for finding grids with specified words.
+
 0.1.6 (unreleased)
 * Added ability to store an explanation for a clue (XPF).
 * Added basic support for ipuz file format.
@@ -9,8 +12,8 @@ This is a list of changes since the initial release of Palabra.
 * Added properties dialog for modifying individual cells.
 * Added ability to show words of selected length in properties window.
 * Added various options for export to PDF.
-* Added button in new puzzle window for finding grids with specified words.
 * Added dialog for finding words using basic regex.
+* Added dialog for viewing accidental words in the grid.
 
 0.1.5 (April 19, 2011)
 * XPF 1.0 is supported (except right-to-left editing)
