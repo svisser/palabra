@@ -130,7 +130,8 @@ def check_accidental_word(wordlists, seq):
 def check_str_for_words(wordlists, offset, s):
     """
     Given a string s, returns pairs of (offset, length) of words that
-    occur in the given wordlists.
+    occur in the given wordlists. The given offset is the offset of
+    string s in the original sequence.
     """
     l = len(s)
     return [(offset + i, j - i) for i in xrange(l) for j in xrange(i + 1, l + 1)

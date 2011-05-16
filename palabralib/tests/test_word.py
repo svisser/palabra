@@ -510,3 +510,65 @@ class WordTestCase(unittest.TestCase):
         for l, words in clist.words.items():
             self.assertEquals(words, [])
         cPalabra.postprocess()
+        
+    def testAccidentalGridTwo(self):
+        clist = CWordList(["no"])
+        # N _ N
+        # _ O _
+        # N _ N
+        g = Grid(3, 3)
+        g.set_char(0, 0, 'N')
+        g.set_char(2, 0, 'N')
+        g.set_char(0, 2, 'N')
+        g.set_char(2, 2, 'N')
+        g.set_char(1, 1, 'O')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 4)
+        for d, cells in result:
+            self.assertEquals("NO", ''.join([c for x, y, c in cells]))
+        cPalabra.postprocess()
+        
+    def testAccidentalGridThree(self):
+        clist = CWordList(["no"])
+        # _ _ _ _ _
+        # _ N _ N _
+        # _ _ O _ _
+        # _ N _ N _
+        # _ _ _ _ _
+        g = Grid(5, 5)
+        g.set_char(1, 1, 'N')
+        g.set_char(3, 1, 'N')
+        g.set_char(1, 3, 'N')
+        g.set_char(3, 3, 'N')
+        g.set_char(2, 2, 'O')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 4)
+        for d, cells in result:
+            self.assertEquals("NO", ''.join([c for x, y, c in cells]))
+        cPalabra.postprocess()
+        
+    def testAccidentalGridReverse(self):
+        clist = CWordList(["radar"])
+        g = Grid(6, 5)
+        g.set_char(0, 0, 'R')
+        g.set_char(1, 0, 'A')
+        g.set_char(2, 0, 'D')
+        g.set_char(3, 0, 'A')
+        g.set_char(4, 0, 'R')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 2)
+        cPalabra.postprocess()
+        
+    def testAccidentalGridMultipleLists(self):
+        clist1 = CWordList(["ab"], index=0)
+        clist2 = CWordList(["ba"], index=1)
+        # _ _ A
+        # _ B _
+        # A _ _
+        g = Grid(3, 3)
+        g.set_char(0, 2, 'A')
+        g.set_char(1, 1, 'B')
+        g.set_char(2, 0, 'A')
+        result = word.check_accidental_words([clist1, clist2], g)
+        self.assertEquals(len(result), 4)
+        cPalabra.postprocess()

@@ -690,13 +690,19 @@ class Grid:
         
     def generate_all_slots(self):
         """
-        Generate all sequences of cells in the directions across, down,
-        north-east, south-east, south-west and north-west.
+        Generate all sequences of cells of length 2+ in the directions across,
+        across (reverse), down, down (reverse), north-east, south-east,
+        south-west and north-west.
         """
         data = self.data
         gather_word = self.gather_word
-        slots = [(d, decompose_word(gather_word(x, y, d), x, y, d))
-            for n, x, y, d in self.words(allow_duplicates=True, include_dir=True)]
+        slots = []
+        for n, x, y, d in self.words(allow_duplicates=True, include_dir=True):
+            l1 = decompose_word(gather_word(x, y, d), x, y, d)
+            l2 = decompose_word(gather_word(x, y, d), x, y, d)
+            l2.reverse()
+            slots.append((d, l1))
+            slots.append((d, l2))
         opp = {"ne": "sw", "se": "nw"}
         for i, d in [(0, "ne"), (1, "se")]:
             seqs = self.generate_diagonals(i)
