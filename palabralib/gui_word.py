@@ -34,7 +34,7 @@ class PalabraDialog(gtk.Dialog):
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         self.main = gtk.VBox(False, 0)
-        self.main.set_spacing(18)
+        self.main.set_spacing(9)
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
 
