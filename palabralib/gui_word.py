@@ -116,19 +116,24 @@ class AccidentalWordsDialog(PalabraDialog):
             h_cells = [(x, y) for x, y, c in highlight]
             highlight_cells(self.pwindow, self.puzzle, "cells", h_cells)
 
+MATCHING_TEXT = u"Number of matching words:"
+
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent, u"Find words")
         self.wordlists = parent.wordlists
         self.sort_option = 0
         self.pattern = None
-        
         label = gtk.Label(u"Use ? for an unknown letter and * for zero or more unknown letters.")
         label.set_alignment(0, 0.5)
         self.main.pack_start(label, False, False, 0)
         entry = gtk.Entry()
         entry.connect("changed", self.on_entry_changed)
         self.main.pack_start(entry, False, False, 0)
+        self.n_label = gtk.Label("")
+        self.n_label.set_alignment(1, 0.5)
+        self.set_n_label(0)
+        self.main.pack_start(self.n_label, False, False, 0)
         self.store = gtk.ListStore(str, str)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
@@ -162,6 +167,9 @@ class FindWordsDialog(PalabraDialog):
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.launch_pattern(None)
         
+    def set_n_label(self, n):
+        self.n_label.set_text(MATCHING_TEXT + " " + str(n))
+        
     def on_entry_changed(self, widget):
         glib.source_remove(self.timer)
         self.launch_pattern(widget.get_text().strip())
@@ -183,6 +191,7 @@ class FindWordsDialog(PalabraDialog):
             result.sort(key=operator.itemgetter(1))
         self.pattern = pattern
         self.store.clear()
+        self.set_n_label(len(result))
         for name, s in result:
             t1 = '<span font_desc="Monospace 12">' + s + '</span>'
             self.store.append([t1, name])
