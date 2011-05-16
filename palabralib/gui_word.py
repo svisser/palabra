@@ -123,7 +123,7 @@ class AccidentalWordsDialog(PalabraDialog):
                 del ws[s]
         else:
             for s, index in show:
-                yield s, 1, str(index)
+                yield s, 1, index
     
     def on_selection_changed(self, selection):
         """Highlight all cells associated with the selected entry."""
