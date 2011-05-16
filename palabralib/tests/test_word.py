@@ -436,4 +436,38 @@ class WordTestCase(unittest.TestCase):
         g.set_char(3, 3, 'O')
         result = word.check_accidental_words([clist], g)
         self.assertEquals(len(result), 4)
+        self.assertTrue(("ne", [(0, 4, 'N'), (1, 3, 'O')]) in result)
+        self.assertTrue(("se", [(0, 0, 'N'), (1, 1, 'O')]) in result)
+        self.assertTrue(("sw", [(4, 0, 'N'), (3, 1, 'O')]) in result)
+        self.assertTrue(("nw", [(4, 4, 'N'), (3, 3, 'O')]) in result)
         cPalabra.postprocess()
+        
+    def testAccidentalGridIgnoreNormalSlots(self):
+        clist = CWordList(["bad"])
+        # B A D
+        # A A _
+        # D _ D
+        g = Grid(3, 3)
+        g.set_char(0, 0, 'B')
+        g.set_char(1, 0, 'A')
+        g.set_char(2, 0, 'D')
+        g.set_char(0, 1, 'A')
+        g.set_char(0, 2, 'D')
+        g.set_char(1, 1, 'A')
+        g.set_char(2, 2, 'D')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 1)
+        self.assertTrue(("se", [(0, 0, 'B'), (1, 1, 'A'), (2, 2, 'D')]) in result)
+        cPalabra.postprocess()
+        
+    def testAccidentalSubstrings(self):
+        clist = CWordList(["bad"])
+        g = Grid(5, 5)
+        g.set_char(0, 0, 'B')
+        g.set_char(1, 0, 'A')
+        g.set_char(2, 0, 'D')
+        g.set_char(3, 0, 'L')
+        g.set_char(4, 0, 'Y')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 1)
+        self.assertTrue(("across", [(0, 0, 'B'), (1, 0, 'A'), (2, 0, 'D')]) in result)
