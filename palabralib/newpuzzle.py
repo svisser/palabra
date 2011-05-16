@@ -291,7 +291,7 @@ class NewWindow(gtk.Dialog):
         files_hbox.pack_start(align, False, False, 0)
         self.find_button = gtk.Button(u"Find grids")
         self.find_button.connect("clicked", self.on_find_patterns)
-        files_hbox.pack_start(self.find_button, False, False, 0)
+        #files_hbox.pack_start(self.find_button, False, False, 0)
         
         patterns_vbox.pack_start(files_hbox, False, False, 6)
         
