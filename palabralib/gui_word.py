@@ -44,6 +44,7 @@ class AccidentalWordsDialog(PalabraDialog):
         self.puzzle = puzzle
         self.wordlists = parent.wordlists
         self.index = 0
+        self.collapse = True
         wlist_hbox = gtk.HBox(False, 0)
         label = gtk.Label(u"Check for words in list:")
         label.set_alignment(0, 0.5)
@@ -71,6 +72,13 @@ class AccidentalWordsDialog(PalabraDialog):
         label = gtk.Label(u"Click to highlight the word(s) in the grid.")
         label.set_alignment(0, 0.5)
         self.main.pack_start(label, False, False, 0)
+        def collapse_callback(button):
+            self.collapse = button.get_active()
+            self.launch_accidental(self.puzzle.grid)
+        button = gtk.CheckButton("Collapse multiple occurrences into one item.")
+        button.connect("toggled", collapse_callback)
+        button.set_active(self.collapse)
+        self.main.pack_start(button, False, False, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
@@ -84,10 +92,11 @@ class AccidentalWordsDialog(PalabraDialog):
         
     def load_words(self, grid, wlist):
         """Compute and display the words of the grid found in the wordlist."""
+        highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.results = [(d, cells) for d, cells in
             check_accidental_words([wlist], grid) if len(cells) > 1]
         self.store.clear()
-        for s, count, str_indices in self.entries(self.results):
+        for s, count, str_indices in self.entries(self.results, self.collapse):
             text = s.lower()
             if count > 1:
                 text += " (" + str(count) + "x)"
@@ -95,22 +104,27 @@ class AccidentalWordsDialog(PalabraDialog):
             self.store.append([t1, str_indices])
         return False
     
-    def entries(self, results):
+    def entries(self, results, collapse):
         """Yield all entries that should be displayed."""
         show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(results)]
-        ws = {}
-        for s, index in show:
-            if s not in ws:
-                ws[s] = [str(index)]
-            else:
-                ws[s].append(str(index))
+        if collapse:
+            ws = {}
+            for s, index in show:
+                if s not in ws:
+                    ws[s] = [str(index)]
+                else:
+                    ws[s].append(str(index))
         show.sort(key=operator.itemgetter(0))
-        for s, index in show:
-            if s not in ws:
-                continue
-            indices = ws[s]
-            yield s, len(indices), ','.join(ws[s])
-            del ws[s]
+        if collapse:
+            for s, index in show:
+                if s not in ws:
+                    continue
+                indices = ws[s]
+                yield s, len(indices), ','.join(ws[s])
+                del ws[s]
+        else:
+            for s, index in show:
+                yield s, 1, str(index)
     
     def on_selection_changed(self, selection):
         """Highlight all cells associated with the selected entry."""
