@@ -691,10 +691,10 @@ class Grid:
         
     def generate_all_slots(self):
         data = self.data
-        slots = []
-        for n, x, y, d in self.words(allow_duplicates=True, include_dir=True):
-            slots.append((d, decompose_word(self.gather_word(x, y, d), x, y, d)))
-        for i in [0, 1]:
+        gather_word = self.gather_word
+        slots = [(d, decompose_word(gather_word(x, y, d), x, y, d))
+            for n, x, y, d in self.words(allow_duplicates=True, include_dir=True)]
+        for i, d in [(0, "ne"), (1, "se")]:
             seqs = self.generate_diagonals(i)
             for s in seqs:
                 t = []
@@ -703,7 +703,7 @@ class Grid:
                     if c == '':
                         c = constants.MISSING_CHAR
                     t.append((x, y, c))
-                slots.append((i, t))
+                slots.append((d, t))
         return slots
             
     def resize(self, width, height, make_dirty=True):

@@ -53,23 +53,30 @@ class AccidentalWordsDialog(PalabraDialog):
         scrolled_window.set_size_request(300, 300)
         self.main.pack_start(scrolled_window, True, True, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
+        self.launch_accidental(puzzle.grid)
         
-        self.results = [(d, cells) for d, cells in check_accidental_words(self.wordlists, puzzle.grid) if len(cells) > 1]
+    def launch_accidental(self, grid):
+        self.store.clear()
+        self.store.append(["Loading...", -1])
+        self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT, self.load_words, grid)
+        
+    def load_words(self, grid):
+        self.results = [(d, cells) for d, cells in check_accidental_words(self.wordlists, grid) if len(cells) > 1]
         show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(self.results)]
         show.sort(key=operator.itemgetter(0))
+        self.store.clear()
         for s, i in show:
-            s = s.lower()
-            self.store.append([s, i])
+            self.store.append([s.lower(), i])
     
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
         if it is not None:
             index = self.store[it][1]
-            d, cells = self.results[index]
-            highlight_cells(self.pwindow, self.puzzle, "cells", [(x, y) for x, y, c in cells])
+            if index >= 0:
+                d, cells = self.results[index]
+                highlight_cells(self.pwindow, self.puzzle, "cells", [(x, y) for x, y, c in cells])
 
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):

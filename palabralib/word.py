@@ -105,23 +105,21 @@ def check_accidental_word(wordlists, seq):
     check = [i for i in p if len(i) >= 2]
     result = []
     for s in check:
-        r = _check_seq_for_words(wordlists, s)
+        st = ''.join([c for x, y, c in s])
+        st = st.lower()
+        r = check_str_for_words(wordlists, st)
         if r:
             result.extend(r)
     return result
     
-def _check_seq_for_words(wordlists, seq):
-    r = []
-    s = ''.join([c for x, y, c in seq])
-    s = s.lower()
+def check_str_for_words(wordlists, s):
+    """
+    Given a string s, returns pairs of (offset, length) of words that
+    occur in the given wordlists.
+    """
     l = len(s)
-    for i in xrange(l):
-        for j in xrange(i, l + 1):
-            q = s[i:j]
-            l_q = len(q)
-            if search_wordlists(wordlists, l_q, q):
-                r.append((i, l_q))
-    return r
+    return [(i, j - i) for i in xrange(l) for j in xrange(i, l + 1)
+        if (j - i > 0) and search_wordlists(wordlists, j - i, s[i:j], sort=False)]
 
 def produce_word_counts(word):
     counts = {}
@@ -165,7 +163,7 @@ def create_wordlists(prefs):
         files.append((i, data["path"]["value"], data["name"]["value"]))
     return [CWordList(path, index=i, name=name) for i, path, name in files]
 
-def search_wordlists(wordlists, length, constraints, more=None):
+def search_wordlists(wordlists, length, constraints, more=None, sort=True):
     """
     Search the specified wordlists for words that match
     the constraints and the given length.
@@ -179,11 +177,11 @@ def search_wordlists(wordlists, length, constraints, more=None):
         return None if css is None else [(i, cs_to_str(l, cs)) for (i, l, cs) in css]
     if isinstance(constraints, list):
         constraints = cs_to_str(length, constraints)
-    if isinstance(more, list):
+    if more is not None and isinstance(more, list):
         more = css_to_strs(more)
-    indices = [item.index for item in wordlists]
+    indices = [wlist.index for wlist in wordlists]
     result = cPalabra.search(length, constraints, more, indices)
-    if len(indices) > 1:
+    if sort and len(indices) > 1:
         result.sort(key=itemgetter(0))
     return result
     
