@@ -36,6 +36,8 @@ class WordTestCase(unittest.TestCase):
         self.word2 = "parrot"
         self.length2 = len(self.word2)
         self.constraints2 = [(i, self.word2[i]) for i in xrange(self.length2)]
+        self.MANY_WORDS = [string.ascii_lowercase[0:l] for l in xrange(len(string.ascii_lowercase) + 1)]
+        self.MANY_FOUR_WORDS = [string.ascii_lowercase[i:i + 4] for i in xrange(len(string.ascii_lowercase) - 3)]
         cPalabra.preprocess_all()
         
     def testPostprocess(self):
@@ -172,7 +174,7 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         
     def testInsertPrePost(self):
-        clist = CWordList('/usr/share/dict/words')
+        clist = CWordList(self.MANY_WORDS)
         for l, words in clist.words.items():
             pre_list = clist.words[l]
             pre_count = len(pre_list)
@@ -185,7 +187,7 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         
     def testScale(self):
-        clist = CWordList('/usr/share/dict/words')
+        clist = CWordList(self.MANY_FOUR_WORDS)
         total4 = len(clist.search(4, [], None))
         totals = {}
         for c in string.ascii_lowercase:
