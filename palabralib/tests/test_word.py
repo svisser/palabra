@@ -471,3 +471,19 @@ class WordTestCase(unittest.TestCase):
         result = word.check_accidental_words([clist], g)
         self.assertEquals(len(result), 1)
         self.assertTrue(("across", [(0, 0, 'B'), (1, 0, 'A'), (2, 0, 'D')]) in result)
+        cPalabra.postprocess()
+        
+    def testWordlistIllegalChars(self):
+        clist = CWordList(["abc!", "john@example.com", "#number"])
+        for l, words in clist.words.items():
+            self.assertEquals(words, [])
+        cPalabra.postprocess()
+        
+    def testWordListIllegalCharsFile(self):
+        LOC = "palabralib/tests/test_wordlist.txt"
+        with open(LOC, 'w') as f:
+            f.write("abc!\njohn@example.com\n#number")
+        clist = CWordList(LOC)
+        for l, words in clist.words.items():
+            self.assertEquals(words, [])
+        cPalabra.postprocess()

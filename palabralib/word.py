@@ -224,6 +224,19 @@ class CWordList:
             words = [(w if isinstance(w, tuple) else (w, 0)) for w in content]
             # for now, reject compound
             words = [item for item in words if " " not in item[0]]
+            # reject all non-alphabet chars
+            ord_A = ord("A")
+            ord_Z = ord("Z")
+            ord_a = ord("a")
+            ord_z = ord("z")
+            def is_ok(w):
+                for c in w:
+                    ord_c = ord(c)
+                    if not (ord_A <= ord_c <= ord_Z
+                        or ord_a <= ord_c <= ord_z):
+                        return False
+                return True
+            words = [item for item in words if is_ok(item[0])]
         self.words = cPalabra.preprocess(words, index)
         self.index = index
         self.name = name
