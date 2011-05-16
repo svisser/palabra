@@ -92,6 +92,7 @@ _COLOR_ATTRS = [
 ]
 _OTHER_COLOR_PREFS = [
     (constants.COLOR_WARNING, (65535, 49152, 49152))
+    , (constants.COLOR_HIGHLIGHT, (65535, 65535, 16383))
 ]
 _INT_PREFS = [
     (constants.PREF_INITIAL_HEIGHT, 15)

@@ -148,6 +148,7 @@ WARN_TWO_LETTER = "warn_two_letter_words"
 WARNINGS = [WARN_UNCHECKED, WARN_CONSECUTIVE, WARN_TWO_LETTER]
 
 COLOR_WARNING = "color_warning"
+COLOR_HIGHLIGHT = "color_highlight"
 COLOR_CURRENT_WORD = "color_current_word"
 COLOR_PRIMARY_SELECTION = "color_primary_selection"
 COLOR_PRIMARY_ACTIVE = "color_primary_active"

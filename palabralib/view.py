@@ -23,6 +23,7 @@ import pangocairo
 
 import constants
 import cPalabra
+from preferences import read_pref_color
 
 SETTINGS_PREVIEW = {
     "has_padding": True
@@ -430,8 +431,7 @@ class GridView:
         if highlights:
             hwidth = int(cell_size / 8)
             ctx_set_line_width(hwidth)
-            # TODO custom color
-            color = (65535.0, 65535.0, 65535.0 / 2)
+            color = read_pref_color(constants.COLOR_HIGHLIGHT, False)
             if color != cur_color:
                 cur_color = color
                 ctx_set_source_rgb(*[c / 65535.0 for c in color])
