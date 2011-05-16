@@ -162,6 +162,24 @@ class PreferencesWindow(gtk.Dialog):
         label.set_markup(u"<b>Colors</b>")
         main.pack_start(label, False, False, 6)
         
+        colors_combo = gtk.combo_box_new_text()
+        colors_combo.connect("changed", self.on_colors_combo_changed)
+        colors_combo.append_text("")
+        for key, value in COLORS:
+            colors_combo.append_text(value.title)
+        colors_combo.set_active(0)
+        
+        align = gtk.Alignment(0, 0.5)
+        align.set_padding(0, 0, 12, 0)
+        align.add(gtk.Label(u"Load color scheme:"))
+        scheme_hbox = gtk.HBox(False, 0)
+        scheme_hbox.pack_start(align, False, False, 0)
+        align = gtk.Alignment(0, 0.5)
+        align.set_padding(0, 0, 12, 0)
+        align.add(colors_combo)
+        scheme_hbox.pack_start(align, True, True, 0)
+        main.pack_start(scheme_hbox, False, False, 0)
+        
         color_table = gtk.Table(5, 2)
         color_table.set_col_spacings(6)
         main.pack_start(color_table, False, False, 0)
@@ -177,28 +195,6 @@ class PreferencesWindow(gtk.Dialog):
             align.add(gtk.Label(label))
             color_table.attach(align, 0, 1, i, i + 1, gtk.FILL, gtk.FILL)
             color_table.attach(getattr(self, button), 1, 2, i, i + 1, 0, 0)
-
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup(u"<b>Color schemes</b>")
-        main.pack_start(label, False, False, 6)
-        
-        scheme_table = gtk.Table(1, 2)
-        scheme_table.set_col_spacings(6)
-        main.pack_start(scheme_table, False, False, 0)
-        
-        colors_combo = gtk.combo_box_new_text()
-        colors_combo.connect("changed", self.on_colors_combo_changed)
-        colors_combo.append_text("")
-        for key, value in COLORS:
-            colors_combo.append_text(value.title)
-        colors_combo.set_active(0)
-        
-        align = gtk.Alignment(0, 0.5)
-        align.set_padding(0, 0, 12, 0)
-        align.add(gtk.Label(u"Load color scheme:"))
-        scheme_table.attach(align, 0, 1, 0, 1, gtk.FILL, gtk.FILL)
-        scheme_table.attach(colors_combo, 1, 2, 0, 1)
         return main
         
     def on_colors_combo_changed(self, combo, data=None):
