@@ -22,7 +22,7 @@ import pangocairo
 
 import constants
 from editor import highlight_cells
-from word import check_accidental_words
+from word import check_accidental_words, accidental_entries
 
 LOADING_TEXT = "Loading..."
 
@@ -96,34 +96,13 @@ class AccidentalWordsDialog(PalabraDialog):
         self.results = [(d, cells) for d, cells in
             check_accidental_words([wlist], grid) if len(cells) > 1]
         self.store.clear()
-        for s, count, str_indices in self.entries(self.results, self.collapse):
+        for s, count, str_indices in accidental_entries(self.results, self.collapse):
             text = s.lower()
             if count > 1:
                 text += " (" + str(count) + "x)"
             t1 = '<span font_desc="Monospace 12">' + text + '</span>'
             self.store.append([t1, str_indices])
         return False
-    
-    def entries(self, results, collapse):
-        """Yield all entries that should be displayed."""
-        show = [(''.join([c for x, y, c in r]), str(i)) for i, (d, r) in enumerate(results)]
-        show.sort(key=operator.itemgetter(0))
-        if collapse:
-            ws = {}
-            for s, index in show:
-                if s not in ws:
-                    ws[s] = [index]
-                else:
-                    ws[s].append(index)
-            for s, index in show:
-                if s not in ws:
-                    continue
-                indices = ws[s]
-                yield s, len(indices), ','.join(indices)
-                del ws[s]
-        else:
-            for s, index in show:
-                yield s, 1, index
     
     def on_selection_changed(self, selection):
         """Highlight all cells associated with the selected entry."""

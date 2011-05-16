@@ -38,6 +38,30 @@ def extract(counts, s):
             chars.append(c)
     return s, chars
 
+def accidental_entries(results, collapse=False):
+    """
+    Yield all entries that should be displayed
+    in the accidental words dialog.
+    """
+    show = [(str(i), ''.join([c for x, y, c in r])) for i, (d, r) in enumerate(results)]
+    show.sort(key=itemgetter(1))
+    if collapse:
+        ws = {}
+        for index, s in show:
+            if s not in ws:
+                ws[s] = [index]
+            else:
+                ws[s].append(index)
+        for index, s in show:
+            if s not in ws:
+                continue
+            indices = ws[s]
+            yield s, len(indices), ','.join(indices)
+            del ws[s]
+    else:
+        for index, s in show:
+            yield s, 1, index
+
 def read_wordlist(path):
     """Yield all words found in the specified file."""
     if not os.path.exists(path):
