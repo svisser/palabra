@@ -85,6 +85,7 @@ class AccidentalWordsDialog(PalabraDialog):
         self.launch_accidental(puzzle.grid)
         
     def launch_accidental(self, grid):
+        highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.store.clear()
         self.store.append([LOADING_TEXT, ''])
         self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT
@@ -92,7 +93,6 @@ class AccidentalWordsDialog(PalabraDialog):
         
     def load_words(self, grid, wlist):
         """Compute and display the words of the grid found in the wordlist."""
-        highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.results = [(d, cells) for d, cells in
             check_accidental_words([wlist], grid) if len(cells) > 1]
         self.store.clear()
@@ -106,21 +106,20 @@ class AccidentalWordsDialog(PalabraDialog):
     
     def entries(self, results, collapse):
         """Yield all entries that should be displayed."""
-        show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(results)]
+        show = [(''.join([c for x, y, c in r]), str(i)) for i, (d, r) in enumerate(results)]
+        show.sort(key=operator.itemgetter(0))
         if collapse:
             ws = {}
             for s, index in show:
                 if s not in ws:
-                    ws[s] = [str(index)]
+                    ws[s] = [index]
                 else:
-                    ws[s].append(str(index))
-        show.sort(key=operator.itemgetter(0))
-        if collapse:
+                    ws[s].append(index)
             for s, index in show:
                 if s not in ws:
                     continue
                 indices = ws[s]
-                yield s, len(indices), ','.join(ws[s])
+                yield s, len(indices), ','.join(indices)
                 del ws[s]
         else:
             for s, index in show:
