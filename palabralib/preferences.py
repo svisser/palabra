@@ -76,6 +76,13 @@ _SCHEME_CYAN = ColorScheme("Cyan"
     , (49152, 65535, 65535)
     , (16383, 65535, 65535)
 )
+_SCHEME_ORANGE = ColorScheme("Orange"
+    , (65535, 32767, 16383)
+    , (65535, 32767, 16383)
+    , (65535, 49152, 16383)
+    , (65535, 49152, 16383)
+    , (65535, 32767, 16383)
+)
 
 COLORS = [('yellow', _SCHEME_YELLOW)
     , ('red', _SCHEME_RED)
@@ -83,6 +90,7 @@ COLORS = [('yellow', _SCHEME_YELLOW)
     , ('blue', _SCHEME_BLUE)
     , ('purple', _SCHEME_PURPLE)
     , ('cyan', _SCHEME_CYAN)
+    , ('orange', _SCHEME_ORANGE)
 ]
 D_COLORS = dict(COLORS)
 
