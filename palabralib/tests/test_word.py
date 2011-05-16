@@ -277,6 +277,20 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(clist.find_by_pattern("w(!@@#$%??"), ["woo"])
         cPalabra.postprocess()
         
+    def testSearchWordlistsByPattern(self):
+        c1 = CWordList(["koala", "kangaroo", "wombat"], name="Australia")
+        c2 = CWordList(["shark", "fish", "whale"], name="Marine")
+        c3 = CWordList(["widget", "gui", "button"])
+        c4 = CWordList(["baltimore", "washington", "huntsville"])
+        c4.path = "/this/is/the/path"
+        result = word.search_wordlists_by_pattern([c1, c2, c3, c4], "w*")
+        self.assertEquals(len(result), 4)
+        self.assertTrue(("Australia", "wombat") in result)
+        self.assertTrue(("Marine", "whale") in result)
+        self.assertTrue((None, "widget") in result)
+        self.assertTrue(("/this/is/the/path", "washington") in result)
+        cPalabra.postprocess()
+        
     def testCreateWordLists(self):
         w1 = {'path': {'value': '/the/path'}, 'name': {'value': 'the name'}}
         w2 = {'path': {'value': '/somewhere/else'}, 'name': {'value': 'the name 2'}}

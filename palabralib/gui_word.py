@@ -22,7 +22,11 @@ import pangocairo
 
 import constants
 from editor import highlight_cells
-from word import check_accidental_words, accidental_entries
+from word import (
+    check_accidental_words,
+    accidental_entries,
+    search_wordlists_by_pattern,
+)
 
 LOADING_TEXT = "Loading..."
 
@@ -183,10 +187,7 @@ class FindWordsDialog(PalabraDialog):
     def find_words(self, pattern=None):
         if pattern is None:
             return False
-        result = []
-        for wlist in self.wordlists:
-            name = wlist.name if wlist.name is not None else wlist.path
-            result.extend([(name, w) for w in wlist.find_by_pattern(pattern)])
+        result = search_wordlists_by_pattern(self.wordlists, pattern)
         if self.sort_option == 0:
             result.sort(key=operator.itemgetter(1))
         self.pattern = pattern
