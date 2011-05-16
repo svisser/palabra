@@ -72,6 +72,7 @@ class AccidentalWordsDialog(PalabraDialog):
         for s, i in show:
             t1 = '<span font_desc="Monospace 12">' + s.lower() + '</span>'
             self.store.append([t1, i])
+        return False
     
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
