@@ -20,7 +20,13 @@ import string
 import unittest
 
 import palabralib.cPalabra as cPalabra
-from palabralib.constants import MAX_WORD_LISTS, MAX_WORD_LENGTH
+from palabralib.constants import (
+    MAX_WORD_LISTS,
+    MAX_WORD_LENGTH,
+    MISSING_CHAR,
+)
+from palabralib.grid import Grid
+import palabralib.word as word
 from palabralib.word import (
     CWordList,
     create_wordlists,
@@ -356,4 +362,78 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue((2, 1) in result)
         self.assertTrue((0, 2) in result)
         self.assertTrue((2, 2) in result)
+        cPalabra.postprocess()
+        
+    def testSeqToCellsEmpty(self):
+        result = word.seq_to_cells([(x, 0, MISSING_CHAR) for x in xrange(10)])
+        self.assertEquals(result, [])
+        
+    def testSeqToCellsOneSplit(self):
+        seq = [(0, 0, 'A'), (1, 0, 'B'), (2, 0, MISSING_CHAR), (3, 0, 'C'), (4, 0, 'D')]
+        result = word.seq_to_cells(seq)
+        self.assertEquals(len(result), 2)
+        self.assertTrue([(0, 0, 'A'), (1, 0, 'B')] in result)
+        self.assertTrue([(3, 0, 'C'), (4, 0, 'D')] in result)
+        
+    def testSeqToCellsTwoSplits(self):
+        seq = [(0, 0, 'A'), (1, 0, 'B'), (2, 0, MISSING_CHAR)
+            , (3, 0, 'C'), (4, 0, 'D'), (5, 0, MISSING_CHAR)
+            , (6, 0, 'E'), (7, 0, 'F')
+        ]
+        result = word.seq_to_cells(seq)
+        self.assertEquals(len(result), 3)
+        self.assertTrue([(0, 0, 'A'), (1, 0, 'B')] in result)
+        self.assertTrue([(3, 0, 'C'), (4, 0, 'D')] in result)
+        self.assertTrue([(6, 0, 'E'), (7, 0, 'F')] in result)
+        
+    def testSeqToCellsShort(self):
+        seq = [(0, 0, 'A'), (1, 0, MISSING_CHAR), (2, 0, 'B')]
+        result = word.seq_to_cells(seq)
+        self.assertEquals(result, [])
+        
+    def testSeqToCellsShortTwo(self):
+        seq = [(0, 0, 'A'), (1, 0, MISSING_CHAR), (2, 0, 'B'), (3, 0, 'C')]
+        result = word.seq_to_cells(seq)
+        self.assertEquals(len(result), 1)
+        self.assertTrue([(2, 0, 'B'), (3, 0, 'C')] in result)
+        
+    def testSeqToCellsMultipleMissing(self):
+        seq = [(0, 0, 'A'), (1, 0, MISSING_CHAR)
+            , (2, 0, MISSING_CHAR), (3, 0, 'C'), (4, 0, 'D')]
+        result = word.seq_to_cells(seq)
+        self.assertEquals(len(result), 1)
+        self.assertTrue([(3, 0, 'C'), (4, 0, 'D')] in result)
+        
+    def testAccidentalWordlists(self):
+        clist = CWordList(["steam"])
+        seq = [(0, 0, 'S'), (1, 0, 'T'), (2, 0, 'E'), (3, 0, 'A'), (4, 0, 'M')]
+        result = word.check_accidental_word([clist], seq)
+        self.assertEquals(result, [(0, 5)])
+        cPalabra.postprocess()
+        
+    def testAccidentalWordlistsTwo(self):
+        clist = CWordList(["be", "cd"])
+        seq = [(0, 0, 'B'), (1, 0, 'E'), (2, 0, 'X'), (3, 0, 'C'), (4, 0, 'D')]
+        result = word.check_accidental_word([clist], seq)
+        self.assertEquals(result, [(0, 2), (3, 2)])
+        cPalabra.postprocess()
+        
+    def testAccidentalGrid(self):
+        clist = CWordList(["no"])
+        # N _ _ _ N
+        # _ O _ O _
+        # _ _ _ _ _
+        # _ O _ O _
+        # N _ _ _ N
+        g = Grid(5, 5)
+        g.set_char(0, 0, 'N')
+        g.set_char(4, 0, 'N')
+        g.set_char(0, 4, 'N')
+        g.set_char(4, 4, 'N')
+        g.set_char(1, 1, 'O')
+        g.set_char(1, 3, 'O')
+        g.set_char(3, 1, 'O')
+        g.set_char(3, 3, 'O')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 4)
         cPalabra.postprocess()

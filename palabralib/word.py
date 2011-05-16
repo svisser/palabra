@@ -78,6 +78,10 @@ def read_wordlist(path):
     return words
     
 def check_accidental_words(wordlists, grid):
+    """
+    Given a grid, check it for accidental occurences of words in
+    the given wordlists.
+    """
     accidentals = []
     slots = grid.generate_all_slots()
     for d, s in slots:
@@ -86,9 +90,13 @@ def check_accidental_words(wordlists, grid):
                 continue
             accidentals.append((d, s[offset:offset + length]))
     return accidentals
-        
-def check_accidental_word(wordlists, seq):
-    # return (offset, length) pairs
+
+def seq_to_cells(seq):
+    """
+    Given a list of (x, y, c) tuples, return all uninterrupted
+    sequences of cells of length 2+. A sequence is interrupted
+    if c == constants.MISSING_CHAR.
+    """
     seqs = [(c if c[2] != constants.MISSING_CHAR else None) for c in seq]
     if False not in [(i is None) for i in seqs]:
         return []
@@ -102,9 +110,16 @@ def check_accidental_word(wordlists, seq):
             p_r.append(item)
     if p_r:
         p.append(p_r)
-    check = [i for i in p if len(i) >= 2]
+    return [i for i in p if len(i) >= 2]
+        
+def check_accidental_word(wordlists, seq):
+    """
+    Given a list of (x, y, c) tuples, check it for occurrences of words
+    in the wordlists. This function returns (offset, length) pairs relative
+    to the given sequence.
+    """
     result = []
-    for s in check:
+    for s in seq_to_cells(seq):
         st = ''.join([c for x, y, c in s])
         r = check_str_for_words(wordlists, st.lower())
         if r:

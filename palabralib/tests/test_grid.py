@@ -1408,16 +1408,16 @@ class GridTestCase(unittest.TestCase):
     def testGenerateAllSlots(self):
         g = Grid(5, 5)
         slots = g.generate_all_slots()
-        # across + down + ne + se
-        self.assertEquals(len(slots), 5 + 5 + 7 + 7)
+        # across + down + ne + se + sw + nw
+        self.assertEquals(len(slots), 5 + 5 + 7 + 7 + 7 + 7)
         fives = [s for s in slots if len(s[1]) == 5]
-        self.assertEquals(len(fives), 5 + 5 + 1 + 1)
+        self.assertEquals(len(fives), 5 + 5 + 1 + 1 + 1 + 1)
         fours = [s for s in slots if len(s[1]) == 4]
-        self.assertEquals(len(fours), 0 + 0 + 2 + 2)
+        self.assertEquals(len(fours), 0 + 0 + 2 + 2 + 2 + 2)
         threes = [s for s in slots if len(s[1]) == 3]
-        self.assertEquals(len(threes), 0 + 0 + 2 + 2)
+        self.assertEquals(len(threes), 0 + 0 + 2 + 2 + 2 + 2)
         twos = [s for s in slots if len(s[1]) == 2]
-        self.assertEquals(len(twos), 0 + 0 + 2 + 2)
+        self.assertEquals(len(twos), 0 + 0 + 2 + 2 + 2 + 2)
         ones = [s for s in slots if len(s[1]) == 1]
         self.assertEquals(len(ones), 0)
         
@@ -1434,10 +1434,10 @@ class GridTestCase(unittest.TestCase):
         g.set_void(0, 4, True)
         g.set_void(4, 4, True)
         slots = g.generate_all_slots()
-        # across + down + ne + se
-        self.assertEquals(len(slots), 6 + 6 + 6 + 6)
+        # across + down + ne + se + sw + nw
+        self.assertEquals(len(slots), 6 + 6 + 6 + 6 + 6 + 6)
         twos = [s for s in slots if len(s[1]) == 2]
-        self.assertEquals(len(twos), 2 + 2 + 2 + 2)
+        self.assertEquals(len(twos), 2 + 2 + 2 + 2 + 2 + 2)
         
     def testGenerateAllSlotsWords(self):
         # _ A _ _ _
