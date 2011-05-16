@@ -151,8 +151,7 @@ class FindWordsDialog(PalabraDialog):
         self.store.clear()
         for name, s in result:
             t1 = '<span font_desc="Monospace 12">' + s + '</span>'
-            t2 = '<span foreground="gray">' + name + '</span>'
-            self.store.append([t1, t2])
+            self.store.append([t1, name])
         return False
 
 class AnagramDialog(gtk.Dialog):

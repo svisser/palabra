@@ -153,7 +153,7 @@ COLOR_PRIMARY_SELECTION = "color_primary_selection"
 COLOR_PRIMARY_ACTIVE = "color_primary_active"
 COLOR_SECONDARY_ACTIVE = "color_secondary_active"
 
-INPUT_DELAY = 500
+INPUT_DELAY = 350
 INPUT_DELAY_SHORT = 250
 
 PREF_COPY_BEFORE_SAVE = "backup_copy_before_save"
