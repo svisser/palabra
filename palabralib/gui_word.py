@@ -93,7 +93,9 @@ class AccidentalWordsDialog(PalabraDialog):
                 ws[s].append(str(index))
         show.sort(key=operator.itemgetter(0))
         self.store.clear()
-        for s in ws.keys():
+        for s, dontuse in show:
+            if s not in ws:
+                continue
             text = s.lower()
             indices = ws[s]
             l_i = len(indices)
@@ -101,6 +103,7 @@ class AccidentalWordsDialog(PalabraDialog):
                 text += " (" + str(l_i) + "x)"
             t1 = '<span font_desc="Monospace 12">' + text + '</span>'
             self.store.append([t1, ','.join(ws[s])])
+            del ws[s]
         return False
     
     def on_selection_changed(self, selection):
