@@ -85,8 +85,9 @@ def check_accidental_words(wordlists, grid):
     accidentals = []
     slots = grid.generate_all_slots()
     for d, s in slots:
+        l_s = len(s)
         for offset, length in check_accidental_word(wordlists, s):
-            if (d == "across" or d == "down") and offset == 0 and length == len(s):
+            if (offset, length) == (0, l_s) and d in ["across", "down"]:
                 continue
             accidentals.append((d, s[offset:offset + length]))
     return accidentals
@@ -102,15 +103,15 @@ def seq_to_cells(seq):
         return []
     p = []
     p_r = []
-    for item in seqs:
+    for i, item in enumerate(seqs):
         if item is None:
-            p.append(p_r)
+            p.append((i - len(p_r), p_r))
             p_r = []
         else:
             p_r.append(item)
     if p_r:
-        p.append(p_r)
-    return [i for i in p if len(i) >= 2]
+        p.append((len(seqs) - len(p_r), p_r))
+    return [i for i in p if len(i[1]) >= 2]
         
 def check_accidental_word(wordlists, seq):
     """
@@ -119,21 +120,21 @@ def check_accidental_word(wordlists, seq):
     to the given sequence.
     """
     result = []
-    for s in seq_to_cells(seq):
+    for offset, s in seq_to_cells(seq):
         st = ''.join([c for x, y, c in s])
-        r = check_str_for_words(wordlists, st.lower())
+        r = check_str_for_words(wordlists, offset, st.lower())
         if r:
             result.extend(r)
     return result
     
-def check_str_for_words(wordlists, s):
+def check_str_for_words(wordlists, offset, s):
     """
     Given a string s, returns pairs of (offset, length) of words that
     occur in the given wordlists.
     """
     l = len(s)
-    return [(i, j - i) for i in xrange(l) for j in xrange(i, l + 1)
-        if (j - i > 0) and search_wordlists(wordlists, j - i, s[i:j], sort=False)]
+    return [(offset + i, j - i) for i in xrange(l) for j in xrange(i + 1, l + 1)
+        if search_wordlists(wordlists, j - i, s[i:j], sort=False)]
 
 def produce_word_counts(word):
     counts = {}

@@ -319,7 +319,7 @@ class WordTestCase(unittest.TestCase):
         
     def testCheckStrForWords(self):
         wlist = CWordList(["abc", "def", "ghi"])
-        result = check_str_for_words([wlist], "abcdefghi")
+        result = check_str_for_words([wlist], 0, "abcdefghi")
         self.assertEquals(len(result), 3)
         self.assertTrue((0, 3) in result)
         self.assertTrue((3, 3) in result)
@@ -328,7 +328,7 @@ class WordTestCase(unittest.TestCase):
         
     def testCheckStrForWordsOverlap(self):
         wlist = CWordList(["abc", "def", "cd"])
-        result = check_str_for_words([wlist], "abcdef")
+        result = check_str_for_words([wlist], 0, "abcdef")
         self.assertEquals(len(result), 3)
         self.assertTrue((0, 3) in result)
         self.assertTrue((2, 2) in result)
@@ -337,18 +337,18 @@ class WordTestCase(unittest.TestCase):
         
     def testCheckStrForWordsOne(self):
         wlist = CWordList(["a", "b", "c"])
-        result = check_str_for_words([wlist], "abccba")
+        result = check_str_for_words([wlist], 0, "abccba")
         self.assertEquals(len(result), 6)
         for i in xrange(6):
             self.assertTrue((i, 1) in result)
         cPalabra.postprocess()
             
     def testCheckStrForWordsEmpty(self):
-        self.assertEquals(check_str_for_words([], "abc"), [])
+        self.assertEquals(check_str_for_words([], 0, "abc"), [])
         
     def testCheckStrForWordsSameOffset(self):
         wlist = CWordList(["a", "ab", "abc", "abcd"])
-        result = check_str_for_words([wlist], "abcd")
+        result = check_str_for_words([wlist], 0, "abcd")
         self.assertEquals(len(result), 4)
         for i in xrange(4):
             self.assertTrue((0, i + 1) in result)
@@ -356,12 +356,20 @@ class WordTestCase(unittest.TestCase):
         
     def testCheckStrForWordsWithin(self):
         wlist = CWordList(["a", "ab"])
-        result = check_str_for_words([wlist], "abab")
+        result = check_str_for_words([wlist], 0, "abab")
         self.assertEquals(len(result), 4)
         self.assertTrue((0, 1) in result)
         self.assertTrue((2, 1) in result)
         self.assertTrue((0, 2) in result)
         self.assertTrue((2, 2) in result)
+        cPalabra.postprocess()
+        
+    def testCheckStrForWordsOffset(self):
+        wlist = CWordList(["abc", "def"])
+        result = check_str_for_words([wlist], 5, "abcdef")
+        self.assertEquals(len(result), 2)
+        self.assertTrue((5, 3) in result)
+        self.assertTrue((8, 3) in result)
         cPalabra.postprocess()
         
     def testSeqToCellsEmpty(self):
@@ -372,8 +380,8 @@ class WordTestCase(unittest.TestCase):
         seq = [(0, 0, 'A'), (1, 0, 'B'), (2, 0, MISSING_CHAR), (3, 0, 'C'), (4, 0, 'D')]
         result = word.seq_to_cells(seq)
         self.assertEquals(len(result), 2)
-        self.assertTrue([(0, 0, 'A'), (1, 0, 'B')] in result)
-        self.assertTrue([(3, 0, 'C'), (4, 0, 'D')] in result)
+        self.assertTrue((0, [(0, 0, 'A'), (1, 0, 'B')]) in result)
+        self.assertTrue((3, [(3, 0, 'C'), (4, 0, 'D')]) in result)
         
     def testSeqToCellsTwoSplits(self):
         seq = [(0, 0, 'A'), (1, 0, 'B'), (2, 0, MISSING_CHAR)
@@ -382,9 +390,9 @@ class WordTestCase(unittest.TestCase):
         ]
         result = word.seq_to_cells(seq)
         self.assertEquals(len(result), 3)
-        self.assertTrue([(0, 0, 'A'), (1, 0, 'B')] in result)
-        self.assertTrue([(3, 0, 'C'), (4, 0, 'D')] in result)
-        self.assertTrue([(6, 0, 'E'), (7, 0, 'F')] in result)
+        self.assertTrue((0, [(0, 0, 'A'), (1, 0, 'B')]) in result)
+        self.assertTrue((3, [(3, 0, 'C'), (4, 0, 'D')]) in result)
+        self.assertTrue((6, [(6, 0, 'E'), (7, 0, 'F')]) in result)
         
     def testSeqToCellsShort(self):
         seq = [(0, 0, 'A'), (1, 0, MISSING_CHAR), (2, 0, 'B')]
@@ -395,14 +403,14 @@ class WordTestCase(unittest.TestCase):
         seq = [(0, 0, 'A'), (1, 0, MISSING_CHAR), (2, 0, 'B'), (3, 0, 'C')]
         result = word.seq_to_cells(seq)
         self.assertEquals(len(result), 1)
-        self.assertTrue([(2, 0, 'B'), (3, 0, 'C')] in result)
+        self.assertTrue((2, [(2, 0, 'B'), (3, 0, 'C')]) in result)
         
     def testSeqToCellsMultipleMissing(self):
         seq = [(0, 0, 'A'), (1, 0, MISSING_CHAR)
             , (2, 0, MISSING_CHAR), (3, 0, 'C'), (4, 0, 'D')]
         result = word.seq_to_cells(seq)
         self.assertEquals(len(result), 1)
-        self.assertTrue([(3, 0, 'C'), (4, 0, 'D')] in result)
+        self.assertTrue((3, [(3, 0, 'C'), (4, 0, 'D')]) in result)
         
     def testAccidentalWordlists(self):
         clist = CWordList(["steam"])
@@ -440,6 +448,21 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue(("se", [(0, 0, 'N'), (1, 1, 'O')]) in result)
         self.assertTrue(("sw", [(4, 0, 'N'), (3, 1, 'O')]) in result)
         self.assertTrue(("nw", [(4, 4, 'N'), (3, 3, 'O')]) in result)
+        cPalabra.postprocess()
+        
+    def testAccidentalGridMissingChars(self):
+        clist = CWordList(["no", "on"])
+        # N _ _
+        # _ O _
+        # _ _ _
+        g = Grid(3, 3)
+        g.set_char(0, 0, 'N')
+        g.set_char(1, 1, 'O')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 2)
+        for d, cells in result:
+            for x, y, c in cells:
+                self.assertTrue(c != MISSING_CHAR)
         cPalabra.postprocess()
         
     def testAccidentalGridIgnoreNormalSlots(self):

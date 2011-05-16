@@ -66,6 +66,7 @@ class AccidentalWordsDialog(PalabraDialog):
         
     def load_words(self, grid):
         self.results = [(d, cells) for d, cells in check_accidental_words(self.wordlists, grid) if len(cells) > 1]
+        print self.results
         show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(self.results)]
         show.sort(key=operator.itemgetter(0))
         self.store.clear()
