@@ -106,8 +106,7 @@ def check_accidental_word(wordlists, seq):
     result = []
     for s in check:
         st = ''.join([c for x, y, c in s])
-        st = st.lower()
-        r = check_str_for_words(wordlists, st)
+        r = check_str_for_words(wordlists, st.lower())
         if r:
             result.extend(r)
     return result

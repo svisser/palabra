@@ -25,6 +25,7 @@ from palabralib.word import (
     CWordList,
     create_wordlists,
     search_wordlists,
+    check_str_for_words,
 )
 
 class WordTestCase(unittest.TestCase):
@@ -306,4 +307,41 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(["worda"], words)
         words = [w for w, b in search_wordlists([w2], 5, ".....")]
         self.assertEquals(["wordb"], words)
+        cPalabra.postprocess()
+        
+    def testCheckStrForWords(self):
+        wlist = CWordList(["abc", "def", "ghi"])
+        result = check_str_for_words([wlist], "abcdefghi")
+        self.assertEquals(len(result), 3)
+        self.assertTrue((0, 3) in result)
+        self.assertTrue((3, 3) in result)
+        self.assertTrue((6, 3) in result)
+        cPalabra.postprocess()
+        
+    def testCheckStrForWordsOverlap(self):
+        wlist = CWordList(["abc", "def", "cd"])
+        result = check_str_for_words([wlist], "abcdef")
+        self.assertEquals(len(result), 3)
+        self.assertTrue((0, 3) in result)
+        self.assertTrue((2, 2) in result)
+        self.assertTrue((3, 3) in result)
+        cPalabra.postprocess()
+        
+    def testCheckStrForWordsOne(self):
+        wlist = CWordList(["a", "b", "c"])
+        result = check_str_for_words([wlist], "abccba")
+        self.assertEquals(len(result), 6)
+        for i in xrange(6):
+            self.assertTrue((i, 1) in result)
+        cPalabra.postprocess()
+            
+    def testCheckStrForWordsEmpty(self):
+        self.assertEquals(check_str_for_words([], "abc"), [])
+        
+    def testCheckStrForWordsSameOffset(self):
+        wlist = CWordList(["a", "ab", "abc", "abcd"])
+        result = check_str_for_words([wlist], "abcd")
+        self.assertEquals(len(result), 4)
+        for i in xrange(4):
+            self.assertTrue((0, i + 1) in result)
         cPalabra.postprocess()

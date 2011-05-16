@@ -24,6 +24,8 @@ import constants
 from editor import highlight_cells
 from word import check_accidental_words
 
+LOADING_TEXT = "Loading..."
+
 class PalabraDialog(gtk.Dialog):
     def __init__(self, pwindow, title):
         gtk.Dialog.__init__(self, title, pwindow, gtk.DIALOG_MODAL)
@@ -59,7 +61,7 @@ class AccidentalWordsDialog(PalabraDialog):
         
     def launch_accidental(self, grid):
         self.store.clear()
-        self.store.append(["Loading...", -1])
+        self.store.append([LOADING_TEXT, -1])
         self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT, self.load_words, grid)
         
     def load_words(self, grid):
@@ -131,7 +133,7 @@ class FindWordsDialog(PalabraDialog):
     def launch_pattern(self, pattern=None):
         self.store.clear()
         if pattern is not None and len(pattern) > 0:
-            self.store.append(["Loading...", ''])
+            self.store.append([LOADING_TEXT, ''])
         self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, pattern)
         
     def find_words(self, pattern=None):
@@ -187,7 +189,7 @@ class AnagramDialog(gtk.Dialog):
     def on_buffer_changed(self, widget):
         glib.source_remove(self.timer)
         self.store.clear()
-        self.store.append(["Loading..."])
+        self.store.append([LOADING_TEXT])
         word = widget.get_text().strip()
         self.timer = glib.timeout_add(INPUT_DELAY, self.find_words, word)
         
