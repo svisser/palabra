@@ -1404,3 +1404,52 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(g.get_cell_of_slot((3, 0, "across"), "end"), (4, 0))
         self.assertEquals(g.get_cell_of_slot((3, 0, "down"), "start"), (3, 0))
         self.assertEquals(g.get_cell_of_slot((3, 0, "down"), "end"), (3, 4))
+        
+    def testGenerateAllSlots(self):
+        g = Grid(5, 5)
+        slots = g.generate_all_slots()
+        # across + down + ne + se
+        self.assertEquals(len(slots), 5 + 5 + 7 + 7)
+        fives = [s for s in slots if len(s[1]) == 5]
+        self.assertEquals(len(fives), 5 + 5 + 1 + 1)
+        fours = [s for s in slots if len(s[1]) == 4]
+        self.assertEquals(len(fours), 0 + 0 + 2 + 2)
+        threes = [s for s in slots if len(s[1]) == 3]
+        self.assertEquals(len(threes), 0 + 0 + 2 + 2)
+        twos = [s for s in slots if len(s[1]) == 2]
+        self.assertEquals(len(twos), 0 + 0 + 2 + 2)
+        ones = [s for s in slots if len(s[1]) == 1]
+        self.assertEquals(len(ones), 0)
+        
+    def testGenerateAllSlotsBlockVoid(self):
+        #   _ _ _
+        # _ _ _ _ _
+        # _ _ X _ _
+        # _ _ _ _ _
+        #   _ _ _
+        g = Grid(5, 5)
+        g.set_block(2, 2, True)
+        g.set_void(0, 0, True)
+        g.set_void(4, 0, True)
+        g.set_void(0, 4, True)
+        g.set_void(4, 4, True)
+        slots = g.generate_all_slots()
+        # across + down + ne + se
+        self.assertEquals(len(slots), 6 + 6 + 6 + 6)
+        twos = [s for s in slots if len(s[1]) == 2]
+        self.assertEquals(len(twos), 2 + 2 + 2 + 2)
+        
+    def testGenerateAllSlotsWords(self):
+        # _ A _ _ _
+        # B _ _ _ _
+        # _ C _ _ _
+        # _ _ _ _ _
+        # _ _ _ _ _
+        g = Grid(5, 5)
+        g.set_char(1, 0, 'A')
+        g.set_char(0, 1, 'B')
+        g.set_char(1, 2, 'C')
+        slots = g.generate_all_slots()
+        self.assertTrue(("ne", [(0, 1, 'B'), (1, 0, 'A')]) in slots)
+        seq = [(0, 1, 'B'), (1, 2, 'C'), (2, 3, constants.MISSING_CHAR), (3, 4, constants.MISSING_CHAR)]
+        self.assertTrue(("se", seq) in slots)

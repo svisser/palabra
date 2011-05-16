@@ -345,3 +345,13 @@ class WordTestCase(unittest.TestCase):
         for i in xrange(4):
             self.assertTrue((0, i + 1) in result)
         cPalabra.postprocess()
+        
+    def testCheckStrForWordsWithin(self):
+        wlist = CWordList(["a", "ab"])
+        result = check_str_for_words([wlist], "abab")
+        self.assertEquals(len(result), 4)
+        self.assertTrue((0, 1) in result)
+        self.assertTrue((2, 1) in result)
+        self.assertTrue((0, 2) in result)
+        self.assertTrue((2, 2) in result)
+        cPalabra.postprocess()

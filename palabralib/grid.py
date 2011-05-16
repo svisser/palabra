@@ -660,7 +660,7 @@ class Grid:
             cs2 = [(x, height - 1) for x in xrange(1, width - 1)]
             dx, dy = 1, -1
         elif direction == 1:
-            cs1 = [(0, y) for y in xrange(1, height)]
+            cs1 = [(0, y) for y in xrange(height)]
             cs2 = [(x, 0) for x in xrange(1, width - 1)]
             dx, dy = 1, 1
         seqs = []
