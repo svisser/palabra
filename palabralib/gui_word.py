@@ -79,12 +79,25 @@ class AccidentalWordsDialog(PalabraDialog):
     def launch_accidental(self, grid):
         self.store.clear()
         self.store.append([LOADING_TEXT, ''])
-        self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT, self.load_words, grid)
+        self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT
+            , self.load_words, grid, self.wordlists[self.index])
         
-    def load_words(self, grid):
-        wlists = [self.wordlists[self.index]]
-        self.results = [(d, cells) for d, cells in check_accidental_words(wlists, grid) if len(cells) > 1]
-        show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(self.results)]
+    def load_words(self, grid, wlist):
+        """Compute and display the words of the grid found in the wordlist."""
+        self.results = [(d, cells) for d, cells in
+            check_accidental_words([wlist], grid) if len(cells) > 1]
+        self.store.clear()
+        for s, count, str_indices in self.entries(self.results):
+            text = s.lower()
+            if count > 1:
+                text += " (" + str(count) + "x)"
+            t1 = '<span font_desc="Monospace 12">' + text + '</span>'
+            self.store.append([t1, str_indices])
+        return False
+    
+    def entries(self, results):
+        """Yield all entries that should be displayed."""
+        show = [(''.join([c for x, y, c in r]), i) for i, (d, r) in enumerate(results)]
         ws = {}
         for s, index in show:
             if s not in ws:
@@ -92,30 +105,24 @@ class AccidentalWordsDialog(PalabraDialog):
             else:
                 ws[s].append(str(index))
         show.sort(key=operator.itemgetter(0))
-        self.store.clear()
-        for s, dontuse in show:
+        for s, index in show:
             if s not in ws:
                 continue
-            text = s.lower()
             indices = ws[s]
-            l_i = len(indices)
-            if l_i > 1:
-                text += " (" + str(l_i) + "x)"
-            t1 = '<span font_desc="Monospace 12">' + text + '</span>'
-            self.store.append([t1, ','.join(ws[s])])
+            yield s, len(indices), ','.join(ws[s])
             del ws[s]
-        return False
     
     def on_selection_changed(self, selection):
+        """Highlight all cells associated with the selected entry."""
         store, it = selection.get_selected()
         if it is not None:
             index = self.store[it][1]
-            indices = index.split(',')
             highlight = []
-            for index in indices:
+            for index in index.split(','):
                 d, cells = self.results[int(index)]
                 highlight.extend(cells)
-            highlight_cells(self.pwindow, self.puzzle, "cells", [(x, y) for x, y, c in highlight])
+            h_cells = [(x, y) for x, y, c in highlight]
+            highlight_cells(self.pwindow, self.puzzle, "cells", h_cells)
 
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):
