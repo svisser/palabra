@@ -702,7 +702,7 @@ class Grid:
             l2 = decompose_word(gather_word(x, y, d), x, y, d)
             l2.reverse()
             slots.append((d, l1))
-            slots.append((d, l2))
+            slots.append((d + "r", l2))
         opp = {"ne": "sw", "se": "nw"}
         for i, d in [(0, "ne"), (1, "se")]:
             seqs = self.generate_diagonals(i)

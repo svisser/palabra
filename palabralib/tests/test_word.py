@@ -559,6 +559,18 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(len(result), 2)
         cPalabra.postprocess()
         
+    def testAccidentalGridReverseTwo(self):
+        clist = CWordList(["abcde"])
+        g = Grid(5, 1)
+        g.set_char(0, 0, 'E')
+        g.set_char(1, 0, 'D')
+        g.set_char(2, 0, 'C')
+        g.set_char(3, 0, 'B')
+        g.set_char(4, 0, 'A')
+        result = word.check_accidental_words([clist], g)
+        self.assertEquals(len(result), 1)
+        cPalabra.postprocess()
+        
     def testAccidentalGridMultipleLists(self):
         clist1 = CWordList(["ab"], index=0)
         clist2 = CWordList(["ba"], index=1)
