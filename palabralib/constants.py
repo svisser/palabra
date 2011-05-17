@@ -19,7 +19,7 @@ import os
 
 # application data
 TITLE = "Palabra"
-VERSION = "0.1.6"
+VERSION = "0.1.7"
 WEBSITE = "http://bitbucket.org/svisser/palabra"
 
 # configuration file
