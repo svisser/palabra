@@ -325,11 +325,17 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     if ((event.state & gtk.gdk.SHIFT_MASK) or
         (event.state & gtk.gdk.CONTROL_MASK)):
         return True
+    actions = determine_editor_actions(puzzle.grid, e_settings.selection, event.keyval)
+    process_editor_actions(window, puzzle, e_settings, actions)
+    return True
+
+def determine_editor_actions(grid, selection, key):
+    """
+    Determine all actions that need to take place given the current grid,
+    the current selection and the key that the user has pressed.
+    """
     actions = []
-    key = event.keyval
-    grid = puzzle.grid
-    selection = e_settings.selection
-    if key == gtk.keysyms.BackSpace and not e_settings.settings["locked_grid"]:
+    if key == gtk.keysyms.BackSpace:
         actions = on_backspace(grid, selection)
     elif key == gtk.keysyms.Tab:
         actions = [EditorAction("swapdir", None)]
@@ -347,17 +353,27 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
         actions = apply_selection_delta(grid, selection, 1, 0)
     elif key == gtk.keysyms.Down:
         actions = apply_selection_delta(grid, selection, 0, 1)
-    elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
+    elif key == gtk.keysyms.Delete:
         actions = on_delete(grid, selection)
-    elif not e_settings.settings["locked_grid"]:
+    else:
         actions = on_typing(grid, key, selection)
+    return actions
+    
+def process_editor_actions(window, puzzle, e_settings, actions):
+    """
+    Process all the editor actions and apply them to the grid and editor controls.
+    """
     for a in actions:
         if a.type == "blocks":
+            if e_settings.settings["locked_grid"]:
+                continue
             x = a.args['x']
             y = a.args['y']
             status = a.args['status']
             r_transform_blocks(window, puzzle, e_settings, x, y, status)
         elif a.type == "char":
+            if e_settings.settings["locked_grid"]:
+                continue
             c = a.args['char']
             x = a.args['x']
             y = a.args['y']
@@ -368,7 +384,6 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
             set_selection(window, puzzle, e_settings, x, y)
         elif a.type == "swapdir":
             set_selection(window, puzzle, e_settings, other_dir=True)
-    return True
 
 def on_typing(grid, keyval, selection):
     """Place an alphabetical character in the grid and move the selection."""
