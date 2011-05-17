@@ -155,8 +155,6 @@ def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
                 for c2 in c:
                     d = {"type": c2.get("type"), "value": c2.text}
                     value[c2.get("name")] = d
-            else:
-                value = c.text
             values.append(value)
         return values
     props = {}
@@ -197,9 +195,7 @@ def write_config_file(filename=constants.CONFIG_FILE_LOCATION):
             for v in data:
                 f = etree.SubElement(e, "preference-item")
                 f.set("type", pref.itemtype)
-                if pref.itemtype == "str":
-                    f.text = str(v)
-                elif pref.itemtype == "file":
+                if pref.itemtype == "file":
                     for k0, v0 in v.items():
                         g = etree.SubElement(f, "preference-item")
                         g.set("name", k0)
