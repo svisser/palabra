@@ -44,7 +44,8 @@ def modify_chars(content, chars):
 
 def modify_char(puzzle, x, y, next_char):
     """Modify the character at the given location."""
-    modify_char.__setattr__('type', constants.TRANSFORM_CONTENT)
+    # for explanation of type, see modify_chars
+    modify_char.__setattr__('type', constants.TRANSFORM_STRUCTURE)
     modify_chars(puzzle, [(x, y, next_char)])
     
 def modify_clue(puzzle, x, y, direction, key, value):
