@@ -53,82 +53,23 @@ def modify_clue(puzzle, x, y, direction, key, value):
     modify_clue.__setattr__('type', constants.TRANSFORM_CONTENT)
     puzzle.grid.store_clue(x, y, direction, key, value)
 
-def clear_all(puzzle):
-    """Clear the content of the grid."""
-    puzzle.grid.clear()
-    
-def clear_bars(puzzle):
-    """Clear the bars of the grid."""
-    puzzle.grid.clear_bars()
-
-def clear_blocks(puzzle):
-    """Clear the blocks of the grid."""
-    puzzle.grid.clear_blocks()
-
-def clear_voids(puzzle):
-    """Clear the voids of the grid."""
-    puzzle.grid.clear_voids()
-    
-def clear_chars(puzzle):
-    """Clear the characters of the grid."""
-    puzzle.grid.clear_chars()
-    
-def clear_clues(puzzle):
-    """Clear the clues of the grid."""
-    puzzle.grid.clear_clues()
-    
-def shift_grid_up(puzzle):
-    """Shift the grid's content up."""
-    puzzle.grid.shift_up()
-    
-def shift_grid_down(puzzle):
-    """Shift the grid's content down."""
-    puzzle.grid.shift_down()
-
-def shift_grid_left(puzzle):
-    """Shift the grid's content left."""
-    puzzle.grid.shift_left()
-    
-def shift_grid_right(puzzle):
-    """Shift the grid's content right."""
-    puzzle.grid.shift_right()
-
-def resize_grid(puzzle, width, height):
-    """Resize the grid."""
-    puzzle.grid.resize(width, height)
-    
-def insert_row_above(puzzle, x, y):
-    """Insert a row above the given location."""
-    puzzle.grid.insert_row(y, True)
-
-def insert_row_below(puzzle, x, y):
-    """Insert a row below the given location."""
-    puzzle.grid.insert_row(y, False)
-    
-def insert_column_left(puzzle, x, y):
-    """Insert a column left of the given location."""
-    puzzle.grid.insert_column(x, True)
-
-def insert_column_right(puzzle, x, y):
-    """Insert a column right of the given location."""
-    puzzle.grid.insert_column(x, False)
-
-def remove_row(puzzle, x, y):
-    """Remove a row."""
-    puzzle.grid.remove_row(y)
-
-def remove_column(puzzle, x, y):
-    """Remove a column."""
-    puzzle.grid.remove_column(x)
-    
-def horizontal_flip(puzzle):
-    """Flip the grid horizontally."""
-    puzzle.grid.horizontal_flip()
-    
-def vertical_flip(puzzle):
-    """Flip the grid vertically."""
-    puzzle.grid.vertical_flip()
-    
-def diagonal_flip(puzzle):
-    """Flip the grid diagonally and return and Action."""
-    puzzle.grid.diagonal_flip()
+clear_all = lambda p: p.grid.clear()
+clear_bars = lambda p: p.grid.clear_bars()
+clear_blocks = lambda p: p.grid.clear_blocks()
+clear_voids = lambda p: p.grid.clear_voids()
+clear_chars = lambda p: p.grid.clear_chars()
+clear_clues = lambda p: p.grid.clear_clues()
+shift_grid_up = lambda p: p.grid.shift_up()
+shift_grid_down = lambda p: p.grid.shift_down()
+shift_grid_left = lambda p: p.grid.shift_left()
+shift_grid_right = lambda p: p.grid.shift_right()
+resize_grid = lambda p, width, height: p.grid.resize(width, height)
+insert_row_above = lambda p, x, y: p.grid.insert_row(y, True)
+insert_row_below = lambda p, x, y: p.grid.insert_row(y, False)
+insert_column_left = lambda p, x, y: p.grid.insert_column(x, True)
+insert_column_right = lambda p, x, y: p.grid.insert_column(x, False)
+remove_row = lambda p, x, y: p.grid.remove_row(y)
+remove_column = lambda p, x, y: p.grid.remove_column(x)
+horizontal_flip = lambda p: p.grid.horizontal_flip()
+vertical_flip = lambda p: p.grid.vertical_flip()
+diagonal_flip = lambda p: p.grid.diagonal_flip()
