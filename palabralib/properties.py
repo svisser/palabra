@@ -90,6 +90,15 @@ def determine_words_message(puzzle, length=None):
     words.sort(key=operator.itemgetter(3))
     return words
 
+def determine_scrabble_score(puzzle):
+    # http://en.wikipedia.org/wiki/Scrabble_letter_distributions#English
+    scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
+        , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
+        , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
+        , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
+    chars = [puzzle.grid.get_char(x, y) for x, y in puzzle.grid.cells()]
+    return sum([scores[c] for c in chars])
+
 class PropertiesWindow(gtk.Dialog):
     def __init__(self, window, puzzle):
         gtk.Dialog.__init__(self, u"Puzzle properties", window
@@ -192,7 +201,7 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Connected?", "Yes" if status["connected"] else "No", 2, 6)
         
         create_header(table, u"<b>Score</b>", 2, 7)
-        score = self.determine_scrabble_score(puzzle)
+        score = determine_scrabble_score(puzzle)
         create_statistic(table, u"Scrabble score", str(score), 2, 8)
         try:
             avg_score = float(score) / status["char_count"]
@@ -347,6 +356,7 @@ class PropertiesWindow(gtk.Dialog):
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Words", cell, markup=0)
         tree.append_column(column)
+        tree.get_selection().connect("changed", self.on_word_selected)
         
         self.load_words(determine_words_message(self.puzzle))
         
@@ -400,15 +410,12 @@ class PropertiesWindow(gtk.Dialog):
                 words = determine_words_message(self.puzzle, length=length)
             self.load_words(words)
             
-    @staticmethod
-    def determine_scrabble_score(puzzle):
-        # http://en.wikipedia.org/wiki/Scrabble_letter_distributions#English
-        scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
-            , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
-            , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
-            , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
-        chars = [puzzle.grid.get_char(x, y) for x, y in puzzle.grid.cells()]
-        return sum([scores[c] for c in chars])
+    def on_word_selected(self, selection):
+        store, it = selection.get_selected()
+        if it:
+            highlight_cells(self.palabra_window, self.puzzle, clear=True)
+            x, y, d = store[it][1], store[it][2], store[it][3]
+            highlight_cells(self.palabra_window, self.puzzle, "slot", (x, y, d))
         
     def create_metadata_tab(self, puzzle):
         details = gtk.Table(9, 2, False)
