@@ -165,6 +165,23 @@ def attempt_fill(grid, words):
         return g
     return grid
 
+def compute_highlights(grid, f=None, arg=None, clear=False):
+    """Compute the cells to highlight according to the specified function."""
+    cells = []
+    if not clear:
+        if f == "length":
+            cells = get_length_slots(grid, arg)
+        elif f == "char":
+            cells = get_char_slots(grid, arg)
+        elif f == "open":
+            cells = get_open_slots(grid)
+        elif f == "cells":
+            cells = [(x, y, "across", 1) for x, y in arg]
+        elif f == "slot":
+            x, y, d = arg
+            cells = [(x, y, d, grid.word_length(x, y, d))]
+    return cells
+
 def compute_warnings_of_cells(grid, cells, settings):
     """Determine undesired cells."""
     lengths = {}
@@ -469,23 +486,6 @@ def insert(window, grid, slot, word):
     if not cells:
         return
     window.transform_grid(transform.modify_chars, chars=cells)
-
-def compute_highlights(grid, f=None, arg=None, clear=False):
-    """Compute the cells to highlight according to the specified function."""
-    cells = []
-    if not clear:
-        if f == "length":
-            cells = get_length_slots(grid, arg)
-        elif f == "char":
-            cells = get_char_slots(grid, arg)
-        elif f == "open":
-            cells = get_open_slots(grid)
-        elif f == "cells":
-            cells = [(x, y, "across", 1) for x, y in arg]
-        elif f == "slot":
-            x, y, d = arg
-            cells = [(x, y, d, grid.word_length(x, y, d))]
-    return cells
 
 def highlight_cells(window, puzzle, f=None, arg=None, clear=False):
     """

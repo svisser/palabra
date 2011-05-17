@@ -86,6 +86,18 @@ class EditorTestCase(unittest.TestCase):
         cells = editor.compute_highlights(self.grid, "open")
         self.assertEquals(len(cells), len(list(self.grid.cells())))
         
+    def testHighlightsTwo(self):
+        arg = [(1, 1), (5, 5), (3, 4), (4, 3)]
+        cells = editor.compute_highlights(self.grid, "cells", arg)
+        self.assertEquals(len(arg), len(cells))
+        for x, y in arg:
+            self.assertTrue((x, y, "across", 1) in cells)
+        result = editor.compute_highlights(self.grid, "slot", (0, 0, "down"))
+        self.assertTrue((0, 0, "down", 15) in result)
+        self.grid.set_block(5, 0, True)
+        result = editor.compute_highlights(self.grid, "slot", (0, 0, "across"))
+        self.assertTrue((0, 0, "across", 5) in result)
+        
     def testSymmetryInvalid(self):
         self.assertEquals(editor.apply_symmetry(self.grid, [], -1, -1), [])
 
