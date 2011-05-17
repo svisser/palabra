@@ -82,6 +82,10 @@ class Histogram:
         context.restore()
 
 def determine_words_message(puzzle, length=None):
+    """
+    Compute a sorted list of (x, y, d, word) of all words in the puzzle's grid.
+    If length is specified, return only words of that length.
+    """
     words = []
     for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
         if length is not None and len(word) != length:
@@ -91,6 +95,7 @@ def determine_words_message(puzzle, length=None):
     return words
 
 def determine_scrabble_score(puzzle):
+    """Compute the sum of each character's score in Scrabble."""
     # http://en.wikipedia.org/wiki/Scrabble_letter_distributions#English
     scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
         , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
