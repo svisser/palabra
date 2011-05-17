@@ -38,12 +38,23 @@ def extract(counts, s):
             chars.append(c)
     return s, chars
 
-def accidental_entries(results, collapse=False):
+def accidental_entries(results, collapse=False, palindrome=False):
     """
     Yield all entries that should be displayed
     in the accidental words dialog.
     """
-    show = [(str(i), ''.join([c for x, y, c in r])) for i, (d, r) in enumerate(results)]
+    use = results
+    if palindrome:
+        slots = [cells for d, cells in results]
+        use = []
+        for d, cells in results:
+            if cells in slots:
+                # s[::-1] = reverse sequence
+                use.append((d, cells))
+                r_cells = cells[::-1]
+                if r_cells in slots:
+                    slots.remove(r_cells)
+    show = [(str(i), ''.join([c for x, y, c in r])) for i, (d, r) in enumerate(use)]
     show.sort(key=itemgetter(1))
     if collapse:
         ws = {}

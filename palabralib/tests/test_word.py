@@ -624,3 +624,15 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(s0, "ABC")
         self.assertEquals(count0, 2)
         self.assertEquals(indices0, "0,1")
+        
+    def testAccidentalGridPalindrome(self):
+        """A palindrome is counted only once as accidental word."""
+        seq1 = ("across", [(0, 0, 'N'), (1, 0, 'O'), (2, 0, 'N')])
+        seq2 = ("acrossr", [(2, 0, 'N'), (1, 0, 'O'), (0, 0, 'N')])
+        seqs = [seq1, seq2]
+        entries = list(word.accidental_entries(seqs, True, True))
+        self.assertEquals(len(entries), 1)
+        s0, count0, indices0 = entries[0]
+        self.assertEquals(s0, "NON")
+        self.assertEquals(count0, 1)
+        self.assertEquals(indices0, "0")

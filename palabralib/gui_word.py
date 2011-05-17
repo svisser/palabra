@@ -100,7 +100,7 @@ class AccidentalWordsDialog(PalabraDialog):
         self.results = [(d, cells) for d, cells in
             check_accidental_words([wlist], grid) if len(cells) > 1]
         self.store.clear()
-        for s, count, str_indices in accidental_entries(self.results, self.collapse):
+        for s, count, str_indices in accidental_entries(self.results, self.collapse, True):
             text = s.lower()
             if count > 1:
                 text += " (" + str(count) + "x)"
