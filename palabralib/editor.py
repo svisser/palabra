@@ -328,28 +328,29 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     actions = []
     key = event.keyval
     grid = puzzle.grid
+    selection = e_settings.selection
     if key == gtk.keysyms.BackSpace and not e_settings.settings["locked_grid"]:
-        on_backspace(window, puzzle, e_settings)
+        actions = on_backspace(grid, selection)
     elif key == gtk.keysyms.Tab:
-        set_selection(window, puzzle, e_settings, other_dir=True)
+        actions = [EditorAction("swapdir", None)]
     elif key == gtk.keysyms.Home:
-        cell = grid.get_cell_of_slot(e_settings.selection, "start")
-        set_selection(window, puzzle, e_settings, *cell)
+        x, y = grid.get_cell_of_slot(selection, "start")
+        actions = [EditorAction("selection", {'x': x, 'y': y})]
     elif key == gtk.keysyms.End:
-        cell = grid.get_cell_of_slot(e_settings.selection, "end")
-        set_selection(window, puzzle, e_settings, *cell)
+        x, y = grid.get_cell_of_slot(selection, "end")
+        actions = [EditorAction("selection", {'x': x, 'y': y})]
     elif key == gtk.keysyms.Left:
-        apply_selection_delta(window, puzzle, e_settings, -1, 0)
+        actions = apply_selection_delta(grid, selection, -1, 0)
     elif key == gtk.keysyms.Up:
-        apply_selection_delta(window, puzzle, e_settings, 0, -1)
+        actions = apply_selection_delta(grid, selection, 0, -1)
     elif key == gtk.keysyms.Right:
-        apply_selection_delta(window, puzzle, e_settings, 1, 0)
+        actions = apply_selection_delta(grid, selection, 1, 0)
     elif key == gtk.keysyms.Down:
-        apply_selection_delta(window, puzzle, e_settings, 0, 1)
+        actions = apply_selection_delta(grid, selection, 0, 1)
     elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
-        on_delete(window, puzzle, e_settings)
+        actions = on_delete(grid, selection)
     elif not e_settings.settings["locked_grid"]:
-        actions = on_typing(puzzle.grid, key, e_settings.selection)
+        actions = on_typing(grid, key, selection)
     for a in actions:
         if a.type == "blocks":
             x = a.args['x']
@@ -365,6 +366,8 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
             x = a.args['x']
             y = a.args['y']
             set_selection(window, puzzle, e_settings, x, y)
+        elif a.type == "swapdir":
+            set_selection(window, puzzle, e_settings, other_dir=True)
     return True
 
 def on_typing(grid, keyval, selection):
@@ -389,6 +392,13 @@ def on_typing(grid, keyval, selection):
         actions.append(EditorAction("selection", {'x': nx, 'y': ny}))
     return actions
 
+def on_delete(grid, selection):
+    """Remove the character in the selected cell."""
+    x, y, d = selection
+    if grid.get_char(x, y) != "":
+        return [EditorAction("char", {'x': x, 'y': y, 'char': ''})]
+    return []
+
 def r_transform_blocks(window, puzzle, e_settings, x, y, status):
     """Place or remove a block at (x, y) and its symmetrical cells."""
     blocks = transform_blocks(puzzle.grid, e_settings.settings["symmetries"], x, y, status)
@@ -397,17 +407,6 @@ def r_transform_blocks(window, puzzle, e_settings, x, y, status):
     window.transform_grid(transform.modify_blocks, blocks=blocks)
     cells = [(x, y) for x, y, status in blocks]
     _render_cells(puzzle, cells, e_settings, window.drawing_area)
-
-def on_delete(window, puzzle, e_settings):
-    """Remove the character in the selected cell."""
-    x, y = e_settings.selection.x, e_settings.selection.y
-    if puzzle.grid.get_char(x, y) != "":
-        window.transform_grid(transform.modify_char
-            , x=x
-            , y=y
-            , next_char="")
-        #self._check_blacklist_for_cell(x, y)
-        _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
 
 def compute_selection(prev, x=None, y=None, direction=None, other_dir=False):
     if other_dir:
@@ -463,35 +462,27 @@ def set_overlay(window, puzzle, e_settings, word=None):
     render = [(x, y) for x, y, c in (old + cells)]
     _render_cells(puzzle, render, e_settings, window.drawing_area)
 
-def apply_selection_delta(window, puzzle, e_settings, dx, dy):
+def apply_selection_delta(grid, selection, dx, dy):
     """Move the selection to an available nearby cell."""
-    nx, ny = e_settings.selection.x + dx, e_settings.selection.y + dy
-    if puzzle.grid.is_available(nx, ny):
-        set_selection(window, puzzle, e_settings, nx, ny)
+    x, y, d = selection
+    nx, ny = x + dx, y + dy
+    if grid.is_available(nx, ny):
+        return [EditorAction("selection", {'x': nx, 'y': ny})]
+    return []
 
-def on_backspace(window, puzzle, e_settings):
+def on_backspace(grid, selection):
     """Remove a character in the current or previous cell."""
-    x, y, direction = e_settings.selection
-    grid = puzzle.grid
-    transform_grid = window.transform_grid
-    modify_char = transform.modify_char
-    
-    # remove character in selected cell if it has one
+    x, y, direction = selection
     if grid.data[y][x]["char"] != "":
-        transform_grid(modify_char, x=x, y=y, next_char="")
-        #self._check_blacklist_for_cell(x, y)
-        _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
-    else:
-        # remove character in previous cell if needed and move selection
-        if direction == "across":
-            x -= 1
-        elif direction == "down":
-            y -= 1
-        if grid.is_available(x, y):
-            if grid.data[y][x]["char"] != "":
-                transform_grid(modify_char, x=x, y=y, next_char="")
-            #self._check_blacklist_for_cell(x, y)
-            set_selection(window, puzzle, e_settings, x, y)
+        return [EditorAction("char", {'x': x, 'y': y, 'char': ''})]
+    actions = []
+    x -= (1 if direction == "across" else 0)
+    y -= (1 if direction == "down" else 0)
+    if grid.is_available(x, y):
+        if grid.data[y][x]["char"] != "":
+            actions.append(EditorAction("char", {'x': x, 'y': y, 'char': ''}))
+        actions.append(EditorAction("selection", {'x': x, 'y': y}))
+    return actions
 
 def insert(window, grid, slot, word):
     """Insert a word in the selected slot."""

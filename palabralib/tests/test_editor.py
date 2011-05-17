@@ -501,3 +501,61 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_block(3, 3, True)
         actions = editor.on_typing(self.grid, gtk.keysyms.a, (3, 3, "across"))
         self.assertEquals(actions, [])
+        
+    def testOnTypingCharAlreadyThere(self):
+        """If the user types a character that is already there then only selection moves."""
+        self.grid.set_char(5, 5, 'A')
+        actions = editor.on_typing(self.grid, gtk.keysyms.a, (5, 5, "down"))
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "selection")
+        self.assertEquals(actions[0].args, {'x': 5, 'y': 6})
+        
+    def testOnDeleteNothingThere(self):
+        """If the user deletes an empty cell then nothing happens."""
+        actions = editor.on_delete(self.grid, (0, 0, "across"))
+        self.assertEquals(actions, [])
+        
+    def testOnDeleteChar(self):
+        """If the user deletes a character then it is removed."""
+        self.grid.set_char(4, 4, 'P')
+        actions = editor.on_delete(self.grid, (4, 4, "across"))
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "char")
+        self.assertEquals(actions[0].args, {'x': 4, 'y': 4, 'char': ''})
+        
+    def testSelectionDeltaUpRight(self):
+        """Applying a selection delta is possible when cell is available."""
+        actions = editor.apply_selection_delta(self.grid, (3, 3, "across"), 0, -1)
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "selection")
+        self.assertEquals(actions[0].args, {'x': 3, 'y': 2})
+        actions = editor.apply_selection_delta(self.grid, (4, 4, "across"), 1, 0)
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "selection")
+        self.assertEquals(actions[0].args, {'x': 5, 'y': 4})
+        
+    def testSelectionDeltaUpFail(self):
+        """Applying a selection delta fails when no cell is available."""
+        actions = editor.apply_selection_delta(self.grid, (5, 0, "across"), 0, -1)
+        self.assertEquals(actions, [])
+        self.grid.set_block(3, 3, True)
+        actions = editor.apply_selection_delta(self.grid, (3, 4, "across"), 0, -1)
+        self.assertEquals(actions, [])
+        
+    def testBackspaceCurrentCell(self):
+        """Character is removed from cell when user presses backspace."""
+        self.grid.set_char(3, 3, 'A')
+        actions = editor.on_backspace(self.grid, (3, 3, "across"))
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "char")
+        self.assertEquals(actions[0].args, {'x': 3, 'y': 3, 'char': ''})
+        
+    def testBackspacePreviousCell(self):
+        """Move selection to previous cell on backspace and remove char there."""
+        self.grid.set_char(3, 3, 'A')
+        actions = editor.on_backspace(self.grid, (4, 3, "across"))
+        self.assertEquals(len(actions), 2)
+        self.assertEquals(actions[0].type, "char")
+        self.assertEquals(actions[0].args, {'x': 3, 'y': 3, 'char': ''})
+        self.assertEquals(actions[1].type, "selection")
+        self.assertEquals(actions[1].args, {'x': 3, 'y': 3})
