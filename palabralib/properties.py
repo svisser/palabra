@@ -81,6 +81,15 @@ class Histogram:
         pcr.show_layout(layout)
         context.restore()
 
+def determine_words_message(puzzle, length=None):
+    words = []
+    for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
+        if length is not None and len(word) != length:
+            continue
+        words.append((x, y, d, word.lower()))
+    words.sort(key=operator.itemgetter(3))
+    return words
+
 class PropertiesWindow(gtk.Dialog):
     def __init__(self, window, puzzle):
         gtk.Dialog.__init__(self, u"Puzzle properties", window
@@ -113,10 +122,15 @@ class PropertiesWindow(gtk.Dialog):
         
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)
+        
+    def load_words(self, words):
+        self.words_data.clear()
+        for x, y, d, word in words:
+            txt = '<span font_desc="Monospace 12">' + word + '</span>'
+            self.words_data.append([txt, x, y, d])
 
     def on_switch_page(self, tabs, page, pagenum):
-        txt = self.determine_words_message(self.puzzle)
-        self.words_data.set_text(txt)
+        self.load_words(determine_words_message(self.puzzle))
         self.words_tab_sel.unselect_all()
         highlight_cells(self.palabra_window, self.puzzle, clear=True)        
     
@@ -327,14 +341,18 @@ class PropertiesWindow(gtk.Dialog):
         window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         window.add(tree)
         
-        text = gtk.TextView()
-        text.set_editable(False)        
-        self.words_data = text.get_buffer()
-        self.words_data.set_text(self.determine_words_message(self.puzzle))
+        # word x y d
+        self.words_data = gtk.ListStore(str, int, int, str)
+        tree = gtk.TreeView(self.words_data)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Words", cell, markup=0)
+        tree.append_column(column)
+        
+        self.load_words(determine_words_message(self.puzzle))
         
         twindow = gtk.ScrolledWindow(None, None)
         twindow.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        twindow.add_with_viewport(text)
+        twindow.add(tree)
         
         label = gtk.Label()
         label.set_markup(u"<b>Words</b>")        
@@ -377,10 +395,10 @@ class PropertiesWindow(gtk.Dialog):
             length = store.get_value(it, 0)
             words = highlight_cells(self.palabra_window, self.puzzle, "length", length)
             if not words:
-                message = self.determine_words_message(self.puzzle)
+                words = determine_words_message(self.puzzle)
             else:
-                message = self.determine_words_message(self.puzzle, length=length)
-            self.words_data.set_text(message)
+                words = determine_words_message(self.puzzle, length=length)
+            self.load_words(words)
             
     @staticmethod
     def determine_scrabble_score(puzzle):
@@ -391,17 +409,6 @@ class PropertiesWindow(gtk.Dialog):
             , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
         chars = [puzzle.grid.get_char(x, y) for x, y in puzzle.grid.cells()]
         return sum([scores[c] for c in chars])
-        
-    @staticmethod
-    def determine_words_message(puzzle, length=None):
-        entries = puzzle.grid.entries()
-        entries.sort(key=len)
-        result = []
-        for word in entries:
-            if length is not None and len(word) != length:
-                continue
-            result += (word + u"\n")
-        return ''.join(result[:-1])
         
     def create_metadata_tab(self, puzzle):
         details = gtk.Table(9, 2, False)
