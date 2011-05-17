@@ -21,6 +21,7 @@ import pangocairo
 
 import constants
 from editor import highlight_cells
+from grid import determine_scrabble_score
 
 class Histogram:
     def __init__(self, totals, width, height):
@@ -93,16 +94,6 @@ def determine_words_message(puzzle, length=None):
         words.append((x, y, d, word.lower()))
     words.sort(key=operator.itemgetter(3))
     return words
-
-def determine_scrabble_score(puzzle):
-    """Compute the sum of each character's score in Scrabble."""
-    # http://en.wikipedia.org/wiki/Scrabble_letter_distributions#English
-    scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
-        , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
-        , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
-        , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
-    chars = [puzzle.grid.get_char(x, y) for x, y in puzzle.grid.cells()]
-    return sum([scores[c] for c in chars])
 
 class PropertiesWindow(gtk.Dialog):
     def __init__(self, window, puzzle):
@@ -206,7 +197,7 @@ class PropertiesWindow(gtk.Dialog):
         create_statistic(table, u"Connected?", "Yes" if status["connected"] else "No", 2, 6)
         
         create_header(table, u"<b>Score</b>", 2, 7)
-        score = determine_scrabble_score(puzzle)
+        score = determine_scrabble_score(puzzle.grid)
         create_statistic(table, u"Scrabble score", str(score), 2, 8)
         try:
             avg_score = float(score) / status["char_count"]

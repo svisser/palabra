@@ -27,6 +27,16 @@ def decompose_word(word, x, y, direction):
     elif direction == "down":
         return [(x, y + j, word[j]) for j in xrange(len(word))]
 
+def determine_scrabble_score(grid):
+    """Compute the sum of each character's score in Scrabble."""
+    # http://en.wikipedia.org/wiki/Scrabble_letter_distributions#English
+    scores = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2
+        , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
+        , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
+        , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
+    chars = [grid.get_char(x, y) for x, y in grid.cells()]
+    return sum([scores[c] for c in chars])
+
 class Grid:
     def __init__(self, width, height, initialize=True, number_mode=constants.NUMBERING_AUTO):
         """Construct a grid with the given dimensions."""
