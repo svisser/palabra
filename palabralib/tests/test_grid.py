@@ -18,7 +18,7 @@
 import unittest
 
 import palabralib.constants as constants
-from palabralib.grid import Grid, decompose_word
+from palabralib.grid import Grid, decompose_word, determine_scrabble_score
 from palabralib.puzzle import Puzzle
 
 class PuzzleTestCase(unittest.TestCase):
@@ -1471,3 +1471,37 @@ class GridTestCase(unittest.TestCase):
         self.assertTrue("se" in dirs_with_a)
         self.assertTrue("sw" in dirs_with_a)
         self.assertTrue("nw" in dirs_with_a)
+        
+    def testScrabble(self):
+        g = Grid(4, 4)
+        g.set_char(0, 0, 'A')
+        g.set_char(1, 0, 'E')
+        g.set_char(2, 0, 'I')
+        g.set_char(0, 1, 'O')
+        g.set_char(1, 1, 'N')
+        g.set_char(2, 1, 'R')
+        g.set_char(0, 2, 'T')
+        g.set_char(1, 2, 'L')
+        g.set_char(2, 2, 'S')
+        g.set_char(3, 3, 'U')
+        self.assertEquals(determine_scrabble_score(g), 10)
+        g2 = Grid(3, 3)
+        g2.set_char(0, 0, 'D')
+        g2.set_char(1, 0, 'G')
+        g2.set_char(2, 0, 'B')
+        g2.set_char(0, 1, 'C')
+        g2.set_char(1, 1, 'M')
+        g2.set_char(2, 1, 'P')
+        g2.set_char(0, 2, 'F')
+        g2.set_char(1, 2, 'H')
+        g2.set_char(2, 2, 'V')
+        self.assertEquals(determine_scrabble_score(g2), 28)
+        g3 = Grid(3, 3)
+        g3.set_char(0, 0, 'W')
+        g3.set_char(1, 0, 'Y')
+        g3.set_char(2, 0, 'K')
+        g3.set_char(0, 1, 'J')
+        g3.set_char(1, 1, 'X')
+        g3.set_char(2, 1, 'Q')
+        g3.set_char(0, 2, 'Z')
+        self.assertEquals(determine_scrabble_score(g3), 49)
