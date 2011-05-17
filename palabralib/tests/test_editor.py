@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import gtk
 import unittest
 
 import palabralib.cPalabra as cPalabra
@@ -451,3 +452,41 @@ class EditorTestCase(unittest.TestCase):
         #g = Grid(3, 3)
         #g2 = editor.attempt_fill(g, ["klm", "nop", "qrs", "knq", "lor", "mps"])
         #self.assertEquals(g2.count_chars(include_blanks=False), 9)
+        
+    def testOnTypingPeriod(self):
+        """If the user types a period then a block is placed and selection is moved."""
+        actions = editor.on_typing(self.grid, gtk.keysyms.period, (0, 0, "across"))
+        self.assertEquals(len(actions), 2)
+        self.assertEquals(actions[0].type, "blocks")
+        self.assertEquals(actions[0].args, {'x': 0, 'y': 0, 'status': True})
+        self.assertEquals(actions[1].type, "selection")
+        self.assertEquals(actions[1].args, {'x': 1, 'y': 0})
+        
+    def testOnTypingPeriodTwo(self):
+        """If the current direction is down then the selected cell moves down."""
+        actions = editor.on_typing(self.grid, gtk.keysyms.period, (0, 0, "down"))
+        self.assertEquals(len(actions), 2)
+        self.assertEquals(actions[1].type, "selection")
+        self.assertEquals(actions[1].args, {'x': 0, 'y': 1})
+        
+    def testOnTypingPeriodThree(self):
+        """If the user types next to a block, the selection is not moved."""
+        self.grid.set_block(1, 0, True)
+        actions = editor.on_typing(self.grid, gtk.keysyms.period, (0, 0, "across"))
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "blocks")
+        self.assertEquals(actions[0].args, {'x': 0, 'y': 0, 'status': True})
+        
+    def testOnTypingChar(self):
+        """If the user types a valid character then it is placed and selection is moved."""
+        actions = editor.on_typing(self.grid, gtk.keysyms.k, (1, 1, "across"))
+        self.assertEquals(len(actions), 2)
+        self.assertEquals(actions[0].type, "char")
+        self.assertEquals(actions[0].args, {'x': 1, 'y': 1, 'char': 'K'})
+        self.assertEquals(actions[1].type, "selection")
+        self.assertEquals(actions[1].args, {'x': 2, 'y': 1})
+        
+    def testOnTypingInvalidChar(self):
+        """If the user types an invalid character then nothing happens."""
+        actions = editor.on_typing(self.grid, gtk.keysyms.slash, (5, 5, "down"))
+        self.assertEquals(actions, [])

@@ -325,6 +325,7 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     if ((event.state & gtk.gdk.SHIFT_MASK) or
         (event.state & gtk.gdk.CONTROL_MASK)):
         return True
+    actions = []
     key = event.keyval
     grid = puzzle.grid
     if key == gtk.keysyms.BackSpace and not e_settings.settings["locked_grid"]:
@@ -348,22 +349,22 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
         on_delete(window, puzzle, e_settings)
     elif not e_settings.settings["locked_grid"]:
-        actions = on_typing(window, puzzle.grid, key, e_settings.selection)
-        for a in actions:
-            if a.type == "blocks":
-                x = a.args['x']
-                y = a.args['y']
-                status = a.args['status']
-                r_transform_blocks(window, puzzle, e_settings, x, y, status)
-            elif a.type == "char":
-                c = a.args['char']
-                x = a.args['x']
-                y = a.args['y']
-                window.transform_grid(transform.modify_char, x=x, y=y, next_char=c)
-            elif a.type == "selection":
-                x = a.args['x']
-                y = a.args['y']
-                set_selection(window, puzzle, e_settings, x, y)
+        actions = on_typing(puzzle.grid, key, e_settings.selection)
+    for a in actions:
+        if a.type == "blocks":
+            x = a.args['x']
+            y = a.args['y']
+            status = a.args['status']
+            r_transform_blocks(window, puzzle, e_settings, x, y, status)
+        elif a.type == "char":
+            c = a.args['char']
+            x = a.args['x']
+            y = a.args['y']
+            window.transform_grid(transform.modify_char, x=x, y=y, next_char=c)
+        elif a.type == "selection":
+            x = a.args['x']
+            y = a.args['y']
+            set_selection(window, puzzle, e_settings, x, y)
     return True
 
 def on_typing(grid, keyval, selection):
