@@ -44,8 +44,25 @@ DEFAULT_FILL_OPTIONS = {
 }
 
 Selection = namedtuple('Selection', ['x', 'y', 'direction'])
+EditorAction = namedtuple('EditorAction', ['type', 'args'])
 
 mouse_buttons_down = [False, False, False]
+
+class EditorSettings:
+    def __init__(self):
+        self.surface = None
+        self.pattern = None
+        self.selection = Selection(-1, -1, "across")
+        self.current = (-1, -1)
+        self.settings = {
+            "symmetries": constants.SYM_180
+            , "locked_grid": False
+        }
+        self.warnings = {}
+        for w in constants.WARNINGS:
+            self.warnings[w] = False
+e_settings = EditorSettings()
+e_tools = {}
 
 def get_char_slots(grid, c):
     return [(x, y, "across", 1) for x, y in grid.cells() if grid.data[y][x]["char"] == c]
@@ -293,22 +310,6 @@ def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
     context.set_source(e_settings.pattern)
     context.paint()
 
-class EditorSettings:
-    def __init__(self):
-        self.surface = None
-        self.pattern = None
-        self.selection = Selection(-1, -1, "across")
-        self.current = (-1, -1)
-        self.settings = {
-            "symmetries": constants.SYM_180
-            , "locked_grid": False
-        }
-        self.warnings = {}
-        for w in constants.WARNINGS:
-            self.warnings[w] = False
-e_settings = EditorSettings()
-e_tools = {}
-
 def on_button_release_event(drawing_area, event):
     if 1 <= event.button <= 3:
         mouse_buttons_down[event.button - 1] = False
@@ -347,31 +348,45 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     elif key == gtk.keysyms.Delete and not e_settings.settings["locked_grid"]:
         on_delete(window, puzzle, e_settings)
     elif not e_settings.settings["locked_grid"]:
-        on_typing(window, puzzle, key, e_settings)
+        actions = on_typing(window, puzzle.grid, key, e_settings.selection)
+        for a in actions:
+            if a.type == "blocks":
+                x = a.args['x']
+                y = a.args['y']
+                status = a.args['status']
+                r_transform_blocks(window, puzzle, e_settings, x, y, status)
+            elif a.type == "char":
+                c = a.args['char']
+                x = a.args['x']
+                y = a.args['y']
+                window.transform_grid(transform.modify_char, x=x, y=y, next_char=c)
+            elif a.type == "selection":
+                x = a.args['x']
+                y = a.args['y']
+                set_selection(window, puzzle, e_settings, x, y)
     return True
 
-def on_typing(window, puzzle, keyval, e_settings):
+def on_typing(grid, keyval, selection):
     """Place an alphabetical character in the grid and move the selection."""
     valid = gtk.keysyms.a <= keyval <= gtk.keysyms.z or keyval == gtk.keysyms.period
     if not valid:
-        return
-    grid = puzzle.grid
-    x, y, direction = e_settings.selection
+        return []
+    x, y, direction = selection
     if not grid.is_valid(x, y):
-        return
+        return []
+    actions = []
     if keyval == gtk.keysyms.period:
-        r_transform_blocks(window, puzzle, e_settings, x, y, True)
+        actions.append(EditorAction("blocks", {'x': x, 'y': y, 'status': True}))
     else:
         c = chr(keyval).capitalize()
         if c != grid.get_char(x, y):
-            window.transform_grid(transform.modify_char
-                    , x=x
-                    , y=y
-                    , next_char=c)
-            #self._check_blacklist_for_cell(x, y)
+            actions.append(EditorAction("char", {'x': x, 'y': y, 'char': c}))
     dx = 1 if direction == "across" else 0
     dy = 1 if direction == "down" else 0
-    apply_selection_delta(window, puzzle, e_settings, dx, dy)
+    nx, ny = x + dx, y + dy
+    if grid.is_available(nx, ny):
+        actions.append(EditorAction("selection", {'x': nx, 'y': ny}))
+    return actions
 
 def r_transform_blocks(window, puzzle, e_settings, x, y, status):
     """Place or remove a block at (x, y) and its symmetrical cells."""
