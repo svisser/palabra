@@ -490,3 +490,14 @@ class EditorTestCase(unittest.TestCase):
         """If the user types an invalid character then nothing happens."""
         actions = editor.on_typing(self.grid, gtk.keysyms.slash, (5, 5, "down"))
         self.assertEquals(actions, [])
+        
+    def testOnTypingInvalidCell(self):
+        """If the user types when no valid cell is selected then nothing happens."""
+        actions = editor.on_typing(self.grid, gtk.keysyms.a, (-1, -1, "across"))
+        self.assertEquals(actions, [])
+        
+    def testOnTypingNotAvailableCell(self):
+        """If the user types while an unavailable cell is selected then nothing happens."""
+        self.grid.set_block(3, 3, True)
+        actions = editor.on_typing(self.grid, gtk.keysyms.a, (3, 3, "across"))
+        self.assertEquals(actions, [])

@@ -373,7 +373,7 @@ def on_typing(grid, keyval, selection):
     if not valid:
         return []
     x, y, direction = selection
-    if not grid.is_valid(x, y):
+    if not grid.is_available(x, y):
         return []
     actions = []
     if keyval == gtk.keysyms.period:
