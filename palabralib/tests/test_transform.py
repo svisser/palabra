@@ -23,49 +23,57 @@ import palabralib.transform as transform
 
 class TransformTestCase(unittest.TestCase):
     def setUp(self):
-        self.puzzle = Puzzle(Grid(15, 15))
+        self.grid = Grid(15, 15)
+        self.puzzle = Puzzle(self.grid)
         
     def testClearAll(self):
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(10, 10, u"A")
-        
+        """transform.clear_all removes all content of a puzzle."""
+        self.grid.set_block(5, 5, True)
+        self.grid.set_char(10, 10, u"A")
+        self.grid.set_void(1, 1, True)
         a = transform.clear_all(self.puzzle)
-        self.assertEqual(self.puzzle.grid.is_block(5, 5), False)
-        self.assertEqual(self.puzzle.grid.get_char(10, 10), u"")
+        self.assertEqual(self.grid.is_block(5, 5), False)
+        self.assertEqual(self.grid.get_char(10, 10), u"")
+        self.assertEqual(self.grid.is_void(1, 1), False)
         
     def testClearChars(self):
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(10, 10, u"A")
+        """transform.clear_chars removes all characters of a puzzle."""
+        self.grid.set_block(5, 5, True)
+        self.grid.set_char(10, 10, u"A")
         
         a = transform.clear_chars(self.puzzle)
-        self.assertEqual(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEqual(self.puzzle.grid.get_char(10, 10), u"")
+        self.assertEqual(self.grid.is_block(5, 5), True)
+        self.assertEqual(self.grid.get_char(10, 10), u"")
         
     def testClearClues(self):
-        self.puzzle.grid.store_clue(0, 0, "across", "text", "foo")
-        self.puzzle.grid.set_block(5, 5, True)
-        self.puzzle.grid.set_char(10, 10, u"A")
+        """transform.clear_clues removes all clues of a puzzle."""
+        self.grid.store_clue(0, 0, "across", "text", "foo")
+        self.grid.set_block(5, 5, True)
+        self.grid.set_char(10, 10, u"A")
         
         a = transform.clear_clues(self.puzzle)
-        self.assertEqual("across" in self.puzzle.grid.get_clues(0, 0), False)
-        self.assertEqual(self.puzzle.grid.is_block(5, 5), True)
-        self.assertEqual(self.puzzle.grid.get_char(10, 10), u"A")
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual(self.grid.is_block(5, 5), True)
+        self.assertEqual(self.grid.get_char(10, 10), u"A")
         
     def testModifyBlocks(self):
-        blocks = [(3, 3, True), (4, 4, True)]
+        """transform.modify_blocks modifies the blocks of a puzzle."""
+        self.grid.set_block(4, 4, True)
+        blocks = [(3, 3, True), (4, 4, False)]
         a = transform.modify_blocks(self.puzzle, blocks)
         for x, y, status in blocks:
-            self.assertEqual(self.puzzle.grid.is_block(x, y), status)
+            self.assertEqual(self.grid.is_block(x, y), status)
             
     def testModifyChar(self):
+        """transform.modify_char modifies a character of a puzzle."""
         a = transform.modify_char(self.puzzle, 3, 3, "C")
-        self.assertEqual(self.puzzle.grid.get_char(3, 3), "C")
+        self.assertEqual(self.grid.get_char(3, 3), "C")
         
     def testModifyClue(self):
         a = transform.modify_clue(self.puzzle, 3, 3, "across", "text", "foo")
         b = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "bar")
         
-        clues = self.puzzle.grid.cell(3, 3)["clues"]
+        clues = self.grid.cell(3, 3)["clues"]
         self.assertEqual(clues["across"], {"text": "foo"})
         self.assertEqual(clues["down"], {"text": "bar"})
         
@@ -75,4 +83,26 @@ class TransformTestCase(unittest.TestCase):
         d = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "foo")
         e = transform.modify_clue(self.puzzle, 3, 3, "down", "explanation", "bar")
         f = transform.modify_clue(self.puzzle, 3, 3, "down", "text", "")
-        self.assertEqual(clues["down"], {"explanation": "bar"})        
+        self.assertEqual(clues["down"], {"explanation": "bar"})
+        
+    def testClearBlocks(self):
+        """transform.clear_blocks removes all blocks of a puzzle."""
+        self.grid.set_block(0, 0, True)
+        self.grid.set_block(5, 5, True)
+        transform.clear_blocks(self.puzzle)
+        self.assertEquals(self.grid.count_blocks(), 0)
+    
+    def testClearBars(self):
+        """transform.clear_bars removes all bars of a puzzle."""
+        self.grid.set_bar(3, 3, "top", True)
+        self.grid.set_bar(7, 7, "left", True)
+        transform.clear_bars(self.puzzle)
+        self.assertEquals(self.grid.has_bar(3, 3, "top"), False)
+        self.assertEquals(self.grid.has_bar(7, 7, "left"), False)
+        
+    def testClearVoids(self):
+        """transform.clear_voids removes all voids of a puzzle."""
+        self.grid.set_void(0, 0, True)
+        self.grid.set_void(5, 5, True)
+        transform.clear_voids(self.puzzle)
+        self.assertEquals(self.grid.count_voids(), 0)
