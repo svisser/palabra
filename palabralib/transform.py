@@ -41,12 +41,6 @@ def modify_chars(content, chars):
     g = content.grid if isinstance(content, Puzzle) else content
     for x, y, c in chars:
         g.set_char(x, y, c)
-
-def modify_char(puzzle, x, y, next_char):
-    """Modify the character at the given location."""
-    # for explanation of type, see modify_chars
-    modify_char.__setattr__('type', constants.TRANSFORM_STRUCTURE)
-    modify_chars(puzzle, [(x, y, next_char)])
     
 def modify_clue(puzzle, x, y, direction, key, value):
     """Store the given clue data at the given (x, y) and direction."""

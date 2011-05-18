@@ -64,10 +64,11 @@ class TransformTestCase(unittest.TestCase):
         for x, y, status in blocks:
             self.assertEqual(self.grid.is_block(x, y), status)
             
-    def testModifyChar(self):
-        """transform.modify_char modifies a character of a puzzle."""
-        a = transform.modify_char(self.puzzle, 3, 3, "C")
-        self.assertEqual(self.grid.get_char(3, 3), "C")
+    def testModifyChars(self):
+        """transform.modify_chars modifies a character of a puzzle."""
+        a = transform.modify_chars(self.puzzle, [(3, 3, 'C'), (4, 5, 'D')])
+        self.assertEquals(self.grid.get_char(3, 3), "C")
+        self.assertEquals(self.grid.get_char(4, 5), "D")
         
     def testModifyClue(self):
         a = transform.modify_clue(self.puzzle, 3, 3, "across", "text", "foo")
