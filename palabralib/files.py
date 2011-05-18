@@ -803,17 +803,17 @@ def read_xpf(filename, warnings=True):
                         if warnings:
                             print "Warning: skipping a child of Grid that is not a Row."
                         continue
-                    if not row.text or len(row.text) < r_width:
+                    if not row.text:# or len(row.text) < r_width:
                         if warnings:
                             print "Warning: skipping a row with missing content."
                         continue
                     for x, c in enumerate(row.text):
                         if c == '.':
-                            r_grid.set_block(x, y, True)
+                            r_grid.data[y][x]["block"] = True
                         elif c == '~':
-                            r_grid.set_void(x, y, True)
+                            r_grid.data[y][x]["void"] = True
                         else:
-                            r_grid.set_char(x, y, c if c != ' ' else '')
+                            r_grid.data[y][x]["char"] = c if c != ' ' else ''
                     y += 1
             elif child.tag == "Circles":
                 for circle in child:
