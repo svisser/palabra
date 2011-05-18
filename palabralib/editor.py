@@ -378,12 +378,22 @@ def process_editor_actions(window, puzzle, e_settings, actions):
             x = a.args['x']
             y = a.args['y']
             window.transform_grid(transform.modify_char, x=x, y=y, next_char=c)
+        elif a.type == "chars":
+            if e_settings.settings["locked_grid"]:
+                continue
+            cells = a.args['cells']
+            window.transform_grid(transform.modify_chars, chars=cells)
         elif a.type == "selection":
             x = a.args['x']
             y = a.args['y']
             set_selection(window, puzzle, e_settings, x, y)
         elif a.type == "swapdir":
             set_selection(window, puzzle, e_settings, other_dir=True)
+        elif a.type == "popup":
+            x = a.args['x']
+            y = a.args['y']
+            event = a.args['event']
+            _create_popup_menu(window, puzzle, event, x, y)
 
 def on_typing(grid, keyval, selection):
     """Place an alphabetical character in the grid and move the selection."""
@@ -499,15 +509,15 @@ def on_backspace(grid, selection):
         actions.append(EditorAction("selection", {'x': x, 'y': y}))
     return actions
 
-def insert(window, grid, slot, word):
+def insert(grid, slot, word):
     """Insert a word in the selected slot."""
     x, y, d = slot
     if not grid.is_available(x, y):
-        return
+        return []
     cells = compute_word_cells(grid, word, x, y, d)
     if not cells:
-        return
-    window.transform_grid(transform.modify_chars, chars=cells)
+        return []
+    return [EditorAction("chars", {'cells': cells})]
 
 def highlight_cells(window, puzzle, f=None, arg=None, clear=False):
     """
@@ -520,6 +530,105 @@ def highlight_cells(window, puzzle, f=None, arg=None, clear=False):
     render = list(set(expand_slots(old + cells)))
     _render_cells(puzzle, render, e_settings, window.drawing_area)
     return cells
+    
+def on_button_press(grid, event, prev, next):
+    prev_x, prev_y = prev
+    x, y = next
+    if not grid.is_valid(x, y):
+        return [EditorAction("selection", {'x': -1, 'y': -1})]
+    actions = []
+    if (event.state & gtk.gdk.SHIFT_MASK):
+        if event.button in [1, 3]:
+            args = {'x': x, 'y': y, 'status': event.button == 1}
+            actions.append(EditorAction("blocks", args))
+    else:
+        if event.button == 1:
+            # type is needed to assure rapid clicking
+            # doesn't trigger it multiple times
+            if (prev_x, prev_y) == (x, y) and event.type == gtk.gdk._2BUTTON_PRESS:
+                actions.append(EditorAction("swapdir", None))
+            if grid.is_available(x, y):
+                actions.append(EditorAction("selection", {'x': x, 'y': y}))
+        elif event.button == 3:
+            if grid.is_valid(x, y):
+                actions.append(EditorAction("popup", {'event': event, 'x': x, 'y': y}))
+                # popup menu right-click should not interfere with
+                # normal editing controls
+                mouse_buttons_down[2] = False
+    return actions
+
+def _create_popup_menu(window, puzzle, event, x, y):
+    menu = gtk.Menu()
+    update_status = window.update_status
+    pop_status = window.pop_status
+    def on_clear_slot_select(item, direction, x, y):
+        grid = puzzle.grid
+        sx, sy = grid.get_start_word(x, y, direction)
+        msg = ''.join(["Clear all letters in the slot: "
+            , str(grid.data[sy][sx]["number"]), " "
+            , {"across": "across", "down": "down"}[direction]])
+        update_status(constants.STATUS_MENU, msg)
+    on_clear_slot_deselect = lambda item: pop_status(constants.STATUS_MENU)
+    on_clear_slot = lambda item, d: clear_slot_of(window, puzzle.grid, x, y, d)
+    def has_chars(x, y, direction):
+        grid = puzzle.grid
+        return any([grid.data[q][p]["char"] != ''
+            for p, q in grid.slot(x, y, direction)])
+    clearable = lambda slot: puzzle.grid.is_part_of_word(*slot) and has_chars(*slot)
+    item = gtk.MenuItem("Clear across slot")
+    item.connect("activate", on_clear_slot, "across")
+    item.connect("select", on_clear_slot_select, "across", x, y)
+    item.connect("deselect", on_clear_slot_deselect)
+    item.set_sensitive(clearable((x, y, "across")))
+    menu.append(item)
+    item = gtk.MenuItem("Clear down slot")
+    item.connect("activate", on_clear_slot, "down")
+    item.connect("select", on_clear_slot_select, "down", x, y)
+    item.connect("deselect", on_clear_slot_deselect)
+    item.set_sensitive(clearable((x, y, "down")))
+    menu.append(item)
+    menu.append(gtk.SeparatorMenuItem())
+    def on_cell_properties(item):
+        grid = puzzle.grid
+        def determine_type(c):
+            if grid.is_block(*c):
+                return "block"
+            elif grid.is_void(*c):
+                return "void"
+            return "letter"
+        props = {"cell": (x, y), "grid": grid, "defaults": {}}
+        for k in DEFAULTS_CELL:
+            props[k] = puzzle.view.properties.style(x, y)[k]
+            props["defaults"][k] = puzzle.view.properties.style()[k]
+        w = CellPropertiesDialog(window, props)
+        w.show_all()
+        if w.run() == gtk.RESPONSE_OK:
+            puzzle.view.properties.update(x, y, w.gather_appearance().items())
+            #self._render_cells([(x, y)])
+        w.destroy()
+    item = gtk.MenuItem("Properties")
+    item.connect("activate", on_cell_properties)
+    menu.append(item)
+    menu.show_all()
+    menu.popup(None, None, None, event.button, event.time)
+
+def clear_slot_of(window, grid, x, y, direction):
+    """Clear all letters of the slot in the specified direction
+    that contains (x, y)."""
+    chars = [(r, s, "") for r, s in grid.slot(x, y, direction)
+        if grid.data[s][r]["char"] != '']
+    if len(chars) > 0:
+        window.transform_grid(transform.modify_chars, chars=chars)
+
+def on_button_press_event(drawing_area, event, window, puzzle, e_settings):
+    if 1 <= event.button <= 3:
+        mouse_buttons_down[event.button - 1] = True
+    drawing_area.grab_focus()
+    prev_x, prev_y = e_settings.selection.x, e_settings.selection.y
+    x, y = puzzle.view.properties.screen_to_grid(event.x, event.y)
+    actions = on_button_press(puzzle.grid, event, (prev_x, prev_y), (x, y))
+    process_editor_actions(window, puzzle, e_settings, actions)
+    return True
 
 class Editor:
     def __init__(self, window):
@@ -527,7 +636,7 @@ class Editor:
         self.blacklist = []
         self.fill_options = {}
         self.EVENTS = {"expose_event": self.on_expose_event
-            , "button_press_event": self.on_button_press_event
+            , "button_press_event": (on_button_press_event, self.window, self.puzzle, e_settings)
             , "button_release_event": on_button_release_event
             , "motion_notify_event": self.on_motion_notify_event
             , "key_press_event": on_key_press_event
@@ -558,92 +667,6 @@ class Editor:
         context.paint()
         return True
         
-    def on_button_press_event(self, drawing_area, event):
-        if 1 <= event.button <= 3:
-            mouse_buttons_down[event.button - 1] = True
-        drawing_area.grab_focus()
-        prev_x, prev_y = e_settings.selection.x, e_settings.selection.y
-        x, y = self.puzzle.view.properties.screen_to_grid(event.x, event.y)
-        
-        if not self.puzzle.grid.is_valid(x, y):
-            self.set_selection(-1, -1)
-            return True
-            
-        if (event.state & gtk.gdk.SHIFT_MASK):
-            if event.button in [1, 3] and not e_settings.settings["locked_grid"]:
-                self.transform_blocks(x, y, event.button == 1)
-        else:
-            if event.button == 1:
-                # type is needed to assure rapid clicking
-                # doesn't trigger it multiple times
-                if (prev_x, prev_y) == (x, y) and event.type == gtk.gdk._2BUTTON_PRESS:
-                    self.set_selection(other_dir=True)
-                if self.puzzle.grid.is_available(x, y):
-                    self.set_selection(x, y)
-            elif event.button == 3:
-                if self.puzzle.grid.is_valid(x, y):
-                    self._create_popup_menu(event, x, y)
-                    # popup menu right-click should not interfere with
-                    # normal editing controls
-                    mouse_buttons_down[2] = False
-        return True
-    
-    def _create_popup_menu(self, event, x, y):
-        menu = gtk.Menu()
-        update_status = self.window.update_status
-        pop_status = self.window.pop_status
-        def on_clear_slot_select(item, direction, x, y):
-            grid = self.puzzle.grid
-            sx, sy = grid.get_start_word(x, y, direction)
-            msg = ''.join(["Clear all letters in the slot: "
-                , str(grid.data[sy][sx]["number"]), " "
-                , {"across": "across", "down": "down"}[direction]])
-            update_status(constants.STATUS_MENU, msg)
-        on_clear_slot_deselect = lambda item: pop_status(constants.STATUS_MENU)
-        on_clear_slot = lambda item, d: self.clear_slot_of(x, y, d)
-        def has_chars(x, y, direction):
-            grid = self.puzzle.grid
-            return any([grid.data[q][p]["char"] != ''
-                for p, q in grid.slot(x, y, direction)])
-        clearable = lambda slot: self.puzzle.grid.is_part_of_word(*slot) and has_chars(*slot)
-        item = gtk.MenuItem("Clear across slot")
-        item.connect("activate", on_clear_slot, "across")
-        item.connect("select", on_clear_slot_select, "across", x, y)
-        item.connect("deselect", on_clear_slot_deselect)
-        item.set_sensitive(clearable((x, y, "across")))
-        menu.append(item)
-        item = gtk.MenuItem("Clear down slot")
-        item.connect("activate", on_clear_slot, "down")
-        item.connect("select", on_clear_slot_select, "down", x, y)
-        item.connect("deselect", on_clear_slot_deselect)
-        item.set_sensitive(clearable((x, y, "down")))
-        menu.append(item)
-        menu.append(gtk.SeparatorMenuItem())
-        def on_cell_properties(item):
-            puzzle = self.puzzle
-            grid = puzzle.grid
-            def determine_type(c):
-                if grid.is_block(*c):
-                    return "block"
-                elif grid.is_void(*c):
-                    return "void"
-                return "letter"
-            props = {"cell": (x, y), "grid": grid, "defaults": {}}
-            for k in DEFAULTS_CELL:
-                props[k] = puzzle.view.properties.style(x, y)[k]
-                props["defaults"][k] = puzzle.view.properties.style()[k]
-            w = CellPropertiesDialog(self.window, props)
-            w.show_all()
-            if w.run() == gtk.RESPONSE_OK:
-                puzzle.view.properties.update(x, y, w.gather_appearance().items())
-                self._render_cells([(x, y)])
-            w.destroy()
-        item = gtk.MenuItem("Properties")
-        item.connect("activate", on_cell_properties)
-        menu.append(item)
-        menu.show_all()
-        menu.popup(None, None, None, event.button, event.time)
-        
     def on_motion_notify_event(self, drawing_area, event):
         if event.is_hint:
             ex, ey, estate = event.window.get_pointer()
@@ -668,15 +691,6 @@ class Editor:
             elif mouse_buttons_down[2]:
                 transform_blocks(cx, cy, False)
         return True
-        
-    def clear_slot_of(self, x, y, direction):
-        """Clear all letters of the slot in the specified direction
-        that contains (x, y)."""
-        grid = self.puzzle.grid
-        chars = [(r, s, "") for r, s in grid.slot(x, y, direction)
-            if grid.data[s][r]["char"] != '']
-        if len(chars) > 0:
-            self.window.transform_grid(transform.modify_chars, chars=chars)
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""
@@ -715,9 +729,8 @@ class Editor:
         
     def insert(self, word):
         """Insert a word in the selected slot."""
-        if e_settings.settings["locked_grid"]:
-            return
-        insert(self.window, self.puzzle.grid, e_settings.selection, word)
+        actions = insert(self.puzzle.grid, e_settings.selection, word)
+        process_editor_actions(self.window, self.puzzle, e_settings, actions)
             
     def set_overlay(self, word=None):
         """
@@ -729,53 +742,6 @@ class Editor:
     def transform_blocks(self, x, y, status):
         """Place or remove a block at (x, y) and its symmetrical cells."""
         r_transform_blocks(self.window, self.puzzle, e_settings, x, y, status)
-            
-    def _check_blacklist_for_cell(self, x, y):
-        """
-        Check whether the cell (x, y) is part of a blacklisted word.
-        The blacklist is updated accordingly.
-        """
-        return # TODO until ready
-        def get_segment(direction, x, y, dx, dy):
-            """Gather the content of the cells touching and including (x, y)."""
-            segment = []
-            for p, q in self.puzzle.grid.in_direction(x + dx, y + dy, direction):
-                c = self.puzzle.grid.get_char(p, q)
-                if not c:
-                    break
-                segment.append((p, q, c))
-            segment.insert(0, (x, y, self.puzzle.grid.get_char(x, y)))
-            for p, q in self.puzzle.grid.in_direction(x - dx, y - dy, direction, reverse=True):
-                c = self.puzzle.grid.get_char(p, q)
-                if not c:
-                    break
-                segment.insert(0, (p, q, c))
-            return direction, segment
-        def check_segment(direction, segment):
-            """Determine the cells that need to be blacklisted."""
-            result = []
-            word = "".join([c.lower() if c else " " for x, y, c in segment])
-            badwords = self.window.blacklist.get_substring_matches(word)
-            for i in xrange(len(word)):
-                for b in badwords:
-                    if word[i:i + len(b)] == b:
-                        p, q, c = segment[i]
-                        result.append((p, q, direction, len(b)))
-            return result
-        def clear_blacklist(direction, segment):
-            """Remove all blacklist entries related to cells in data."""
-            remove = []
-            for p, q, bdir, length in self.blacklist:
-                for r, s, c in segment:
-                    if (p, q, bdir) == (r, s, direction):
-                        remove.append((p, q, bdir, length))
-            for x in remove:
-                self.blacklist.remove(x)
-        across = get_segment("across", x, y, 1, 0)
-        down = get_segment("down", x, y, 0, 1)
-        for data in [across, down]:
-            clear_blacklist(*data)
-            self.blacklist.extend(check_segment(*data))
         
     def refresh_visual_size(self):
         # TODO fix design
