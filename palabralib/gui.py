@@ -245,7 +245,7 @@ class PalabraWindow(gtk.Window):
                 self.update_title(None)
                 configuration = window.get_configuration()
                 self.puzzle_manager.new_puzzle(configuration)
-                
+                e_settings.reset_controls()
                 self.load_puzzle()
             window.destroy()
     

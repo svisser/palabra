@@ -52,8 +52,6 @@ class EditorSettings:
     def __init__(self):
         self.surface = None
         self.pattern = None
-        self.selection = Selection(-1, -1, "across")
-        self.current = (-1, -1)
         self.settings = {
             "symmetries": constants.SYM_180
             , "locked_grid": False
@@ -62,6 +60,11 @@ class EditorSettings:
         for w in constants.WARNINGS:
             self.warnings[w] = False
         self.force_redraw = True
+        self.reset_controls()
+        
+    def reset_controls(self):
+        self.selection = Selection(-1, -1, "across")
+        self.current = (-1, -1)
 e_settings = EditorSettings()
 e_tools = {}
 
