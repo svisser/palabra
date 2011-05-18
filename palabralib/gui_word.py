@@ -72,12 +72,13 @@ class SimilarWordsDialog(PalabraDialog):
         for s, words in entries.items():
             txt = '<span font_desc="Monospace 12">'
             l_words = len(words)
+            l_s = len(s)
             for i, (x, y, d, word, pos) in enumerate(words):
                 txt += word[0:pos]
                 txt += '<span foreground="red">'
-                txt += word[pos:pos + len(s)]
+                txt += word[pos:pos + l_s]
                 txt += '</span>'
-                txt += word[pos + len(s):]
+                txt += word[pos + l_s:]
                 if i < l_words - 1:
                     txt += ' / '
             txt += '</span>'
