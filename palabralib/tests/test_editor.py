@@ -682,4 +682,6 @@ class EditorTestCase(unittest.TestCase):
         args = self.grid, (5, 5, "across"), gtk.keysyms.equal
         actions = editor.determine_editor_actions(*args)
         self.assertEquals(actions, [])
+        
     # TODO: if user clicks an invalid cell, selection dir must be reset to across
+    # TODO: if new puzzle is opened, editor settings should be reset

@@ -62,7 +62,7 @@ class ClueTool:
             , self.on_selection_changed)
         self.tree.set_headers_visible(False)
         
-        self.load_items(puzzle)
+        self.load_items(puzzle.grid)
         
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("", cell, markup=7)
@@ -119,11 +119,11 @@ class ClueTool:
         d = {"across": "Across", "down": "Down"}[direction]
         return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
 
-    def load_items(self, puzzle):
+    def load_items(self, grid):
         """Load all word/clue items and put them in the ListStore."""
         def locked():
             self.store.clear()
-            for row in puzzle.grid.gather_words():
+            for row in grid.gather_words():
                 n, x, y, d, word, clue, explanation = row
                 display = self.create_display_string(n, d, word, clue)
                 item = (n, x, y, d, word, clue, explanation, display)

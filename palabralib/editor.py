@@ -671,6 +671,18 @@ EDITOR_EVENTS = {
     , "key_press_event": on_key_press_event
     , "key_release_event": on_key_release_event
 }
+    
+def refresh_words(wordlists, grid, selection, force_refresh=False):
+    """
+    Update the list of words according to active constraints of letters
+    and the current settings (e.g., show only words with intersections).
+    """
+    args = compute_search_args(grid, selection, force_refresh)
+    if args:
+        result = search_wordlists(wordlists, *args)
+    else:
+        result = []
+    e_tools["word"].display_words(result)
 
 class Editor:
     def __init__(self, window):
@@ -683,23 +695,12 @@ class Editor:
         
     puzzle = property(get_puzzle)
         
-    def refresh_clues(self):
-        """Reload all the word/clue items and select the currently selected item."""
-        p, q = self.puzzle.grid.get_start_word(*e_settings.selection)
-        e_tools["clue"].load_items(self.puzzle)
-        e_tools["clue"].select(p, q, e_settings.selection[2])
-        
     def refresh_words(self, force_refresh=False):
         """
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        args = compute_search_args(self.puzzle.grid, e_settings.selection, force_refresh)
-        if args:
-            result = search_wordlists(self.window.wordlists, *args)
-        else:
-            result = []
-        e_tools["word"].display_words(result)
+        refresh_words(self.window.wordlists, self.puzzle.grid, e_settings.selection, force_refresh)
         
     def fill(self):
         for wlist in self.window.wordlists:

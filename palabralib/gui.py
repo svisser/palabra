@@ -41,7 +41,12 @@ import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow
-from editor import e_settings, e_tools, Editor, EDITOR_EVENTS
+from editor import (
+    e_settings,
+    e_tools,
+    Editor,
+    EDITOR_EVENTS,
+)
 from files import (
     FILETYPES,
     ParserError,
@@ -809,7 +814,12 @@ class PalabraWindow(gtk.Window):
                     # TODO modify when arbitrary number schemes are implemented
                     self.editor.puzzle.grid.assign_numbers()
                 if transform >= constants.TRANSFORM_CONTENT:
-                    self.editor.refresh_clues()
+                    # reload all word/clue items and select current word
+                    grid = self.puzzle_manager.current_puzzle.grid
+                    selection = e_settings.selection
+                    p, q = grid.get_start_word(*selection)
+                    e_tools["clue"].load_items(grid)
+                    e_tools["clue"].select(p, q, selection[2])
             e_settings.force_redraw = True
             self.editor.refresh_words()
             self.editor.refresh_visual_size()
