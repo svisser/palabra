@@ -372,21 +372,18 @@ def process_editor_actions(window, puzzle, e_settings, actions):
     """
     is_locked = e_settings.settings["locked_grid"]
     for a in actions:
-        if a.type in ["blocks", "char", "chars"] and is_locked:
+        if a.type in ["blocks", "chars"] and is_locked:
             continue
         if a.type == "blocks":
             x = a.args['x']
             y = a.args['y']
             status = a.args['status']
-            r_transform_blocks(window, puzzle, e_settings, x, y, status)
-        elif a.type == "char":
-            c = a.args['char']
-            x = a.args['x']
-            y = a.args['y']
-            window.transform_grid(transform.modify_char, x=x, y=y, next_char=c)
-        elif a.type == "chars":
-            cells = a.args['cells']
-            window.transform_grid(transform.modify_chars, chars=cells)
+            blocks = transform_blocks(puzzle.grid, e_settings.settings["symmetries"], x, y, status)
+            if not blocks:
+                continue
+            window.transform_grid(transform.modify_blocks, blocks=blocks)
+        elif a.type in ["chars"]:
+            window.transform_grid(transform.modify_chars, chars=a.args['cells'])
         elif a.type == "selection":
             x = a.args['x']
             y = a.args['y']
@@ -413,7 +410,7 @@ def on_typing(grid, keyval, selection):
     else:
         c = chr(keyval).capitalize()
         if c != grid.get_char(x, y):
-            actions.append(EditorAction("char", {'x': x, 'y': y, 'char': c}))
+            actions.append(EditorAction("chars", {'cells': [(x, y, c)]}))
     dx = 1 if direction == "across" else 0
     dy = 1 if direction == "down" else 0
     nx, ny = x + dx, y + dy
@@ -425,17 +422,8 @@ def on_delete(grid, selection):
     """Remove the character in the selected cell."""
     x, y, d = selection
     if grid.get_char(x, y) != "":
-        return [EditorAction("char", {'x': x, 'y': y, 'char': ''})]
+        return [EditorAction("chars", {'cells': [(x, y, '')]})]
     return []
-
-def r_transform_blocks(window, puzzle, e_settings, x, y, status):
-    """Place or remove a block at (x, y) and its symmetrical cells."""
-    blocks = transform_blocks(puzzle.grid, e_settings.settings["symmetries"], x, y, status)
-    if not blocks:
-        return
-    window.transform_grid(transform.modify_blocks, blocks=blocks)
-    cells = [(x, y) for x, y, status in blocks]
-    _render_cells(puzzle, cells, e_settings, window.drawing_area)
 
 def compute_selection(prev, x=None, y=None, direction=None, other_dir=False):
     if other_dir:
@@ -503,13 +491,13 @@ def on_backspace(grid, selection):
     """Remove a character in the current or previous cell."""
     x, y, direction = selection
     if grid.data[y][x]["char"] != "":
-        return [EditorAction("char", {'x': x, 'y': y, 'char': ''})]
+        return [EditorAction("chars", {'cells': [(x, y, '')]})]
     actions = []
     x -= (1 if direction == "across" else 0)
     y -= (1 if direction == "down" else 0)
     if grid.is_available(x, y):
         if grid.data[y][x]["char"] != "":
-            actions.append(EditorAction("char", {'x': x, 'y': y, 'char': ''}))
+            actions.append(EditorAction("chars", {'cells': [(x, y, '')]}))
         actions.append(EditorAction("selection", {'x': x, 'y': y}))
     return actions
 
@@ -741,10 +729,6 @@ class Editor:
         If the word is None, the overlay will be cleared.
         """
         set_overlay(self.window, self.puzzle, e_settings, word)
-            
-    def transform_blocks(self, x, y, status):
-        """Place or remove a block at (x, y) and its symmetrical cells."""
-        r_transform_blocks(self.window, self.puzzle, e_settings, x, y, status)
         
     def refresh_visual_size(self):
         # TODO fix design

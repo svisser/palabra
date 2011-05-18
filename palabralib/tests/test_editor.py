@@ -481,8 +481,8 @@ class EditorTestCase(unittest.TestCase):
         """If the user types a valid character then it is placed and selection is moved."""
         actions = editor.on_typing(self.grid, gtk.keysyms.k, (1, 1, "across"))
         self.assertEquals(len(actions), 2)
-        self.assertEquals(actions[0].type, "char")
-        self.assertEquals(actions[0].args, {'x': 1, 'y': 1, 'char': 'K'})
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(1, 1, 'K')]})
         self.assertEquals(actions[1].type, "selection")
         self.assertEquals(actions[1].args, {'x': 2, 'y': 1})
         
@@ -520,8 +520,8 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_char(4, 4, 'P')
         actions = editor.on_delete(self.grid, (4, 4, "across"))
         self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "char")
-        self.assertEquals(actions[0].args, {'x': 4, 'y': 4, 'char': ''})
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(4, 4, '')]})
         
     def testSelectionDeltaUpRight(self):
         """Applying a selection delta is possible when cell is available."""
@@ -547,16 +547,16 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_char(3, 3, 'A')
         actions = editor.on_backspace(self.grid, (3, 3, "across"))
         self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "char")
-        self.assertEquals(actions[0].args, {'x': 3, 'y': 3, 'char': ''})
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(3, 3, '')]})
         
     def testBackspacePreviousCell(self):
         """Move selection to previous cell on backspace and remove char there."""
         self.grid.set_char(3, 3, 'A')
         actions = editor.on_backspace(self.grid, (4, 3, "across"))
         self.assertEquals(len(actions), 2)
-        self.assertEquals(actions[0].type, "char")
-        self.assertEquals(actions[0].args, {'x': 3, 'y': 3, 'char': ''})
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(3, 3, '')]})
         self.assertEquals(actions[1].type, "selection")
         self.assertEquals(actions[1].args, {'x': 3, 'y': 3})
         
@@ -671,8 +671,8 @@ class EditorTestCase(unittest.TestCase):
         args = self.grid, (5, 5, "across"), gtk.keysyms.Delete
         actions = editor.determine_editor_actions(*args)
         self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "char")
-        self.assertEquals(actions[0].args, {'x': 5, 'y': 5, 'char': ''})
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(5, 5, '')]})
         
     def testKeyOthers(self):
         """Pressing other keys may or may not have an action as result."""
