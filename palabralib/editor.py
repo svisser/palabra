@@ -398,6 +398,9 @@ def process_editor_actions(window, puzzle, e_settings, actions):
             y = a.args['y']
             event = a.args['event']
             _create_popup_menu(window, puzzle, event, x, y)
+        elif a.type == "render":
+            cells = a.args['cells']
+            _render_cells(puzzle, cells, e_settings, window.drawing_area)
 
 def on_typing(grid, keyval, selection):
     """Place an alphabetical character in the grid and move the selection."""
@@ -634,14 +637,14 @@ def on_motion_notify_event(drawing_area, event, window, puzzle, e_settings):
     cx, cy = props.screen_to_grid(ex, ey)
     prev_x, prev_y = e_settings.current
     e_settings.current = (cx, cy)
+    actions = []
     if (prev_x, prev_y) != (cx, cy):
         grid = puzzle.grid
         symms = e_settings.settings["symmetries"]
         c0 = apply_symmetry(grid, symms, prev_x, prev_y)
         c1 = apply_symmetry(grid, symms, cx, cy)
         cells = c0 + c1 + [(prev_x, prev_y), (cx, cy)]
-        _render_cells(puzzle, cells, e_settings, drawing_area)
-    actions = []
+        actions.append(EditorAction("render", {'cells': cells}))
     if estate & gtk.gdk.SHIFT_MASK:
         if mouse_buttons_down[0]:
             actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': True}))
