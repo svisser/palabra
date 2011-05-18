@@ -26,6 +26,7 @@ from word import (
     check_accidental_words,
     accidental_entries,
     search_wordlists_by_pattern,
+    similar_entries,
     similar_words,
 )
 
@@ -63,16 +64,8 @@ class SimilarWordsDialog(PalabraDialog):
         self.main.pack_start(label, False, False, 0)
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
-        self.entries = self.compute_entries(puzzle.grid)
+        self.entries = similar_entries(similar_words(puzzle.grid))
         self.load_entries(self.entries)
-        
-    def compute_entries(self, grid):
-        result = {}
-        for s, words in similar_words(grid).items():
-            if constants.MISSING_CHAR in s or len(words) == 1:
-                continue
-            result[s] = [(x, y, d, word.lower(), word.find(s)) for x, y, d, word in words]
-        return result
         
     def load_entries(self, entries):
         self.store.clear()

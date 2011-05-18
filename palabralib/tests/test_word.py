@@ -692,6 +692,7 @@ class WordTestCase(unittest.TestCase):
             self.assertTrue(len(words), 1)
             
     def testSimilarWordsLengths(self):
+        """The minimum length of similar words can be specified."""
         # G R A N I T E
         # L I T E . _ _
         g = Grid(7, 2)
@@ -703,3 +704,31 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue((0, 1, "across", "LITE") in result["ITE"])
         result = word.similar_words(g, min_length=4)
         self.assertTrue("ITE" not in result)
+        
+    def testSimilarEntries(self):
+        """A substring in only one word does not appear as similar entry."""
+        g = Grid(5, 2)
+        test_insert(g, "ABCDE\nBCD..")
+        similar = word.similar_words(g)
+        self.assertTrue("CDE" in similar)
+        entries = word.similar_entries(similar)
+        self.assertTrue("CDE" not in entries)
+        
+    def testSimilarEntriesPartial(self):
+        """A substring with missing characters does not appear as similar entry."""
+        g = Grid(4, 4)
+        test_insert(g, "ABCD\n....\n....\nEFGH")
+        similar = word.similar_words(g)
+        self.assertTrue("A??" in similar)
+        entries = word.similar_entries(similar)
+        self.assertTrue("A??" not in entries)
+        
+    def testSimilarEntriesOffsets(self):
+        """Similar entries have (x, y, d, word, offset) of the common substrings."""
+        g = Grid(4, 2)
+        test_insert(g, "ABCD\nBCDE")
+        entries = word.similar_entries(word.similar_words(g))
+        self.assertTrue("BCD" in entries)
+        self.assertTrue(len(entries["BCD"]), 2)
+        self.assertTrue((0, 0, "across", "abcd", 1) in entries["BCD"])
+        self.assertTrue((0, 1, "across", "bcde", 0) in entries["BCD"])

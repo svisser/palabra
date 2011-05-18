@@ -75,6 +75,18 @@ def accidental_entries(results, collapse=False, palindrome=False):
         for index, s in show:
             yield s, 1, index
 
+def similar_entries(results):
+    """
+    Determine all entries that should be displayed
+    in overview of similar words.
+    """
+    result = {}
+    for s, words in results.items():
+        if constants.MISSING_CHAR in s or len(words) == 1:
+            continue
+        result[s] = [(x, y, d, word.lower(), word.find(s)) for x, y, d, word in words]
+    return result
+
 def read_wordlist(path):
     """Yield all words found in the specified file."""
     if not os.path.exists(path):
