@@ -201,6 +201,8 @@ def compute_highlights(grid, f=None, arg=None, clear=False):
         elif f == "slot":
             x, y, d = arg
             cells = [(x, y, d, grid.word_length(x, y, d))]
+        elif f == "slots":
+            cells = [(x, y, d, grid.word_length(x, y, d)) for x, y, d in arg]
     return cells
 
 def compute_warnings_of_cells(grid, cells, settings):

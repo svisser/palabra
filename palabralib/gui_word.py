@@ -26,6 +26,7 @@ from word import (
     check_accidental_words,
     accidental_entries,
     search_wordlists_by_pattern,
+    similar_words,
 )
 
 LOADING_TEXT = "Loading..."
@@ -41,6 +42,61 @@ class PalabraDialog(gtk.Dialog):
         self.main.set_spacing(9)
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
+
+class SimilarWordsDialog(PalabraDialog):
+    def __init__(self, parent, puzzle):
+        PalabraDialog.__init__(self, parent, u"View similar words")
+        self.puzzle = puzzle
+        self.store = gtk.ListStore(str, str)
+        self.tree = gtk.TreeView(self.store)
+        self.tree.get_selection().connect("changed", self.on_selection_changed)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("Similar words", cell, markup=1)
+        self.tree.append_column(column)
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add(self.tree)
+        scrolled_window.set_size_request(512, 384)
+        self.main.pack_start(scrolled_window, True, True, 0)
+        label = gtk.Label(u"Click to highlight the words in the grid.")
+        label.set_alignment(0, 0.5)
+        self.main.pack_start(label, False, False, 0)
+        destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
+        self.connect("destroy", destroy)
+        self.entries = self.compute_entries(puzzle.grid)
+        self.load_entries(self.entries)
+        
+    def compute_entries(self, grid):
+        result = {}
+        for s, words in similar_words(grid).items():
+            if constants.MISSING_CHAR in s or len(words) == 1:
+                continue
+            result[s] = [(x, y, d, word.lower(), word.find(s)) for x, y, d, word in words]
+        return result
+        
+    def load_entries(self, entries):
+        self.store.clear()
+        for s, words in entries.items():
+            txt = '<span font_desc="Monospace 12">'
+            l_words = len(words)
+            for i, (x, y, d, word, pos) in enumerate(words):
+                txt += word[0:pos]
+                txt += '<span foreground="red">'
+                txt += word[pos:pos + len(s)]
+                txt += '</span>'
+                txt += word[pos + len(s):]
+                if i < l_words - 1:
+                    txt += ' / '
+            txt += '</span>'
+            self.store.append([s, txt])
+    
+    def on_selection_changed(self, selection):
+        """Highlight all cells associated with the selected entry."""
+        store, it = selection.get_selected()
+        if it is not None:
+            words = self.entries[store[it][0]]
+            slots = [(x, y, d) for x, y, d, word, offset in words]
+            highlight_cells(self.pwindow, self.puzzle, "slots", slots)
 
 class AccidentalWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):

@@ -60,6 +60,7 @@ from gui_word import (
     AccidentalWordsDialog,
     FindWordsDialog,
     WordListEditor,
+    SimilarWordsDialog,
 )
 import grid
 from grid import Grid
@@ -1151,6 +1152,22 @@ class PalabraWindow(gtk.Window):
             , u"View words that may have accidentally appeared in the grid")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem(u"View _accidental words...", True)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        menu.append(item)
+        item.set_sensitive(False)
+        self.puzzle_toggle_items += [item]
+        
+        def activate(item):
+            w = SimilarWordsDialog(self, self.puzzle_manager.current_puzzle)
+            w.show_all()
+            w.run()
+            w.destroy()
+        select = lambda item: self.update_status(constants.STATUS_MENU
+            , u"View words that have a part in common")
+        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
+        item = gtk.MenuItem(u"View _similar words...", True)
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)
