@@ -338,13 +338,19 @@ def determine_editor_actions(grid, selection, key):
     if key == gtk.keysyms.BackSpace:
         actions = on_backspace(grid, selection)
     elif key == gtk.keysyms.Tab:
-        actions = [EditorAction("swapdir", None)]
+        x, y, d = selection
+        if grid.is_available(x, y):
+            actions = [EditorAction("swapdir", None)]
     elif key == gtk.keysyms.Home:
-        x, y = grid.get_cell_of_slot(selection, "start")
-        actions = [EditorAction("selection", {'x': x, 'y': y})]
+        x, y, d = selection
+        if grid.is_available(x, y):
+            x, y = grid.get_cell_of_slot(selection, "start")
+            actions = [EditorAction("selection", {'x': x, 'y': y})]
     elif key == gtk.keysyms.End:
-        x, y = grid.get_cell_of_slot(selection, "end")
-        actions = [EditorAction("selection", {'x': x, 'y': y})]
+        x, y, d = selection
+        if grid.is_available(x, y):
+            x, y = grid.get_cell_of_slot(selection, "end")
+            actions = [EditorAction("selection", {'x': x, 'y': y})]
     elif key == gtk.keysyms.Left:
         actions = apply_selection_delta(grid, selection, -1, 0)
     elif key == gtk.keysyms.Up:
@@ -660,7 +666,7 @@ class Editor:
         self.window = window
         self.blacklist = []
         self.fill_options = {}
-        self.EVENTS = {"expose_event": self.on_expose_event
+        self.EVENTS = {"expose_event": (self.on_expose_event, self.puzzle)
             , "button_press_event": (on_button_press_event, self.window, self.puzzle, e_settings)
             , "button_release_event": on_button_release_event
             , "motion_notify_event": (on_motion_notify_event, self.window, self.puzzle, e_settings)
@@ -674,20 +680,18 @@ class Editor:
         
     puzzle = property(get_puzzle)
     
-    def _render_cells(self, cells, editor=True):
-        _render_cells(self.puzzle, cells, e_settings, self.window.drawing_area, editor)
-        
-    def on_expose_event(self, drawing_area, event):
+    def on_expose_event(self, drawing_area, event, puzzle):
         """Render the main editing component."""
         if not e_settings.surface or self.force_redraw:
-            width, height = self.puzzle.view.properties.visual_size(True)
+            grid, view = puzzle.grid, puzzle.view
+            width, height = view.properties.visual_size(True)
             e_settings.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
             e_settings.pattern = cairo.SurfacePattern(e_settings.surface)
             # TODO should not be needed
-            self.puzzle.view.grid = self.puzzle.grid
+            view.grid = grid
             self.force_redraw = False
-            self._render_cells(list(self.puzzle.grid.cells()), editor=True)
-        context = self.window.drawing_area.window.cairo_create()
+            _render_cells(puzzle, list(grid.cells()), e_settings, drawing_area, True)
+        context = drawing_area.window.cairo_create()
         context.set_source(e_settings.pattern)
         context.paint()
         return True

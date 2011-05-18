@@ -593,3 +593,24 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(len(actions), 1)
         self.assertEquals(actions[0].type, "chars")
         self.assertEquals(actions[0].args, {'cells': [(2, 0, 'C')]})
+        
+    def testKeyBackspace(self):
+        """Pressing backspace in the editor results at least one action."""
+        args = self.grid, (5, 5, "across"), gtk.keysyms.BackSpace
+        actions = editor.determine_editor_actions(*args)
+        self.assertTrue(actions != [])
+        
+    def testKeyTab(self):
+        """Pressing tab in the editor results in an action when selection is available."""
+        args = self.grid, (5, 5, "across"), gtk.keysyms.Tab
+        actions = editor.determine_editor_actions(*args)
+        self.assertTrue(actions != [])
+        args = self.grid, (-1, -1, "across"), gtk.keysyms.Tab
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
+        self.grid.set_block(5, 5, True)
+        args = self.grid, (5, 5, "across"), gtk.keysyms.Tab
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
+        
+    # TODO: if user clicks an invalid cell, selection dir must be reset to across
