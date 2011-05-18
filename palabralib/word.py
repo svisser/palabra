@@ -43,18 +43,20 @@ def accidental_entries(results, collapse=False, palindrome=False):
     Yield all entries that should be displayed
     in the accidental words dialog.
     """
-    use = results
     if palindrome:
         slots = [cells for d, cells in results]
         use = []
-        for d, cells in results:
+        for i, (d, cells) in enumerate(results):
             if cells in slots:
                 # s[::-1] = reverse sequence
-                use.append((d, cells))
+                use.append((i, d, cells))
                 r_cells = cells[::-1]
-                if r_cells in slots:
+                palindrome = [c for x, y, c in cells] == [c for x, y, c in r_cells]
+                if r_cells in slots and palindrome:
                     slots.remove(r_cells)
-    show = [(str(i), ''.join([c for x, y, c in r])) for i, (d, r) in enumerate(use)]
+    else:
+        use = [(i, d, r) for i, (d, r) in enumerate(results)]
+    show = [(str(i), ''.join([c for x, y, c in r])) for i, d, r in use]
     show.sort(key=itemgetter(1))
     if collapse:
         ws = {}

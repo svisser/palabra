@@ -645,6 +645,22 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(count0, 1)
         self.assertEquals(indices0, "0")
         
+    def testAccidentalEntriesPreserveIndices(self):
+        seq1 = ("across", [(0, 0, 'N'), (1, 0, 'O'), (2, 0, 'N')])
+        seq2 = ("acrossr", [(2, 0, 'N'), (1, 0, 'O'), (0, 0, 'N')])
+        seq3 = ("across", [(0, 4, 'X'), (1, 4, 'Y'), (2, 4, 'Z')])
+        seqs = [seq1, seq2, seq3]
+        entries = list(word.accidental_entries(seqs, True, True))
+        self.assertEquals(len(entries), 2)
+        s0, count0, indices0 = entries[0]
+        s1, count1, indices1 = entries[1]
+        self.assertEquals(s0, "NON")
+        self.assertEquals(s1, "XYZ")
+        self.assertEquals(count0, 1)
+        self.assertEquals(count1, 1)
+        self.assertEquals(indices0, "0")
+        self.assertEquals(indices1, "2")
+        
     def testSimilarWords(self):
         """Words are similar when they share a substring of length 3+."""
         # A B C D
