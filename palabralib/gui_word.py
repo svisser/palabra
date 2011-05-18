@@ -62,6 +62,7 @@ class SimilarWordsDialog(PalabraDialog):
         label = gtk.Label(u"Click to highlight the words in the grid.")
         label.set_alignment(0, 0.5)
         self.main.pack_start(label, False, False, 0)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
         self.entries = similar_entries(similar_words(puzzle.grid))
