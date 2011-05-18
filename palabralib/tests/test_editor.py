@@ -559,3 +559,37 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(actions[0].args, {'x': 3, 'y': 3, 'char': ''})
         self.assertEquals(actions[1].type, "selection")
         self.assertEquals(actions[1].args, {'x': 3, 'y': 3})
+        
+    def testInsertWordInvalid(self):
+        """A word cannot be inserted when the selected slot is invalid."""
+        actions = editor.insert(self.grid, (-1, -1, "across"), "australia")
+        self.assertEquals(actions, [])
+        
+    def testInsertWordCells(self):
+        """A word cannot be inserted when there are no empty cells."""
+        self.grid.set_block(3, 0, True)
+        self.grid.set_char(0, 0, 'S')
+        self.grid.set_char(1, 0, 'P')
+        self.grid.set_char(2, 0, 'Y')
+        actions = editor.insert(self.grid, (0, 0, "across"), "spy")
+        self.assertEquals(actions, [])
+        
+    def testInsertWordCellsAvailable(self):
+        """A word can be inserted when there are empty cells."""
+        self.grid.set_block(3, 0, True)
+        self.grid.set_char(0, 0, 'A')
+        self.grid.set_char(1, 0, 'B')
+        actions = editor.insert(self.grid, (0, 0, "across"), "abc")
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(2, 0, 'C')]})
+        
+    def testInsertWordCellsMatch(self):
+        """Existing characters don't have to match the inserted word."""
+        self.grid.set_block(3, 0, True)
+        self.grid.set_char(0, 0, 'D')
+        self.grid.set_char(1, 0, 'E')
+        actions = editor.insert(self.grid, (0, 0, "across"), "abc")
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "chars")
+        self.assertEquals(actions[0].args, {'cells': [(2, 0, 'C')]})
