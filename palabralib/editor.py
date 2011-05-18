@@ -630,6 +630,31 @@ def on_button_press_event(drawing_area, event, window, puzzle, e_settings):
     process_editor_actions(window, puzzle, e_settings, actions)
     return True
 
+def on_motion_notify_event(drawing_area, event, window, puzzle, e_settings):
+    if event.is_hint:
+        ex, ey, estate = event.window.get_pointer()
+    else:
+        ex, ey, estate = event.x, event.y, event.state
+    props = puzzle.view.properties
+    cx, cy = props.screen_to_grid(ex, ey)
+    prev_x, prev_y = e_settings.current
+    e_settings.current = (cx, cy)
+    if (prev_x, prev_y) != (cx, cy):
+        grid = puzzle.grid
+        symms = e_settings.settings["symmetries"]
+        c0 = apply_symmetry(grid, symms, prev_x, prev_y)
+        c1 = apply_symmetry(grid, symms, cx, cy)
+        cells = c0 + c1 + [(prev_x, prev_y), (cx, cy)]
+        _render_cells(puzzle, cells, e_settings, drawing_area)
+    actions = []
+    if estate & gtk.gdk.SHIFT_MASK:
+        if mouse_buttons_down[0]:
+            actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': True}))
+        elif mouse_buttons_down[2]:
+            actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': False}))
+    process_editor_actions(window, puzzle, e_settings, actions)
+    return True
+
 class Editor:
     def __init__(self, window):
         self.window = window
@@ -638,7 +663,7 @@ class Editor:
         self.EVENTS = {"expose_event": self.on_expose_event
             , "button_press_event": (on_button_press_event, self.window, self.puzzle, e_settings)
             , "button_release_event": on_button_release_event
-            , "motion_notify_event": self.on_motion_notify_event
+            , "motion_notify_event": (on_motion_notify_event, self.window, self.puzzle, e_settings)
             , "key_press_event": on_key_press_event
             , "key_release_event": (on_key_release_event, self.window, self.puzzle, e_settings)
         }
@@ -665,31 +690,6 @@ class Editor:
         context = self.window.drawing_area.window.cairo_create()
         context.set_source(e_settings.pattern)
         context.paint()
-        return True
-        
-    def on_motion_notify_event(self, drawing_area, event):
-        if event.is_hint:
-            ex, ey, estate = event.window.get_pointer()
-        else:
-            ex, ey, estate = event.x, event.y, event.state
-        props = self.puzzle.view.properties
-        cx, cy = props.screen_to_grid(ex, ey)
-        prev_x, prev_y = e_settings.current
-        e_settings.current = (cx, cy)
-
-        if (prev_x, prev_y) != (cx, cy):
-            grid = self.puzzle.grid
-            symms = e_settings.settings["symmetries"]
-            c0 = apply_symmetry(grid, symms, prev_x, prev_y)
-            c1 = apply_symmetry(grid, symms, cx, cy)
-            self._render_cells(c0 + c1 + [(prev_x, prev_y), (cx, cy)])
-        
-        transform_blocks = self.transform_blocks
-        if (estate & gtk.gdk.SHIFT_MASK and not e_settings.settings["locked_grid"]):
-            if mouse_buttons_down[0]:
-                transform_blocks(cx, cy, True)
-            elif mouse_buttons_down[2]:
-                transform_blocks(cx, cy, False)
         return True
         
     def refresh_clues(self):
