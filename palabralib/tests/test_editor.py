@@ -612,5 +612,73 @@ class EditorTestCase(unittest.TestCase):
         args = self.grid, (5, 5, "across"), gtk.keysyms.Tab
         actions = editor.determine_editor_actions(*args)
         self.assertEquals(actions, [])
+    
+    def testKeyHome(self):
+        """Pressing the Home key has no effect when nothing is selected."""
+        args = self.grid, (-1, -1, "across"), gtk.keysyms.Home
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
         
+    def testKeyHomeNotAvailable(self):
+        """Pressing the Home key has no effect when cell is not available."""
+        self.grid.set_void(5, 5, True)
+        args = self.grid, (5, 5, "across"), gtk.keysyms.Home
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
+        
+    def testKeyEnd(self):
+        """Pressing the End key has no effect when nothing is selected."""
+        args = self.grid, (-1, -1, "across"), gtk.keysyms.End
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
+        
+    def testKeyHomeNotAvailable(self):
+        """Pressing the End key has no effect when cell is not available."""
+        self.grid.set_void(5, 5, True)
+        args = self.grid, (5, 5, "across"), gtk.keysyms.End
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
+        
+    def testKeyHomeWorks(self):
+        """Pressing the Home key results in a selection action."""
+        args = self.grid, (5, 5, "across"), gtk.keysyms.Home
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "selection")
+        self.assertEquals(actions[0].args, {'x': 0, 'y': 5})
+        
+    def testKeyEndWorks(self):
+        """Pressing the End key results in a selection action."""
+        args = self.grid, (5, 5, "across"), gtk.keysyms.End
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "selection")
+        self.assertEquals(actions[0].args, {'x': self.grid.width - 1, 'y': 5})
+        
+    def testKeyArrow(self):
+        """Pressing an arrow key results in a selection action."""
+        KEYS = [gtk.keysyms.Left, gtk.keysyms.Right, gtk.keysyms.Up, gtk.keysyms.Down]
+        for key in KEYS:
+            args = self.grid, (5, 5, "across"), key
+            actions = editor.determine_editor_actions(*args)
+            self.assertEquals(len(actions), 1)
+            self.assertEquals(actions[0].type, "selection")
+            
+    def testKeyDelete(self):
+        """Pressing the delete key results in a char deletion."""
+        self.grid.set_char(5, 5, 'A')
+        args = self.grid, (5, 5, "across"), gtk.keysyms.Delete
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions[0].type, "char")
+        self.assertEquals(actions[0].args, {'x': 5, 'y': 5, 'char': ''})
+        
+    def testKeyOthers(self):
+        """Pressing other keys may or may not have an action as result."""
+        args = self.grid, (5, 5, "across"), gtk.keysyms.c
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(len(actions), 2)
+        args = self.grid, (5, 5, "across"), gtk.keysyms.equal
+        actions = editor.determine_editor_actions(*args)
+        self.assertEquals(actions, [])
     # TODO: if user clicks an invalid cell, selection dir must be reset to across

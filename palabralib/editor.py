@@ -369,24 +369,21 @@ def process_editor_actions(window, puzzle, e_settings, actions):
     """
     Process all the editor actions and apply them to the grid and editor controls.
     """
+    is_locked = e_settings.settings["locked_grid"]
     for a in actions:
+        if a.type in ["blocks", "char", "chars"] and is_locked:
+            continue
         if a.type == "blocks":
-            if e_settings.settings["locked_grid"]:
-                continue
             x = a.args['x']
             y = a.args['y']
             status = a.args['status']
             r_transform_blocks(window, puzzle, e_settings, x, y, status)
         elif a.type == "char":
-            if e_settings.settings["locked_grid"]:
-                continue
             c = a.args['char']
             x = a.args['x']
             y = a.args['y']
             window.transform_grid(transform.modify_char, x=x, y=y, next_char=c)
         elif a.type == "chars":
-            if e_settings.settings["locked_grid"]:
-                continue
             cells = a.args['cells']
             window.transform_grid(transform.modify_chars, chars=cells)
         elif a.type == "selection":
