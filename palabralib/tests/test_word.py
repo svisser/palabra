@@ -34,6 +34,14 @@ from palabralib.word import (
     check_str_for_words,
 )
 
+def test_insert(grid, content):
+    rows = content.split("\n")
+    for i, row in enumerate(rows):
+        for j, c in enumerate(row):
+            if c == '.':
+                continue
+            grid.set_char(j, i, c)
+
 class WordTestCase(unittest.TestCase):
     def setUp(self):
         self.word = "palabra"
@@ -636,3 +644,46 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(s0, "NON")
         self.assertEquals(count0, 1)
         self.assertEquals(indices0, "0")
+        
+    def testSimilarWords(self):
+        """Words are similar when they share a substring of length 3+."""
+        # A B C D
+        # B _ _ _
+        # C _ . _
+        # D _ _ _
+        g = Grid(4, 4)
+        test_insert(g, "ABCD\nB...\nC...\nD...")
+        g.set_block(2, 2, True)
+        result = word.similar_words(g)
+        self.assertTrue("ABC" in result)
+        self.assertTrue("BCD" in result)
+        self.assertTrue((0, 0, "across", "ABCD") in result["ABC"])
+        self.assertTrue((0, 0, "down", "ABCD") in result["ABC"])
+        self.assertTrue((0, 0, "across", "ABCD") in result["BCD"])
+        self.assertTrue((0, 0, "down", "ABCD") in result["BCD"])
+        self.assertTrue("AB" not in result)
+        self.assertTrue("BC" not in result)
+        self.assertTrue("CD" not in result)
+        
+    def testSimilarWordsToItself(self):
+        """A word is not similar to itself."""
+        g = Grid(6, 1)
+        test_insert(g, "TAMTAM")
+        result = word.similar_words(g)
+        # unique substrings of length 3, 4, 5
+        self.assertEquals(len(result), 3 + 3 + 2)
+        for s, words in result.items():
+            self.assertTrue(len(words), 1)
+            
+    def testSimilarWordsLengths(self):
+        # G R A N I T E
+        # L I T E . _ _
+        g = Grid(7, 2)
+        g.set_block(4, 1, True)
+        test_insert(g, "GRANITE\nLITE...")
+        result = word.similar_words(g, min_length=3)
+        self.assertTrue("ITE" in result)
+        self.assertTrue((0, 0, "across", "GRANITE") in result["ITE"])
+        self.assertTrue((0, 1, "across", "LITE") in result["ITE"])
+        result = word.similar_words(g, min_length=4)
+        self.assertTrue("ITE" not in result)

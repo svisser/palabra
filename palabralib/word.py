@@ -203,6 +203,29 @@ def verify_contained_words(wordlists, pairs):
         result.extend(cPalabra.verify_contained_words(wlist.index, pairs))
     return result
 
+def similar_words(grid, min_length=3):
+    """
+    Compute all substrings of at least min_length characters
+    and the words in which they can be found.
+    """
+    lengths = {}
+    words = []
+    for n, x, y, d in grid.words(allow_duplicates=True, include_dir=True):
+        word = grid.gather_word(x, y, d)
+        words.append((x, y, d, word, len(word)))
+    substrings = {}
+    for x, y, d, word, l_word in words:
+        for l in xrange(min_length, l_word):
+            for o in xrange(0, l_word - min_length + 1):
+                subs = word[o:o + l]
+                if subs not in substrings:
+                    substrings[subs] = []
+    for s in substrings.keys():
+        for x, y, d, word, l_word in words:
+            if s in word:
+                substrings[s].append((x, y, d, word))
+    return substrings
+    
 def create_wordlists(prefs):
     """
     Convert preference data of word files into CWordLists.
