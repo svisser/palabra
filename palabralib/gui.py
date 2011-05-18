@@ -90,12 +90,9 @@ class PalabraWindow(gtk.Window):
         super(PalabraWindow, self).__init__()
         self.set_title(constants.TITLE)
         self.set_size_request(800, 600)
-        
         self.puzzle_toggle_items = []
         self.selection_toggle_items = []
-        
         self.puzzle_manager = PuzzleManager()
-        
         self.menubar = gtk.MenuBar()
         self.menubar.append(self.create_file_menu())
         self.menubar.append(self.create_edit_menu())
@@ -105,26 +102,19 @@ class PalabraWindow(gtk.Window):
         #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_tools_menu())
         self.menubar.append(self.create_help_menu())
-        
         self.toolbar = self.create_toolbar()
-        
         self.panel = gtk.VBox(False, 0)
-        
         self.statusbar = gtk.Statusbar()
-        
         self.main = gtk.VBox(False, 0)
         self.main.pack_start(self.menubar, False, False, 0)
         self.main.pack_start(self.toolbar, False, False, 0)
         self.main.pack_start(self.panel, True, True, 0)
         self.main.pack_start(self.statusbar, False, False, 0)
         self.add(self.main)
-        
         self.connect("delete-event", self.on_delete)
         self.connect("destroy", lambda widget: quit())
-        
         self.wordlists = []
         self.patterns = None
-        
         self.blacklist = None
         
     def on_delete(self, window, event):
@@ -905,55 +895,30 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
-        activate = lambda item: toggle_warning(constants.WARN_UNCHECKED, item.active)
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Warn visually when cells that belong to one word exist in the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.CheckMenuItem(u"Warn for _unchecked cells", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        item.set_active(True)
-        toggle_warning(constants.WARN_UNCHECKED, True)
-        
-        activate = lambda item: toggle_warning(constants.WARN_CONSECUTIVE, item.active)
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Warn visually when consecutive unchecked cells exist in the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.CheckMenuItem(u"Warn for _consecutive unchecked cells", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        item.set_active(True)
-        toggle_warning(constants.WARN_CONSECUTIVE, True)
-           
-        activate = lambda item: toggle_warning(constants.WARN_TWO_LETTER, item.active)
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Warn visually when two-letter words exist in the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.CheckMenuItem(u"Warn for tw_o-letter words", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        item.set_active(True)
-        toggle_warning(constants.WARN_TWO_LETTER, True)
-        
-        if False: # TODO until ready
-            activate = lambda item: toggle_predicate("warn_blacklist", item.active)
-            select = lambda item: self.update_status(constants.STATUS_MENU
-                , u"Warn visually when blacklisted words exist in the grid")
-            deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-            item = gtk.CheckMenuItem(u"Warn for blacklisted words", True)
-            item.connect("activate", activate)
-            item.connect("select", select)
+        warnings = [(constants.WARN_UNCHECKED
+            , u"Warn visually when cells that belong to one word exist in the grid"
+            , u"Warn for _unchecked cells")
+            , (constants.WARN_CONSECUTIVE
+            , u"Warn visually when consecutive unchecked cells exist in the grid"
+            , u"Warn for _consecutive unchecked cells")
+            , (constants.WARN_TWO_LETTER
+            , u"Warn visually when two-letter words exist in the grid"
+            , u"Warn for tw_o-letter words")
+            #, (constants.WARN_BLACKLIST
+            #, u"Warn visually when blacklisted words exist in the grid"
+            #, u"Warn for blacklisted words")
+        ]
+        for code, status, txt in warnings:
+            activate = lambda i, code: toggle_warning(code, i.active)
+            select = lambda i, status: self.update_status(constants.STATUS_MENU, status)
+            deselect = lambda i: self.pop_status(constants.STATUS_MENU)
+            item = gtk.CheckMenuItem(txt, True)
+            item.connect("activate", activate, code)
+            item.connect("select", select, status)
             item.connect("deselect", deselect)
             menu.append(item)
             item.set_active(True)
-            toggle_predicate("warn_blacklist", True)
-        
+            toggle_warning(code, True)
         view_menu = gtk.MenuItem(u"_View", True)
         view_menu.set_submenu(menu)
         return view_menu

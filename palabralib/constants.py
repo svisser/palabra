@@ -145,6 +145,7 @@ VIEW_MODE_PREVIEW_SOLUTION = "preview_solution"
 WARN_UNCHECKED = "warn_unchecked_cells"
 WARN_CONSECUTIVE = "warn_consecutive_unchecked"
 WARN_TWO_LETTER = "warn_two_letter_words"
+WARN_BLACKLIST = "warn_blacklist"
 WARNINGS = [WARN_UNCHECKED, WARN_CONSECUTIVE, WARN_TWO_LETTER]
 
 COLOR_WARNING = "color_warning"
