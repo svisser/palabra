@@ -61,6 +61,7 @@ class EditorSettings:
         self.warnings = {}
         for w in constants.WARNINGS:
             self.warnings[w] = False
+        self.force_redraw = True
 e_settings = EditorSettings()
 e_tools = {}
 
@@ -310,14 +311,14 @@ def _render_cells(puzzle, cells, e_settings, drawing_area, editor=True):
     context.set_source(e_settings.pattern)
     context.paint()
 
-def on_button_release_event(drawing_area, event):
+def on_button_release_event(drawing_area, event, window, puzzle, e_settings):
     if 1 <= event.button <= 3:
         mouse_buttons_down[event.button - 1] = False
     return True
 
 # needed to capture the press of a tab button
 # so focus won't switch to the toolbar
-def on_key_press_event(drawing_area, event):
+def on_key_press_event(drawing_area, event, window, puzzle, e_settings):
     return True
 
 def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
@@ -607,7 +608,7 @@ def _create_popup_menu(window, puzzle, event, x, y):
         w.show_all()
         if w.run() == gtk.RESPONSE_OK:
             puzzle.view.properties.update(x, y, w.gather_appearance().items())
-            #self._render_cells([(x, y)])
+            _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
         w.destroy()
     item = gtk.MenuItem("Properties")
     item.connect("activate", on_cell_properties)
@@ -658,40 +659,41 @@ def on_motion_notify_event(drawing_area, event, window, puzzle, e_settings):
     process_editor_actions(window, puzzle, e_settings, actions)
     return True
 
+def on_expose_event(drawing_area, event, window, puzzle, e_settings):
+    """Render the main editing component."""
+    if not e_settings.surface or e_settings.force_redraw:
+        grid, view = puzzle.grid, puzzle.view
+        width, height = view.properties.visual_size(True)
+        e_settings.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+        e_settings.pattern = cairo.SurfacePattern(e_settings.surface)
+        # TODO should not be needed
+        view.grid = grid
+        e_settings.force_redraw = False
+        _render_cells(puzzle, list(grid.cells()), e_settings, drawing_area, True)
+    context = drawing_area.window.cairo_create()
+    context.set_source(e_settings.pattern)
+    context.paint()
+    return True
+
+EDITOR_EVENTS = {
+    "expose_event": on_expose_event
+    , "button_press_event": on_button_press_event
+    , "button_release_event": on_button_release_event
+    , "motion_notify_event": on_motion_notify_event
+    , "key_press_event": on_key_press_event
+    , "key_release_event": on_key_release_event
+}
+
 class Editor:
     def __init__(self, window):
         self.window = window
         self.blacklist = []
         self.fill_options = {}
-        self.EVENTS = {"expose_event": (self.on_expose_event, self.puzzle)
-            , "button_press_event": (on_button_press_event, self.window, self.puzzle, e_settings)
-            , "button_release_event": on_button_release_event
-            , "motion_notify_event": (on_motion_notify_event, self.window, self.puzzle, e_settings)
-            , "key_press_event": on_key_press_event
-            , "key_release_event": (on_key_release_event, self.window, self.puzzle, e_settings)
-        }
-        self.force_redraw = True
         
     def get_puzzle(self):
         return self.window.puzzle_manager.current_puzzle
         
     puzzle = property(get_puzzle)
-    
-    def on_expose_event(self, drawing_area, event, puzzle):
-        """Render the main editing component."""
-        if not e_settings.surface or self.force_redraw:
-            grid, view = puzzle.grid, puzzle.view
-            width, height = view.properties.visual_size(True)
-            e_settings.surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-            e_settings.pattern = cairo.SurfacePattern(e_settings.surface)
-            # TODO should not be needed
-            view.grid = grid
-            self.force_redraw = False
-            _render_cells(puzzle, list(grid.cells()), e_settings, drawing_area, True)
-        context = drawing_area.window.cairo_create()
-        context.set_source(e_settings.pattern)
-        context.paint()
-        return True
         
     def refresh_clues(self):
         """Reload all the word/clue items and select the currently selected item."""

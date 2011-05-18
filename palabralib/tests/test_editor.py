@@ -604,7 +604,8 @@ class EditorTestCase(unittest.TestCase):
         """Pressing tab in the editor results in an action when selection is available."""
         args = self.grid, (5, 5, "across"), gtk.keysyms.Tab
         actions = editor.determine_editor_actions(*args)
-        self.assertTrue(actions != [])
+        self.assertTrue(len(actions), 1)
+        self.assertEquals(actions[0].type, "swapdir")
         args = self.grid, (-1, -1, "across"), gtk.keysyms.Tab
         actions = editor.determine_editor_actions(*args)
         self.assertEquals(actions, [])

@@ -41,7 +41,7 @@ import cPalabra
 from clue import ClueTool
 import constants
 from export import ExportWindow
-from editor import e_settings, e_tools, Editor
+from editor import e_settings, e_tools, Editor, EDITOR_EVENTS
 from files import (
     FILETYPES,
     ParserError,
@@ -159,11 +159,8 @@ class PalabraWindow(gtk.Window):
         self.drawing_area.queue_draw()
         self.editor = Editor(self)
         self.ids = []
-        for k, e in self.editor.EVENTS.items():
-            if isinstance(e, tuple):
-                self.ids.append(self.drawing_area.connect(k, *e))
-            else:
-                self.ids.append(self.drawing_area.connect(k, e))
+        for k, e in EDITOR_EVENTS.items():
+            self.ids.append(self.drawing_area.connect(k, e, self, puzzle, e_settings))
         e_tools["clue"] = ClueTool(self.editor)
         e_tools["fill"] = FillTool(self.editor)
         e_tools["word"] = WordTool(self.editor)
@@ -823,7 +820,7 @@ class PalabraWindow(gtk.Window):
                     self.editor.puzzle.grid.assign_numbers()
                 if transform >= constants.TRANSFORM_CONTENT:
                     self.editor.refresh_clues()
-            self.editor.force_redraw = True
+            e_settings.force_redraw = True
             self.editor.refresh_words()
             self.editor.refresh_visual_size()
         except AttributeError:
@@ -881,7 +878,7 @@ class PalabraWindow(gtk.Window):
         def toggle_predicate(predicate, status):
             view.custom_settings[predicate] = status
             try:
-                self.editor.force_redraw = True
+                e_settings.force_redraw = True
                 self.panel.queue_draw()
             except AttributeError:
                 pass
@@ -889,7 +886,7 @@ class PalabraWindow(gtk.Window):
         def toggle_warning(predicate, status):
             e_settings.warnings[predicate] = status
             try:
-                self.editor.force_redraw = True
+                e_settings.force_redraw = True
                 self.panel.queue_draw()
             except AttributeError:
                 pass
@@ -970,7 +967,7 @@ class PalabraWindow(gtk.Window):
             for key, value in app.items():
                 puzzle.view.properties[key] = value
             try:
-                self.editor.force_redraw = True
+                e_settings.force_redraw = True
                 self.editor.refresh_visual_size()
             except AttributeError:
                 pass
