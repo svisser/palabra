@@ -704,6 +704,8 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue((0, 1, "across", "LITE") in result["ITE"])
         result = word.similar_words(g, min_length=4)
         self.assertTrue("ITE" not in result)
+        result = word.similar_words(g, min_length=10)
+        self.assertEquals(result, {})
         
     def testSimilarEntries(self):
         """A substring in only one word does not appear as similar entry."""
