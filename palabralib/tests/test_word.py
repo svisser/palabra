@@ -310,6 +310,7 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(result[1].name, "the name 2")
         self.assertEquals(result[1].path, "/somewhere/else")
         self.assertTrue(result[0].index != result[1].index)
+        cPalabra.postprocess()
         
     def testCreateWordListsCapAtMax(self):
         prefs = []
@@ -326,6 +327,66 @@ class WordTestCase(unittest.TestCase):
         result = create_wordlists(prefs)
         self.assertEquals(len(set([item.index for item in result])), MAX_WORD_LISTS)
         cPalabra.postprocess()
+        
+    def testCreateWordListsPrevious(self):
+        """A word list can be added to the list of word lists."""
+        w1 = {'path': {'value': '/the/path'}, 'name': {'value': 'the name'}}
+        previous = create_wordlists([w1])
+        w2 = {'path': {'value': '/the/other/path'}, 'name': {'value': 'the other name'}}
+        result = create_wordlists([w1, w2], previous=previous)
+        self.assertEqual(len(result), 2)
+        self.assertTrue(result[0].path != result[1].path)
+        cPalabra.postprocess()
+        
+    def testCreateWordListsPreviousRemove(self):
+        """A word list can be removed and the previous word list is still used."""
+        w1 = {'path': {'value': '/the/path'}, 'name': {'value': 'the name'}}
+        w2 = {'path': {'value': '/the/other/path'}, 'name': {'value': 'the other name'}}
+        previous = create_wordlists([w1, w2])
+        result = create_wordlists([w2], previous=previous)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].path, '/the/other/path')
+        
+    def testCreateWordListsPreviousRemoveMultiple(self):
+        """Removing multiple word lists at once is possible."""
+        prefs = []
+        for n in xrange(MAX_WORD_LISTS):
+            prefs.append({'path': {'value': 'P' + str(n)}, 'name': {'value': str(n)}})
+        previous = create_wordlists(prefs)
+        next = [p for p in prefs if int(p["name"]["value"]) % 2 == 0]
+        result = create_wordlists(next, previous=previous)
+        self.assertEqual(len(result), MAX_WORD_LISTS / 2)
+        for clist in result:
+            self.assertEqual(int(clist.index) % 2, 0)
+            
+    def testCreateWordListsPreviousAddMultiple(self):
+        """Adding multiple word lists is possible."""
+        prefs = []
+        for n in xrange(MAX_WORD_LISTS):
+            prefs.append({'path': {'value': 'P' + str(n)}, 'name': {'value': str(n)}})
+        previous = create_wordlists([p for p in prefs if n % 2 == 0])
+        result = create_wordlists(prefs, previous=previous)
+        self.assertEqual(len(result), MAX_WORD_LISTS)
+        indices = [clist.index for clist in result]
+        self.assertEqual(len(set(indices)), MAX_WORD_LISTS)
+        
+    def testCreateAndSearch(self):
+        PATH1 = "palabralib/tests/test_wordlist1.txt"
+        PATH2 = "palabralib/tests/test_wordlist2.txt"
+        with open(PATH1, 'w') as f:
+            f.write("fish\nwhale")
+        with open(PATH2, 'w') as g:
+            g.write("bear\nlion\ntiger")
+        p1 = {"path": {"value": PATH1}, "name": {"value": "Word list name 1"}}
+        p2 = {"path": {"value": PATH2}, "name": {"value": "Word list name 2"}}
+        wordlists = create_wordlists([p1, p2])
+        result = search_wordlists(wordlists, 4, "....")
+        self.assertEqual(len(result), 3)
+        self.assertTrue(("fish", True) in result)
+        self.assertTrue(("bear", True) in result)
+        self.assertTrue(("lion", True) in result)
+        os.remove(PATH1)
+        os.remove(PATH2)
         
     def testSearchWordlists(self):
         w1 = CWordList(["worda"], index=0)
@@ -808,3 +869,13 @@ class WordTestCase(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "ab...", css)
         self.assertTrue(("abaaa", True) in result)
         cPalabra.postprocess()
+        
+    def testCWordListIndex(self):
+        """The same index of a CWordList can be used again."""
+        w1 = CWordList(["aaaaa"], index=0)
+        w2 = CWordList(["bbbbb"], index=0)
+        # now w1 works the same as w2
+        self.assertEquals(search_wordlists([w1], 5, "aaaaa"), [])
+        self.assertEquals(search_wordlists([w2], 5, "aaaaa"), [])
+        self.assertEquals(search_wordlists([w1], 5, "bbbbb"), [("bbbbb", True)])
+        self.assertEquals(search_wordlists([w2], 5, "bbbbb"), [("bbbbb", True)])

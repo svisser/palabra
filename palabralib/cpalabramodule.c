@@ -159,6 +159,11 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     // TODO insert in random order for best performance
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
+        // clear previous tree in case we are rebuilding for this index
+        if (trees[index][m] != NULL) {
+            free_tree(trees[index][m]);
+            PyMem_Free(trees[index][m]);
+        }
         trees[index][m] = NULL;
         PyObject *key = Py_BuildValue("i", m);
         PyObject *words = PyDict_GetItem(dict, key);
