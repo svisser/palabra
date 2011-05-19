@@ -20,10 +20,12 @@ import glib
 import operator
 import pangocairo
 
+import cPalabra
 import constants
 from editor import highlight_cells
 import preferences
 from word import (
+    create_wordlists,
     check_accidental_words,
     accidental_entries,
     search_wordlists_by_pattern,
@@ -400,7 +402,10 @@ class WordListEditor(gtk.Dialog):
             
             # TODO
             value = {"name": {"type": "str", "value": "TODO"}, "path": {"type": "str", "value": path}}
+            
             preferences.prefs["word_files"].append(value)
+            cPalabra.postprocess()
+            self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"])
             
             self._load_wordlists()
         dialog.destroy()
@@ -411,10 +416,10 @@ class WordListEditor(gtk.Dialog):
         
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
-        name = self.store[it][0]
-        nextprefs = [p for p in preferences.prefs["word_files"] if p["name"]["value"] != name]
+        path = self.store[it][1]
+        nextprefs = [p for p in preferences.prefs["word_files"] if p["path"]["value"] != path]
         preferences.prefs["word_files"] = nextprefs
-        
+        cPalabra.postprocess()
         self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"])
         try:
             self.palabra_window.editor.refresh_words(True)
