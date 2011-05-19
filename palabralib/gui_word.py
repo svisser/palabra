@@ -30,6 +30,8 @@ from word import (
     search_wordlists_by_pattern,
     similar_entries,
     similar_words,
+    remove_wordlist,
+    rename_wordlists,
 )
 
 LOADING_TEXT = "Loading..."
@@ -376,16 +378,14 @@ class WordListEditor(gtk.Dialog):
         add_button = gtk.Button(stock=gtk.STOCK_ADD)
         buttonbox.pack_start(add_button, False, False, 0)
         add_button.connect("clicked", lambda button: self.add_word_list())
-        
+        self.rename_button = gtk.Button("Rename")
+        buttonbox.pack_start(self.rename_button, False, False, 0)
+        self.rename_button.connect("clicked", lambda button: self.rename_word_list())
+        self.rename_button.set_sensitive(False)        
         self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
         buttonbox.pack_start(self.remove_button, False, False, 0)
         self.remove_button.connect("clicked", lambda button: self.remove_word_list())
         self.remove_button.set_sensitive(False)
-        
-        self.rename_button = gtk.Button("Rename")
-        buttonbox.pack_start(self.rename_button, False, False, 0)
-        self.rename_button.connect("clicked", lambda button: self.rename_word_list())
-        self.rename_button.set_sensitive(False)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -442,29 +442,24 @@ class WordListEditor(gtk.Dialog):
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
-        path = self.store[it][1]
-        d = NewWordListDialog(self, path, name=self.store[it][0])
+        name, path = self.store[it][0], self.store[it][1]
+        d = NewWordListDialog(self, path, name=name)
         d.show_all()
         response = d.run()
         if response == gtk.RESPONSE_OK:
-            for p in preferences.prefs["word_files"]:
-                if p["path"]["value"] == path:
-                    p["name"]["value"] = d.wlist_name
-                    break
-            for wlist in self.palabra_window.wordlists:
-                for p in preferences.prefs["word_files"]:
-                    if wlist.path == p["path"]["value"]:
-                        wlist.name = p["name"]["value"]
+            rename_wordlists(preferences.prefs["word_files"]
+                , self.palabra_window.wordlists
+                , path, d.wlist_name)
+            self.store[it][0] = d.wlist_name
         d.destroy()
-        self.display_wordlists()
         
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store[it][1]
-        nextprefs = [p for p in preferences.prefs["word_files"] if p["path"]["value"] != path]
-        preferences.prefs["word_files"] = nextprefs
-        wordlists = self.palabra_window.wordlists
-        self.palabra_window.wordlists = [wlist for wlist in wordlists if wlist.path != path]
+        n_prefs, n_wlists = remove_wordlist(preferences.prefs["word_files"]
+            , self.palabra_window.wordlists, path)
+        preferences.prefs["word_files"] = n_prefs
+        self.palabra_window.wordlists = n_wlists
         try:
             self.palabra_window.editor.refresh_words(True)
         except AttributeError:

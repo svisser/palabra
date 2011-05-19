@@ -268,6 +268,21 @@ def create_wordlists(prefs, previous=None):
         return wordlists
     return [CWordList(path, index=i, name=name) for i, path, name in files]
 
+def remove_wordlist(prefs, wordlists, path):
+    n_prefs = [p for p in prefs if p["path"]["value"] != path]
+    n_wordlists = [wlist for wlist in wordlists if wlist.path != path]
+    return n_prefs, n_wordlists
+    
+def rename_wordlists(prefs, wordlists, path, name):
+    for p in prefs:
+        if p["path"]["value"] == path:
+            p["name"]["value"] = name
+            break
+    for wlist in wordlists:
+        for p in prefs:
+            if wlist.path == p["path"]["value"]:
+                wlist.name = p["name"]["value"]
+
 def search_wordlists(wordlists, length, constraints, more=None, sort=True):
     """
     Search the specified wordlists for words that match
