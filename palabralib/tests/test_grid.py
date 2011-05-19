@@ -587,6 +587,28 @@ class GridTestCase(unittest.TestCase):
         self.assertAlmostEqual(g.mean_word_length(), (2 * 4 + 2 * 3 + 6 * 5) / 10.0)
         g.set_block(1, 3, True)
         self.assertAlmostEqual(g.mean_word_length(), (2 * 4 + 2 * 3 + 5 * 5) / 9.0)
+        
+    def testMeanWordLengthCounts(self):
+        """Mean word lengths are the same as normal when check counts are provided."""
+        g = Grid(3, 3)
+        g.set_block(1, 0, True)
+        g.set_block(0, 1, True)
+        g.set_block(1, 2, True)
+        g.set_block(2, 1, True)
+        counts = g.get_check_count_all()
+        self.assertEquals(g.mean_word_length(counts), 0)
+        g = Grid(5, 5)
+        counts = g.get_check_count_all()
+        self.assertEquals(g.mean_word_length(counts), 5)
+        g.set_block(0, 0, True)
+        counts = g.get_check_count_all()
+        self.assertAlmostEqual(g.mean_word_length(counts), (8 * 5 + 2 * 4) / 10.0)
+        g.set_block(1, 1, True)
+        counts = g.get_check_count_all()
+        self.assertAlmostEqual(g.mean_word_length(counts), (2 * 4 + 2 * 3 + 6 * 5) / 10.0)
+        g.set_block(1, 3, True)
+        counts = g.get_check_count_all()
+        self.assertAlmostEqual(g.mean_word_length(counts), (2 * 4 + 2 * 3 + 5 * 5) / 9.0)
             
     def testCountBlocks(self):
         self.assertEqual(self.grid.count_blocks(), 0)
@@ -1018,7 +1040,18 @@ class GridTestCase(unittest.TestCase):
         """A single cell is open."""
         g = Grid(1, 1)
         self.assertTrue((0, 0) in g.compute_open_squares())
-            
+
+    def testOpenSquaresCount(self):
+        """If count=True then the number of open squares are computed."""
+        g = Grid(5, 5)
+        self.assertEquals(g.compute_open_squares(count=True), 5 * 5)
+        g.set_block(2, 2, True)
+        self.assertEquals(g.compute_open_squares(count=True), (5 * 5) - 1 - 8)
+        g.set_block(0, 0, True)
+        self.assertEquals(g.compute_open_squares(count=True), (5 * 5) - 9 - 1 - 2)
+        g.set_block(1, 1, True)
+        self.assertEquals(g.compute_open_squares(count=True), (5 * 5) - 9 - 3 - 2)
+
     def testIsConnected(self):
         g = Grid(5, 5)
         self.assertEquals(g.is_connected(), True)

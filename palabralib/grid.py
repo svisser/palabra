@@ -272,11 +272,20 @@ class Grid:
         percentage = (float(status["block_count"]) / float(self.width * self.height)) * 100
         status["block_percentage"] = percentage
         if full:
-            status["mean_word_length"] = self.mean_word_length()
+            check_counts = self.get_check_count_all()
+            status["mean_word_length"] = self.mean_word_length(check_counts)
             status["blank_count"] = status["char_count"] - status["actual_char_count"]
             status["word_counts"] = self.determine_word_counts()
+            status["checked_count"] = 0
+            status["unchecked_count"] = 0
+            status["clue_count"] = 0
             status["char_counts"] = {}
             for x, y in self.cells():
+                status["clue_count"] += len(self.data[y][x]["clues"])
+                if 0 <= check_counts[x, y] <= 1:
+                    status["unchecked_count"] += 1
+                elif check_counts[x, y] == 2:
+                    status["checked_count"] += 1
                 c = self.data[y][x]["char"]
                 if not c:
                     continue
@@ -285,23 +294,11 @@ class Grid:
                 except KeyError:
                     status["char_counts"][c] = 1
             status["char_counts_total"] = []
+            s_char_counts = status["char_counts"]
             for c in string.ascii_uppercase:
-                try:
-                    count = status["char_counts"][c]
-                except KeyError:
-                    count = 0
+                count = s_char_counts[c] if c in s_char_counts else 0
                 status["char_counts_total"].append((c, count))
-            counts = self.get_check_count_all()
-            status["checked_count"] = 0
-            status["unchecked_count"] = 0
-            status["clue_count"] = 0
-            for x, y in self.cells():
-                if 0 <= counts[x, y] <= 1:
-                    status["unchecked_count"] += 1
-                elif counts[x, y] == 2:
-                    status["checked_count"] += 1
-                status["clue_count"] += len(self.data[y][x]["clues"])
-            status["open_count"] = len(self.compute_open_squares())
+            status["open_count"] = self.compute_open_squares(count=True)
             status["connected"] = self.is_connected()
             status["complete_count"] = self.count_complete()
         return status
@@ -320,7 +317,6 @@ class Grid:
                     status[length] = 1
         count_by_dir("across")
         count_by_dir("down")
-                
         status["total"] = []
         for length in range(2, max(self.width, self.height) + 1):
             try:
@@ -543,15 +539,15 @@ class Grid:
             if 0 <= x + dx < width and 0 <= y + dy < height:
                 yield x + dx, y + dy
         
-    def compute_open_squares(self):
+    def compute_open_squares(self, count=False):
         """
-        Return the open squares.
-        
-        A square is open if it does not touch a block, including diagonally.
+        Return a list of open squares in this grid.
+        If count is True, just return the number of open squares.
+        A square is open if it does not touch a block or void, including diagonally.
         """
         data = self.data
         neighbors = self.neighbors
-        cells = []
+        result = 0 if count else []
         for x, y in self.cells():
             if data[y][x]["block"] or data[y][x]["void"]:
                 continue
@@ -559,8 +555,11 @@ class Grid:
                 if data[q][p]["block"] or data[q][p]["void"]:
                     break
             else:
-                cells.append((x, y))
-        return cells
+                if count:
+                    result += 1
+                else:
+                    result.append((x, y))
+        return result
         
     def is_connected(self):
         """
@@ -568,11 +567,13 @@ class Grid:
         other by going from cell to cell, using only horizontal and
         vertical steps.
         """
+        availables = {}
         a_cell = None
         a_count = 0
         is_available = self.is_available
         for x, y in self.cells():
-            if is_available(x, y):
+            availables[x, y] = is_available(x, y)
+            if availables[x, y]:
                 if a_cell is None:
                     a_cell = (x, y)
                 a_count += 1
@@ -587,7 +588,7 @@ class Grid:
             for cell in neighbors(x, y):
                 if cell in done or cell in check:
                     continue
-                if is_available(*cell):
+                if availables[cell]:
                     check.append(cell)
         return a_count == len(done)
         
@@ -653,12 +654,15 @@ class Grid:
         """Return True iff the grid has at least one character."""
         return self.count_chars(include_blanks=False, _return_at_one=True) == 1
             
-    def mean_word_length(self):
+    def mean_word_length(self, check_counts=None):
         """Return the mean length of the words in the grid."""
         word_count = self.count_words()
         if word_count == 0:
             return 0
-        char_counts = [self.get_check_count(x, y) for x, y in self.availables()]
+        if not check_counts:
+            char_counts = [self.get_check_count(x, y) for x, y in self.cells() if self.is_available(x, y)]
+        else:
+            char_counts = [check_counts[x, y] for x, y in self.cells() if self.is_available(x, y)]
         return float(sum(char_counts)) / float(word_count)
         
     def generate_diagonals(self, direction=0):
@@ -763,10 +767,13 @@ class Grid:
         self.lines = None
         
     def count_complete(self):
+        """Compute the number of complete words for each direction."""
+        in_direction = self.in_direction
+        data = self.data
         r = {"across": 0, "down": 0}
         for n, x, y, d in self.words(allow_duplicates=True, include_dir=True):
-            for p, q in self.in_direction(x, y, d):
-                if self.data[q][p]["char"] == '':
+            for p, q in in_direction(x, y, d):
+                if data[q][p]["char"] == '':
                     break
             else:
                 r[d] += 1
