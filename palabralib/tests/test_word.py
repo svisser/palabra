@@ -884,13 +884,17 @@ class WordTestCase(unittest.TestCase):
     def testCWordListIndexArbitrary(self):
         """A CWordList can be created with an arbitrary index (< MAX_WORD_LISTS)."""
         w1 = CWordList(["abcde"], index=33)
-        self.assertEquals(search_wordlists([w1, w2], 5, "abcde"), [("abcde", True)])
+        self.assertEquals(search_wordlists([w1], 5, "abcde"), [("abcde", True)])
         cPalabra.postprocess()
         
     def testCWordListIndexArbitraryCSS(self):
         """A CWordList with arbitrary index can be searched with all constraints."""
-        w1 = CWordList(["abcde"], index=33)
-        css = [(0, 5, []), (0, 5, []), (0, 5, []), (0, 5, []), (0, 5, [])]
-        result = search_wordlists([w1], 5, "abcde", css)
-        self.assertEqual(result, [("abcde", True)])
+        w1 = CWordList(["abcde", "bcdef", "cdefg", "defgh", "efghi"], index=33)
+        css = [(0, 5, [(0, 'a')])
+            , (0, 5, [(0, 'b')])
+            , (0, 5, [(0, 'c')])
+            , (0, 5, [(0, 'd')])
+            , (0, 5, [(0, 'e')])
+        ]
+        self.assertEqual(search_wordlists([w1], 5, "abcde", css), [("abcde", True)])
         cPalabra.postprocess()

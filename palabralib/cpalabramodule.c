@@ -50,7 +50,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
         Py_ssize_t ii;
         for (ii = 0; ii < n_indices; ii++) {
             const int index = (int) PyInt_AsLong(PyList_GET_ITEM(indices, ii));
-            analyze_intersect_slot2(results[index], skipped, offsets, cs, length, index);
+            analyze_intersect_slot2(results[ii], skipped, offsets, cs, length, index);
         }
     }
 
@@ -75,8 +75,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
                 }
                 Py_ssize_t jj;
                 for (jj = 0; jj < n_indices; jj++) {
-                    const int index_j = (int) PyInt_AsLong(PyList_GET_ITEM(indices, jj));
-                    check_intersect(word, cs, length, results[index_j], is_char_ok);
+                    check_intersect(word, cs, length, results[jj], is_char_ok);
                     int n_chars = 0;
                     int j;
                     for (j = 0; j < length; j++) {
@@ -95,7 +94,6 @@ cPalabra_search(PyObject *self, PyObject *args) {
             Py_DECREF(item);
         }
     }
-    printf("We get here<>?\n");    
     if (more_constraints != Py_None) {
         Py_ssize_t ii;
         for (ii = 0; ii < n_indices; ii++) {
