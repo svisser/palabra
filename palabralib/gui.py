@@ -1145,7 +1145,7 @@ class PalabraWindow(gtk.Window):
             w.run()
             w.destroy()
         select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Find words in wordlists according to a pattern")
+            , u"Find words in word lists according to a pattern")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem(u"_Find words...", True)
         item.connect("activate", activate, )
@@ -1257,7 +1257,7 @@ def main(argv=None):
                 gtk.main_iteration()
         print "Reading configuration file..."
         read_config_file()
-        print "Loading wordlists..."
+        print "Loading word lists..."
         cPalabra.preprocess_all()
         wordlists = create_wordlists(preferences.prefs["word_files"])
         print "Loading pattern files..."
