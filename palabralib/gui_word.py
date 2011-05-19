@@ -148,7 +148,7 @@ class AccidentalWordsDialog(PalabraDialog):
             , self.load_words, grid, self.wordlists[self.index])
         
     def load_words(self, grid, wlist):
-        """Compute and display the words of the grid found in the wordlist."""
+        """Compute and display the words of the grid found in the word list."""
         self.results = [(d, cells) for d, cells in
             check_accidental_words([wlist], grid) if len(cells) > 1]
         self.store.clear()
@@ -323,7 +323,7 @@ class NewWordListDialog(gtk.Dialog):
 
 class WordListEditor(gtk.Dialog):
     def __init__(self, palabra_window):
-        gtk.Dialog.__init__(self, u"Word list manager"
+        gtk.Dialog.__init__(self, u"Manage word lists"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(640, 480)
@@ -335,7 +335,7 @@ class WordListEditor(gtk.Dialog):
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Identifier")
+        column = gtk.TreeViewColumn(u"Name")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)

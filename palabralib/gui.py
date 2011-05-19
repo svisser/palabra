@@ -104,7 +104,6 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
-        #self.menubar.append(self.create_word_menu())
         #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_tools_menu())
         self.menubar.append(self.create_help_menu())
@@ -1130,6 +1129,17 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def activate(item):
+            editor = WordListEditor(self)
+            editor.show_all()
+            editor.run()
+            editor.destroy()
+        menu.append(self._create_menu_item(activate
+            , u"Manage the word lists available to the program"
+            , title="_Manage word lists..."))
+        
+        menu.append(gtk.SeparatorMenuItem())
+        
+        def activate(item):
             w = FindWordsDialog(self)
             w.show_all()
             w.run()
@@ -1179,18 +1189,6 @@ class PalabraWindow(gtk.Window):
         tool_menu.set_submenu(menu)
         return tool_menu
     
-    def create_word_menu(self):
-        menu = gtk.Menu()
-        
-        menu.append(self._create_menu_item(
-            lambda item: self.manage_wordlists()
-            , u"Manage the word lists available to the program"
-            , title="_Manage word lists..."))
-        
-        word_menu = gtk.MenuItem(u"_Word", True)
-        word_menu.set_submenu(menu)
-        return word_menu
-        
     def create_clue_menu(self):
         menu = gtk.Menu()
         
@@ -1204,12 +1202,6 @@ class PalabraWindow(gtk.Window):
         word_menu.set_submenu(menu)
         return word_menu
         
-    def manage_wordlists(self):
-        editor = WordListEditor(self)
-        editor.show_all()
-        editor.run()
-        editor.destroy()
-                
     def manage_patterns(self):
         editor = PatternFileEditor(self)
         editor.show_all()
