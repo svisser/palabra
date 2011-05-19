@@ -22,6 +22,7 @@ import pangocairo
 
 import constants
 from editor import highlight_cells
+import preferences
 from word import (
     check_accidental_words,
     accidental_entries,
