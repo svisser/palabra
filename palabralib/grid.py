@@ -536,8 +536,7 @@ class Grid:
         width = self.width
         height = self.height
         if diagonals:
-            neighbors = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1]]
-            neighbors.remove((0, 0))
+            neighbors = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         else:
             neighbors = [(0, -1), (1, 0), (0, 1), (-1, 0)]
         for dx, dy in neighbors:
@@ -557,7 +556,7 @@ class Grid:
             if data[y][x]["block"] or data[y][x]["void"]:
                 continue
             for p, q in neighbors(x, y, diagonals=True):
-                if data[q][p]["block"]:
+                if data[q][p]["block"] or data[q][p]["void"]:
                     break
             else:
                 cells.append((x, y))
@@ -569,21 +568,28 @@ class Grid:
         other by going from cell to cell, using only horizontal and
         vertical steps.
         """
-        avs = [(x, y) for x, y in self.availables()]
-        if len(avs) == 0:
+        a_cell = None
+        a_count = 0
+        is_available = self.is_available
+        for x, y in self.cells():
+            if is_available(x, y):
+                if a_cell is None:
+                    a_cell = (x, y)
+                a_count += 1
+        if a_count == 0:
             return True
-    
+        neighbors = self.neighbors
         done = []
-        check = [avs[0]]
+        check = [a_cell]
         while check:
             x, y = check.pop()
             done.append((x, y))
-            for p, q in self.neighbors(x, y):
+            for p, q in neighbors(x, y):
                 if (p, q) in done or (p, q) in check:
                     continue
-                if self.is_available(p, q):
+                if is_available(p, q):
                     check.append((p, q))
-        return len(avs) == len(done)
+        return a_count == len(done)
         
     def count_voids(self):
         """Return the number of voids in the grid."""

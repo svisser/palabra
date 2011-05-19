@@ -991,6 +991,7 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(len(ns), 0)
             
     def testOpenSquares(self):
+        """A cell is open if it does not touch a block, including diagonally."""
         g = Grid(5, 5)
         self.assertEquals(len(g.compute_open_squares()), 5 * 5)
         g.set_block(2, 2, True)
@@ -998,6 +999,17 @@ class GridTestCase(unittest.TestCase):
         g.set_block(0, 0, True)
         self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
         g.set_block(1, 1, True)
+        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
+        
+    def testOpenSquaresVoid(self):
+        """A cell is oen if it does not touch a void, including diagonally."""
+        g = Grid(5, 5)
+        self.assertEquals(len(g.compute_open_squares()), 5 * 5)
+        g.set_void(2, 2, True)
+        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 1 - 8)
+        g.set_void(0, 0, True)
+        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
+        g.set_void(1, 1, True)
         self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
             
     def testIsConnected(self):
