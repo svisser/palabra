@@ -31,7 +31,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
         return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
     const Py_ssize_t n_indices = PyList_Size(indices);
-    
+
     // each of the constraints
     int offsets[length];
     char *cs[length];
@@ -94,7 +94,8 @@ cPalabra_search(PyObject *self, PyObject *args) {
             PyList_Append(result, item);
             Py_DECREF(item);
         }
-    }    
+    }
+    printf("We get here<>?\n");    
     if (more_constraints != Py_None) {
         Py_ssize_t ii;
         for (ii = 0; ii < n_indices; ii++) {
