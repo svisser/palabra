@@ -734,3 +734,18 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue(len(entries["BCD"]), 2)
         self.assertTrue((0, 0, "across", "abcd", 1) in entries["BCD"])
         self.assertTrue((0, 1, "across", "bcde", 0) in entries["BCD"])
+        
+    def testSearchMultipleListsIntersection(self):
+        """Intersection boolean in search result can be due to other word list."""
+        w1 = CWordList(["worda"], index=0)
+        w2 = CWordList(["wwwww", "ooooo", "rrrrr", "ddddd", "aaaaa"], index=1)
+        wordlists = [w1, w2]
+        css = [(0, 5, [(0, 'w')])
+            , (0, 5, [(0, 'o')])
+            , (0, 5, [(0, 'r')])
+            , (0, 5, [(0, 'd')])
+            , (0, 5, [(0, 'a')])
+        ]
+        result = search_wordlists(wordlists, 5, "worda", css)
+        self.assertTrue(("worda", True) in result)
+        cPalabra.postprocess()

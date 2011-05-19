@@ -30,6 +30,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
     if (length <= 0 || length >= MAX_WORD_LENGTH)
         return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
+    const Py_ssize_t n_indices = PyList_Size(indices);
     
     // each of the constraints
     int offsets[length];
@@ -37,7 +38,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
     int t;
     int skipped[length];
     for (t = 0; t < length; t++) skipped[t] = 0;
-    Sptr results[length];
+    Sptr results[n_indices][length];
     if (more_constraints != Py_None) {
         for (t = 0; t < length; t++) {
             PyObject *py_cons_str2;
@@ -46,13 +47,17 @@ cPalabra_search(PyObject *self, PyObject *args) {
                 return NULL;
             cs[t] = PyString_AS_STRING(py_cons_str2);
         }
-        analyze_intersect_slot2(results, skipped, offsets, cs, length);
+        Py_ssize_t ii;
+        for (ii = 0; ii < n_indices; ii++) {
+            const int index = (int) PyInt_AsLong(PyList_GET_ITEM(indices, ii));
+            analyze_intersect_slot2(results[index], skipped, offsets, cs, length, index);
+        }
     }
 
     // main word
     PyObject *result = PyList_New(0);
     Py_ssize_t ii;
-    for (ii = 0; ii < PyList_Size(indices); ii++) {
+    for (ii = 0; ii < n_indices; ii++) {
         const int index = (int) PyInt_AsLong(PyList_GET_ITEM(indices, ii));
         
         PyObject *mwords = PyList_New(0);
@@ -62,7 +67,12 @@ cPalabra_search(PyObject *self, PyObject *args) {
             char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
             int valid = 1;
             if (more_constraints != Py_None) {
-                valid = check_intersect(word, cs, length, results);
+                Py_ssize_t jj;
+                for (jj = 0; jj < n_indices; jj++) {
+                    const int index_j = (int) PyInt_AsLong(PyList_GET_ITEM(indices, jj));
+                    valid = check_intersect(word, cs, length, results[index_j]);
+                    if (valid) break;
+                }
             }
             PyObject* py_intersect = PyBool_FromLong(valid);
             PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
@@ -72,10 +82,13 @@ cPalabra_search(PyObject *self, PyObject *args) {
         }
     }    
     if (more_constraints != Py_None) {
-        for (t = 0; t < length; t++) {
-            if (skipped[t] == 0 && results[t] != NULL) {
-                PyMem_Free(results[t]->chars);
-                PyMem_Free(results[t]);
+        Py_ssize_t ii;
+        for (ii = 0; ii < n_indices; ii++) {
+            for (t = 0; t < length; t++) {
+                if (skipped[t] == 0 && results[ii][t] != NULL) {
+                    PyMem_Free(results[ii][t]->chars);
+                    PyMem_Free(results[ii][t]);
+                }
             }
         }
     }
@@ -374,7 +387,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     cs_i[index] = get_constraints(cgrid, width, height, &slots[m]);
                 }
             }
-            analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length);
+            // TODO index
+            analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length, 0);
         }
         
         int is_word_ok = 1;

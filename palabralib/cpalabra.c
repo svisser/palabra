@@ -253,8 +253,8 @@ int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
     return n;
 }
 
-Sptr analyze_intersect_slot(int offset, char *cs) {
-    if (!trees[0][strlen(cs)]) {
+Sptr analyze_intersect_slot(int offset, char *cs, int index) {
+    if (!trees[index][strlen(cs)]) {
         return NULL;
     }
     Sptr result;
@@ -271,11 +271,11 @@ Sptr analyze_intersect_slot(int offset, char *cs) {
     for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
         result->chars[c] = ' ';
     }
-    analyze(offset, result, trees[0][strlen(cs)], cs, cs);
+    analyze(offset, result, trees[index][strlen(cs)], cs, cs);
     return result;
 }
 
-void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length) {
+void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length, int index) {
     int t;
     for (t = 0; t < length; t++) {
         int skip = -1;
@@ -289,7 +289,7 @@ void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **c
             }
         }
         if (skip < 0) {
-            results[t] = analyze_intersect_slot(offsets[t], cs[t]);
+            results[t] = analyze_intersect_slot(offsets[t], cs[t], index);
         } else {
             skipped[t] = 1;
             results[t] = results[skip];
