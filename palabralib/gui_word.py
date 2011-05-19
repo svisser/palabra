@@ -316,23 +316,31 @@ class AnagramDialog(gtk.Dialog):
             self.store.append([s])
 
 class NewWordListDialog(PalabraDialog):
-    def __init__(self, parent, path):
-        PalabraDialog.__init__(self, parent, u"New word list")
+    def __init__(self, parent, path, name=None):
+        title = u"New word list"
+        if name is not None:
+            title = u"Rename word list"
+        PalabraDialog.__init__(self, parent, title)
         label = gtk.Label()
         label.set_markup(u"Word list: <b>" + path + "</b>")
         label.set_alignment(0, 0.5)
         self.main.pack_start(label, False, False, 0)
-        label = gtk.Label(u"Please give the new word list a name:")
+        text = u"Please give the new word list a name:"
+        if name is not None:
+            text = u"Please give the word list a new name:"
+        label = gtk.Label(text)
         label.set_alignment(0, 0.5)
         self.main.pack_start(label, False, False, 0)
-        entry = gtk.Entry()
+        self.entry = gtk.Entry()
         def on_entry_changed(widget):
             self.store_name(widget.get_text().strip())
-        entry.connect("changed", on_entry_changed)
-        self.main.pack_start(entry, True, True, 0)
+        self.entry.connect("changed", on_entry_changed)
+        self.main.pack_start(self.entry, True, True, 0)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.store_name(None)
+        if name is not None:
+            self.entry.set_text(name)
+        self.store_name(name)
         
     def store_name(self, name=None):
         self.wlist_name = name
@@ -373,6 +381,11 @@ class WordListEditor(gtk.Dialog):
         buttonbox.pack_start(self.remove_button, False, False, 0)
         self.remove_button.connect("clicked", lambda button: self.remove_word_list())
         self.remove_button.set_sensitive(False)
+        
+        self.rename_button = gtk.Button("Rename")
+        buttonbox.pack_start(self.rename_button, False, False, 0)
+        self.rename_button.connect("clicked", lambda button: self.rename_word_list())
+        self.rename_button.set_sensitive(False)
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
@@ -425,6 +438,25 @@ class WordListEditor(gtk.Dialog):
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
         self.remove_button.set_sensitive(it is not None)
+        self.rename_button.set_sensitive(it is not None)
+        
+    def rename_word_list(self):
+        store, it = self.tree.get_selection().get_selected()
+        path = self.store[it][1]
+        d = NewWordListDialog(self, path, name=self.store[it][0])
+        d.show_all()
+        response = d.run()
+        if response == gtk.RESPONSE_OK:
+            for p in preferences.prefs["word_files"]:
+                if p["path"]["value"] == path:
+                    p["name"]["value"] = d.wlist_name
+                    break
+            for wlist in self.palabra_window.wordlists:
+                for p in preferences.prefs["word_files"]:
+                    if wlist.path == p["path"]["value"]:
+                        wlist.name = p["name"]["value"]
+        d.destroy()
+        self.display_wordlists()
         
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
