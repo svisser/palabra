@@ -122,6 +122,7 @@ for k, color in (_COLOR_ATTRS + _OTHER_COLOR_PREFS):
     _INT_PREFS.extend([(k + "_red", r), (k + "_green", g), (k + "_blue", b)])
 _BOOL_PREFS = [
     (constants.PREF_COPY_BEFORE_SAVE, False)
+    , (constants.PREF_ARROWS_CHANGE_DIR, False)
 #    , (constants.PREF_UNDO_FINITE_STACK, True)
 ]
 _FILE_PREFS = [

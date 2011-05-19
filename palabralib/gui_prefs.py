@@ -194,6 +194,22 @@ class PreferencesWindow(gtk.Dialog):
         align.add(colors_combo)
         scheme_hbox.pack_start(align, True, True, 0)
         main.pack_start(scheme_hbox, False, False, 0)
+        
+        label = gtk.Label()
+        label.set_alignment(0, 0)
+        label.set_markup(u"<b>Arrow keys</b>")
+        main.pack_start(label, False, False, 6)
+        
+        def callback(widget):
+            prefs[constants.PREF_ARROWS_CHANGE_DIR] = widget.get_active()
+        arrows_button = gtk.CheckButton(u"Right / down arrow keys change typing direction")
+        arrows_button.set_active(prefs[constants.PREF_ARROWS_CHANGE_DIR])
+        arrows_button.connect("toggled", callback)
+        align = gtk.Alignment(0, 0.5)
+        align.set_padding(0, 0, 12, 0)
+        align.add(arrows_button)
+        main.pack_start(align, False, False, 0)
+        
         return main
         
     def on_colors_combo_changed(self, combo, data=None):

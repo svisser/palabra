@@ -27,6 +27,7 @@ import action
 from appearance import CellPropertiesDialog
 import constants
 from grid import Grid, decompose_word
+import preferences
 from preferences import read_pref_color
 import transform
 from view import GridPreview, DEFAULTS_CELL
@@ -363,8 +364,14 @@ def determine_editor_actions(grid, selection, key):
         actions = apply_selection_delta(grid, selection, 0, -1)
     elif key == gtk.keysyms.Right:
         actions = apply_selection_delta(grid, selection, 1, 0)
+        change = preferences.prefs[constants.PREF_ARROWS_CHANGE_DIR]
+        if change and selection[2] == "down":
+            actions.append(EditorAction("swapdir", None))
     elif key == gtk.keysyms.Down:
         actions = apply_selection_delta(grid, selection, 0, 1)
+        change = preferences.prefs[constants.PREF_ARROWS_CHANGE_DIR]
+        if change and selection[2] == "across":
+            actions.append(EditorAction("swapdir", None))
     elif key == gtk.keysyms.Delete:
         actions = on_delete(grid, selection)
     else:
