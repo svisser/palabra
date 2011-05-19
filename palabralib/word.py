@@ -251,6 +251,7 @@ def create_wordlists(prefs, rebuild=False):
         files.append((i, data["path"]["value"], data["name"]["value"]))
     if rebuild:
         cPalabra.postprocess()
+        cPalabra.preprocess_all()
     return [CWordList(path, index=i, name=name) for i, path, name in files]
 
 def search_wordlists(wordlists, length, constraints, more=None, sort=True):
