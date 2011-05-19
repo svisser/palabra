@@ -1013,6 +1013,11 @@ class GridTestCase(unittest.TestCase):
         self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
         g.set_void(1, 1, True)
         self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
+        
+    def testOpenSquaresSingle(self):
+        """A single cell is open."""
+        g = Grid(1, 1)
+        self.assertTrue((0, 0) in g.compute_open_squares())
             
     def testIsConnected(self):
         g = Grid(5, 5)

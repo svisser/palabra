@@ -454,6 +454,12 @@ class PalabraWindow(gtk.Window):
         dialog.destroy()
         
     def view_puzzle_properties(self):
+        import pstats
+        import cProfile
+        cProfile.runctx('dialog = PropertiesWindow(self, self.puzzle_manager.current_puzzle)', globals(), locals(), filename='fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('time').print_stats(20)
+        p.print_callers()
         dialog = PropertiesWindow(self, self.puzzle_manager.current_puzzle)
         dialog.show_all()
         dialog.run()

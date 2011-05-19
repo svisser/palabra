@@ -34,7 +34,7 @@ def determine_scrabble_score(grid):
         , 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1
         , 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1
         , 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10, '': 0}
-    chars = [grid.get_char(x, y) for x, y in grid.cells()]
+    chars = [grid.data[y][x]["char"] for x, y in grid.cells()]
     return sum([scores[c] for c in chars])
 
 class Grid:
@@ -584,11 +584,11 @@ class Grid:
         while check:
             x, y = check.pop()
             done.append((x, y))
-            for p, q in neighbors(x, y):
-                if (p, q) in done or (p, q) in check:
+            for cell in neighbors(x, y):
+                if cell in done or cell in check:
                     continue
-                if is_available(p, q):
-                    check.append((p, q))
+                if is_available(*cell):
+                    check.append(cell)
         return a_count == len(done)
         
     def count_voids(self):
