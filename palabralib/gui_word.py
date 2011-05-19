@@ -315,12 +315,28 @@ class AnagramDialog(gtk.Dialog):
         for s in strings:
             self.store.append([s])
 
-class NewWordListDialog(gtk.Dialog):
-    def __init__(self, parent):
-        gtk.Dialog.__init__(self, u"New word list", parent, gtk.DIALOG_MODAL)
-        self.set_size_request(320, 240)
+class NewWordListDialog(PalabraDialog):
+    def __init__(self, parent, path):
+        PalabraDialog.__init__(self, parent, u"New word list")
+        label = gtk.Label()
+        label.set_markup(u"Word list: <b>" + path + "</b>")
+        label.set_alignment(0, 0.5)
+        self.main.pack_start(label, False, False, 0)
+        label = gtk.Label(u"Please give the new word list a name:")
+        label.set_alignment(0, 0.5)
+        self.main.pack_start(label, False, False, 0)
+        entry = gtk.Entry()
+        def on_entry_changed(widget):
+            self.store_name(widget.get_text().strip())
+        entry.connect("changed", on_entry_changed)
+        self.main.pack_start(entry, True, True, 0)
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.store_name(None)
         
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+    def store_name(self, name=None):
+        self.wlist_name = name
+        self.ok_button.set_sensitive(False if name is None else len(name) > 0)
 
 class WordListEditor(gtk.Dialog):
     def __init__(self, palabra_window):
@@ -341,7 +357,7 @@ class WordListEditor(gtk.Dialog):
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Word lists")
+        column = gtk.TreeViewColumn(u"Word list")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=1)
         self.tree.append_column(column)
@@ -383,30 +399,28 @@ class WordListEditor(gtk.Dialog):
             path = dialog.get_filename()
             if path in [p["path"]["value"] for p in preferences.prefs["word_files"]]:
                 dialog.destroy()
-                
-                title = u"Duplicate found"
                 message = u"The word list has not been added because it's already in the list."
                 mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
                     , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
                 mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-                mdialog.set_title(title)
+                mdialog.set_title(u"Duplicate found")
                 mdialog.run()
                 mdialog.destroy()
                 return
-            
-            d = NewWordListDialog(self)
+            dialog.destroy()
+            d = NewWordListDialog(self, path)
             d.show_all()
-            d.run()
+            if d.run() == gtk.RESPONSE_OK:
+                value = {"name": {"type": "str", "value": d.wlist_name}
+                    , "path": {"type": "str", "value": path}
+                }
+                preferences.prefs["word_files"].append(value)
+                self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"]
+                    , previous=self.palabra_window.wordlists)
+                self._load_wordlists()
             d.destroy()
-            
-            # TODO
-            value = {"name": {"type": "str", "value": "TODO"}, "path": {"type": "str", "value": path}}
-            
-            preferences.prefs["word_files"].append(value)
-            self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"]
-                , previous=self.palabra_window.wordlists)
-            self._load_wordlists()
-        dialog.destroy()
+        else:
+            dialog.destroy()
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
