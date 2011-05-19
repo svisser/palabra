@@ -773,7 +773,8 @@ class WordTestCase(unittest.TestCase):
         w4 = CWordList(["adapt"], index=3)
         w5 = CWordList(["cabin"], index=4)
         w6 = CWordList(["haven"], index=5)
-        wordlists = [w1, w2, w3, w4, w5, w6]
+        w7 = CWordList(["realm"], index=6)
+        wordlists = [w1, w2, w3, w4, w5, w6, w7]
         css = [(0, 5, [(0, 'r')])
             , (0, 5, [(0, 'e')])
             , (0, 5, [(0, 'a')])
@@ -782,4 +783,12 @@ class WordTestCase(unittest.TestCase):
         ]
         result = search_wordlists(wordlists, 5, "reach", css)
         self.assertTrue(("reach", True) in result)
+        css = [(0, 5, [(0, 'r')])
+            , (0, 5, [(0, 'e')])
+            , (0, 5, [(0, 'a')])
+            , (0, 5, [(0, 'l')])
+            , (0, 5, [(0, 'm')])
+        ]
+        result = search_wordlists(wordlists, 5, "realm", css)
+        self.assertTrue(("realm", False) in result)
         cPalabra.postprocess()
