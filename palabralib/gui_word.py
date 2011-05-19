@@ -347,7 +347,7 @@ class WordListEditor(gtk.Dialog):
         
         # name path
         self.store = gtk.ListStore(str, str)
-        self._load_wordlists()
+        self.display_wordlists()
         
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
@@ -417,7 +417,7 @@ class WordListEditor(gtk.Dialog):
                 preferences.prefs["word_files"].append(value)
                 self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"]
                     , previous=self.palabra_window.wordlists)
-                self._load_wordlists()
+                self.display_wordlists()
             d.destroy()
         else:
             dialog.destroy()
@@ -437,14 +437,12 @@ class WordListEditor(gtk.Dialog):
             self.palabra_window.editor.refresh_words(True)
         except AttributeError:
             pass
-        self._load_wordlists()
+        self.display_wordlists()
         
-    def _load_wordlists(self):
+    def display_wordlists(self):
         self.store.clear()
         for p in preferences.prefs["word_files"]:
-            name = p["name"]["value"]
-            path = p["path"]["value"]
-            self.store.append([name, path])
+            self.store.append([p["name"]["value"], p["path"]["value"]])
             
 class WordWidget(gtk.DrawingArea):
     def __init__(self, editor):
