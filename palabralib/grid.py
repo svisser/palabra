@@ -391,12 +391,6 @@ class Grid:
             for x in xrange(self.width):
                 yield x, y
                 
-    def availables(self):
-        """Convenience function for iterating over available cells."""
-        for x, y in self.cells():
-            if self.is_available(x, y):
-                yield x, y
-                
     def gather_word(self, x, y, direction, empty_char=constants.MISSING_CHAR):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
