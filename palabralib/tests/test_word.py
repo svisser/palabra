@@ -792,3 +792,19 @@ class WordTestCase(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "realm", css)
         self.assertTrue(("realm", False) in result)
         cPalabra.postprocess()
+        
+    def testSearchIntersectionCountMultipleTimes(self):
+        """A word can be used multiple times as intersecting word."""
+        w1 = CWordList(["aaaaa"], index=0)
+        w2 = CWordList(["abaaa"], index=1)
+        w3 = CWordList(["bbbbb"], index=2)
+        wordlists = [w1, w2, w3]
+        css = [(0, 5, [(0, 'a')])
+            , (0, 5, [(0, 'b')])
+            , (0, 5, [])
+            , (0, 5, [])
+            , (0, 5, [])
+        ]
+        result = search_wordlists(wordlists, 5, "ab...", css)
+        self.assertTrue(("abaaa", True) in result)
+        cPalabra.postprocess()
