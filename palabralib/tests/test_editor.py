@@ -76,28 +76,47 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(editor.expand_slots(slots_a + slots_d), exp_a + exp_d)
         
     def testHighlights(self):
-        for i in xrange(5):
-            self.grid.set_char(i, i, 'A')
+        """Clearing the highlights means no cells are highlighted."""
         cells = editor.compute_highlights(self.grid, clear=True)
         self.assertEquals(cells, [])
-        cells = editor.compute_highlights(self.grid, "length", 15)
-        self.assertEquals(len(cells), self.grid.count_words())
+        
+    def testHighlightsLength(self):
+        """Slots can be highlighted by length."""
+        slots = editor.compute_highlights(self.grid, "length", 15)
+        self.assertEquals(len(slots), self.grid.count_words())
+        for s in slots:
+            self.assertTrue(s[3], 15)
+        
+    def testHighlightsChar(self):
+        """Highlighting a character results in that many slots to highlight."""
+        for i in xrange(5):
+            self.grid.set_char(i, i, 'A')
         cells = editor.compute_highlights(self.grid, "char", 'A')
         self.assertEquals(len(cells), 5)
+        
+    def testHighlightsOpen(self):
+        """All open cells can be highlighted."""
         cells = editor.compute_highlights(self.grid, "open")
         self.assertEquals(len(cells), len(list(self.grid.cells())))
         
     def testHighlightsTwo(self):
+        """Highlighting individual cells results in slots of length 1."""
         arg = [(1, 1), (5, 5), (3, 4), (4, 3)]
         cells = editor.compute_highlights(self.grid, "cells", arg)
         self.assertEquals(len(arg), len(cells))
         for x, y in arg:
             self.assertTrue((x, y, "across", 1) in cells)
+    
+    def testHighlightsSlots(self):
         result = editor.compute_highlights(self.grid, "slot", (0, 0, "down"))
         self.assertTrue((0, 0, "down", 15) in result)
         self.grid.set_block(5, 0, True)
         result = editor.compute_highlights(self.grid, "slot", (0, 0, "across"))
         self.assertTrue((0, 0, "across", 5) in result)
+        slots = [(0, 0, "across"), (0, 0, "down")]
+        result = editor.compute_highlights(self.grid, "slots", slots)
+        self.assertTrue((0, 0, "across", 5) in result)
+        self.assertTrue((0, 0, "down", 15) in result)
         
     def testSymmetryInvalid(self):
         self.assertEquals(editor.apply_symmetry(self.grid, [], -1, -1), [])
