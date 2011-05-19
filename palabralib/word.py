@@ -274,6 +274,10 @@ def remove_wordlist(prefs, wordlists, path):
     return n_prefs, n_wordlists
     
 def rename_wordlists(prefs, wordlists, path, name):
+    """
+    Rename the word list with the given path to the given name
+    in the preferences and wordlists.
+    """
     for p in prefs:
         if p["path"]["value"] == path:
             p["name"]["value"] = name

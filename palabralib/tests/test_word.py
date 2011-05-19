@@ -898,3 +898,25 @@ class WordTestCase(unittest.TestCase):
         ]
         self.assertEqual(search_wordlists([w1], 5, "abcde", css), [("abcde", True)])
         cPalabra.postprocess()
+        
+    def testRenameWordlists(self):
+        """A word list can be renamed in preferences and wordlists data."""
+        w1 = {'path': {'value': '/the/path'}, 'name': {'value': "The Word List"}}
+        prefs = [w1]
+        wordlists = create_wordlists(prefs)
+        self.assertTrue(wordlists[0].name, "The Word List")
+        word.rename_wordlists(prefs, wordlists, '/the/path', "The New Word List")
+        self.assertTrue(prefs[0]["name"]["value"], "The New Word List")
+        self.assertTrue(wordlists[0].name, "The New Word List")
+        cPalabra.postprocess()
+        
+    def testRenameWordListMissingPath(self):
+        """When a specific path is not present, nothing happens when renaming."""
+        w1 = {'path': {'value': '/the/path'}, 'name': {'value': "The Word List"}}
+        prefs = [w1]
+        wordlists = create_wordlists(prefs)
+        self.assertTrue(wordlists[0].name, "The Word List")
+        word.rename_wordlists(prefs, wordlists, '/the/missing/path', "The New Word List")
+        self.assertTrue(prefs[0]["name"]["value"], "The Word List")
+        self.assertTrue(wordlists[0].name, "The Word List")
+        cPalabra.postprocess()
