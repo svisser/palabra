@@ -240,7 +240,7 @@ def similar_words(grid, min_length=3):
                 substrings[s].append((x, y, d, word))
     return substrings
     
-def create_wordlists(prefs):
+def create_wordlists(prefs, rebuild=False):
     """
     Convert preference data of word files into CWordLists.
     """
@@ -249,6 +249,8 @@ def create_wordlists(prefs):
         if i >= constants.MAX_WORD_LISTS:
             break
         files.append((i, data["path"]["value"], data["name"]["value"]))
+    if rebuild:
+        cPalabra.postprocess()
     return [CWordList(path, index=i, name=name) for i, path, name in files]
 
 def search_wordlists(wordlists, length, constraints, more=None, sort=True):

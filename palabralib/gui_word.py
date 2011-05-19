@@ -20,7 +20,6 @@ import glib
 import operator
 import pangocairo
 
-import cPalabra
 import constants
 from editor import highlight_cells
 import preferences
@@ -404,8 +403,7 @@ class WordListEditor(gtk.Dialog):
             value = {"name": {"type": "str", "value": "TODO"}, "path": {"type": "str", "value": path}}
             
             preferences.prefs["word_files"].append(value)
-            cPalabra.postprocess()
-            self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"])
+            self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"], rebuild=True)
             
             self._load_wordlists()
         dialog.destroy()
@@ -419,8 +417,7 @@ class WordListEditor(gtk.Dialog):
         path = self.store[it][1]
         nextprefs = [p for p in preferences.prefs["word_files"] if p["path"]["value"] != path]
         preferences.prefs["word_files"] = nextprefs
-        cPalabra.postprocess()
-        self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"])
+        self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"], rebuild=True)
         try:
             self.palabra_window.editor.refresh_words(True)
         except AttributeError:
