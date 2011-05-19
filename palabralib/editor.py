@@ -332,11 +332,12 @@ def on_key_release_event(drawing_area, event, window, puzzle, e_settings):
     if ((event.state & gtk.gdk.SHIFT_MASK) or
         (event.state & gtk.gdk.CONTROL_MASK)):
         return True
-    actions = determine_editor_actions(puzzle.grid, e_settings.selection, event.keyval)
+    arrows_change_dir = preferences.prefs[constants.PREF_ARROWS_CHANGE_DIR]
+    actions = determine_editor_actions(puzzle.grid, e_settings.selection, event.keyval, arrows_change_dir)
     process_editor_actions(window, puzzle, e_settings, actions)
     return True
 
-def determine_editor_actions(grid, selection, key):
+def determine_editor_actions(grid, selection, key, arrows_change_dir=False):
     """
     Determine all actions that need to take place given the current grid,
     the current selection and the key that the user has pressed.
@@ -364,13 +365,11 @@ def determine_editor_actions(grid, selection, key):
         actions = apply_selection_delta(grid, selection, 0, -1)
     elif key == gtk.keysyms.Right:
         actions = apply_selection_delta(grid, selection, 1, 0)
-        change = preferences.prefs[constants.PREF_ARROWS_CHANGE_DIR]
-        if change and selection[2] == "down":
+        if arrows_change_dir and selection[2] == "down":
             actions.append(EditorAction("swapdir", None))
     elif key == gtk.keysyms.Down:
         actions = apply_selection_delta(grid, selection, 0, 1)
-        change = preferences.prefs[constants.PREF_ARROWS_CHANGE_DIR]
-        if change and selection[2] == "across":
+        if arrows_change_dir and selection[2] == "across":
             actions.append(EditorAction("swapdir", None))
     elif key == gtk.keysyms.Delete:
         actions = on_delete(grid, selection)
