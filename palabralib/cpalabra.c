@@ -80,18 +80,14 @@ PyObject *find_matches_i(int index, char *s) {
     return result;
 }
 
-// 1 = ok, 0 = not ok
-int check_intersect(char *word, char **cs, int length, Sptr *results) {
+// fills in is_char_ok with 1 = ok, 0 = not ok
+void check_intersect(char *word, char **cs, int length, Sptr *results, int is_char_ok[MAX_WORD_LENGTH]) {
     int c;
-    for (c = 0; c < length; c++) {
-        if (results[c] == NULL || results[c]->n_matches == 0) {
-            return 0;
-        }
-    }
-    int n_chars = 0;
+    for (c = 0; c < length; c++)
+        if (results[c] == NULL)
+            return;
     for (c = 0; c < length; c++) {
         if (strchr(cs[c], '.') == NULL) {
-            n_chars += 1;
             continue;
         }
         int m;
@@ -99,12 +95,11 @@ int check_intersect(char *word, char **cs, int length, Sptr *results) {
             char m_c = results[c]->chars[m];
             if (m_c == ' ') break;
             if (m_c == *(word + c)) {
-                n_chars += 1;
+                is_char_ok[c] = 1;
                 break;
             }
         }
     }
-    return n_chars == length;
 }
 
 char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int option_nice, int offset) {
@@ -115,7 +110,21 @@ char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int optio
     for (w = 0; w < count; w++) {
         char *word = PyString_AsString(PyList_GetItem(slot->words, w));
         //printf("Considering %s %s\n", word, cs);
-        if (check_constraints(word, cs) && (option_nice ? 1 : check_intersect(word, cs_i, slot->length, results))) {
+        if (check_constraints(word, cs)) {
+            if (!option_nice) {
+                int is_char_ok[MAX_WORD_LENGTH];
+                int j = 0;
+                for (j = 0; j < slot->length; j++) {
+                    is_char_ok[j] = 0;
+                }
+                check_intersect(word, cs_i, slot->length, results, is_char_ok);
+                int n_chars = 0;
+                for (j = 0; j < slot->length; j++) {
+                    if (is_char_ok[j]) n_chars++;
+                }
+                if (n_chars < slot->length)
+                    continue;
+            }
             //printf("checking %s\n", word);
             if (m_count == offset) {
                 return word;

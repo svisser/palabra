@@ -749,3 +749,37 @@ class WordTestCase(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "worda", css)
         self.assertTrue(("worda", True) in result)
         cPalabra.postprocess()
+        
+    def testSearchMultipleListsIntersectionTwo(self):
+        """Intersection boolean in search result can be due to multiple lists."""
+        w1 = CWordList(["steam", "ttttt", "aaaaa"], index=0)
+        w2 = CWordList(["sssss", "eeeee", "mmmmm"], index=1)
+        wordlists = [w1, w2]
+        css = [(0, 5, [(0, 's')])
+            , (0, 5, [(0, 't')])
+            , (0, 5, [(0, 'e')])
+            , (0, 5, [(0, 'a')])
+            , (0, 5, [(0, 'm')])
+        ]
+        result = search_wordlists(wordlists, 5, "steam", css)
+        self.assertTrue(("steam", True) in result)
+        cPalabra.postprocess()
+        
+    def testSearchMultipleListsIntersectionN(self):
+        """Intersection boolean in search result can be due to N lists."""
+        w1 = CWordList(["reach"], index=0)
+        w2 = CWordList(["radar"], index=1)
+        w3 = CWordList(["eager"], index=2)
+        w4 = CWordList(["adapt"], index=3)
+        w5 = CWordList(["cabin"], index=4)
+        w6 = CWordList(["haven"], index=5)
+        wordlists = [w1, w2, w3, w4, w5, w6]
+        css = [(0, 5, [(0, 'r')])
+            , (0, 5, [(0, 'e')])
+            , (0, 5, [(0, 'a')])
+            , (0, 5, [(0, 'c')])
+            , (0, 5, [(0, 'h')])
+        ]
+        result = search_wordlists(wordlists, 5, "reach", css)
+        self.assertTrue(("reach", True) in result)
+        cPalabra.postprocess()

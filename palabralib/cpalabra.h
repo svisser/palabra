@@ -72,7 +72,7 @@ typedef struct Slot {
 Tptr trees[MAX_WORD_LISTS + 1][MAX_WORD_LENGTH];
 
 extern PyObject *find_matches_i(int index, char *s);
-extern int check_intersect(char *word, char **cs, int length, Sptr *results);
+extern void check_intersect(char *word, char **cs, int length, Sptr *results, int is_char_ok[MAX_WORD_LENGTH]);
 extern PyObject* find_matches(PyObject *list, Tptr p, char *s);
 extern char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int option_nice, int offset);
 extern int process_constraints(PyObject* constraints, char *cs);

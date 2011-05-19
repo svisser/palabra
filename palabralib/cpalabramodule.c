@@ -67,11 +67,25 @@ cPalabra_search(PyObject *self, PyObject *args) {
             char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
             int valid = 1;
             if (more_constraints != Py_None) {
+                valid = 0;
+                int is_char_ok[MAX_WORD_LENGTH];
+                int i;
+                for (i = 0; i < length; i++) {
+                    is_char_ok[i] = 0;
+                }
                 Py_ssize_t jj;
                 for (jj = 0; jj < n_indices; jj++) {
                     const int index_j = (int) PyInt_AsLong(PyList_GET_ITEM(indices, jj));
-                    valid = check_intersect(word, cs, length, results[index_j]);
-                    if (valid) break;
+                    check_intersect(word, cs, length, results[index_j], is_char_ok);
+                    int n_chars = 0;
+                    int j;
+                    for (j = 0; j < length; j++) {
+                        if (is_char_ok[j]) n_chars++;
+                    }
+                    if (n_chars == length) {
+                        valid = 1;
+                        break;
+                    }
                 }
             }
             PyObject* py_intersect = PyBool_FromLong(valid);
