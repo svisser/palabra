@@ -217,7 +217,7 @@ Tptr insert1(Tptr p, char *s, char *word, int score)
         p = (Tptr) PyMem_Malloc(sizeof(Tnode));
         p->splitchar = *s;
         p->word = word;
-        p->score = 0;
+        p->score = score;
         p->lokid = NULL;
         p->eqkid = NULL;
         p->hikid = NULL;
