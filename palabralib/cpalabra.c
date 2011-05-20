@@ -12,7 +12,9 @@ PyObject* find_matches(PyObject *list, Tptr p, char *s)
         if (p->splitchar && *s)
             find_matches(list, p->eqkid, s + 1);
     if (*s == 0 && p->splitchar == 0) {
-        PyList_Append(list, PyString_FromString(p->word));
+        PyObject *item = Py_BuildValue("(si)", p->word, p->score);
+        PyList_Append(list, item);
+        Py_DECREF(item);
     }
     if (*s == '.' || *s > p->splitchar)
         find_matches(list, p->hikid, s);
@@ -209,7 +211,7 @@ void print(Tptr p, int indent)
     if (p->hikid != NULL) print(p->hikid, indent + 2);
 }
 
-Tptr insert1(Tptr p, char *s, char *word)
+Tptr insert1(Tptr p, char *s, char *word, int score)
 {
     if (p == NULL) {
         p = (Tptr) PyMem_Malloc(sizeof(Tnode));
@@ -221,12 +223,12 @@ Tptr insert1(Tptr p, char *s, char *word)
         p->hikid = NULL;
     }
     if (*s < p->splitchar)
-        p->lokid = insert1(p->lokid, s, word);
+        p->lokid = insert1(p->lokid, s, word, score);
     else if (*s == p->splitchar) {
         if (*s != 0)
-            p->eqkid = insert1(p->eqkid, ++s, word);
+            p->eqkid = insert1(p->eqkid, ++s, word, score);
     } else
-        p->hikid = insert1(p->hikid, s, word);
+        p->hikid = insert1(p->hikid, s, word, score);
     return p;
 }
 

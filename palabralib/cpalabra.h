@@ -80,7 +80,7 @@ extern int process_constraints(PyObject* constraints, char *cs);
 extern int check_constraints(char *word, char *cs);
 extern int is_intersecting_equal(IntersectingSlot s0, IntersectingSlot s1);
 extern void print(Tptr p, int indent);
-extern Tptr insert1(Tptr p, char *s, char *word);
+extern Tptr insert1(Tptr p, char *s, char *word, int score);
 extern int analyze(int offset, Sptr result, Tptr p, char *s, char *cs);
 extern Sptr analyze_intersect_slot(int offset, char *cs, int index);
 extern void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length, int index);

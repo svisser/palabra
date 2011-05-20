@@ -59,12 +59,16 @@ cPalabra_search(PyObject *self, PyObject *args) {
     Py_ssize_t ii;
     for (ii = 0; ii < n_indices; ii++) {
         const int index = (int) PyInt_AsLong(PyList_GET_ITEM(indices, ii));
-        
         PyObject *mwords = PyList_New(0);
         mwords = find_matches(mwords, trees[index][strlen(cons_str)], cons_str);
         Py_ssize_t m;
         for (m = 0; m < PyList_Size(mwords); m++) {
-            char *word = PyString_AS_STRING(PyList_GET_ITEM(mwords, m));
+            PyObject* m_item = PyList_GET_ITEM(mwords, m);
+            PyObject* word_str;
+            const int score;
+            if (!PyArg_ParseTuple(m_item, "Oi", &word_str, &score))
+                return NULL;
+            char *word = PyString_AS_STRING(word_str);
             int valid = 1;
             if (more_constraints != Py_None) {
                 valid = 0;
@@ -87,7 +91,6 @@ cPalabra_search(PyObject *self, PyObject *args) {
                     }
                 }
             }
-            int score = 0;
             PyObject* item = Py_BuildValue("(sib)", word, score, valid);
             PyList_Append(result, item);
             Py_DECREF(item);
@@ -177,7 +180,7 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
             if (!PyArg_ParseTuple(w_word, "Oi", &w_str, &w_score))
                 return NULL;
             char *c_word = PyString_AsString(w_str);
-            trees[index][m] = insert1(trees[index][m], c_word, c_word);
+            trees[index][m] = insert1(trees[index][m], c_word, c_word, w_score);
         }
     }
     return dict;
