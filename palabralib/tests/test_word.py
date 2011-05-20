@@ -233,23 +233,31 @@ class WordTestCase(unittest.TestCase):
             os.remove(LOC)
             
     def testFileDoesNotExist(self):
+        """Loading a file that does not exist results in an empty word list."""
         clist = CWordList('/does/not/exist/file')
-        self.assertEquals(clist.search(5, [], None), [])
+        for k, words in clist.words.items():
+            self.assertEqual(clist.search(k, []), [])
+            self.assertEqual(words, [])
         cPalabra.postprocess()
         
-    def testReadWordsWithRank(self):
+    def testReadWordsWithScore(self):
+        """Word lists in files can have scores."""
         LOC = "palabralib/tests/test_wordlist.txt"
         with open(LOC, 'w') as f:
             f.write("worda\nwordb,0\nwordc , 100\nwordd, 500, is_wrong")
         clist = CWordList(LOC)
-        words = [w for w, score, b in clist.search(5, [])]
-        self.assertEquals(words, ["worda", "wordb", "wordc"])
+        result = clist.search(5, [])
+        self.assertEqual(len(result), 3)
+        self.assertTrue(("worda", 0, True) in result)
+        self.assertTrue(("wordb", 0, True) in result)
+        self.assertTrue(("wordc", 100, True) in result)
         cPalabra.postprocess()
         
     def testRankedInput(self):
+        """A word can optionally have a score."""
         clist = CWordList(["unranked", ("ranked", 50)])
-        self.assertEquals(len(clist.search(6, [])), 1)
-        self.assertEquals(len(clist.search(8, [])), 1)
+        self.assertEquals(clist.search(6, []), [("ranked", 50, True)])
+        self.assertEquals(clist.search(8, []), [("unranked", 0, True)])
         cPalabra.postprocess()
         
     def testCompoundOne(self):
@@ -919,4 +927,19 @@ class WordTestCase(unittest.TestCase):
         word.rename_wordlists(prefs, wordlists, '/the/missing/path', "The New Word List")
         self.assertTrue(prefs[0]["name"]["value"], "The Word List")
         self.assertTrue(wordlists[0].name, "The Word List")
+        cPalabra.postprocess()
+        
+    def testSearchWordlistsScore(self):
+        """Words are stored with a score."""
+        w1 = CWordList(["aaaaa", ("bbbbb", 5)])
+        result = search_wordlists([w1], 5, ".....")
+        self.assertTrue(("aaaaa", 0, True) in result)
+        self.assertTrue(("bbbbb", 5, True) in result)
+        cPalabra.postprocess()
+        
+    def testSearchWordListsDefaultScore(self):
+        """CWordLists can be created with a default score other than zero."""
+        w1 = CWordList(["aaaaa"], score=77)
+        result = search_wordlists([w1], 5, ".....")
+        self.assertTrue(("aaaaa", 77, True) in result)
         cPalabra.postprocess()

@@ -87,7 +87,7 @@ def similar_entries(results):
         result[s] = [(x, y, d, word.lower(), word.find(s)) for x, y, d, word in words]
     return result
 
-def read_wordlist(path):
+def read_wordlist(path, default_score):
     """Yield all words found in the specified file."""
     if not os.path.exists(path):
         return []
@@ -106,7 +106,7 @@ def read_wordlist(path):
             if not line or l_line > 2:
                 continue
             if l_line == 1:
-                word, score = line[0], 0
+                word, score = line[0], default_score
             elif l_line == 2:
                 word, score = line
             word = word.strip()
@@ -335,14 +335,14 @@ def analyze_words(grid, g_words, g_cs, g_lengths, words):
     return result
 
 class CWordList:
-    def __init__(self, content, index=0, name=None):
+    def __init__(self, content, index=0, name=None, score=0):
         """Accepts either a filepath or a list of words, possibly with ranks."""
         if isinstance(content, str):
-            words = list(read_wordlist(content))
+            words = list(read_wordlist(content, score))
             self.path = content
         else:
             self.path = None
-            words = [(w if isinstance(w, tuple) else (w, 0)) for w in content]
+            words = [(w if isinstance(w, tuple) else (w, score)) for w in content]
             # for now, reject compound
             words = [item for item in words if " " not in item[0]]
             # reject all non-alphabet chars
