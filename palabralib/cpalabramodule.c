@@ -87,9 +87,8 @@ cPalabra_search(PyObject *self, PyObject *args) {
                     }
                 }
             }
-            PyObject* py_intersect = PyBool_FromLong(valid);
-            PyObject* item = Py_BuildValue("(sO)", word, py_intersect);
-            Py_DECREF(py_intersect);
+            int score = 0;
+            PyObject* item = Py_BuildValue("(sib)", word, score, valid);
             PyList_Append(result, item);
             Py_DECREF(item);
         }
@@ -178,9 +177,7 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
             if (!PyArg_ParseTuple(w_word, "Oi", &w_str, &w_score))
                 return NULL;
             char *c_word = PyString_AsString(w_str);
-            printf("Processing %s\n", c_word);
             trees[index][m] = insert1(trees[index][m], c_word, c_word);
-            printf("Do we get?\n");
         }
     }
     return dict;

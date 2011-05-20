@@ -82,7 +82,7 @@ class WordTestCase(unittest.TestCase):
         for w in clist.search(5, [(0, "a")]):
             self.assertEquals(w[0], "azure")
         rs = clist.search(5, [(0, "r")])
-        rss = [w for w, x in rs]
+        rss = [w for w, score, b in rs]
         self.assertEquals("reach" in rss, True)
         self.assertEquals("roast" in rss, True)
         for w in clist.search(5, [(0, "o")]):
@@ -110,18 +110,18 @@ class WordTestCase(unittest.TestCase):
     
     def testBasic(self):
         self.basic = CWordList(["koala", "kangaroo", "aardvark", "loophole", "outgoing"])
-        self.assertEquals(self.basic.search(5, [], None), [("koala", True)])
+        self.assertEquals(self.basic.search(5, [], None), [("koala", 0, True)])
         self.assertEquals(self.basic.search(6, [], None), [])
         css_eight = [(0, 8, []), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
         css_seven = [(0, 7, []), (0, 7, []), (0, 7, []), (0, 7, []), (0, 7, [])]
         css_eight_t = [(0, 8, [(7, 'o')]), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
         css_eight_f = [(0, 8, [(7, 'p')]), (0, 8, []), (0, 8, []), (0, 8, []), (0, 8, [])]
-        self.assertEquals(self.basic.search(5, [], css_eight), [("koala", True)])
-        self.assertEquals(self.basic.search(5, [], css_seven), [("koala", False)])
-        self.assertEquals(self.basic.search(5, [(4, 'a')], css_eight), [("koala", True)])
-        self.assertEquals(self.basic.search(5, [(4, 'a')], css_seven), [("koala", False)])
-        self.assertEquals(self.basic.search(5, [(4, 'a')], css_eight_t), [("koala", True)])
-        self.assertEquals(self.basic.search(5, [(4, 'a')], css_eight_f), [("koala", False)])
+        self.assertEquals(self.basic.search(5, [], css_eight), [("koala", 0, True)])
+        self.assertEquals(self.basic.search(5, [], css_seven), [("koala", 0, False)])
+        self.assertEquals(self.basic.search(5, [(4, 'a')], css_eight), [("koala", 0, True)])
+        self.assertEquals(self.basic.search(5, [(4, 'a')], css_seven), [("koala", 0, False)])
+        self.assertEquals(self.basic.search(5, [(4, 'a')], css_eight_t), [("koala", 0, True)])
+        self.assertEquals(self.basic.search(5, [(4, 'a')], css_eight_f), [("koala", 0, False)])
         cPalabra.postprocess()
         
     def testIntersecting(self):
@@ -129,39 +129,39 @@ class WordTestCase(unittest.TestCase):
         
         # 4 chars, starts with 'a', 4 chars at all intersections
         css = [(0, 4, []), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(0, 'a')], css), [("aaaa", True), ("abbb", True)])
+        self.assertEquals(clist.search(4, [(0, 'a')], css), [("aaaa", 0, True), ("abbb", 0, True)])
 
         # 4 chars, starts with 'a', 4 chars at intersection 0 that ends with 'b'
         css = [(0, 4, [(3, 'b')]), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(0, 'a')], css), [("aaaa", True), ("abbb", True)])
+        self.assertEquals(clist.search(4, [(0, 'a')], css), [("aaaa", 0, True), ("abbb", 0, True)])
         
         # 4 chars, starts with 'b', 4 chars at all intersections
         css = [(0, 4, []), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(0, 'b')], css), [("bbbb", True)])
+        self.assertEquals(clist.search(4, [(0, 'b')], css), [("bbbb", 0, True)])
         
         # 4 chars, starts with 'a', 4 chars at intersection 0 that starts with 'ab'
         css = [(0, 4, [(0, 'a'), (1, 'b')]), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(0, 'a')], css), [("aaaa", True), ("abbb", True)])
+        self.assertEquals(clist.search(4, [(0, 'a')], css), [("aaaa", 0, True), ("abbb", 0, True)])
         
         # 4 chars, starts with 'b', 4 chars at intersection 0 that starts with 'aba'
         css = [(0, 4, [(0, 'a'), (1, 'b'), (2, 'a')]), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(0, 'b')], css), [("bbbb", False)])
+        self.assertEquals(clist.search(4, [(0, 'b')], css), [("bbbb", 0, False)])
         
         # 4 chars, starts with 'b', 4 chars at intersection 0 that ends with 'a'
         css = [(0, 4, [(3, 'a')]), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(0, 'b')], css), [("bbbb", False)])
+        self.assertEquals(clist.search(4, [(0, 'b')], css), [("bbbb", 0, False)])
         
         # 4 chars, ends with 'b', 4 chars at intersection 0 that ends with 'a'
         css = [(0, 4, [(3, 'a')]), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [(3, 'b')], css), [("abbb", True), ("bbbb", False)])
+        self.assertEquals(clist.search(4, [(3, 'b')], css), [("abbb", 0, True), ("bbbb", 0, False)])
         
         # 4 chars, 5 chars at intersection 0
         css = [(0, 5, []), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [], css), [("aaaa", False), ("abbb", False), ("bbbb", False)])
+        self.assertEquals(clist.search(4, [], css), [("aaaa", 0, False), ("abbb", 0, False), ("bbbb", 0, False)])
         
         # 4 chars, 4 chars at intersection 0 that ends with 'c'
         css = [(0, 4, [(3, 'c')]), (0, 4, []), (0, 4, []), (0, 4, [])]
-        self.assertEquals(clist.search(4, [], css), [("aaaa", False), ("abbb", False), ("bbbb", False)])
+        self.assertEquals(clist.search(4, [], css), [("aaaa", 0, False), ("abbb", 0, False), ("bbbb", 0, False)])
 
         # 3 chars, no further constraints
         self.assertEquals(clist.search(3, [], None), [])
@@ -192,7 +192,7 @@ class WordTestCase(unittest.TestCase):
         for l, words in clist.words.items():
             pre_list = clist.words[l]
             pre_count = len(pre_list)
-            post_list = [a for a, b in clist.search(l, [], None)]
+            post_list = [w for w, score, b in clist.search(l, [], None)]
             post_count = len(post_list)
             self.assertEquals(pre_count, post_count)
             pre_list.sort()
@@ -242,7 +242,7 @@ class WordTestCase(unittest.TestCase):
         with open(LOC, 'w') as f:
             f.write("worda\nwordb,0\nwordc , 100\nwordd, 500, is_wrong")
         clist = CWordList(LOC)
-        words = [w for w, b in clist.search(5, [])]
+        words = [w for w, score, b in clist.search(5, [])]
         self.assertEquals(words, ["worda", "wordb", "wordc"])
         cPalabra.postprocess()
         
@@ -382,9 +382,9 @@ class WordTestCase(unittest.TestCase):
         wordlists = create_wordlists([p1, p2])
         result = search_wordlists(wordlists, 4, "....")
         self.assertEqual(len(result), 3)
-        self.assertTrue(("fish", True) in result)
-        self.assertTrue(("bear", True) in result)
-        self.assertTrue(("lion", True) in result)
+        self.assertTrue(("fish", 0, True) in result)
+        self.assertTrue(("bear", 0, True) in result)
+        self.assertTrue(("lion", 0, True) in result)
         os.remove(PATH1)
         os.remove(PATH2)
         
@@ -392,11 +392,11 @@ class WordTestCase(unittest.TestCase):
         w1 = CWordList(["worda"], index=0)
         w2 = CWordList(["wordb"], index=1)
         wordlists = [w1, w2]
-        words = [w for w, b in search_wordlists(wordlists, 5, ".....")]
+        words = [w for w, score, b in search_wordlists(wordlists, 5, ".....")]
         self.assertEquals(["worda", "wordb"], words)
-        words = [w for w, b in search_wordlists([w1], 5, ".....")]
+        words = [w for w, score, b in search_wordlists([w1], 5, ".....")]
         self.assertEquals(["worda"], words)
-        words = [w for w, b in search_wordlists([w2], 5, ".....")]
+        words = [w for w, score, b in search_wordlists([w2], 5, ".....")]
         self.assertEquals(["wordb"], words)
         cPalabra.postprocess()
         
@@ -808,7 +808,7 @@ class WordTestCase(unittest.TestCase):
             , (0, 5, [(0, 'a')])
         ]
         result = search_wordlists(wordlists, 5, "worda", css)
-        self.assertTrue(("worda", True) in result)
+        self.assertTrue(("worda", 0, True) in result)
         cPalabra.postprocess()
         
     def testSearchMultipleListsIntersectionTwo(self):
@@ -823,7 +823,7 @@ class WordTestCase(unittest.TestCase):
             , (0, 5, [(0, 'm')])
         ]
         result = search_wordlists(wordlists, 5, "steam", css)
-        self.assertTrue(("steam", True) in result)
+        self.assertTrue(("steam", 0, True) in result)
         cPalabra.postprocess()
         
     def testSearchMultipleListsIntersectionN(self):
@@ -843,7 +843,7 @@ class WordTestCase(unittest.TestCase):
             , (0, 5, [(0, 'h')])
         ]
         result = search_wordlists(wordlists, 5, "reach", css)
-        self.assertTrue(("reach", True) in result)
+        self.assertTrue(("reach", 0, True) in result)
         css = [(0, 5, [(0, 'r')])
             , (0, 5, [(0, 'e')])
             , (0, 5, [(0, 'a')])
@@ -851,7 +851,7 @@ class WordTestCase(unittest.TestCase):
             , (0, 5, [(0, 'm')])
         ]
         result = search_wordlists(wordlists, 5, "realm", css)
-        self.assertTrue(("realm", False) in result)
+        self.assertTrue(("realm", 0, False) in result)
         cPalabra.postprocess()
         
     def testSearchIntersectionCountMultipleTimes(self):
@@ -867,7 +867,7 @@ class WordTestCase(unittest.TestCase):
             , (0, 5, [])
         ]
         result = search_wordlists(wordlists, 5, "ab...", css)
-        self.assertTrue(("abaaa", True) in result)
+        self.assertTrue(("abaaa", 0, True) in result)
         cPalabra.postprocess()
         
     def testCWordListIndex(self):
@@ -877,14 +877,14 @@ class WordTestCase(unittest.TestCase):
         # now w1 works the same as w2
         self.assertEquals(search_wordlists([w1], 5, "aaaaa"), [])
         self.assertEquals(search_wordlists([w2], 5, "aaaaa"), [])
-        self.assertEquals(search_wordlists([w1], 5, "bbbbb"), [("bbbbb", True)])
-        self.assertEquals(search_wordlists([w2], 5, "bbbbb"), [("bbbbb", True)])
+        self.assertEquals(search_wordlists([w1], 5, "bbbbb"), [("bbbbb", 0, True)])
+        self.assertEquals(search_wordlists([w2], 5, "bbbbb"), [("bbbbb", 0, True)])
         cPalabra.postprocess()
         
     def testCWordListIndexArbitrary(self):
         """A CWordList can be created with an arbitrary index (< MAX_WORD_LISTS)."""
         w1 = CWordList(["abcde"], index=33)
-        self.assertEquals(search_wordlists([w1], 5, "abcde"), [("abcde", True)])
+        self.assertEquals(search_wordlists([w1], 5, "abcde"), [("abcde", 0, True)])
         cPalabra.postprocess()
         
     def testCWordListIndexArbitraryCSS(self):
@@ -896,7 +896,7 @@ class WordTestCase(unittest.TestCase):
             , (0, 5, [(0, 'd')])
             , (0, 5, [(0, 'e')])
         ]
-        self.assertEqual(search_wordlists([w1], 5, "abcde", css), [("abcde", True)])
+        self.assertEqual(search_wordlists([w1], 5, "abcde", css), [("abcde", 0, True)])
         cPalabra.postprocess()
         
     def testRenameWordlists(self):

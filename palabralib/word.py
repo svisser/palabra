@@ -359,6 +359,8 @@ class CWordList:
                 return True
             words = [item for item in words if is_ok(item[0])]
         self.words = cPalabra.preprocess(words, index)
+        # keys of self.words = lengths
+        # values = list of words of that length with (word, score)
         self.index = index
         self.name = name
         

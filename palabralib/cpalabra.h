@@ -24,6 +24,7 @@ typedef struct tnode *Tptr;
 typedef struct tnode {
     char splitchar;
     char *word;
+    int score;
     Tptr lokid, eqkid, hikid;
 } Tnode;
 
@@ -61,7 +62,7 @@ typedef struct Slot {
     int y;
     int dir; // 0 = across, 1 = down
     int length;
-    int count;
+    int count; // number of possible words for this slot
     int done; // {0, 1}
     Py_ssize_t offset;
     PyObject *words;
