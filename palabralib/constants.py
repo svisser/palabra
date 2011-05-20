@@ -57,6 +57,9 @@ FILL_OPTION_NICE = "nice"
 FILL_OPTION_DUPLICATE = "duplicate"
 FILL_NICE_COUNT = "nice_count"
 
+# search options, also in .c (search function)
+SEARCH_OPTION_MIN_SCORE = "min_score"
+
 # puzzle types
 PUZZLE_PALABRA = 'palabra'
 # http://www.xwordinfo.com/XPF/

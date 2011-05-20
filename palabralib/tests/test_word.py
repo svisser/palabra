@@ -20,6 +20,7 @@ import string
 import unittest
 
 import palabralib.cPalabra as cPalabra
+import palabralib.constants as constants
 from palabralib.constants import (
     MAX_WORD_LISTS,
     MAX_WORD_LENGTH,
@@ -977,4 +978,24 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue(("foobar", -100) in w1.words[6])
         result = search_wordlists([w1], 6, "......")
         self.assertTrue(("foobar", -100, True) in result)
+        cPalabra.postprocess()
+        
+    def testSearchOptionsMinScore(self):
+        """A minimum score can be specified for word search."""
+        options = {constants.SEARCH_OPTION_MIN_SCORE: 5}
+        w1 = CWordList([("car", 0), ("plane", 50), ("hovercraft", 100)])
+        result = search_wordlists([w1], 3, "...", options=None)
+        self.assertEqual(result, [("car", 0, True)])
+        result = search_wordlists([w1], 3, "...", options=options)
+        self.assertEqual(result, [])
+        cPalabra.postprocess()
+        
+    def testSearchOptionsScoreEqualToMinScore(self):
+        """A word that is equal to the minimum word score will be included."""
+        options = {constants.SEARCH_OPTION_MIN_SCORE: 50}
+        w1 = CWordList([("foo", 0), ("bar", 50), ("baz", 100)])
+        result = search_wordlists([w1], 3, "...", options=options)
+        self.assertEqual(len(result), 2)
+        self.assertTrue(("bar", 50, True) in result)
+        self.assertTrue(("baz", 100, True) in result)
         cPalabra.postprocess()

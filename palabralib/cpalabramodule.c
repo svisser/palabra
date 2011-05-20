@@ -25,12 +25,19 @@ cPalabra_search(PyObject *self, PyObject *args) {
     PyObject *constraints;
     PyObject *more_constraints;
     PyObject *indices;
-    if (!PyArg_ParseTuple(args, "iOOO", &length, &constraints, &more_constraints, &indices))
+    PyObject *options;
+    if (!PyArg_ParseTuple(args, "iOOOO", &length, &constraints, &more_constraints, &indices, &options))
         return NULL;
     if (length <= 0 || length >= MAX_WORD_LENGTH)
         return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
     const Py_ssize_t n_indices = PyList_Size(indices);
+    
+    const int HAS_OPTIONS = options != Py_None;
+    int OPTION_MIN_SCORE = 0;
+    if (HAS_OPTIONS) {
+        OPTION_MIN_SCORE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("min_score")));
+    }
 
     // each of the constraints
     int offsets[length];
@@ -68,6 +75,8 @@ cPalabra_search(PyObject *self, PyObject *args) {
             const int score;
             if (!PyArg_ParseTuple(m_item, "Oi", &word_str, &score))
                 return NULL;
+            if (HAS_OPTIONS && score < OPTION_MIN_SCORE)
+                continue;
             char *word = PyString_AS_STRING(word_str);
             int valid = 1;
             if (more_constraints != Py_None) {

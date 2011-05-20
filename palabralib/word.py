@@ -287,7 +287,7 @@ def rename_wordlists(prefs, wordlists, path, name):
             if wlist.path == p["path"]["value"]:
                 wlist.name = p["name"]["value"]
 
-def search_wordlists(wordlists, length, constraints, more=None, sort=True):
+def search_wordlists(wordlists, length, constraints, more=None, sort=True, options=None):
     """
     Search the specified wordlists for words that match
     the constraints and the given length.
@@ -304,7 +304,7 @@ def search_wordlists(wordlists, length, constraints, more=None, sort=True):
     if more is not None and isinstance(more, list):
         more = css_to_strs(more)
     indices = [wlist.index for wlist in wordlists]
-    result = cPalabra.search(length, constraints, more, indices)
+    result = cPalabra.search(length, constraints, more, indices, options)
     if sort and len(indices) > 1:
         result.sort(key=itemgetter(0))
     return result
@@ -381,7 +381,7 @@ class CWordList:
             result.extend([item for item in words if prog.match(item[0])])
         return result
         
-    def search(self, length, constraints, more=None):
+    def search(self, length, constraints, more=None, options=None):
         """
         Search for words that match the given criteria.
         
@@ -401,4 +401,4 @@ class CWordList:
         
         Words are returned in alphabetical order.
         """
-        return search_wordlists([self], length, constraints, more)
+        return search_wordlists([self], length, constraints, more, options)
