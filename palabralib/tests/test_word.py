@@ -943,3 +943,36 @@ class WordTestCase(unittest.TestCase):
         result = search_wordlists([w1], 5, ".....")
         self.assertTrue(("aaaaa", 77, True) in result)
         cPalabra.postprocess()
+        
+    def testSearchScores(self):
+        """CWordLists can have the same word with different scores."""
+        w1 = CWordList([("aaaaa", 0), ("aaaaa", 5), ("aaaaa", 10)])
+        result = search_wordlists([w1], 5, ".....")
+        self.assertTrue(("aaaaa", 0, True) in result)
+        self.assertTrue(("aaaaa", 5, True) in result)
+        self.assertTrue(("aaaaa", 10, True) in result)
+        cPalabra.postprocess()
+    
+    def testSearchDuplicate(self):
+        """When inserting a word twice then data structures and search have same length."""
+        w1 = CWordList(["abcd", "abcd"])
+        result = search_wordlists([w1], 4, "....")
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(w1.words[4]), 2)
+        cPalabra.postprocess()
+        
+    def testSearchDuplicateSameScores(self):
+        """It is possible to insert the same (word, score) more than once."""
+        w1 = CWordList([("foobar", 30), ("foobar", 30), ("foobar", 30)])
+        result = search_wordlists([w1], 6, "......")
+        self.assertEqual(result, [("foobar", 30, True)] * 3)
+        cPalabra.postprocess()
+        
+    def testNegativeWordScores(self):
+        """Words can have negative scores."""
+        w1 = CWordList([("word", -1), ("foobar", -100)])
+        self.assertTrue(("word", -1) in w1.words[4])
+        self.assertTrue(("foobar", -100) in w1.words[6])
+        result = search_wordlists([w1], 6, "......")
+        self.assertTrue(("foobar", -100, True) in result)
+        cPalabra.postprocess()

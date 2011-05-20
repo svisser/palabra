@@ -15,6 +15,10 @@ PyObject* find_matches(PyObject *list, Tptr p, char *s)
         PyObject *item = Py_BuildValue("(si)", p->word, p->score);
         PyList_Append(list, item);
         Py_DECREF(item);
+        // continue recursion as we may have more words
+        if (p->eqkid != NULL) {
+            find_matches(list, p->eqkid, s);
+        }
     }
     if (*s == '.' || *s > p->splitchar)
         find_matches(list, p->hikid, s);
@@ -221,6 +225,9 @@ Tptr insert1(Tptr p, char *s, char *word, int score)
         p->lokid = NULL;
         p->eqkid = NULL;
         p->hikid = NULL;
+    } else if (*s == 0 && p != NULL) {
+        // if we are inserting the same word more than once, continue recursion
+        p->eqkid = insert1(p->eqkid, s, word, score);
     }
     if (*s < p->splitchar)
         p->lokid = insert1(p->lokid, s, word, score);
