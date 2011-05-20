@@ -197,7 +197,7 @@ class WordTestCase(unittest.TestCase):
             self.assertEquals(pre_count, post_count)
             pre_list.sort()
             post_list.sort()
-            self.assertEquals(pre_list, post_list)
+            self.assertEquals([w for w, score in pre_list], post_list)
         cPalabra.postprocess()
         
     def testScale(self):

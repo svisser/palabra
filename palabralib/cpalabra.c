@@ -393,7 +393,12 @@ int count_words(PyObject *words, int length, char *cs) {
     PyObject* key = Py_BuildValue("i", length);
     PyObject* words_m = PyDict_GetItem(words, key);
     for (w = 0; w < PyList_Size(words_m); w++) {
-        char *word = PyString_AsString(PyList_GetItem(words_m, w));
+        PyObject* word_obj = PyList_GET_ITEM(words_m, w);
+        PyObject* word_str;
+        const int word_score;
+        if (!PyArg_ParseTuple(word_obj, "Oi", &word_str, &word_score))
+            return -1;
+        char *word = PyString_AsString(word_str);
         if (!check_constraints(word, cs)) {
             continue;
         }

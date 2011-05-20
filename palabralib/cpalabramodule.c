@@ -128,7 +128,10 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "Oi", &words, &index))
         return NULL;
     
-    // create dict (keys are word lengths, each item is a list with words of that length)
+    // create dict
+    // keys = word lengths
+    // values = list with words of that length
+    // each item has (word, score)
     PyObject* dict = PyDict_New();
     PyObject* keys[MAX_WORD_LENGTH];
     int l;
@@ -143,15 +146,15 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     for (w = 0; w < PyList_Size(words); w++) {
         PyObject* word = PyList_GET_ITEM(words, w);
         PyObject* word_str;
-        const int word_rank;
-        if (!PyArg_ParseTuple(word, "Oi", &word_str, &word_rank))
+        const int word_score;
+        if (!PyArg_ParseTuple(word, "Oi", &word_str, &word_score))
             return NULL;
         int length = (int) PyString_GET_SIZE(word_str);
         if (length <= 0 || length >= MAX_WORD_LENGTH)
             continue;
         PyObject* key = keys[length];
         // PyDict_GetItem eats ref
-        PyList_Append(PyDict_GetItem(dict, key), word_str);
+        PyList_Append(PyDict_GetItem(dict, key), word);
     }
 
     // build ternary search trees per word length
@@ -169,8 +172,15 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
         const Py_ssize_t len_m = PyList_Size(words);
         Py_ssize_t w;
         for (w = 0; w < len_m; w++) {
-            char *word = PyString_AsString(PyList_GET_ITEM(words, w));
-            trees[index][m] = insert1(trees[index][m], word, word);
+            PyObject *w_word = PyList_GET_ITEM(words, w);
+            PyObject* w_str;
+            const int w_score;
+            if (!PyArg_ParseTuple(w_word, "Oi", &w_str, &w_score))
+                return NULL;
+            char *c_word = PyString_AsString(w_str);
+            printf("Processing %s\n", c_word);
+            trees[index][m] = insert1(trees[index][m], c_word, c_word);
+            printf("Do we get?\n");
         }
     }
     return dict;
@@ -957,8 +967,12 @@ cPalabra_compute_counts(PyObject *self, PyObject *args) {
         PyObject *l_words = PyDict_GetItem(words, key);
         Py_ssize_t w;
         for (w = 0; w < PyList_Size(l_words); w++) {
-            PyObject *item = PyList_GetItem(l_words, w);
-            char *word = PyString_AsString(item);
+            PyObject* item = PyList_GET_ITEM(l_words, w);
+            PyObject* word_str;
+            const int word_score;
+            if (!PyArg_ParseTuple(item, "Oi", &word_str, &word_score))
+                return NULL;
+            char *word = PyString_AsString(word_str);
             int i;
             for (i = 0; i < strlen(word); i++) {
                 char c = *(word + i);

@@ -106,9 +106,9 @@ def read_wordlist(path):
             if not line or l_line > 2:
                 continue
             if l_line == 1:
-                word = line[0]
+                word, score = line[0], 0
             elif l_line == 2:
-                word, r = line
+                word, score = line
             word = word.strip()
             if " " in word:
                 continue # for now, reject compound
@@ -123,7 +123,7 @@ def read_wordlist(path):
                     or ord_a <= ord_c <= ord_z):
                     break
             else:
-                words.add(lower(word))
+                words.add((lower(word), int(score)))
     return words
     
 def check_accidental_words(wordlists, grid):
@@ -330,7 +330,7 @@ def analyze_words(grid, g_words, g_cs, g_lengths, words):
             counts[l][i] = sorted(counts[l][i].items(), key=itemgetter(1), reverse=True)
     result = {}
     for n, x, y, d in g_words:
-        data = cPalabra.compute_distances(words[g_lengths[x, y, d]], cs, counts, (x, y, d))
+        data = cPalabra.compute_distances([w for w, score in words[g_lengths[x, y, d]]], cs, counts, (x, y, d))
         result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
     return result
 
@@ -338,7 +338,7 @@ class CWordList:
     def __init__(self, content, index=0, name=None):
         """Accepts either a filepath or a list of words, possibly with ranks."""
         if isinstance(content, str):
-            words = [(w, 0) for w in list(read_wordlist(content))]
+            words = list(read_wordlist(content))
             self.path = content
         else:
             self.path = None
@@ -376,7 +376,7 @@ class CWordList:
         prog = re.compile(pattern + "$")
         result = []
         for l, words in self.words.items():
-            result.extend([w for w in words if prog.match(w)])
+            result.extend([w for w, score in words if prog.match(w)])
         return result
         
     def search(self, length, constraints, more=None):

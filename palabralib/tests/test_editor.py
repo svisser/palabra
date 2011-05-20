@@ -381,7 +381,7 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(len(cs), 5)
         self.assertEquals(len(more), 5)
         
-    def testAttempFill(self):
+    def testAttemptFill(self):
         g = Grid(5, 5)
         g2 = editor.attempt_fill(g, ["koala"])
         self.assertEquals(g2.count_chars(include_blanks=False), 5)
@@ -390,13 +390,13 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(g2.count_chars(include_blanks=False), 10)
         cPalabra.postprocess()
         
-    def testAttempFillTwo(self):
+    def testAttemptFillTwo(self):
         g = Grid(5, 5)
         g2 = editor.attempt_fill(g, ["doesnotfit"])
         self.assertEquals(g, g2)
         cPalabra.postprocess()
         
-    def testAttempFillIntersect(self):
+    def testAttemptFillIntersect(self):
         g = Grid(3, 3)
         g.set_block(1, 1, True)
         g.set_block(2, 2, True)
