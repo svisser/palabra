@@ -353,11 +353,11 @@ class WordListEditor(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Manage word lists"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
-        self.set_size_request(640, 480)
         
         # name path
         self.store = gtk.ListStore(str, str)
         self.display_wordlists()
+        self.current_wlist = None
         
         self.tree = gtk.TreeView(self.store)
         self.tree.get_selection().connect("changed", self.on_selection_changed)
@@ -367,7 +367,7 @@ class WordListEditor(gtk.Dialog):
         column.set_attributes(cell, text=0)
         self.tree.append_column(column)
         cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Word list")
+        column = gtk.TreeViewColumn(u"Path")
         column.pack_start(cell, True)
         column.set_attributes(cell, text=1)
         self.tree.append_column(column)
@@ -387,10 +387,84 @@ class WordListEditor(gtk.Dialog):
         self.remove_button.connect("clicked", lambda button: self.remove_word_list())
         self.remove_button.set_sensitive(False)
         
-        main = gtk.VBox(False, 0)
+        main = gtk.HBox(False, 0)
         main.set_spacing(18)
-        main.pack_start(self.tree, True, True, 0)
-        main.pack_start(buttonbox, False, False, 0)
+        
+        wlist_vbox = gtk.VBox(False, 0)
+        wlist_vbox.set_spacing(6)
+        label = gtk.Label()
+        label.set_markup("<b>Word lists</b>")
+        label.set_alignment(0, 0)
+        wlist_vbox.pack_start(label, False, False, 0)
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add(self.tree)
+        scrolled_window.set_size_request(300, -1)
+        wlist_vbox.pack_start(scrolled_window, True, True, 0)
+        wlist_vbox.pack_start(buttonbox, False, False, 0)
+        main.pack_start(wlist_vbox, False, False, 0)
+        
+        table = gtk.Table(3, 2)
+        table.set_col_spacings(6)
+        table.set_row_spacings(6)
+        table.set_row_spacing(0, 18)
+        label = gtk.Label()
+        label.set_markup("<b>Properties of selected word list</b>")
+        label.set_alignment(0, 0)
+        table.attach(label, 0, 2, 0, 1, gtk.FILL, gtk.FILL)        
+        
+        label = gtk.Label("Number of words:")
+        label.set_alignment(0, 0)
+        table.attach(label, 0, 1, 1, 2)
+        self.n_words_label = gtk.Label("0")
+        self.n_words_label.set_alignment(1, 0)
+        table.attach(self.n_words_label, 1, 2, 1, 2, gtk.FILL, gtk.FILL)
+        
+        label = gtk.Label("Average word length:")
+        label.set_alignment(0, 0)
+        table.attach(label, 0, 1, 2, 3)
+        self.avg_word_label = gtk.Label("0")
+        self.avg_word_label.set_alignment(1, 0)
+        table.attach(self.avg_word_label, 1, 2, 2, 3, gtk.FILL, gtk.FILL)
+        
+        self.counts_store = gtk.ListStore(int, int)
+        tree = gtk.TreeView(self.counts_store)
+        cell = gtk.CellRendererText()
+        self.title_column = gtk.TreeViewColumn(u"Length", cell, text=0)
+        tree.append_column(self.title_column)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(u"Count", cell, text=1)
+        tree.append_column(column)
+        tree.get_selection().set_mode(gtk.SELECTION_NONE)
+        
+        scrolled_window = gtk.ScrolledWindow()
+        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scrolled_window.add(tree)
+        scrolled_window.set_size_request(300, 300)
+        
+        props_vbox = gtk.VBox(False, 0)
+        props_vbox.set_spacing(6)
+        props_vbox.pack_start(table)
+        props_vbox.pack_start(scrolled_window)
+        
+        show_hbox = gtk.HBox()
+        label = gtk.Label(u"Show words by:")
+        label.set_alignment(0, 0.5)
+        show_hbox.pack_start(label)
+        self.show_index = 0
+        self.show_combo = gtk.combo_box_new_text()
+        self.show_combo.append_text("Length")
+        self.show_combo.append_text("Score")
+        self.show_combo.set_active(self.show_index)
+        show_hbox.pack_start(self.show_combo)
+        props_vbox.pack_start(show_hbox)
+        def _combo_callback(combo):
+            self.show_index =combo.get_active()
+            self.on_show_counts_changed(self.show_index)
+        self.show_combo.connect("changed", _combo_callback)
+        self.show_combo.set_sensitive(False)
+        
+        main.pack_start(props_vbox, True, True, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
@@ -399,6 +473,14 @@ class WordListEditor(gtk.Dialog):
         
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.vbox.add(hbox)
+        
+    def on_show_counts_changed(self, index):
+        if index == 0:
+            self.title_column.set_title(u"Length")
+            self.load_word_counts(self.current_wlist.words, length=True)
+        elif index == 1:
+            self.title_column.set_title(u"Score")
+            self.load_word_counts(self.current_wlist.words, score=True)
         
     def add_word_list(self):
         dialog = gtk.FileChooserDialog(u"Add word list"
@@ -439,6 +521,34 @@ class WordListEditor(gtk.Dialog):
         store, it = selection.get_selected()
         self.remove_button.set_sensitive(it is not None)
         self.rename_button.set_sensitive(it is not None)
+        self.show_combo.set_sensitive(it is not None)
+        if it is not None:
+            path = store[it][1]
+            for wlist in self.palabra_window.wordlists:
+                if wlist.path == path:
+                    self.current_wlist = wlist
+                    self.on_show_counts_changed(self.show_index)
+
+    def load_word_counts(self, words, length=False, score=False):
+        total_n_words = sum([len(words[i]) for i in words.keys()])
+        self.n_words_label.set_text(str(total_n_words))
+        if length:    
+            counts = []
+            self.counts_store.clear()
+            for k, words in words.items():
+                n_words = len(words)
+                if k < 2 or n_words == 0:
+                    continue
+                counts.append((k, n_words))
+                self.counts_store.append([k, n_words])
+            total = 0.0
+            for l, count in counts:
+                total += (l * count)
+            total /= total_n_words
+            self.avg_word_label.set_text("%.2f" % total)
+        elif score:
+            self.counts_store.clear()
+            self.counts_store.append([0, 1000])
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
@@ -451,6 +561,7 @@ class WordListEditor(gtk.Dialog):
                 , self.palabra_window.wordlists
                 , path, d.wlist_name)
             self.store[it][0] = d.wlist_name
+            self.tree.columns_autosize()
         d.destroy()
         
     def remove_word_list(self):
