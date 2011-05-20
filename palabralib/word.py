@@ -317,7 +317,7 @@ def search_wordlists_by_pattern(wordlists, pattern):
     result = []
     for wlist in wordlists:
         name = wlist.name if wlist.name is not None else wlist.path
-        result.extend([(name, w) for w in wlist.find_by_pattern(pattern)])
+        result.extend([(name, w, score) for w, score in wlist.find_by_pattern(pattern)])
     return result
     
 def analyze_words(grid, g_words, g_cs, g_lengths, words):
@@ -378,7 +378,7 @@ class CWordList:
         prog = re.compile(pattern + "$")
         result = []
         for l, words in self.words.items():
-            result.extend([w for w, score in words if prog.match(w)])
+            result.extend([item for item in words if prog.match(item[0])])
         return result
         
     def search(self, length, constraints, more=None):

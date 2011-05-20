@@ -189,7 +189,8 @@ class FindWordsDialog(PalabraDialog):
         entry = gtk.Entry()
         entry.connect("changed", self.on_entry_changed)
         self.main.pack_start(entry, False, False, 0)
-        self.store = gtk.ListStore(str, str)
+        # word path score
+        self.store = gtk.ListStore(str, str, int)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Word", cell, markup=0)
@@ -198,6 +199,9 @@ class FindWordsDialog(PalabraDialog):
         self.tree.append_column(column)
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Wordlist", cell, markup=1)
+        self.tree.append_column(column)
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn("Score", cell, text=2)
         self.tree.append_column(column)
         scrolled_window = gtk.ScrolledWindow()
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -235,7 +239,7 @@ class FindWordsDialog(PalabraDialog):
     def launch_pattern(self, pattern=None):
         self.store.clear()
         if pattern is not None and len(pattern) > 0:
-            self.store.append([LOADING_TEXT, ''])
+            self.store.append([LOADING_TEXT, '', 0])
         self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, pattern)
         
     def find_words(self, pattern=None):
@@ -247,9 +251,9 @@ class FindWordsDialog(PalabraDialog):
         self.pattern = pattern
         self.store.clear()
         self.set_n_label(len(result))
-        for name, s in result:
-            t1 = '<span font_desc="Monospace 12">' + s + '</span>'
-            self.store.append([t1, name])
+        for name, word, score in result:
+            t1 = '<span font_desc="Monospace 12">' + word + '</span>'
+            self.store.append([t1, name, score])
         return False
 
 class AnagramDialog(gtk.Dialog):

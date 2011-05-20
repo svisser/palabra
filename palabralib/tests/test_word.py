@@ -281,19 +281,21 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         
     def testFindPattern(self):
+        """A word list can be searched using a basic regex pattern."""
         clist = CWordList(["w", "woo", "word"])
         self.assertEquals(len(clist.find_by_pattern("*")), 3)
-        self.assertEquals(clist.find_by_pattern("?"), ["w"])
+        self.assertEquals(clist.find_by_pattern("?"), [("w", 0)])
         self.assertEquals(len(clist.find_by_pattern("w*")), 3)
-        self.assertEquals(clist.find_by_pattern("w*d"), ["word"])
+        self.assertEquals(clist.find_by_pattern("w*d"), [("word", 0)])
         self.assertEquals(clist.find_by_pattern("wo"), [])
         self.assertEquals(len(clist.find_by_pattern("*o*")), 2)
         self.assertEquals(len(clist.find_by_pattern("?o*")), 2)
-        self.assertEquals(clist.find_by_pattern("W"), ["w"])
-        self.assertEquals(clist.find_by_pattern("w(!@@#$%??"), ["woo"])
+        self.assertEquals(clist.find_by_pattern("W"), [("w", 0)])
+        self.assertEquals(clist.find_by_pattern("w(!@@#$%??"), [("woo", 0)])
         cPalabra.postprocess()
         
     def testSearchWordlistsByPattern(self):
+        """Multiple word lists can be searched by pattern."""
         c1 = CWordList(["koala", "kangaroo", "wombat"], name="Australia")
         c2 = CWordList(["shark", "fish", "whale"], name="Marine")
         c3 = CWordList(["widget", "gui", "button"])
@@ -301,10 +303,10 @@ class WordTestCase(unittest.TestCase):
         c4.path = "/this/is/the/path"
         result = word.search_wordlists_by_pattern([c1, c2, c3, c4], "w*")
         self.assertEquals(len(result), 4)
-        self.assertTrue(("Australia", "wombat") in result)
-        self.assertTrue(("Marine", "whale") in result)
-        self.assertTrue((None, "widget") in result)
-        self.assertTrue(("/this/is/the/path", "washington") in result)
+        self.assertTrue(("Australia", "wombat", 0) in result)
+        self.assertTrue(("Marine", "whale", 0) in result)
+        self.assertTrue((None, "widget", 0) in result)
+        self.assertTrue(("/this/is/the/path", "washington", 0) in result)
         cPalabra.postprocess()
         
     def testCreateWordLists(self):
