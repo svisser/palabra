@@ -24,6 +24,8 @@ from files import get_real_filename
 from gui_word import WordWidget
 from word import visible_entries
 
+WORD_DISPLAY_OPTIONS = [u"Alphabet", u"Score"]
+
 class WordTool:
     def __init__(self, editor):
         self.editor = editor
@@ -73,8 +75,8 @@ class WordTool:
         show_hbox.pack_start(label)
         
         show_combo = gtk.combo_box_new_text()
-        show_combo.append_text(u"Alphabet")
-        show_combo.append_text(u"Score")
+        for o in WORD_DISPLAY_OPTIONS:
+            show_combo.append_text(o)
         show_combo.set_active(self.show_order)
         def on_show_changed(widget):
             self.show_order = widget.get_active()
