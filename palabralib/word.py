@@ -38,6 +38,20 @@ def extract(counts, s):
             chars.append(c)
     return s, chars
 
+def visible_entries(words, grid, show_used=True, show_intersect=False, show_order=0):
+    """
+    Compute all words that should be shown in main word component
+    next to puzzle, given the specified settings.
+    """
+    entries = []
+    if not show_used:
+        entries = [e.lower() for e in grid.entries() if constants.MISSING_CHAR not in e]
+    shown = [row for row in words if 
+        not ( (show_intersect and not row[2]) or (not show_used and row[0] in entries) ) ]
+    if show_order == 1: # sort by score
+        shown.sort(key=itemgetter(1), reverse=True)
+    return shown
+
 def accidental_entries(results, collapse=False, palindrome=False):
     """
     Yield all entries that should be displayed

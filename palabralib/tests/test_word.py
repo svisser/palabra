@@ -999,3 +999,49 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue(("bar", 50, True) in result)
         self.assertTrue(("baz", 100, True) in result)
         cPalabra.postprocess()
+        
+    def testVisibleEntries(self):
+        """With no options active then the words are returned identically as visible words."""
+        words = [("aaaaa", 0, True), ("ccccc", 0, False), ("bbbbb", 10, True)]
+        grid = Grid(5, 5)
+        result = word.visible_entries(words, grid
+            , show_used=True, show_intersect=False, show_order=0)
+        self.assertEqual(result, words)
+        
+    def testVisibleEntriesScore(self):
+        """The visible words can be sorted by score, high-to-low."""
+        words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
+        grid = Grid(5, 5)
+        result = word.visible_entries(words, grid
+            , show_used=True, show_intersect=False, show_order=1)
+        words2 = [("bbbbb", 10, True), ("aaaaa", 0, True), ("ccccc", 0, False)]
+        self.assertEqual(result, words2)
+        
+    def testVisibleEntriesShowUsed(self):
+        """With show_used=False then words already used are not shown as visible word."""
+        words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
+        grid = Grid(5, 5)
+        grid.set_char(0, 0, 'A')
+        grid.set_char(1, 0, 'A')
+        grid.set_char(2, 0, 'A')
+        grid.set_char(3, 0, 'A')
+        grid.set_char(4, 0, 'A')
+        result = word.visible_entries(words, grid
+            , show_used=False, show_intersect=False, show_order=0)
+        self.assertEqual(result, [("bbbbb", 10, True), ("ccccc", 0, False)])
+        
+    def testVisibleEntriesShowIntersect(self):
+        """With show_intersect=True then words with no intersecting words are not shown."""
+        words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
+        grid = Grid(5, 5)
+        result = word.visible_entries(words, grid
+            , show_used=True, show_intersect=True, show_order=0)
+        self.assertEqual(result, [("aaaaa", 0, True), ("bbbbb", 10, True)])
+        
+    def testVisibleEntriesAllOptions(self):
+        """The various options of visible_entries can be combined."""
+        words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
+        grid = Grid(5, 5)
+        result = word.visible_entries(words, grid
+            , show_used=False, show_intersect=True, show_order=1)
+        self.assertEqual(result, [("bbbbb", 10, True), ("aaaaa", 0, True)])

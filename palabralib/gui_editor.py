@@ -22,6 +22,7 @@ import constants
 from editor import DEFAULT_FILL_OPTIONS
 from files import get_real_filename
 from gui_word import WordWidget
+from word import visible_entries
 
 class WordTool:
     def __init__(self, editor):
@@ -85,13 +86,10 @@ class WordTool:
     def display_words(self, words=None):
         if words is not None:
             self.words = words
-        entries = []
-        if not self.show_used:
-            entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
-        shown = [row for row in self.words if 
-            not ( (self.show_intersect and not row[1]) or (not self.show_used and row[0] in entries) ) ]
-        if self.show_order == 1: # sort by score
-            shown.sort(key=operator.itemgetter(1), reverse=True)
+        shown = visible_entries(self.words, self.editor.puzzle.grid
+            , show_used=self.show_used
+            , show_intersect=self.show_intersect
+            , show_order=self.show_order)
         self.view.set_words(shown)
         
     def get_selected_word(self):
