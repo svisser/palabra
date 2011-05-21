@@ -67,6 +67,11 @@ class WordTool:
         sw.add_with_viewport(self.view)
         self.main.pack_start(sw, True, True, 0)
         
+        show_hbox = gtk.HBox()
+        label = gtk.Label(u"Sort words by:")
+        label.set_alignment(0, 0.5)
+        show_hbox.pack_start(label)
+        
         show_combo = gtk.combo_box_new_text()
         show_combo.append_text(u"Alphabet")
         show_combo.append_text(u"Score")
@@ -75,7 +80,8 @@ class WordTool:
             self.show_order = widget.get_active()
             self.display_words()
         show_combo.connect("changed", on_show_changed)
-        self.main.pack_start(show_combo, False, False, 0)
+        show_hbox.pack_start(show_combo)
+        self.main.pack_start(show_hbox, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
