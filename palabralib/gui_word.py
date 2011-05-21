@@ -360,7 +360,6 @@ class WordListEditor(gtk.Dialog):
         
         # name path
         self.store = gtk.ListStore(str, str)
-        self.display_wordlists()
         self.current_wlist = None
         
         self.tree = gtk.TreeView(self.store)
@@ -379,9 +378,9 @@ class WordListEditor(gtk.Dialog):
         buttonbox = gtk.HButtonBox()
         buttonbox.set_layout(gtk.BUTTONBOX_START)
         
-        add_button = gtk.Button(stock=gtk.STOCK_ADD)
-        buttonbox.pack_start(add_button, False, False, 0)
-        add_button.connect("clicked", lambda button: self.add_word_list())
+        self.add_wlist_button = gtk.Button(stock=gtk.STOCK_ADD)
+        buttonbox.pack_start(self.add_wlist_button, False, False, 0)
+        self.add_wlist_button.connect("clicked", lambda button: self.add_word_list())
         self.rename_button = gtk.Button("Rename")
         buttonbox.pack_start(self.rename_button, False, False, 0)
         self.rename_button.connect("clicked", lambda button: self.rename_word_list())
@@ -390,6 +389,7 @@ class WordListEditor(gtk.Dialog):
         buttonbox.pack_start(self.remove_button, False, False, 0)
         self.remove_button.connect("clicked", lambda button: self.remove_word_list())
         self.remove_button.set_sensitive(False)
+        self.display_wordlists()
         
         main = gtk.HBox(False, 0)
         main.set_spacing(18)
@@ -599,6 +599,8 @@ class WordListEditor(gtk.Dialog):
         self.store.clear()
         for p in preferences.prefs["word_files"]:
             self.store.append([p["name"]["value"], p["path"]["value"]])
+        n_prefs = len(preferences.prefs["word_files"])
+        self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
             
 class WordWidget(gtk.DrawingArea):
     def __init__(self, editor):
