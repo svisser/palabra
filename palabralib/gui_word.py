@@ -485,6 +485,12 @@ class WordListEditor(gtk.Dialog):
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         
+        # select a word list by default
+        it = self.store.get_iter_first()
+        if it is not None:
+            sel = self.tree.get_selection()
+            sel.select_iter(it)
+        
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.vbox.add(hbox)
         
