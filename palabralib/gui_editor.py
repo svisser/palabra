@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
+import operator
 
 import constants
 from editor import DEFAULT_FILL_OPTIONS
@@ -27,6 +28,7 @@ class WordTool:
         self.editor = editor
         self.show_intersect = False
         self.show_used = True
+        self.show_order = 0
     
     def create(self):
         img = gtk.Image()
@@ -64,6 +66,16 @@ class WordTool:
         sw.add_with_viewport(self.view)
         self.main.pack_start(sw, True, True, 0)
         
+        show_combo = gtk.combo_box_new_text()
+        show_combo.append_text(u"Alphabet")
+        show_combo.append_text(u"Score")
+        show_combo.set_active(self.show_order)
+        def on_show_changed(widget):
+            self.show_order = widget.get_active()
+            self.display_words()
+        show_combo.connect("changed", on_show_changed)
+        self.main.pack_start(show_combo, False, False, 0)
+        
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
         hbox.set_spacing(6)
@@ -78,6 +90,8 @@ class WordTool:
             entries = [e.lower() for e in self.editor.puzzle.grid.entries() if constants.MISSING_CHAR not in e]
         shown = [row for row in self.words if 
             not ( (self.show_intersect and not row[1]) or (not self.show_used and row[0] in entries) ) ]
+        if self.show_order == 1: # sort by score
+            shown.sort(key=operator.itemgetter(1), reverse=True)
         self.view.set_words(shown)
         
     def get_selected_word(self):
