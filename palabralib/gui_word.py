@@ -98,15 +98,14 @@ class WordUsageDialog(PalabraDialog):
         return vbox
         
     def create_find_words(self, parent):
-        vbox = gtk.HBox()
-        vbox.set_border_width(9)
-        vbox.set_spacing(9)
+        hbox = gtk.HBox()
+        hbox.set_spacing(9)
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
             , [("Available word lists", 0)]
             , f_sel=self.on_tree_selection_changed)
         s_window.set_size_request(256, 196)
-        vbox.pack_start(s_window, True, True, 0)
+        hbox.pack_start(s_window, True, True, 0)
         
         button_vbox = gtk.VBox()
         self.add_wlist_button = gtk.Button(stock=gtk.STOCK_ADD)
@@ -117,15 +116,16 @@ class WordUsageDialog(PalabraDialog):
         button_vbox.pack_start(self.remove_wlist_button, True, False, 0)
         self.add_wlist_button.set_sensitive(False)
         self.remove_wlist_button.set_sensitive(False)
-        vbox.pack_start(button_vbox, True, True, 0)
+        hbox.pack_start(button_vbox, True, True, 0)
         
         # name path
         self.store2, self.tree2, s_window2 = create_tree((str, str)
             , [("Word lists for finding words", 0)]
             , f_sel=self.on_tree2_selection_changed)
         s_window2.set_size_request(256, 196)
-        vbox.pack_start(s_window2, True, True, 0)        
+        hbox.pack_start(s_window2, True, True, 0)        
         
+        # populate list stores
         c_find = preferences.prefs[constants.PREF_FIND_WORD_FILES]
         wlists1 = [w for w in parent.wordlists if w.path not in c_find]
         wlists2 = [w for w in parent.wordlists if w.path in c_find]
@@ -133,6 +133,20 @@ class WordUsageDialog(PalabraDialog):
             self.store.append([wlist.name, wlist.path])
         for wlist in wlists2:
             self.store2.append([wlist.name, wlist.path])
+        
+        vbox = gtk.VBox()
+        vbox.set_border_width(9)
+        vbox.set_spacing(9)
+        score_hbox = gtk.HBox()
+        score_hbox.set_spacing(9)
+        label = gtk.Label(u"Minimum word score:")
+        label.set_alignment(0, 0.5)
+        score_hbox.pack_start(label, False, False, 0)
+        adj = gtk.Adjustment(0, 0, 100, 1, 0, 0)
+        self.find_min_score_spinner = gtk.SpinButton(adj, 0.0, 0)
+        score_hbox.pack_start(self.find_min_score_spinner, False, False, 0)
+        vbox.pack_start(hbox)
+        vbox.pack_start(score_hbox, False, False, 0)
         return vbox
         
     def on_tree_selection_changed(self, selection):
@@ -157,6 +171,7 @@ class WordUsageDialog(PalabraDialog):
             store.remove(it)
             
     def get_configuration(self):
+        # this dict gets updated to preferences.prefs
         c = {}
         c[constants.PREF_FIND_WORD_FILES] = [path for name, path in self.store2]
         b_index = self.blacklist_combo.get_active()
@@ -164,6 +179,7 @@ class WordUsageDialog(PalabraDialog):
             c[constants.PREF_BLACKLIST] = self.wordlists[b_index - 1].path
         else:
             c[constants.PREF_BLACKLIST] = ''
+        c[constants.PREF_FIND_WORD_MIN_SCORE] = self.find_min_score_spinner.get_value_as_int()
         return c
 
 class SimilarWordsDialog(PalabraDialog):
