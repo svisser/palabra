@@ -105,7 +105,7 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
         #self.menubar.append(self.create_clue_menu())
-        self.menubar.append(self.create_tools_menu())
+        self.menubar.append(self.create_word_menu())
         self.menubar.append(self.create_help_menu())
         self.toolbar = self.create_toolbar()
         self.panel = gtk.VBox(False, 0)
@@ -1125,7 +1125,7 @@ class PalabraWindow(gtk.Window):
         clear_menu.set_submenu(menu)
         return clear_menu
         
-    def create_tools_menu(self):
+    def create_word_menu(self):
         menu = gtk.Menu()
         
         def activate(item):
@@ -1185,7 +1185,7 @@ class PalabraWindow(gtk.Window):
         item.set_sensitive(False)
         self.puzzle_toggle_items += [item]
         
-        tool_menu = gtk.MenuItem(u"_Tools", True)
+        tool_menu = gtk.MenuItem(u"_Word", True)
         tool_menu.set_submenu(menu)
         return tool_menu
     
