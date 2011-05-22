@@ -1045,3 +1045,22 @@ class WordTestCase(unittest.TestCase):
         result = word.visible_entries(words, grid
             , show_used=False, show_intersect=True, show_order=1)
         self.assertEqual(result, [("bbbbb", 10, True), ("aaaaa", 0, True)])
+    
+    def testMinimumWordScoreIntersection(self):
+        """
+        The minimum word score influences
+        whether the intersection boolean is True or False.
+        """
+        w1 = CWordList([("abc", 1), ("aaa", 0), ("bbb", 0), ("ccc", 0)])
+        css = [(0, 3, [(0, 'a')])
+            , (0, 3, [(0, 'b')])
+            , (0, 3, [(0, 'c')])
+        ]
+        result = search_wordlists([w1], 3, "abc", css)
+        self.assertEqual(result, [("abc", 1, True)])
+        options = {
+            constants.SEARCH_OPTION_MIN_SCORE: 1
+        }
+        result = search_wordlists([w1], 3, "abc", css, options=options)
+        self.assertEqual(result, [("abc", 1, False)])
+        cPalabra.postprocess()
