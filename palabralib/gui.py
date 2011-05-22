@@ -1143,6 +1143,8 @@ class PalabraWindow(gtk.Window):
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
                 self.wordlists_config = w.get_configuration()
+                for k in [constants.PREF_FIND_WORD_FILES]:
+                    preferences.prefs[k] = self.wordlists_config[k]
                 self.update_window()
             w.destroy()
         menu.append(self._create_menu_item(activate

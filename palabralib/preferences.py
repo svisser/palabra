@@ -132,6 +132,9 @@ _FILE_PREFS = [
 _STR_PREFS = [
     (constants.PREF_BLACKLIST, "")
 ]
+_LIST_STR_PREFS = [
+    (constants.PREF_FIND_WORD_FILES, [])
+]
 
 DEFAULTS = {}
 for code, b in _BOOL_PREFS:
@@ -147,6 +150,8 @@ for code, files in _FILE_PREFS:
     DEFAULTS[code] = Preference(result, list, "list", "file")
 for code, s in _STR_PREFS:
     DEFAULTS[code] = Preference(s, str, "str", None)
+for code, l in _LIST_STR_PREFS:
+    DEFAULTS[code] = Preference(l, list, "list", "str")
 
 def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
     """
@@ -161,6 +166,8 @@ def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
                 for c2 in c:
                     d = {"type": c2.get("type"), "value": c2.text}
                     value[c2.get("name")] = d
+            elif c.get("type") == "str":
+                value = c.text
             values.append(value)
         return values
     props = {}
@@ -171,8 +178,10 @@ def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
         for p in root:
             t = p.get("type")
             name = p.get("name")
-            if t in ["int", "bool", "str"]:
+            if t in ["int", "bool"]:
                 props[name] = p.text
+            elif t == "str":
+                props[name] = p.text if p.text is not None else ''
             elif t == "list":
                 props[name] = parse_list(p)
     except (etree.XMLSyntaxError, IOError):
@@ -198,15 +207,20 @@ def write_config_file(filename=constants.CONFIG_FILE_LOCATION):
         if pref.type in ["int", "bool", "str"]:
             e.text = str(data)
         elif pref.type == "list":
-            for v in data:
-                f = etree.SubElement(e, "preference-item")
-                f.set("type", pref.itemtype)
-                if pref.itemtype == "file":
+            if pref.itemtype == "file":
+                for v in data:
+                    f = etree.SubElement(e, "preference-item")
+                    f.set("type", pref.itemtype)
                     for k0, v0 in v.items():
                         g = etree.SubElement(f, "preference-item")
                         g.set("name", k0)
                         g.set("type", v0["type"])
                         g.text = v0["value"]
+            elif pref.itemtype == "str":
+                for v in data:
+                    f = etree.SubElement(e, "preference-item")
+                    f.set("type", "str")
+                    f.text = v
     if not os.path.isdir(constants.APPLICATION_DIRECTORY):
         os.mkdir(constants.APPLICATION_DIRECTORY)
     contents = etree.tostring(root, xml_declaration=True, encoding="UTF-8")
