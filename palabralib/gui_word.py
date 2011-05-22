@@ -96,6 +96,7 @@ class WordUsageDialog(PalabraDialog):
         
         for wlist in parent.wordlists:
             self.store.append([wlist.name, wlist.path])
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
     def on_tree_selection_changed(self, selection):
@@ -107,18 +108,17 @@ class WordUsageDialog(PalabraDialog):
         self.remove_wlist_button.set_sensitive(it is not None)
         
     def on_add_clicked(self, button):
-        store, it = self.tree.get_selection().get_selected()
-        if it is not None:
-            name, path = self.store[it][0], self.store[it][1]
-            self.store2.append([name, path])
-            self.store.remove(it)
+        self._move_to_store(self.tree, self.store2)
             
     def on_remove_clicked(self, button):
-        store, it = self.tree2.get_selection().get_selected()
+        self._move_to_store(self.tree2, self.store)
+            
+    def _move_to_store(self, tree_from, store_to):
+        store, it = tree_from.get_selection().get_selected()
         if it is not None:
-            name, path = self.store2[it][0], self.store2[it][1]
-            self.store.append([name, path])
-            self.store2.remove(it)
+            name, path = store[it][0], store[it][1]
+            store_to.append([name, path])
+            store.remove(it)
 
 class SimilarWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
