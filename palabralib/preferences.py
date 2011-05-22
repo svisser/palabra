@@ -130,7 +130,7 @@ _FILE_PREFS = [
     , (constants.PREF_PATTERN_FILES, [])
 ]
 _STR_PREFS = [
-    (constants.PREF_BLACKLIST, "/usr/share/dict/words")
+    (constants.PREF_BLACKLIST, "")
 ]
 
 DEFAULTS = {}
