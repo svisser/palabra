@@ -122,7 +122,6 @@ class PalabraWindow(gtk.Window):
         self.wordlists = []
         self.patterns = None
         self.blacklist = None
-        self.wordlists_config = {constants.PREF_FIND_WORD_FILES: []}
         
     def on_delete(self, window, event):
         self.close_puzzle()
@@ -1142,9 +1141,9 @@ class PalabraWindow(gtk.Window):
             w = WordUsageDialog(self)
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
-                self.wordlists_config = w.get_configuration()
+                config = w.get_configuration()
                 for k in [constants.PREF_FIND_WORD_FILES]:
-                    preferences.prefs[k] = self.wordlists_config[k]
+                    preferences.prefs[k] = config[k]
                 self.update_window()
             w.destroy()
         menu.append(self._create_menu_item(activate

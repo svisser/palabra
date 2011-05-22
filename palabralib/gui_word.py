@@ -94,8 +94,7 @@ class WordUsageDialog(PalabraDialog):
         s_window2.set_size_request(256, 196)
         self.main.pack_start(s_window2, True, True, 0)        
         
-        c = parent.wordlists_config
-        c_find = c[constants.PREF_FIND_WORD_FILES]
+        c_find = preferences.prefs[constants.PREF_FIND_WORD_FILES]
         wlists1 = [w for w in parent.wordlists if w.path not in c_find]
         wlists2 = [w for w in parent.wordlists if w.path in c_find]
         for wlist in wlists1:
