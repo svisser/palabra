@@ -1252,7 +1252,7 @@ def main(argv=None):
         print "Loading word lists..."
         cPalabra.preprocess_all()
         wordlists = create_wordlists(preferences.prefs["word_files"])
-        print "Loading pattern files..."
+        print "Loading grid files..."
         fs = constants.STANDARD_PATTERN_FILES + preferences.prefs[constants.PREF_PATTERN_FILES]
         patterns = read_containers(fs)
         
