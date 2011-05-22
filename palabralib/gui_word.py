@@ -71,6 +71,8 @@ class WordUsageDialog(PalabraDialog):
             , u"Configure word list usage", horizontal=True)
         self.wordlists = parent.wordlists
         tabs = gtk.Notebook()
+        tabs.set_property("tab-hborder", 8)
+        tabs.set_property("tab-vborder", 4)
         tabs.append_page(self.create_find_words(parent), gtk.Label(u"Finding words"))
         tabs.append_page(self.create_blacklist(parent), gtk.Label(u"Blacklist"))
         self.main.pack_start(tabs, True, True, 0)
