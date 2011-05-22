@@ -686,14 +686,14 @@ EDITOR_EVENTS = {
     , "key_release_event": on_key_release_event
 }
     
-def refresh_words(wordlists, grid, selection, force_refresh=False):
+def refresh_words(wordlists, grid, selection, force_refresh=False, options=None):
     """
     Update the list of words according to active constraints of letters
     and the current settings (e.g., show only words with intersections).
     """
     args = compute_search_args(grid, selection, force_refresh)
     if args:
-        result = search_wordlists(wordlists, *args)
+        result = search_wordlists(wordlists, *args, options=options)
     else:
         result = []
     e_tools["word"].display_words(result)
@@ -716,7 +716,12 @@ class Editor:
         """
         f_wlists = preferences.prefs[constants.PREF_FIND_WORD_FILES]
         wordlists = [wlist for wlist in self.window.wordlists if wlist.path in f_wlists]
-        refresh_words(wordlists, self.puzzle.grid, e_settings.selection, force_refresh)
+        min_score = preferences.prefs[constants.PREF_FIND_WORD_MIN_SCORE]
+        options = {
+            constants.SEARCH_OPTION_MIN_SCORE: min_score
+        }
+        refresh_words(wordlists, self.puzzle.grid
+            , e_settings.selection, force_refresh, options)
         
     def fill(self):
         for wlist in self.window.wordlists:
