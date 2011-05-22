@@ -61,6 +61,7 @@ from gui_word import (
     FindWordsDialog,
     WordListEditor,
     SimilarWordsDialog,
+    WordUsageDialog,
 )
 import grid
 from grid import Grid
@@ -1129,13 +1130,21 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def activate(item):
-            editor = WordListEditor(self)
-            editor.show_all()
-            editor.run()
-            editor.destroy()
+            w = WordListEditor(self)
+            w.show_all()
+            w.run()
+            w.destroy()
         menu.append(self._create_menu_item(activate
             , u"Manage the word lists available to the program"
-            , title="_Manage word lists..."))
+            , title=u"_Manage word lists..."))
+        def activate(item):
+            w = WordUsageDialog(self)
+            w.show_all()
+            w.run()
+            w.destroy()
+        menu.append(self._create_menu_item(activate
+            , u"Configure how word lists are used in the program"
+            , title=u"Configure word list _usage..."))
         
         menu.append(gtk.SeparatorMenuItem())
         
@@ -1143,48 +1152,31 @@ class PalabraWindow(gtk.Window):
             w = FindWordsDialog(self)
             w.show_all()
             w.run()
-            w.destroy()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"Find words in word lists according to a pattern")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem(u"_Find words...", True)
-        item.connect("activate", activate, )
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
+            w.destroy()        
+        menu.append(self._create_menu_item(activate
+            , u"Find words in word lists according to a pattern"
+            , title=u"_Find words..."))
         
         def activate(item):
             w = AccidentalWordsDialog(self, self.puzzle_manager.current_puzzle)
             w.show_all()
             w.run()
             w.destroy()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"View words that may have accidentally appeared in the grid")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem(u"View _accidental words...", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        item.set_sensitive(False)
-        self.puzzle_toggle_items += [item]
+        menu.append(self._create_menu_item(activate
+            , u"View words that may have accidentally appeared in the grid"
+            , title=u"View _accidental words..."
+            , is_puzzle_sensitive=True))
         
         def activate(item):
             w = SimilarWordsDialog(self, self.puzzle_manager.current_puzzle)
             w.show_all()
             w.run()
             w.destroy()
-        select = lambda item: self.update_status(constants.STATUS_MENU
-            , u"View words that have a part in common")
-        deselect = lambda item: self.pop_status(constants.STATUS_MENU)
-        item = gtk.MenuItem(u"View _similar words...", True)
-        item.connect("activate", activate)
-        item.connect("select", select)
-        item.connect("deselect", deselect)
-        menu.append(item)
-        item.set_sensitive(False)
-        self.puzzle_toggle_items += [item]
-        
+        menu.append(self._create_menu_item(activate
+            , u"View words that have a part in common"
+            , title=u"View _similar words..."
+            , is_puzzle_sensitive=True))
+            
         tool_menu = gtk.MenuItem(u"_Word", True)
         tool_menu.set_submenu(menu)
         return tool_menu

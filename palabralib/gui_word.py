@@ -48,6 +48,11 @@ class PalabraDialog(gtk.Dialog):
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
 
+class WordUsageDialog(PalabraDialog):
+    def __init__(self, parent):
+        PalabraDialog.__init__(self, parent, u"Configure word list usage")
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+
 class SimilarWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
         PalabraDialog.__init__(self, parent, u"View similar words")
