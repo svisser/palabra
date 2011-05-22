@@ -37,13 +37,16 @@ from word import (
 LOADING_TEXT = "Loading..."
 
 class PalabraDialog(gtk.Dialog):
-    def __init__(self, pwindow, title):
+    def __init__(self, pwindow, title, horizontal=False):
         gtk.Dialog.__init__(self, title, pwindow, gtk.DIALOG_MODAL)
         self.pwindow = pwindow
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        self.main = gtk.VBox(False, 0)
+        if horizontal:
+            self.main = gtk.HBox()
+        else:
+            self.main = gtk.VBox()
         self.main.set_spacing(9)
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
@@ -64,19 +67,58 @@ def create_tree(types, columns, f_sel=None):
 
 class WordUsageDialog(PalabraDialog):
     def __init__(self, parent):
-        PalabraDialog.__init__(self, parent, u"Configure word list usage")
+        PalabraDialog.__init__(self, parent
+            , u"Configure word list usage", horizontal=True)
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
-            , [("Word list", 0)]
-            , f_sel=self.on_selection_changed)
-        s_window.set_size_request(512, 384)
+            , [("Available word lists", 0)]
+            , f_sel=self.on_tree_selection_changed)
+        s_window.set_size_request(256, 196)
         self.main.pack_start(s_window, True, True, 0)
+        
+        button_vbox = gtk.VBox()
+        self.add_wlist_button = gtk.Button(stock=gtk.STOCK_ADD)
+        self.add_wlist_button.connect("clicked", self.on_add_clicked)
+        button_vbox.pack_start(self.add_wlist_button, True, False, 0)
+        self.remove_wlist_button = gtk.Button(stock=gtk.STOCK_REMOVE)
+        self.remove_wlist_button.connect("clicked", self.on_remove_clicked)
+        button_vbox.pack_start(self.remove_wlist_button, True, False, 0)
+        self.add_wlist_button.set_sensitive(False)
+        self.remove_wlist_button.set_sensitive(False)
+        self.main.pack_start(button_vbox, True, True, 0)
+        
+        # name path
+        self.store2, self.tree2, s_window2 = create_tree((str, str)
+            , [("Word lists for finding words", 0)]
+            , f_sel=self.on_tree2_selection_changed)
+        s_window2.set_size_request(256, 196)
+        self.main.pack_start(s_window2, True, True, 0)        
+        
         for wlist in parent.wordlists:
             self.store.append([wlist.name, wlist.path])
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
-    def on_selection_changed(self, selection):
+    def on_tree_selection_changed(self, selection):
         store, it = selection.get_selected()
+        self.add_wlist_button.set_sensitive(it is not None)
+        
+    def on_tree2_selection_changed(self, selection):
+        store, it = selection.get_selected()
+        self.remove_wlist_button.set_sensitive(it is not None)
+        
+    def on_add_clicked(self, button):
+        store, it = self.tree.get_selection().get_selected()
+        if it is not None:
+            name, path = self.store[it][0], self.store[it][1]
+            self.store2.append([name, path])
+            self.store.remove(it)
+            
+    def on_remove_clicked(self, button):
+        store, it = self.tree2.get_selection().get_selected()
+        if it is not None:
+            name, path = self.store2[it][0], self.store2[it][1]
+            self.store.append([name, path])
+            self.store2.remove(it)
 
 class SimilarWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
