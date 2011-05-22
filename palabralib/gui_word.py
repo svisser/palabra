@@ -389,7 +389,6 @@ class WordListEditor(gtk.Dialog):
         buttonbox.pack_start(self.remove_button, False, False, 0)
         self.remove_button.connect("clicked", lambda button: self.remove_word_list())
         self.remove_button.set_sensitive(False)
-        self.display_wordlists()
         
         main = gtk.HBox(False, 0)
         main.set_spacing(18)
@@ -486,6 +485,7 @@ class WordListEditor(gtk.Dialog):
         hbox.pack_start(main, True, True, 0)
         
         # select a word list by default
+        self.display_wordlists()
         it = self.store.get_iter_first()
         if it is not None:
             sel = self.tree.get_selection()
@@ -607,6 +607,11 @@ class WordListEditor(gtk.Dialog):
             self.store.append([p["name"]["value"], p["path"]["value"]])
         n_prefs = len(preferences.prefs["word_files"])
         self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
+        self.counts_store.clear()
+        self.score_store.clear()
+        self.n_words_label.set_text("0")
+        self.avg_word_label.set_text("0")
+        self.avg_score_label.set_text("0")
             
 class WordWidget(gtk.DrawingArea):
     def __init__(self, editor):
