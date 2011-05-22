@@ -129,6 +129,9 @@ _FILE_PREFS = [
     (constants.PREF_WORD_FILES, [PreferenceFile("/usr/share/dict/words", "Default")])
     , (constants.PREF_PATTERN_FILES, [])
 ]
+_STR_PREFS = [
+    (constants.PREF_BLACKLIST, "/usr/share/dict/words")
+]
 
 DEFAULTS = {}
 for code, b in _BOOL_PREFS:
@@ -142,6 +145,8 @@ for code, files in _FILE_PREFS:
             , "name": {"type": "str", "value": f.name}
         })
     DEFAULTS[code] = Preference(result, list, "list", "file")
+for code, s in _STR_PREFS:
+    DEFAULTS[code] = Preference(s, str, "str", None)
 
 def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
     """
@@ -166,7 +171,7 @@ def read_config_file(filename=constants.CONFIG_FILE_LOCATION, warnings=True):
         for p in root:
             t = p.get("type")
             name = p.get("name")
-            if t in ["int", "bool"]:
+            if t in ["int", "bool", "str"]:
                 props[name] = p.text
             elif t == "list":
                 props[name] = parse_list(p)
@@ -190,7 +195,7 @@ def write_config_file(filename=constants.CONFIG_FILE_LOCATION):
         e.set("type", pref.type)
         e.set("name", key)
         data = prefs[key] if key in prefs else pref.value
-        if pref.type in ["int", "bool"]:
+        if pref.type in ["int", "bool", "str"]:
             e.text = str(data)
         elif pref.type == "list":
             for v in data:

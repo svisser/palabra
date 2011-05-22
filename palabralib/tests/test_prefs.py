@@ -59,6 +59,11 @@ class PrefsTestCase(unittest.TestCase):
         self._writeRead()
         self.assertEquals(preferences.prefs[constants.PREF_INITIAL_HEIGHT], 27)
         
+    def testStrPref(self):
+        preferences.prefs[constants.PREF_BLACKLIST] = "/the/path"
+        self._writeRead()
+        self.assertEqual(preferences.prefs[constants.PREF_BLACKLIST], "/the/path")
+        
     def testColor(self):
         preferences.prefs[constants.COLOR_PRIMARY_SELECTION + "_red"] = 1234
         self._writeRead()
