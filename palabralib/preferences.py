@@ -133,7 +133,7 @@ _STR_PREFS = [
     (constants.PREF_BLACKLIST, "")
 ]
 _LIST_STR_PREFS = [
-    (constants.PREF_FIND_WORD_FILES, [])
+    (constants.PREF_FIND_WORD_FILES, ["/usr/share/dict/words"])
 ]
 
 DEFAULTS = {}
