@@ -69,12 +69,42 @@ class WordUsageDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent
             , u"Configure word list usage", horizontal=True)
+        self.wordlists = parent.wordlists
+        tabs = gtk.Notebook()
+        tabs.append_page(self.create_find_words(parent), gtk.Label(u"Finding words"))
+        tabs.append_page(self.create_blacklist(parent), gtk.Label(u"Blacklist"))
+        self.main.pack_start(tabs, True, True, 0)
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+    def create_blacklist(self, parent):
+        vbox = gtk.VBox()
+        vbox.set_border_width(9)
+        vbox.set_spacing(9)
+        self.blacklist_combo = gtk.combo_box_new_text()
+        self.blacklist_combo.append_text('')
+        for wlist in self.wordlists:
+            self.blacklist_combo.append_text(wlist.name)
+        for i, wlist in enumerate(self.wordlists):
+            if preferences.prefs[constants.PREF_BLACKLIST] == wlist.path:
+                self.blacklist_combo.set_active(i + 1)
+                break
+        label = gtk.Label(u"Word list to be used as blacklist:")
+        label.set_alignment(0, 0.5)
+        vbox.pack_start(label, False, False, 0)
+        vbox.pack_start(self.blacklist_combo, False, False, 0)
+        return vbox
+        
+    def create_find_words(self, parent):
+        vbox = gtk.HBox()
+        vbox.set_border_width(9)
+        vbox.set_spacing(9)
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
             , [("Available word lists", 0)]
             , f_sel=self.on_tree_selection_changed)
         s_window.set_size_request(256, 196)
-        self.main.pack_start(s_window, True, True, 0)
+        vbox.pack_start(s_window, True, True, 0)
         
         button_vbox = gtk.VBox()
         self.add_wlist_button = gtk.Button(stock=gtk.STOCK_ADD)
@@ -85,14 +115,14 @@ class WordUsageDialog(PalabraDialog):
         button_vbox.pack_start(self.remove_wlist_button, True, False, 0)
         self.add_wlist_button.set_sensitive(False)
         self.remove_wlist_button.set_sensitive(False)
-        self.main.pack_start(button_vbox, True, True, 0)
+        vbox.pack_start(button_vbox, True, True, 0)
         
         # name path
         self.store2, self.tree2, s_window2 = create_tree((str, str)
             , [("Word lists for finding words", 0)]
             , f_sel=self.on_tree2_selection_changed)
         s_window2.set_size_request(256, 196)
-        self.main.pack_start(s_window2, True, True, 0)        
+        vbox.pack_start(s_window2, True, True, 0)        
         
         c_find = preferences.prefs[constants.PREF_FIND_WORD_FILES]
         wlists1 = [w for w in parent.wordlists if w.path not in c_find]
@@ -101,8 +131,7 @@ class WordUsageDialog(PalabraDialog):
             self.store.append([wlist.name, wlist.path])
         for wlist in wlists2:
             self.store2.append([wlist.name, wlist.path])
-        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        return vbox
         
     def on_tree_selection_changed(self, selection):
         store, it = selection.get_selected()
@@ -128,6 +157,11 @@ class WordUsageDialog(PalabraDialog):
     def get_configuration(self):
         c = {}
         c[constants.PREF_FIND_WORD_FILES] = [path for name, path in self.store2]
+        b_index = self.blacklist_combo.get_active()
+        if b_index >= 1:
+            c[constants.PREF_BLACKLIST] = self.wordlists[b_index - 1].path
+        else:
+            c[constants.PREF_BLACKLIST] = ''
         return c
 
 class SimilarWordsDialog(PalabraDialog):
@@ -196,7 +230,7 @@ class AccidentalWordsDialog(PalabraDialog):
         combo.set_active(self.index)    
         def on_wordlist_changed(widget):
             self.index = widget.get_active()
-        combo.connect("changed",on_wordlist_changed)
+        combo.connect("changed", on_wordlist_changed)
         wlist_hbox.pack_start(combo, False, False, 0)
         self.main.pack_start(wlist_hbox, False, False, 0)
         self.store = gtk.ListStore(str, str)

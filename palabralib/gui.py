@@ -1142,7 +1142,7 @@ class PalabraWindow(gtk.Window):
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
                 config = w.get_configuration()
-                for k in [constants.PREF_FIND_WORD_FILES]:
+                for k in [constants.PREF_FIND_WORD_FILES, constants.PREF_BLACKLIST]:
                     preferences.prefs[k] = config[k]
                 self.update_window()
             w.destroy()
