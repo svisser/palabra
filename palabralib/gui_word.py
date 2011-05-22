@@ -48,21 +48,29 @@ class PalabraDialog(gtk.Dialog):
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
 
+def create_tree(types, columns, f_sel=None):
+    store = gtk.ListStore(*types)
+    tree = gtk.TreeView(store)
+    for title, i in columns:
+        cell = gtk.CellRendererText()
+        column = gtk.TreeViewColumn(title, cell, markup=i)
+        tree.append_column(column)
+    scrolled_window = gtk.ScrolledWindow()
+    scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    scrolled_window.add(tree)
+    if f_sel is not None:
+        tree.get_selection().connect("changed", f_sel)
+    return store, tree, scrolled_window
+
 class WordUsageDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent, u"Configure word list usage")
         # name path
-        self.store = gtk.ListStore(str, str)
-        self.tree = gtk.TreeView(self.store)
-        self.tree.get_selection().connect("changed", self.on_selection_changed)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("Word list", cell, text=0)
-        self.tree.append_column(column)
-        scrolled_window = gtk.ScrolledWindow()
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add(self.tree)
-        scrolled_window.set_size_request(512, 384)
-        self.main.pack_start(scrolled_window, True, True, 0)
+        self.store, self.tree, s_window = create_tree((str, str)
+            , [("Word list", 0)]
+            , f_sel=self.on_selection_changed)
+        s_window.set_size_request(512, 384)
+        self.main.pack_start(s_window, True, True, 0)
         for wlist in parent.wordlists:
             self.store.append([wlist.name, wlist.path])
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
