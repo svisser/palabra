@@ -94,8 +94,13 @@ class WordUsageDialog(PalabraDialog):
         s_window2.set_size_request(256, 196)
         self.main.pack_start(s_window2, True, True, 0)        
         
-        for wlist in parent.wordlists:
+        c = parent.wordlists_config
+        wlists1 = [w for w in parent.wordlists if w.path not in c["find_word_lists"]]
+        wlists2 = [w for w in parent.wordlists if w.path in c["find_word_lists"]]
+        for wlist in wlists1:
             self.store.append([wlist.name, wlist.path])
+        for wlist in wlists2:
+            self.store2.append([wlist.name, wlist.path])
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
@@ -119,6 +124,11 @@ class WordUsageDialog(PalabraDialog):
             name, path = store[it][0], store[it][1]
             store_to.append([name, path])
             store.remove(it)
+            
+    def get_configuration(self):
+        c = {}
+        c["find_word_lists"] = [path for name, path in self.store2]
+        return c
 
 class SimilarWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):

@@ -714,7 +714,14 @@ class Editor:
         Update the list of words according to active constraints of letters
         and the current settings (e.g., show only words with intersections).
         """
-        refresh_words(self.window.wordlists, self.puzzle.grid, e_settings.selection, force_refresh)
+        # TODO remove if
+        wordlists = []
+        if "find_word_lists" in self.window.wordlists_config:
+            f_wlists = self.window.wordlists_config["find_word_lists"]
+            wordlists = [wlist for wlist in self.window.wordlists if wlist.path in f_wlists]
+        else:
+            wordlists = self.window.wordlists
+        refresh_words(wordlists, self.puzzle.grid, e_settings.selection, force_refresh)
         
     def fill(self):
         for wlist in self.window.wordlists:

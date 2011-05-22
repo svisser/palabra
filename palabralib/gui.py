@@ -122,6 +122,7 @@ class PalabraWindow(gtk.Window):
         self.wordlists = []
         self.patterns = None
         self.blacklist = None
+        self.wordlists_config = {"find_word_lists": []}
         
     def on_delete(self, window, event):
         self.close_puzzle()
@@ -1140,7 +1141,9 @@ class PalabraWindow(gtk.Window):
         def activate(item):
             w = WordUsageDialog(self)
             w.show_all()
-            w.run()
+            if w.run() == gtk.RESPONSE_OK:
+                self.wordlists_config = w.get_configuration()
+                self.update_window()
             w.destroy()
         menu.append(self._create_menu_item(activate
             , u"Configure how word lists are used in the program"
