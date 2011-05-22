@@ -95,8 +95,9 @@ class WordUsageDialog(PalabraDialog):
         self.main.pack_start(s_window2, True, True, 0)        
         
         c = parent.wordlists_config
-        wlists1 = [w for w in parent.wordlists if w.path not in c["find_word_lists"]]
-        wlists2 = [w for w in parent.wordlists if w.path in c["find_word_lists"]]
+        c_find = c[constants.PREF_FIND_WORD_FILES]
+        wlists1 = [w for w in parent.wordlists if w.path not in c_find]
+        wlists2 = [w for w in parent.wordlists if w.path in c_find]
         for wlist in wlists1:
             self.store.append([wlist.name, wlist.path])
         for wlist in wlists2:
@@ -127,7 +128,7 @@ class WordUsageDialog(PalabraDialog):
             
     def get_configuration(self):
         c = {}
-        c["find_word_lists"] = [path for name, path in self.store2]
+        c[constants.PREF_FIND_WORD_FILES] = [path for name, path in self.store2]
         return c
 
 class SimilarWordsDialog(PalabraDialog):

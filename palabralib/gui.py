@@ -122,7 +122,7 @@ class PalabraWindow(gtk.Window):
         self.wordlists = []
         self.patterns = None
         self.blacklist = None
-        self.wordlists_config = {"find_word_lists": []}
+        self.wordlists_config = {constants.PREF_FIND_WORD_FILES: []}
         
     def on_delete(self, window, event):
         self.close_puzzle()
