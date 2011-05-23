@@ -703,6 +703,7 @@ class Editor:
         self.window = window
         self.blacklist = []
         self.fill_options = {}
+        self.fill_options.update(DEFAULT_FILL_OPTIONS)
         
     def get_puzzle(self):
         return self.window.puzzle_manager.current_puzzle

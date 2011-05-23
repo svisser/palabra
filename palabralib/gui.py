@@ -186,8 +186,8 @@ class PalabraWindow(gtk.Window):
         tabs.set_property("tab-vborder", 8)
         tool = e_tools["word"].create()
         tabs.append_page(tool, gtk.Label(u"Word"))
-        #tool = e_tools["fill"].create()
-        #tabs.append_page(tool, gtk.Label(u"Fill"))
+        tool = e_tools["fill"].create()
+        tabs.append_page(tool, gtk.Label(u"Fill"))
         tool = e_tools["clue"].create(puzzle)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):

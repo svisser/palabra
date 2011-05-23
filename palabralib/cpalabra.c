@@ -115,8 +115,8 @@ char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int optio
     Py_ssize_t m_count = 0;
     for (w = 0; w < count; w++) {
         char *word = PyString_AsString(PyList_GetItem(slot->words, w));
-        //printf("Considering %s %s\n", word, cs);
         if (check_constraints(word, cs)) {
+            //printf("Considering %i %s %s\n", option_nice, word, cs);
             if (!option_nice) {
                 int is_char_ok[MAX_WORD_LENGTH];
                 int j = 0;
@@ -125,13 +125,20 @@ char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int optio
                 }
                 check_intersect(word, cs_i, slot->length, results, is_char_ok);
                 int n_chars = 0;
+                // mark fully filled in intersecting words also as ok
+                for (j = 0; j < slot->length; j++) {
+                    if (strchr(cs_i[j], '.') == NULL) {
+                        n_chars++;
+                    }
+                }
                 for (j = 0; j < slot->length; j++) {
                     if (is_char_ok[j]) n_chars++;
                 }
+                //printf("%i %i\n", n_chars, slot->length);
                 if (n_chars < slot->length)
                     continue;
             }
-            //printf("checking %s\n", word);
+            //printf("checking %i %i\n", m_count, offset);
             if (m_count == offset) {
                 return word;
             }
