@@ -34,7 +34,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
     const Py_ssize_t n_indices = PyList_Size(indices);
     
     const int HAS_OPTIONS = options != Py_None;
-    int OPTION_MIN_SCORE = 0;
+    int OPTION_MIN_SCORE = -9999; // TODO ugly
     if (HAS_OPTIONS) {
         OPTION_MIN_SCORE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("min_score")));
     }
@@ -57,7 +57,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
         Py_ssize_t ii;
         for (ii = 0; ii < n_indices; ii++) {
             const int index = (int) PyInt_AsLong(PyList_GET_ITEM(indices, ii));
-            analyze_intersect_slot2(results[ii], skipped, offsets, cs, length, index);
+            analyze_intersect_slot2(results[ii], skipped, offsets, cs, length, index, OPTION_MIN_SCORE);
         }
     }
 
@@ -425,7 +425,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
             }
             // TODO index
-            analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length, 0);
+            // TODO min_score
+            analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length, 0, -9999);
         }
         
         int is_word_ok = 1;

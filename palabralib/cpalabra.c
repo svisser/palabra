@@ -239,16 +239,16 @@ Tptr insert1(Tptr p, char *s, char *word, int score)
     return p;
 }
 
-int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
+int analyze(int offset, Sptr result, Tptr p, char *s, char *cs, int min_score)
 {
     if (!p) return 0;
     int n = 0;
     if (*s == '.' || *s < p->splitchar)
-        n += analyze(offset, result, p->lokid, s, cs);
+        n += analyze(offset, result, p->lokid, s, cs, min_score);
     if (*s == '.' || *s == p->splitchar)
         if (p->splitchar && *s)
-            n += analyze(offset, result, p->eqkid, s + 1, cs);
-    if (*s == 0 && p->splitchar == 0) {
+            n += analyze(offset, result, p->eqkid, s + 1, cs, min_score);
+    if (*s == 0 && p->splitchar == 0 && p->score >= min_score) {
         n += 1;
         char intersect_char = *(cs + offset);
         if (intersect_char == '.') {
@@ -267,12 +267,12 @@ int analyze(int offset, Sptr result, Tptr p, char *s, char *cs)
         }
     }
     if (*s == '.' || *s > p->splitchar)
-        n += analyze(offset, result, p->hikid, s, cs);
+        n += analyze(offset, result, p->hikid, s, cs, min_score);
     result->n_matches = n;
     return n;
 }
 
-Sptr analyze_intersect_slot(int offset, char *cs, int index) {
+Sptr analyze_intersect_slot(int offset, char *cs, int index, int min_score) {
     if (!trees[index][strlen(cs)]) {
         return NULL;
     }
@@ -290,11 +290,11 @@ Sptr analyze_intersect_slot(int offset, char *cs, int index) {
     for (c = 0; c < MAX_ALPHABET_SIZE; c++) {
         result->chars[c] = ' ';
     }
-    analyze(offset, result, trees[index][strlen(cs)], cs, cs);
+    analyze(offset, result, trees[index][strlen(cs)], cs, cs, min_score);
     return result;
 }
 
-void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length, int index) {
+void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **cs, int length, int index, int min_score) {
     int t;
     for (t = 0; t < length; t++) {
         int skip = -1;
@@ -308,7 +308,7 @@ void analyze_intersect_slot2(Sptr *results, int *skipped, int *offsets, char **c
             }
         }
         if (skip < 0) {
-            results[t] = analyze_intersect_slot(offsets[t], cs[t], index);
+            results[t] = analyze_intersect_slot(offsets[t], cs[t], index, min_score);
         } else {
             skipped[t] = 1;
             results[t] = results[skip];
