@@ -142,7 +142,8 @@ class WordUsageDialog(PalabraDialog):
         label = gtk.Label(u"Minimum word score:")
         label.set_alignment(0, 0.5)
         score_hbox.pack_start(label, False, False, 0)
-        adj = gtk.Adjustment(0, 0, 100, 1, 0, 0)
+        value = preferences.prefs[constants.PREF_FIND_WORD_MIN_SCORE]
+        adj = gtk.Adjustment(value, 0, 100, 1, 0, 0)
         self.find_min_score_spinner = gtk.SpinButton(adj, 0.0, 0)
         score_hbox.pack_start(self.find_min_score_spinner, False, False, 0)
         vbox.pack_start(hbox)
