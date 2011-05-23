@@ -374,7 +374,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     PyObject *result = PyList_New(0);
     PyObject *best_fill = NULL;
     int best_n_done_slots = 0;
-    while (attempts < 100) {
+    while (attempts < 1000) {
         int index = -1;
         if (OPTION_NICE) {
             index = find_nice_slot(words, slots, n_slots, width, height, order);
@@ -441,16 +441,21 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         //printf("Candidate BEFORE: %s (%i %i %i) from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
         
         if (word && OPTION_DUPLICATE) {
+            int duplicates[n_slots];
+            for (t = 0; t < n_slots; t++) {
+                duplicates[t] = 0;
+            }
             while (1) {
-                int next_attempts = 0;
+                int added_offset = 0;
                 int next = 0;
                 for (t = 0; t < n_slots; t++) {
                     if (!slots[t].done) continue;
+                    if (duplicates[t]) added_offset++;
                     char *word_t = get_constraints(cgrid, width, height, &slots[t]);
                     if (word_t && strcmp(word, word_t) == 0) {
-                        next_attempts++;
-                        //printf("Finding candidate for %i %i %i with offset %i\n", slot->x, slot->y, slot->dir, slot->offset + next_attempts);
-                        word = find_candidate(cs_i, results, slot, cs, OPTION_NICE, slot->offset + next_attempts);
+                        duplicates[t] = 1;
+                        added_offset++;
+                        word = find_candidate(cs_i, results, slot, cs, OPTION_NICE, slot->offset + added_offset);
                         next = word != NULL;
                         break;
                     }

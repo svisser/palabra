@@ -468,9 +468,9 @@ class EditorTestCase(unittest.TestCase):
         # N O P
         # Q R S
         #pass # TODO don't run: will create infinite loop
-        #g = Grid(3, 3)
-        #g2 = editor.attempt_fill(g, ["klm", "nop", "qrs", "knq", "lor", "mps"])
-        #self.assertEquals(g2.count_chars(include_blanks=False), 9)
+        g = Grid(3, 3)
+        g2 = editor.attempt_fill(g, ["klm", "nop", "qrs", "knq", "lor", "mps"])
+        self.assertEquals(g2.count_chars(include_blanks=False), 9)
         
     def testOnTypingPeriod(self):
         """If the user types a period then a block is placed and selection is moved."""
