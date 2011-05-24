@@ -203,7 +203,7 @@ class FindPatternDialog(gtk.Dialog):
         
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
-        main.pack_start(gtk.Label(u"Type the words that you wish to fit into the grid:"), False, False, 0)
+        main.pack_start(gtk.Label(u"Type a small number of words that you wish to fit into the grid:"), False, False, 0)
         main.pack_start(self.text, True, True, 0)
         
         hbox.pack_start(main, True, True, 0)
@@ -291,7 +291,7 @@ class NewWindow(gtk.Dialog):
         files_hbox.pack_start(align, False, False, 0)
         self.find_button = gtk.Button(u"Find grids")
         self.find_button.connect("clicked", self.on_find_patterns)
-        #files_hbox.pack_start(self.find_button, False, False, 0)
+        files_hbox.pack_start(self.find_button, False, False, 0)
         
         patterns_vbox.pack_start(files_hbox, False, False, 6)
         
