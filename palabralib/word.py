@@ -345,7 +345,7 @@ def analyze_words(grid, g_words, g_cs, g_lengths, words):
     result = {}
     for n, x, y, d in g_words:
         data = cPalabra.compute_distances([w for w, score in words[g_lengths[x, y, d]]], cs, counts, (x, y, d))
-        result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
+        result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1), reverse=True)]
     return result
 
 class CWordList:
