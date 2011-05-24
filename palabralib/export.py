@@ -53,6 +53,7 @@ class HeaderEditor(gtk.Dialog):
     def __init__(self, palabra_window, puzzle, header):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         super(HeaderEditor, self).__init__(u"Page header editor", palabra_window, flags)
+        self.set_size_request(640, 320)
         self.puzzle = puzzle
         self.header = header
         main = gtk.VBox()
@@ -63,7 +64,6 @@ class HeaderEditor(gtk.Dialog):
         label.set_alignment(0, 0.5)
         main.pack_start(label, False, False, 0)
         text = gtk.TextView()
-        text.set_size_request(320, 200)
         text.get_buffer().connect("changed", self.on_header_changed)
         main.pack_start(text, True, True, 0)
         label = gtk.Label()
@@ -71,7 +71,10 @@ class HeaderEditor(gtk.Dialog):
         label.set_alignment(0, 0.5)
         main.pack_start(label, False, False, 0)
         self.preview = gtk.Label()
-        main.pack_start(self.preview, False, False, 0)
+        s_window = gtk.ScrolledWindow()
+        s_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        s_window.add_with_viewport(self.preview)
+        main.pack_start(s_window, False, False, 0)
         text.get_buffer().set_text(self.header)
         self.vbox.pack_start(main, True, True, 0)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
