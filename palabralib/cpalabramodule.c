@@ -530,6 +530,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     if (affected[k] >= 0) {
                         int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
                         (&slots[affected[k]])->count = count;
+                        // if an intersecting slot is not yet done, reset
+                        // offset because constraints may have changed.
+                        if (!slots[affected[k]].done) {
+                            (&slots[affected[k]])->offset = 0;
+                        }
                     }
                 }
             }
@@ -928,6 +933,7 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
                 char *c_c = PyString_AS_STRING(py_c);
                 if (c == *c_c) {
                     count += j;
+                    // TODO use number of times that character occurs as well
                     occurs = 1;
                     break;
                 }

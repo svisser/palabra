@@ -587,21 +587,6 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
                     iindex -= 1;
                 }
             }
-            // reset offsets of intersecting slots as well
-            // the reason is that constraints may change with future words
-            // for the blanked slot which means offsets have to be reset
-            // TODO: improve as we may be throwing away too much info
-            int k;
-            for (k = 0; k < bslot->length; k++) {
-                int cx = bslot->x + (bslot->dir == DIR_ACROSS ? k : 0);
-                int cy = bslot->y + (bslot->dir == DIR_DOWN ? k : 0);
-                int dir = bslot->dir == DIR_ACROSS ? 1 : 0;
-                int indexD = get_slot_index(slots, n_slots, cx, cy, dir);
-                if (indexD >= 0 && indexD != blank) {
-                    (&slots[indexD])->offset = 0;
-                }
-            }
-            
         }
     }
     return cleared;
