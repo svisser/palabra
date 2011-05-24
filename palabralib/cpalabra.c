@@ -118,6 +118,7 @@ char* find_candidate(char **cs_i, Sptr *results, Slot *slot, char *cs, int optio
         if (check_constraints(word, cs)) {
             //printf("Considering %i %s %s\n", option_nice, word, cs);
             if (!option_nice) {
+                // TODO refactor with cPalabra_search
                 int is_char_ok[MAX_WORD_LENGTH];
                 int j = 0;
                 for (j = 0; j < slot->length; j++) {

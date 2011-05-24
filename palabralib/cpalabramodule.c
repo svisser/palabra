@@ -81,6 +81,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
             int valid = 1;
             if (more_constraints != Py_None) {
                 valid = 0;
+                // TODO refactor with find_candidate
                 int is_char_ok[MAX_WORD_LENGTH];
                 int i;
                 for (i = 0; i < length; i++) {
