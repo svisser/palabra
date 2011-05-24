@@ -17,6 +17,8 @@
 
 import gtk
 
+import files
+
 SETTING_TABS = [("page", u"Page"), ("grid", u"Grid"), ("clue", u"Clue")]
 OUTPUT_OPTIONS = [("puzzle", u"Puzzle")
     , ("grid", u"Grid")
@@ -48,32 +50,50 @@ class Setting:
         self.editable = editable
 
 class HeaderEditor(gtk.Dialog):
-    def __init__(self, palabra_window):
+    def __init__(self, palabra_window, puzzle, header):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         super(HeaderEditor, self).__init__(u"Page header editor", palabra_window, flags)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        main = gtk.HBox(False, 0)
+        self.puzzle = puzzle
+        self.header = header
+        main = gtk.VBox()
+        main.set_border_width(12)
         main.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        
+        label = gtk.Label()
+        label.set_markup(u"<b>Text of the header</b>:")
+        label.set_alignment(0, 0.5)
+        main.pack_start(label, False, False, 0)
         text = gtk.TextView()
         text.set_size_request(320, 200)
-        main.pack_start(text, False, False, 0)
+        text.get_buffer().connect("changed", self.on_header_changed)
+        main.pack_start(text, True, True, 0)
+        label = gtk.Label()
+        label.set_markup(u"<b>Header preview</b>:")
+        label.set_alignment(0, 0.5)
+        main.pack_start(label, False, False, 0)
+        self.preview = gtk.Label()
+        main.pack_start(self.preview, False, False, 0)
+        text.get_buffer().set_text(self.header)
+        self.vbox.pack_start(main, True, True, 0)
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
-        self.vbox.pack_start(hbox, True, True, 0)
+    def on_header_changed(self, buff):
+        start, end = buff.get_bounds()
+        self.header = buff.get_text(start, end).strip()
+        preview_txt = files.compute_header(self.puzzle, self.header)
+        preview_txt = files.compute_header(self.puzzle, preview_txt, page_n=0)
+        self.preview.set_text(preview_txt)
 
 class ExportWindow(gtk.Dialog):
-    def __init__(self, palabra_window):
+    def __init__(self, palabra_window, puzzle):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
         super(ExportWindow, self).__init__(u"Export puzzle", palabra_window, flags)
         self.palabra_window = palabra_window
+        self.puzzle = puzzle
         pdf = Format("pdf", u"PDF (pdf)", ["puzzle", "grid", "solution", "answers"])
         pdf.add(Setting("page", "bool", u"Include header", "page_header_include", True))
         pdf.add(Setting("page", "bool", u"Include header on each page", "page_header_include_all", False))
-        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %A"))#, editable=self.on_edit_header))
+        pdf.add(Setting("page", "text", u"Header:", "page_header_text", u"%T / %A", editable=self.on_edit_header))
         pdf.add(Setting("grid", "spin", u"Cell size in puzzle (mm)", "cell_size_puzzle", 7, (5, 10)))
         pdf.add(Setting("grid", "spin", u"Cell size in solution (mm)", "cell_size_solution", 6, (5, 10)))
         pdf.add(Setting("grid", "combo", u"Align grid:", "align", "right"
@@ -187,7 +207,7 @@ class ExportWindow(gtk.Dialog):
             tab.set_border_width(6)
             tab.set_spacing(6)
             tab_c = gtk.VBox(False, 0)
-            self._create_settings(tab_c, key_setts)
+            self._create_settings(tab_c, key_setts, self.puzzle)
             tab.pack_start(tab_c, True, True, 0)
             self.tabs.append_page(tab, gtk.Label(t))
         self.option = gtk.VBox(False, 0)
@@ -233,10 +253,12 @@ class ExportWindow(gtk.Dialog):
         except AttributeError:
             pass
             
-    def on_edit_header(self, item):
-        w = HeaderEditor(self.palabra_window)
+    def on_edit_header(self, item, puzzle):
+        cur_header = self.options["settings"]["page_header_text"]
+        w = HeaderEditor(self.palabra_window, puzzle, cur_header)
         w.show_all()
-        w.run()
+        if w.run() == gtk.RESPONSE_OK:
+            self.options["settings"]["page_header_text"] = w.header
         w.destroy()
             
     def _create_output_options(self, main, format, callback):
@@ -269,10 +291,10 @@ class ExportWindow(gtk.Dialog):
         self.check_ok_button(check=format.allow_multiple)
         
     @staticmethod
-    def _create_settings(main, settings):
+    def _create_settings(main, settings, puzzle):
         if not settings:
             return
-        table = gtk.Table(len(settings), 3)
+        table = gtk.Table(len(settings), 2)
         table.set_col_spacings(6)
         table.set_row_spacings(3)
         main.pack_start(table, False, False, 0)
@@ -304,12 +326,13 @@ class ExportWindow(gtk.Dialog):
                 align.set_padding(0, 0, 12, 0)
                 align.add(gtk.Label(s.title))
                 table.attach(align, 0, 1, row, row + 1, gtk.FILL, gtk.FILL)
-                table.attach(widget, 1, 2, row, row + 1)
                 if s.editable:
                     button = gtk.ToolButton() # TODO check
                     button.set_stock_id(gtk.STOCK_EDIT)
-                    button.connect("clicked", s.editable)
-                    table.attach(button, 2, 3, row, row + 1)
+                    button.connect("clicked", s.editable, puzzle)
+                    table.attach(button, 1, 2, row, row + 1)
+                else:
+                    table.attach(widget, 1, 2, row, row + 1)
             elif s.type in ["combo", "spin"]:
                 align = gtk.Alignment(0, 0.5)
                 align.set_padding(0, 0, 12, 0)

@@ -367,7 +367,8 @@ class PalabraWindow(gtk.Window):
         action.stack.distance_from_saved = 0
         
     def export_puzzle(self):
-        w = ExportWindow(self)
+        puzzle = self.puzzle_manager.current_puzzle
+        w = ExportWindow(self, puzzle)
         w.show_all() 
         if w.run() == gtk.RESPONSE_OK:
             w.hide()
