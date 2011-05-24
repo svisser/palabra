@@ -876,7 +876,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
 
 static PyObject*
 cPalabra_compute_distances(PyObject *self, PyObject *args) {
-    /*
+    /* NO LONGER UPDATED:
     def compute_distance(w):
         places = 0
         for i, c in enumerate(w):
@@ -920,6 +920,7 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
             PyObject *a_l = PyDict_GetItem(counts, py_lengths[l]);
             PyObject *a_l_i = PyDict_GetItem(a_l, py_lengths[l_i]);
             
+            int occurs = 0;
             int j;
             for (j = 0; j < PyList_GET_SIZE(a_l_i); j++) {
                 PyObject *item = PyList_GET_ITEM(a_l_i, j);
@@ -927,8 +928,13 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
                 char *c_c = PyString_AS_STRING(py_c);
                 if (c == *c_c) {
                     count += j;
+                    occurs = 1;
                     break;
                 }
+            }
+            // penalize score if character does not occur at all
+            if (!occurs) {
+                count += PyList_GET_SIZE(a_l_i);
             }
         }
         PyObject* item = Py_BuildValue("(si)", word, count);
