@@ -291,6 +291,8 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     PyObject* data = PyObject_GetAttrString(grid, "data");
     
+    const int OUTPUT_DEBUG = 1;
+    
     int x;
     int y;
     Cell cgrid[width * height];
@@ -443,7 +445,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         //printf("Trying for %i %i %i\n", slot->x, slot->y, slot->dir);
         char* word = find_candidate(cs_i, results, slot, cs, OPTION_NICE, slot->offset);
-        //printf("Candidate BEFORE: %s (%i %i %i) from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
+        if (OUTPUT_DEBUG) {
+            PyObject *val = Py_BuildValue("(ssiiii)", "before", word, slot->x, slot->y, slot->dir, slot->offset);
+            PyList_Append(result, val);
+            Py_DECREF(val);
+        }
         
         if (word && OPTION_DUPLICATE) {
             int duplicates[n_slots];
@@ -467,6 +473,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
                 if (!next) break;
             }
+        }
+        if (OUTPUT_DEBUG && word) {
+            PyObject *val = Py_BuildValue("(ssiiii)", "after", word, slot->x, slot->y, slot->dir, slot->offset);
+            PyList_Append(result, val);
+            Py_DECREF(val);
         }
         //if (word) printf("Candidate AFTER: %s (%i %i %i)\n", word, slot->x, slot->y, slot->dir);
         
@@ -531,7 +542,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                         int count = determine_count(words, cgrid, width, height, &slots[affected[k]]);
                         (&slots[affected[k]])->count = count;
                         // if an intersecting slot is not yet done, reset
-                        // offset because constraints may have changed.
+                        // offset because constraints have changed.
                         if (!slots[affected[k]].done) {
                             (&slots[affected[k]])->offset = 0;
                         }
@@ -559,6 +570,11 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 }
                 n_done_slots -= cleared;
             }
+        }
+        if (OUTPUT_DEBUG) {
+            PyObject *val = gather_fill(cgrid, width, height);
+            PyList_Append(result, val);
+            Py_DECREF(val);
         }
         if (is_word_ok) {
             slot->done = 1;

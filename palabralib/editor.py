@@ -36,6 +36,7 @@ from word import (CWordList,
     analyze_words,
 )
 import cPalabra
+from gui_debug import FillDebugDialog
 
 DEFAULT_FILL_OPTIONS = {
     constants.FILL_OPTION_START: constants.FILL_START_AT_AUTO
@@ -726,7 +727,14 @@ class Editor:
         
     def fill(self):
         for wlist in self.window.wordlists:
+            backup = copy.deepcopy(self.puzzle.grid)
             results = fill(self.puzzle.grid, wlist.words, self.fill_options)
+            if True:
+                w = FillDebugDialog(self.window, [backup] + results)
+                w.show_all()
+                w.run()
+                w.destroy()
+                break
             self.window.transform_grid(transform.modify_chars, chars=results[0])
             break
             
