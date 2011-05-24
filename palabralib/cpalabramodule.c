@@ -86,6 +86,11 @@ cPalabra_search(PyObject *self, PyObject *args) {
                 for (i = 0; i < length; i++) {
                     is_char_ok[i] = 0;
                 }
+                // mark fully filled in intersecting words also as ok
+                for (i = 0; i < length; i++) {
+                    if (strchr(cs[i], '.') == NULL)
+                        is_char_ok[i] = 1;
+                }
                 Py_ssize_t jj;
                 for (jj = 0; jj < n_indices; jj++) {
                     check_intersect(word, cs, length, results[jj], is_char_ok);
