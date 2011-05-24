@@ -1064,3 +1064,16 @@ class WordTestCase(unittest.TestCase):
         result = search_wordlists([w1], 3, "abc", css, options=options)
         self.assertEqual(result, [("abc", 1, False)])
         cPalabra.postprocess()
+        
+    def testSearchWordlistsFullIntersectingWord(self):
+        """
+        A fully filled in intersectin word is effectively ignored for
+        intersection boolean in search results.
+        """
+        w1 = CWordList(["abc", "aaa", "bbb", "ccc"])
+        css = [(0, 3, [(0, 'a'), (1, 'b'), (2, 'c')]), (0, 3, []), (0, 3, [])]
+        result = search_wordlists([w1], 3, "a..", css)
+        self.assertEqual(len(result), 2)
+        self.assertTrue(("abc", 0, True) in result)
+        self.assertTrue(("aaa", 0, True) in result)
+        cPalabra.postprocess()

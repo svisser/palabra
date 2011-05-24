@@ -374,7 +374,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     PyObject *result = PyList_New(0);
     PyObject *best_fill = NULL;
     int best_n_done_slots = 0;
-    while (attempts < 100) {
+    while (attempts < 1000) {
         int index = -1;
         if (OPTION_NICE) {
             index = find_nice_slot(words, slots, n_slots, width, height, order);

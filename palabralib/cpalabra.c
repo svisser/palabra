@@ -572,7 +572,7 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
                 continue;
             }
             Slot *bslot = &slots[blank];
-            if (0) printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
+            //printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
             cleared++;
             clear_slot(cgrid, width, height, slots, n_slots, blank);
             bslot->count = determine_count(words, cgrid, width, height, bslot);
