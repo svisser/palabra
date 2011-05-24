@@ -110,7 +110,7 @@ META_CODES = {
     , META_PUBLISHER: "%P"
     , META_DATE: "%D"
     , META_FILENAME: "%F"
-    , META_FILEPATH: "%FF"
+    , META_FILEPATH: "%L"
     , META_WIDTH: "%W"
     , META_HEIGHT: "%H"
     , META_N_WORDS: "%N"
