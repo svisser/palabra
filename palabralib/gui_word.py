@@ -614,10 +614,17 @@ class WordListEditor(gtk.Dialog):
         
         main.pack_start(props_vbox, True, True, 0)
         
+        content = gtk.VBox()
+        content.set_border_width(12)
+        content.set_spacing(18)
+        
         hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
+        content.pack_start(hbox)
+        label = gtk.Label(u"These settings are saved and loaded when you restart " + constants.TITLE + ".")
+        label.set_alignment(0, 0.5)
+        content.pack_start(label, False, False, 0)
         
         # select a word list by default
         self.display_wordlists()
@@ -627,7 +634,7 @@ class WordListEditor(gtk.Dialog):
             sel.select_iter(it)
         
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.vbox.add(hbox)
+        self.vbox.add(content)
         
     def add_word_list(self):
         dialog = gtk.FileChooserDialog(u"Add word list"
