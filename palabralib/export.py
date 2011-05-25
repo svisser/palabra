@@ -102,11 +102,14 @@ class HeaderEditor(gtk.Dialog):
         buff = self.text.get_buffer()
         start, end = buff.get_bounds()
         header = buff.get_text(start, end)
-        if header.endswith(" "):
-            self.header = header + code
+        insert_it = buff.get_iter_at_mark(buff.get_insert())
+        if insert_it.get_char() == buff.get_end_iter().get_char():
+            if header.endswith(" "):
+                buff.set_text(header + code)
+            else:
+                buff.set_text(header + " " + code)
         else:
-            self.header = header + " " + code
-        buff.set_text(self.header)
+            buff.insert_at_cursor(code)
         
     def on_header_changed(self, buff):
         start, end = buff.get_bounds()
