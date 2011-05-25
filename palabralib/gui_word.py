@@ -249,6 +249,7 @@ class AccidentalWordsDialog(PalabraDialog):
         combo.set_active(self.index)    
         def on_wordlist_changed(widget):
             self.index = widget.get_active()
+            self.launch_accidental(self.puzzle.grid)
         combo.connect("changed", on_wordlist_changed)
         wlist_hbox.pack_start(combo, False, False, 0)
         self.main.pack_start(wlist_hbox, False, False, 0)
