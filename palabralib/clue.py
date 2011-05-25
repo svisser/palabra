@@ -15,10 +15,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import constants
 import gobject
 import gtk
+import os
 
 import transform
+
+def read_clues(path):
+    if not os.path.exists(path):
+        return {}
+    clues = {}
+    with open(path, 'r') as f:
+        lower = str.lower
+        for line in f:
+            line = line.strip("\n")
+            line = line.split(",")
+            l_line = len(line)
+            if not line or l_line != 2:
+                continue
+            word, clue = line
+            clue = clue.strip()
+            if " " in word: # for now, reject compound
+                continue
+            if len(word) > constants.MAX_WORD_LENGTH:
+                continue
+            l_word = lower(word)
+            if l_word not in clues:
+                clues[l_word] = [clue]
+            else:
+                clues[l_word].append(clue)
+    return clues
 
 class ClueTool:
     def __init__(self, editor):
