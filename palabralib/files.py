@@ -436,7 +436,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 layout.set_markup(text)
                 pcr.show_layout(layout)
             return True, None
-        return render_page, pages
+        return [(render_page, p) for p in pages]
     def gen_columns(col_width
         , padding=None
         , grid_w=None
@@ -484,7 +484,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             position = margin_left + (c_width - grid_w) / 2, margin_top
         elif align == "left":
             position = margin_left, margin_top
-        return n_columns, col_width, prevs, grid_w, grid_h, position, padding
+        return col_width, prevs, grid_w, grid_h, position, padding
     def produce_puzzle(mode, prevs, position, add_clues=False):
         def render_puzzle(header_delta=None):
             puzzle.view.properties.margin = position
@@ -499,20 +499,20 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     CELL_SIZE = {"grid": settings["cell_size_puzzle"]
         , "solution": settings["cell_size_solution"]
     }
+    RENDER_MODES = {
+        "puzzle": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+        , "grid": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+        , "solution": constants.VIEW_MODE_EXPORT_PDF_SOLUTION
+    }
     def compute_funcs(header_delta):
         if o == "puzzle":
             grid_props = adjust_grid_props(settings["align"], settings["cell_size_puzzle"])
-            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-            funcs = produce_puzzle(mode, grid_props[2], grid_props[5], True)
-            content = produce_clues(clue_break=True)
-            n_columns, col_width, prevs, grid_w, grid_h, position, padding = grid_props
-            columns = gen_columns(col_width, padding, grid_w, grid_h, position, header_delta)
-            f, args = show_clues_columns(content, columns)
-            funcs += [(f, a) for a in args]
+            funcs = produce_puzzle(RENDER_MODES[o], grid_props[1], grid_props[4], True)
+            columns = gen_columns(grid_props[0], grid_props[5], grid_props[2], grid_props[3], grid_props[4], header_delta)
+            funcs += show_clues_columns(produce_clues(clue_break=True), columns)
         elif o in ["grid", "solution"]:
             grid_props = adjust_grid_props("center", CELL_SIZE[o])
-            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-            funcs = produce_puzzle(mode, grid_props[2], grid_props[5])
+            funcs = produce_puzzle(RENDER_MODES[o], grid_props[1], grid_props[4])
         elif o == "answers":
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
             columns = [int(0.55 * c_width), int(0.05 * c_width), int(0.4 * c_width)]
