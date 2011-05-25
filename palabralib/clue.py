@@ -35,6 +35,8 @@ def read_clues(path):
             if not line or l_line != 2:
                 continue
             word, clue = line
+            if not word or not clue:
+                continue
             clue = clue.strip()
             if " " in word: # for now, reject compound
                 continue

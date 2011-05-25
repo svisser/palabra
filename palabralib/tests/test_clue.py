@@ -66,6 +66,12 @@ class ClueTestCase(unittest.TestCase):
             f.write("a" * (constants.MAX_WORD_LENGTH + 1) + ",clue")
         self.assertEqual(clue.read_clues(self.LOCATION), {})
         
+    def testReadCluesMalformedLines(self):
+        """Lines that do not have 1 word and 1 clue are rejected."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word\nword,\n,clue\n,\ntoo,much,data\n\n")
+        self.assertEqual(clue.read_clues(self.LOCATION), {})
+        
     def testReadCluesRejectCompound(self): # for now, reject compound
         with open(self.LOCATION, 'w') as f:
             f.write("This is a compound word,clue")
