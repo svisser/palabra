@@ -424,7 +424,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         for p, x, y, w, h, text in r_columns:
             if p not in pages:
                 pages.append(p)
-        def render_page(page):
+        def render_page(page, header_delta=None):
             for p, x, y, w, h, text in r_columns:
                 if p != page:
                     continue
@@ -437,7 +437,12 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 pcr.show_layout(layout)
             return True, None
         return render_page, pages
-    def gen_columns(col_width, padding=None, grid_w=None, grid_h=None, position=None):
+    def gen_columns(col_width
+        , padding=None
+        , grid_w=None
+        , grid_h=None
+        , position=None
+        , header_delta=None):
         clue_placement = settings["clue_placement"]
         n_columns = settings["n_columns"]
         page = 0
@@ -445,7 +450,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         pos_x, pos_y = position
         while True:
             for n in xrange(n_columns):
-                col_height = c_height
+                col_height = c_height - header_delta
                 col_x = x + n * col_width + n * padding
                 col_y = y
                 shrink = False
@@ -462,15 +467,15 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                     col_y += (grid_h + padding)
                 yield page, col_x, col_y, col_width, col_height
             page += 1
-    def produce_puzzle(mode, align, cell_size=7, add_clues=False):
+    def adjust_grid_props(align, cell_size=7):
         padding = 20
         n_columns = settings["n_columns"]
+        col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
         props = puzzle.view.properties
         prevs = {
             ("cell", "size"): props["cell", "size"]
             , "margin": props.margin
         }
-        col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
         props["cell", "size"] = cell_size * mm_unit
         grid_w, grid_h = props.visual_size(False)
         if align == "right":
@@ -479,46 +484,21 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             position = margin_left + (c_width - grid_w) / 2, margin_top
         elif align == "left":
             position = margin_left, margin_top
-        def render_puzzle():
+        return n_columns, col_width, prevs, grid_w, grid_h, position, padding
+    def produce_puzzle(mode, grid_props, add_clues=False):
+        n_columns, col_width, prevs, grid_w, grid_h, position, padding = grid_props
+        def render_puzzle(header_delta=None):
             puzzle.view.properties.margin = position
             puzzle.view.render(context, mode)
             puzzle.view.pdf_reset(prevs)
             return (not add_clues), None
-        result = [(render_puzzle, None)]
-        if add_clues:
-            content = produce_clues(clue_break=True)
-            columns = gen_columns(col_width, padding, grid_w, grid_h, position)
-            f, args = show_clues_columns(content, columns)
-            result += [(f, a) for a in args]
-        return result
+        return [(render_puzzle, None)]
     p_h_include = settings["page_header_include"]
     p_h_all = settings["page_header_include_all"]
     page_n = 0
     header = compute_header(puzzle, settings["page_header_text"])
     for o in outputs:
-        if o == "puzzle":
-            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-            funcs = produce_puzzle(mode=mode
-                , align=settings["align"]
-                , cell_size=settings["cell_size_puzzle"]
-                , add_clues=True)
-        elif o == "grid":
-            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-            funcs = produce_puzzle(mode=mode
-                , align="center"
-                , cell_size=settings["cell_size_puzzle"])
-        elif o == "solution":
-            mode = constants.VIEW_MODE_EXPORT_PDF_SOLUTION
-            funcs = produce_puzzle(mode=mode
-                , align="center"
-                , cell_size=settings["cell_size_solution"])
-        elif o == "answers":
-            rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
-            columns = [int(0.6 * c_width), int(0.4 * c_width)]
-            table = PangoCairoTable(columns, margin=(margin_left, margin_top))
-            def render_table(offset):
-                return table.render_rows(context, rows, c_height, offset)
-            funcs = [(render_table, 0)]
+        funcs = None
         done = False
         count = 0
         while not done:
@@ -528,12 +508,37 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 header_height = pdf_header(compute_header(puzzle, header, page_n))
                 header_delta = header_height + 10
                 context.translate(0, header_delta)
+            if funcs is None:
+                if o == "puzzle":
+                    grid_props = adjust_grid_props(settings["align"], settings["cell_size_puzzle"])
+                    mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+                    funcs = produce_puzzle(mode, grid_props, True)
+                    content = produce_clues(clue_break=True)
+                    n_columns, col_width, prevs, grid_w, grid_h, position, padding = grid_props
+                    columns = gen_columns(col_width, padding, grid_w, grid_h, position, header_delta)
+                    f, args = show_clues_columns(content, columns)
+                    funcs += [(f, a) for a in args]
+                elif o == "grid":
+                    grid_props = adjust_grid_props("center", settings["cell_size_puzzle"])
+                    mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+                    funcs = produce_puzzle(mode, grid_props, False)
+                elif o == "solution":
+                    grid_props = adjust_grid_props("center", settings["cell_size_solution"])
+                    mode = constants.VIEW_MODE_EXPORT_PDF_SOLUTION
+                    funcs = produce_puzzle(mode, grid_props, False)
+                elif o == "answers":
+                    rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
+                    columns = [int(0.6 * c_width), int(0.4 * c_width)]
+                    table = PangoCairoTable(columns, margin=(margin_left, margin_top))
+                    def render_table(offset, header_delta):
+                        return table.render_rows(context, rows, c_height - header_delta, offset)
+                    funcs = [(render_table, 0)]
             todo = funcs[count:]
-            for p, p_args in todo:
+            for f, f_args in todo:
                 count += 1
-                r, new_arg = p(p_args) if p_args is not None else p()
+                r, new_arg = f(f_args, header_delta) if f_args is not None else f(header_delta)
                 if new_arg is not None:
-                    funcs.append((p, new_arg))
+                    funcs.append((f, new_arg))
                 if not r:
                     continue
                 context.show_page()
