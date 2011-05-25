@@ -106,8 +106,8 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_edit_menu())
         self.menubar.append(self.create_view_menu())
         self.menubar.append(self.create_grid_menu())
-        #self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_word_menu())
+        self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
         self.toolbar = self.create_toolbar()
         self.panel = gtk.VBox(False, 0)
@@ -1196,11 +1196,11 @@ class PalabraWindow(gtk.Window):
     def create_clue_menu(self):
         menu = gtk.Menu()
         
-        menu.append(self._create_menu_item(
-            lambda item: self.edit_clues()
-            , u"Edit the clues of the puzzle"
-            , title=u"Edit _clues..."
-            , is_puzzle_sensitive=True))
+        def activate(item):
+            print "TODO"
+        menu.append(self._create_menu_item(activate
+            , u"Manage the clue files available to the program"
+            , title=u"_Manage clues..."))
         
         word_menu = gtk.MenuItem(u"_Clue", True)
         word_menu.set_submenu(menu)
