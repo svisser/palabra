@@ -237,7 +237,7 @@ class SimilarWordsDialog(PalabraDialog):
                 txt += '</span>'
                 txt += word[pos + l_s:]
                 if i < l_words - 1:
-                    txt += ' / '
+                    txt += ', '
             txt += '</span>'
             self.store.append([s, txt])
     
