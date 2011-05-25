@@ -496,23 +496,28 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     p_h_all = settings["page_header_include_all"]
     page_n = 0
     header = compute_header(puzzle, settings["page_header_text"])
-    CELL_SIZE = {"grid": settings["cell_size_puzzle"]
+    GRID_ALIGNMENT = {"puzzle": settings["align"]
+        , "grid": "center"
+        , "solution": "center"
+    }
+    CELL_SIZE = {"puzzle": settings["cell_size_puzzle"]
+        , "grid": settings["cell_size_puzzle"]
         , "solution": settings["cell_size_solution"]
     }
-    RENDER_MODES = {
+    RENDER_MODE = {
         "puzzle": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
         , "grid": constants.VIEW_MODE_EXPORT_PDF_PUZZLE
         , "solution": constants.VIEW_MODE_EXPORT_PDF_SOLUTION
     }
     def compute_funcs(header_delta):
+        if o in ["puzzle", "grid", "solution"]:
+            grid_props = adjust_grid_props(GRID_ALIGNMENT[o], CELL_SIZE[o])
+            funcs = produce_puzzle(RENDER_MODE[o], grid_props[1], grid_props[4], o == "puzzle")
         if o == "puzzle":
-            grid_props = adjust_grid_props(settings["align"], settings["cell_size_puzzle"])
-            funcs = produce_puzzle(RENDER_MODES[o], grid_props[1], grid_props[4], True)
-            columns = gen_columns(grid_props[0], grid_props[5], grid_props[2], grid_props[3], grid_props[4], header_delta)
+            columns = gen_columns(grid_props[0]
+                , grid_props[5], grid_props[2], grid_props[3]
+                , grid_props[4], header_delta)
             funcs += show_clues_columns(produce_clues(clue_break=True), columns)
-        elif o in ["grid", "solution"]:
-            grid_props = adjust_grid_props("center", CELL_SIZE[o])
-            funcs = produce_puzzle(RENDER_MODES[o], grid_props[1], grid_props[4])
         elif o == "answers":
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
             columns = [int(0.55 * c_width), int(0.05 * c_width), int(0.4 * c_width)]
