@@ -235,7 +235,7 @@ class PangoCairoTable():
                 return True, offset + i
             r_y = self.render(context, 0, y, r_1, wrap=True)
             if r_2 is not None:
-                self.render(context, 1, y, r_2)
+                self.render(context, 2, y, r_2)
             y += r_y #(r_y / 2) # TODO why divide by 2
         return True, None
         
@@ -485,8 +485,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         elif align == "left":
             position = margin_left, margin_top
         return n_columns, col_width, prevs, grid_w, grid_h, position, padding
-    def produce_puzzle(mode, grid_props, add_clues=False):
-        n_columns, col_width, prevs, grid_w, grid_h, position, padding = grid_props
+    def produce_puzzle(mode, prevs, position, add_clues=False):
         def render_puzzle(header_delta=None):
             puzzle.view.properties.margin = position
             puzzle.view.render(context, mode)
@@ -497,6 +496,31 @@ def export_to_pdf(puzzle, filename, outputs, settings):
     p_h_all = settings["page_header_include_all"]
     page_n = 0
     header = compute_header(puzzle, settings["page_header_text"])
+    CELL_SIZE = {"grid": settings["cell_size_puzzle"]
+        , "solution": settings["cell_size_solution"]
+    }
+    def compute_funcs(header_delta):
+        if o == "puzzle":
+            grid_props = adjust_grid_props(settings["align"], settings["cell_size_puzzle"])
+            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+            funcs = produce_puzzle(mode, grid_props[2], grid_props[5], True)
+            content = produce_clues(clue_break=True)
+            n_columns, col_width, prevs, grid_w, grid_h, position, padding = grid_props
+            columns = gen_columns(col_width, padding, grid_w, grid_h, position, header_delta)
+            f, args = show_clues_columns(content, columns)
+            funcs += [(f, a) for a in args]
+        elif o in ["grid", "solution"]:
+            grid_props = adjust_grid_props("center", CELL_SIZE[o])
+            mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
+            funcs = produce_puzzle(mode, grid_props[2], grid_props[5])
+        elif o == "answers":
+            rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
+            columns = [int(0.55 * c_width), int(0.05 * c_width), int(0.4 * c_width)]
+            table = PangoCairoTable(columns, margin=(margin_left, margin_top))
+            def render_table(offset, header_delta):
+                return table.render_rows(context, rows, c_height - header_delta, offset)
+            funcs = [(render_table, 0)]
+        return funcs
     for o in outputs:
         funcs = None
         done = False
@@ -509,30 +533,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 header_delta = header_height + 10
                 context.translate(0, header_delta)
             if funcs is None:
-                if o == "puzzle":
-                    grid_props = adjust_grid_props(settings["align"], settings["cell_size_puzzle"])
-                    mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-                    funcs = produce_puzzle(mode, grid_props, True)
-                    content = produce_clues(clue_break=True)
-                    n_columns, col_width, prevs, grid_w, grid_h, position, padding = grid_props
-                    columns = gen_columns(col_width, padding, grid_w, grid_h, position, header_delta)
-                    f, args = show_clues_columns(content, columns)
-                    funcs += [(f, a) for a in args]
-                elif o == "grid":
-                    grid_props = adjust_grid_props("center", settings["cell_size_puzzle"])
-                    mode = constants.VIEW_MODE_EXPORT_PDF_PUZZLE
-                    funcs = produce_puzzle(mode, grid_props, False)
-                elif o == "solution":
-                    grid_props = adjust_grid_props("center", settings["cell_size_solution"])
-                    mode = constants.VIEW_MODE_EXPORT_PDF_SOLUTION
-                    funcs = produce_puzzle(mode, grid_props, False)
-                elif o == "answers":
-                    rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
-                    columns = [int(0.6 * c_width), int(0.4 * c_width)]
-                    table = PangoCairoTable(columns, margin=(margin_left, margin_top))
-                    def render_table(offset, header_delta):
-                        return table.render_rows(context, rows, c_height - header_delta, offset)
-                    funcs = [(render_table, 0)]
+                funcs = compute_funcs(header_delta)
             todo = funcs[count:]
             for f, f_args in todo:
                 count += 1
