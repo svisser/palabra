@@ -335,10 +335,10 @@ class FilesTestCase(unittest.TestCase):
         header = compute_header(p, "%T %A %E %C %P %D")
         self.assertEquals(header, "Title Author Editor Copyright Publisher 2011/01/01")
         self.puzzle.filename = None
-        header = compute_header(p, "%F %FF")
-        self.assertEquals(header, "%F %FF")
+        header = compute_header(p, "%F %L")
+        self.assertEquals(header, "%F %L")
         self.puzzle.filename = self.LOCATION
-        header = compute_header(p, "%F %FF")
+        header = compute_header(p, "%F %L")
         self.assertEquals(header, os.path.basename(self.LOCATION) + " " + self.LOCATION)
         p.grid.set_block(0, 0, True)
         p.grid.set_block(5, 0, True)
