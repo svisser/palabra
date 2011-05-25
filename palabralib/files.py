@@ -275,6 +275,8 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         layout.set_markup(''.join(text))
         context.move_to(margin_left, margin_top)
         pcr.show_layout(layout)
+        w, h = layout.get_pixel_size()
+        return h
     def produce_clues(clue_break=False, answers=False, reduce_to_rows=False):
         content = {"clue_markup": {}, "clues": {}}
         c_h = settings["clue_header"]
@@ -521,9 +523,11 @@ def export_to_pdf(puzzle, filename, outputs, settings):
         count = 0
         while not done:
             context.save()
+            header_delta = 0
             if p_h_include and (True if p_h_all else page_n == 0):
-                pdf_header(compute_header(puzzle, header, page_n))
-                context.translate(0, 24)
+                header_height = pdf_header(compute_header(puzzle, header, page_n))
+                header_delta = header_height + 10
+                context.translate(0, header_delta)
             todo = funcs[count:]
             for p, p_args in todo:
                 count += 1
