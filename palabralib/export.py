@@ -17,6 +17,7 @@
 
 import gtk
 
+import constants
 import files
 
 SETTING_TABS = [("page", u"Page"), ("grid", u"Grid"), ("clue", u"Clue")]
@@ -50,22 +51,22 @@ class Setting:
         self.editable = editable
 
 class HeaderEditor(gtk.Dialog):
-    def __init__(self, palabra_window, puzzle, header):
+    def __init__(self, parent, puzzle, header):
         flags = gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT
-        super(HeaderEditor, self).__init__(u"Page header editor", palabra_window, flags)
-        self.set_size_request(640, 320)
+        super(HeaderEditor, self).__init__(u"Page header editor", parent, flags)
         self.puzzle = puzzle
         self.header = header
         main = gtk.VBox()
         main.set_border_width(12)
         main.set_spacing(18)
         label = gtk.Label()
-        label.set_markup(u"<b>Text of the header</b>:")
+        label.set_markup(u"<b>Header text</b>:")
         label.set_alignment(0, 0.5)
         main.pack_start(label, False, False, 0)
-        text = gtk.TextView()
-        text.get_buffer().connect("changed", self.on_header_changed)
-        main.pack_start(text, True, True, 0)
+        self.text = gtk.TextView()
+        self.text.set_size_request(512, 320)
+        self.text.get_buffer().connect("changed", self.on_header_changed)
+        main.pack_start(self.text, True, True, 0)
         label = gtk.Label()
         label.set_markup(u"<b>Header preview</b>:")
         label.set_alignment(0, 0.5)
@@ -75,10 +76,34 @@ class HeaderEditor(gtk.Dialog):
         s_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         s_window.add_with_viewport(self.preview)
         main.pack_start(s_window, False, False, 0)
-        text.get_buffer().set_text(self.header)
-        self.vbox.pack_start(main, True, True, 0)
+        self.text.get_buffer().set_text(self.header)
+        labels_vbox = gtk.VBox()
+        labels_vbox.set_border_width(12)
+        labels_vbox.set_spacing(6)
+        label = gtk.Label()
+        label.set_markup(u"<b>Click to insert</b>:")
+        label.set_alignment(0, 0.5)
+        labels_vbox.pack_start(label, False, False, 0)
+        for code, title in constants.META_CAPTIONS:
+            label = gtk.Label(title + " (" + code + ")")
+            label.set_alignment(0, 0.5)
+            eventbox = gtk.EventBox()
+            eventbox.add(label)
+            eventbox.connect("button-press-event", self.on_code_clicked, code)
+            labels_vbox.pack_start(eventbox, False, False, 0)
+        content_box = gtk.HBox()
+        content_box.pack_start(main, True, True, 0)
+        content_box.pack_start(labels_vbox, False, False, 0)
+        self.vbox.pack_start(content_box, True, True, 0)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+    def on_code_clicked(self, widget, event, code):
+        buff = self.text.get_buffer()
+        start, end = buff.get_bounds()
+        header = buff.get_text(start, end)
+        self.header = header + code
+        buff.set_text(self.header)
         
     def on_header_changed(self, buff):
         start, end = buff.get_bounds()
@@ -258,7 +283,7 @@ class ExportWindow(gtk.Dialog):
             
     def on_edit_header(self, item, puzzle):
         cur_header = self.options["settings"]["page_header_text"]
-        w = HeaderEditor(self.palabra_window, puzzle, cur_header)
+        w = HeaderEditor(self, puzzle, cur_header)
         w.show_all()
         if w.run() == gtk.RESPONSE_OK:
             self.options["settings"]["page_header_text"] = w.header

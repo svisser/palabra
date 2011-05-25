@@ -118,6 +118,23 @@ META_CODES = {
     , META_PAGE_NUMBER: "%G"
 }
 
+# for header editor
+META_CAPTIONS = [
+    (META_CODES[META_TITLE], u"Title")
+    , (META_CODES[META_CREATOR], u"Author")
+    , (META_CODES[META_EDITOR], u"Editor")
+    , (META_CODES[META_COPYRIGHT], u"Rights")
+    , (META_CODES[META_PUBLISHER], u"Publisher")
+    , (META_CODES[META_DATE], u"Date")
+    , (META_CODES[META_FILENAME], u"File name")
+    , (META_CODES[META_FILEPATH], u"Path and file name")
+    , (META_CODES[META_WIDTH], u"Width")
+    , (META_CODES[META_HEIGHT], u"Height")
+    , (META_CODES[META_N_WORDS], "Number of words")
+    , (META_CODES[META_N_BLOCKS], "Number of blocks")
+    , (META_CODES[META_PAGE_NUMBER], "Page number")
+]
+
 # statusbar identifiers
 STATUS_MENU = "STATUS_MENU"
 STATUS_GRID = "STATUS_GRID"
