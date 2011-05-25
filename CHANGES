@@ -4,6 +4,9 @@ This is a list of changes since the initial release of Palabra.
 0.1.7 (unreleased)
 * Added button in new puzzle window for finding grids with specified words.
 * Added dialog for viewing similar words.
+* Added dialog for managing word lists.
+* Added dialog for configuring word list usage.
+* Added dialog for editing page headers.
 
 0.1.6 (May 17, 2011)
 * Added ability to store an explanation for a clue (XPF).
