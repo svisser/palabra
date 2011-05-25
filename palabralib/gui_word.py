@@ -65,6 +65,23 @@ def create_tree(types, columns, f_sel=None):
         tree.get_selection().connect("changed", f_sel)
     return store, tree, scrolled_window
 
+class WordListEditor(PalabraDialog):
+    def __init__(self, parent):
+        PalabraDialog.__init__(self, parent, u"Edit word lists", horizontal=True)
+        self.wordlists = parent.wordlists
+        # name path
+        self.store, self.tree, s_window = create_tree((str, str)
+            , [("Available word lists", 0)]
+            , f_sel=self.on_tree_selection_changed)
+        s_window.set_size_request(256, 196)
+        for wlist in self.wordlists:
+            self.store.append([wlist.name, wlist.path])
+        self.main.pack_start(s_window, True, True, 0)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        
+    def on_tree_selection_changed(self, selection):
+        store, it = selection.get_selected()
+
 class WordUsageDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent
@@ -488,7 +505,7 @@ class NewWordListDialog(PalabraDialog):
         self.wlist_name = name
         self.ok_button.set_sensitive(False if name is None else len(name) > 0)
 
-class WordListEditor(gtk.Dialog):
+class WordListManager(gtk.Dialog):
     def __init__(self, palabra_window):
         gtk.Dialog.__init__(self, u"Manage word lists"
             , palabra_window, gtk.DIALOG_MODAL)

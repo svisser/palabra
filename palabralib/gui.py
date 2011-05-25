@@ -59,9 +59,10 @@ from gui_prefs import PreferencesWindow
 from gui_word import (
     AccidentalWordsDialog,
     FindWordsDialog,
-    WordListEditor,
+    WordListManager,
     SimilarWordsDialog,
     WordUsageDialog,
+    WordListEditor,
 )
 import grid
 from grid import Grid
@@ -1131,7 +1132,7 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def activate(item):
-            w = WordListEditor(self)
+            w = WordListManager(self)
             w.show_all()
             w.run()
             w.destroy()
@@ -1148,6 +1149,14 @@ class PalabraWindow(gtk.Window):
         menu.append(self._create_menu_item(activate
             , u"Configure how word lists are used in the program"
             , title=u"Configure word list _usage..."))
+        def activate(item):
+            w = WordListEditor(self)
+            w.show_all()
+            w.run()
+            w.destroy()
+        menu.append(self._create_menu_item(activate
+            , u"Create new word lists and edit existing word lists"
+            , title=u"_Edit word lists..."))
         
         menu.append(gtk.SeparatorMenuItem())
         
