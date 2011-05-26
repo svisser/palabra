@@ -24,6 +24,7 @@ SETTING_TABS = [("page", u"Page")
     , ("grid", u"Grid")
     , ("clue", u"Clue")
     , ("clueh", u"Clue header")
+    , ("answers", u"Answers")
 ]
 OUTPUT_OPTIONS = [("puzzle", u"Puzzle")
     , ("grid", u"Grid")
@@ -139,7 +140,7 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("clue", "combo", u"Clues:", "clue_placement", "wrap"
             , [(u"Wrapped around grid", "wrap"), (u"Below grid", "below")]))
         pdf.add(Setting("clue", "spin", u"Columns", "n_columns", 3, (3, 5)))
-        pdf.add(Setting("clue", "spin", u"Spacing between columns\n(% of available width)", "column_spacing", 5, (0, 20)))
+        pdf.add(Setting("clue", "spin", u"Spacing between columns\n\t(% of available width)", "column_spacing", 5, (0, 20)))
         pdf.add(Setting("page", "spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
@@ -152,10 +153,12 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("clueh", "bool", u"Bold clue header", "clue_header_bold", True))
         pdf.add(Setting("clueh", "bool", u"Italic clue header", "clue_header_italic", False))
         pdf.add(Setting("clueh", "bool", u"Underline clue header", "clue_header_underline", False))
+        pdf.add(Setting("answers", "spin", u"Width of clue column\n\t(% of available width)", "answers_clue_width", 50, (10, 90)))
+        pdf.add(Setting("answers", "spin", u"Width of spacing between clues / answers\n\t(% of available width)", "answers_clue_sep", 5, (0, 20)))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.outputs = {}
-        self.format = None
+        self.format = None        
         
         items = gtk.ListStore(str)
         for format in self.formats:
@@ -335,7 +338,7 @@ class ExportWindow(gtk.Dialog):
             return
         table = gtk.Table(len(settings), 2)
         table.set_col_spacings(6)
-        table.set_row_spacings(3)
+        table.set_row_spacings(6)
         main.pack_start(table, False, False, 0)
         for row, s in enumerate(settings):
             if s.type == "combo":

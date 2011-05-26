@@ -520,8 +520,10 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             funcs += show_clues_columns(produce_clues(clue_break=True), columns)
         elif o == "answers":
             rows = produce_clues(clue_break=True, answers=True, reduce_to_rows=True)
-            columns = [int(0.55 * c_width), int(0.05 * c_width), int(0.4 * c_width)]
-            table = PangoCairoTable(columns, margin=(margin_left, margin_top))
+            w1 = int((settings["answers_clue_width"] / 100.0) * c_width)
+            w2 = int((settings["answers_clue_sep"] / 100.0) * c_width)
+            w3 = c_width - w1 - w2
+            table = PangoCairoTable([w1, w2, w3], margin=(margin_left, margin_top))
             def render_table(offset, header_delta):
                 return table.render_rows(context, rows, c_height - header_delta, offset)
             funcs = [(render_table, 0)]
