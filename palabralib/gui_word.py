@@ -67,6 +67,13 @@ def create_tree(types, columns, f_sel=None, window_size=None):
     if f_sel is not None:
         tree.get_selection().connect("changed", f_sel)
     return store, tree, scrolled_window
+    
+def create_label(text, align=True):
+    label = gtk.Label()
+    label.set_markup(text)
+    if align:
+        label.set_alignment(0, 0.5)
+    return label
 
 class WordListEditor(PalabraDialog):
     def __init__(self, parent):
@@ -111,9 +118,7 @@ class WordUsageDialog(PalabraDialog):
             if preferences.prefs[constants.PREF_BLACKLIST] == wlist.path:
                 self.blacklist_combo.set_active(i + 1)
                 break
-        label = gtk.Label(u"Word list to be used as blacklist:")
-        label.set_alignment(0, 0.5)
-        vbox.pack_start(label, False, False, 0)
+        vbox.pack_start(create_label(u"Word list to be used as blacklist:"), False, False, 0)
         vbox.pack_start(self.blacklist_combo, False, False, 0)
         return vbox
         
@@ -159,9 +164,7 @@ class WordUsageDialog(PalabraDialog):
         vbox.set_spacing(9)
         score_hbox = gtk.HBox()
         score_hbox.set_spacing(9)
-        label = gtk.Label(u"Minimum word score:")
-        label.set_alignment(0, 0.5)
-        score_hbox.pack_start(label, False, False, 0)
+        score_hbox.pack_start(create_label(u"Minimum word score:"), False, False, 0)
         value = preferences.prefs[constants.PREF_FIND_WORD_MIN_SCORE]
         adj = gtk.Adjustment(value, 0, 100, 1, 0, 0)
         self.find_min_score_spinner = gtk.SpinButton(adj, 0.0, 0)
@@ -212,9 +215,7 @@ class SimilarWordsDialog(PalabraDialog):
             , f_sel=self.on_selection_changed
             , window_size=(512, 384))
         self.main.pack_start(scrolled_window, True, True, 0)
-        label = gtk.Label(u"Click to highlight the words in the grid.")
-        label.set_alignment(0, 0.5)
-        self.main.pack_start(label, False, False, 0)
+        self.main.pack_start(create_label(u"Click to highlight the words in the grid."), False, False, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
@@ -269,9 +270,7 @@ class AccidentalWordsDialog(PalabraDialog):
         self.index = 0
         self.collapse = True
         wlist_hbox = gtk.HBox(False, 0)
-        label = gtk.Label(u"Check for words in list:")
-        label.set_alignment(0, 0.5)
-        wlist_hbox.pack_start(label, True, True, 0)
+        wlist_hbox.pack_start(create_label(u"Check for words in list:"), True, True, 0)
         combo = gtk.combo_box_new_text()
         for wlist in self.wordlists:
             combo.append_text(wlist.name)
@@ -286,9 +285,7 @@ class AccidentalWordsDialog(PalabraDialog):
             , [(u"Word", 0)], window_size=(300, 300))
         self.tree.get_selection().connect("changed", self.on_selection_changed)
         self.main.pack_start(s_window, True, True, 0)
-        label = gtk.Label(u"Click to highlight the word(s) in the grid.")
-        label.set_alignment(0, 0.5)
-        self.main.pack_start(label, False, False, 0)
+        self.main.pack_start(create_label(u"Click to highlight the word(s) in the grid."), False, False, 0)
         def collapse_callback(button):
             self.collapse = button.get_active()
             self.launch_accidental(self.puzzle.grid)
@@ -336,8 +333,7 @@ class FindWordsDialog(PalabraDialog):
         self.wordlists = parent.wordlists
         self.sort_option = 0
         self.pattern = None
-        label = gtk.Label(u"Use ? for an unknown letter and * for zero or more unknown letters.")
-        label.set_alignment(0, 0.5)
+        label = create_label(u"Use ? for an unknown letter and * for zero or more unknown letters.")
         self.main.pack_start(label, False, False, 0)
         entry = gtk.Entry()
         entry.connect("changed", self.on_entry_changed)
@@ -361,14 +357,11 @@ class FindWordsDialog(PalabraDialog):
         scrolled_window.add(self.tree)
         scrolled_window.set_size_request(-1, 300)
         self.main.pack_start(scrolled_window, True, True, 0)
-        self.n_label = gtk.Label("")
-        self.n_label.set_alignment(0, 0.5)
+        self.n_label = create_label("")
         self.set_n_label(0)
         self.main.pack_start(self.n_label, False, False, 0)
         sort_hbox = gtk.HBox(False, 6)
-        label = gtk.Label("Sort by:")
-        label.set_alignment(0, 0.5)
-        sort_hbox.pack_start(label, False, False, 0)
+        sort_hbox.pack_start(create_label(u"Sort by:"), False, False, 0)
         def on_sort_changed(combo):
             self.sort_option = combo.get_active()
             self.launch_pattern(self.pattern)
@@ -482,16 +475,11 @@ class NewWordListDialog(PalabraDialog):
         if name is not None:
             title = u"Rename word list"
         PalabraDialog.__init__(self, parent, title)
-        label = gtk.Label()
-        label.set_markup(u"Word list: <b>" + path + "</b>")
-        label.set_alignment(0, 0.5)
-        self.main.pack_start(label, False, False, 0)
+        self.main.pack_start(create_label(u"Word list: <b>" + path + "</b>"), False, False, 0)
         text = u"Please give the new word list a name:"
         if name is not None:
             text = u"Please give the word list a new name:"
-        label = gtk.Label(text)
-        label.set_alignment(0, 0.5)
-        self.main.pack_start(label, False, False, 0)
+        self.main.pack_start(create_label(text), False, False, 0)
         self.entry = gtk.Entry()
         def on_entry_changed(widget):
             self.store_name(widget.get_text().strip())
