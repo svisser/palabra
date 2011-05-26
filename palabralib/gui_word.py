@@ -226,10 +226,13 @@ class SimilarWordsDialog(PalabraDialog):
         
     def load_entries(self, entries):
         self.store.clear()
-        for s, words in entries.items():
+        items = entries.items()
+        items.sort(key=operator.itemgetter(0))
+        for s, words in items:
             txt = '<span font_desc="Monospace 12">'
             l_words = len(words)
             l_s = len(s)
+            txt += s.lower() + ": "
             for i, (x, y, d, word, pos) in enumerate(words):
                 txt += word[0:pos]
                 txt += '<span foreground="red">'
