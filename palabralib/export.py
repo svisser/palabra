@@ -20,7 +20,11 @@ import gtk
 import constants
 import files
 
-SETTING_TABS = [("page", u"Page"), ("grid", u"Grid"), ("clue", u"Clue")]
+SETTING_TABS = [("page", u"Page")
+    , ("grid", u"Grid")
+    , ("clue", u"Clue")
+    , ("clueh", u"Clue header")
+]
 OUTPUT_OPTIONS = [("puzzle", u"Puzzle")
     , ("grid", u"Grid")
     , ("solution", u"Solution")
@@ -135,6 +139,7 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("clue", "combo", u"Clues:", "clue_placement", "wrap"
             , [(u"Wrapped around grid", "wrap"), (u"Below grid", "below")]))
         pdf.add(Setting("clue", "spin", u"Columns", "n_columns", 3, (3, 5)))
+        pdf.add(Setting("clue", "spin", u"Spacing between columns\n(% of available width)", "column_spacing", 5, (0, 20)))
         pdf.add(Setting("page", "spin", u"Margin left (mm)", "margin_left", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin right (mm)", "margin_right", 20, (0, 50)))
         pdf.add(Setting("page", "spin", u"Margin top (mm)", "margin_top", 20, (0, 50)))
@@ -142,11 +147,11 @@ class ExportWindow(gtk.Dialog):
         pdf.add(Setting("clue", "bool", u"Bold clue number", "clue_number_bold", True))
         pdf.add(Setting("clue", "bool", u"Add period after clue number", "clue_number_period", False))
         pdf.add(Setting("clue", "bool", u"Add length of solution after clue", "clue_length", False))
-        pdf.add(Setting("clue", "text", u"Across header:", "clue_header_across", u"Across"))
-        pdf.add(Setting("clue", "text", u"Down header:", "clue_header_down", u"Down"))
-        pdf.add(Setting("clue", "bool", u"Bold clue header", "clue_header_bold", True))
-        pdf.add(Setting("clue", "bool", u"Italic clue header", "clue_header_italic", False))
-        pdf.add(Setting("clue", "bool", u"Underline clue header", "clue_header_underline", False))
+        pdf.add(Setting("clueh", "text", u"Across header:", "clue_header_across", u"Across"))
+        pdf.add(Setting("clueh", "text", u"Down header:", "clue_header_down", u"Down"))
+        pdf.add(Setting("clueh", "bool", u"Bold clue header", "clue_header_bold", True))
+        pdf.add(Setting("clueh", "bool", u"Italic clue header", "clue_header_italic", False))
+        pdf.add(Setting("clueh", "bool", u"Underline clue header", "clue_header_underline", False))
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.outputs = {}

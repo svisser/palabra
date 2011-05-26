@@ -468,7 +468,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
                 yield page, col_x, col_y, col_width, col_height
             page += 1
     def adjust_grid_props(align, cell_size=7):
-        padding = 20
+        padding = int(c_width * settings["column_spacing"] / 100)
         n_columns = settings["n_columns"]
         col_width = int((c_width - ((n_columns - 1) * padding)) / n_columns)
         props = puzzle.view.properties
