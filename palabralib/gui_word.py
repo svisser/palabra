@@ -602,6 +602,20 @@ class WordListManager(gtk.Dialog):
         vbox.set_border_width(6)
         vbox.set_spacing(6)
         vbox.pack_start(s_window)
+        hbox = gtk.HBox()
+        hbox.set_spacing(6)
+        label = gtk.Label(u"View words by length:")
+        label.set_alignment(0, 0.5)
+        hbox.pack_start(label)
+        self.word_length_combo = gtk.combo_box_new_text()
+        def on_word_length_changed(widget):
+            it = widget.get_active_iter()
+            if it is not None:
+                length = int(widget.get_model().get_value(it, 0))
+                self.load_word_list(self.current_wlist, length)
+        self.word_length_combo.connect("changed", on_word_length_changed)
+        hbox.pack_start(self.word_length_combo)
+        vbox.pack_start(hbox, False, False, 0)
         return vbox
     
     def create_props_tab(self):
@@ -715,8 +729,10 @@ class WordListManager(gtk.Dialog):
                 if wlist.path == path:
                     self.current_wlist = wlist
                     self.load_word_list(wlist)
+                    self.load_word_lengths(wlist)
+                    self.word_length_combo.set_active(0)
 
-    def load_word_list(self, wlist):
+    def load_word_list(self, wlist, word_length=2):
         words = wlist.words
         total_n_words = sum([len(words[i]) for i in words.keys()])
         self.n_words_label.set_text(str(total_n_words))
@@ -750,11 +766,20 @@ class WordListManager(gtk.Dialog):
             total += (s * count)
         total /= total_n_words
         self.avg_score_label.set_text("%.2f" % total)
+        self.load_words_by_length(wlist, word_length)
+        
+    def load_words_by_length(self, wlist, word_length=2):
         self.w_store.clear()
-        length = 2
-        for word, score, i_b in search_wordlists([wlist], length, "." * length):
+        for word, score, i_b in search_wordlists([wlist], word_length, "." * word_length):
             txt = '<span font_desc="Monospace 12">' + word + '</span>'
             self.w_store.append([txt, score])
+            
+    def load_word_lengths(self, wlist):
+        lengths = [l for l in wlist.words.keys() if wlist.words[l] and l >= 2]
+        lengths.sort()
+        self.word_length_combo.get_model().clear()
+        for l in lengths:
+            self.word_length_combo.append_text(str(l))
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
