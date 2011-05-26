@@ -732,7 +732,37 @@ class Grid:
                 slots.append((d, t1))
                 slots.append((opp[d], t2))
         return slots
-            
+        
+    def convert_to_shape(self):
+        """
+        Compute the cells to remove from the grid
+        to create a grid with arbitrary shape.
+        """
+        data = self.data
+        set_void = self.set_void
+        check = [(x, 0) for x in xrange(self.width)]
+        check += [(0, y) for y in xrange(self.height)]
+        check += [(self.width - 1, y) for y in xrange(self.height)]
+        check += [(x, self.height - 1) for x in xrange(self.width)]
+        remove = []
+        done = []
+        neighbors = self.neighbors
+        while check:
+            x, y = check.pop()
+            is_void = data[y][x]["void"]
+            is_block = data[y][x]["block"]
+            if not is_void and not is_block and data[y][x]["char"] == '':
+                remove.append((x, y))
+            done.append((x, y))
+            for cell in neighbors(x, y):
+                if cell in done or cell in check:
+                    continue
+                cx, cy = cell
+                if data[cy][cx]["block"] or data[cy][cx]["char"] != '':
+                    continue
+                check.append(cell)
+        return list(set(remove))
+
     def resize(self, width, height, make_dirty=True):
         """
         Resize the grid to the given dimensions.

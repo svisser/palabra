@@ -1557,3 +1557,57 @@ class GridTestCase(unittest.TestCase):
         g3.set_char(2, 1, 'Q')
         g3.set_char(0, 2, 'Z')
         self.assertEquals(determine_scrabble_score(g3), 49)
+        
+    def testConvertToShape(self):
+        """Converting an empty grid to a shape means removing all cells."""
+        g = Grid(5, 5)
+        self.assertEqual(len(g.convert_to_shape()), 25)
+        
+    def testConvertToShapeBlocks(self):
+        """Blocks can protect cells when converting to a shape."""
+        g = Grid(5, 5)
+        # _ _ _ _ _
+        # _ B B B _
+        # _ B _ B _
+        # _ B B B _
+        # _ _ _ _ _
+        for x in xrange(1, 4):
+            for y in xrange(1, 4):
+                if (x, y) == (2, 2):
+                    continue
+                g.set_block(x, y, True)
+        result = g.convert_to_shape()
+        self.assertEqual(len(result), 16)
+        self.assertTrue((2, 2) not in result)
+        
+    def testConvertToShapeVoids(self):
+        """Voids do not protect a cell when converting to a shape."""
+        g = Grid(5, 5)
+        # _ _ B B B
+        # _ _ B _ B
+        # _ _ V _ B
+        # _ _ B B B
+        # _ _ _ _ _
+        blocks = [(2, 0), (3, 0), (4, 0), (2, 1), (4, 1), (4, 2), (2, 3), (3, 3), (4, 3)]
+        for x, y in blocks:
+            g.set_block(x, y, True)
+        g.set_void(2, 2, True)
+        result = g.convert_to_shape()
+        self.assertEqual(len(result), 15)
+        for cell in blocks:
+            self.assertTrue(cell not in result)
+            
+    def testConvertToShapeWords(self):
+        """Words protect a cell when converting to a shape."""
+        g = Grid(5, 5)
+        g.set_char(1, 1, 'A')
+        g.set_char(2, 1, 'B')
+        g.set_char(3, 1, 'C')
+        g.set_char(1, 2, 'D')
+        g.set_char(3, 2, 'E')
+        g.set_char(1, 3, 'F')
+        g.set_char(2, 3, 'G')
+        g.set_char(3, 3, 'H')
+        result = g.convert_to_shape()
+        self.assertEqual(len(result), 16)
+        self.assertTrue((2, 2) not in result)
