@@ -52,7 +52,7 @@ class PalabraDialog(gtk.Dialog):
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
 
-def create_tree(types, columns, f_sel=None):
+def create_tree(types, columns, f_sel=None, window_size=None):
     store = gtk.ListStore(*types)
     tree = gtk.TreeView(store)
     for title, i in columns:
@@ -62,6 +62,8 @@ def create_tree(types, columns, f_sel=None):
     scrolled_window = gtk.ScrolledWindow()
     scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
     scrolled_window.add(tree)
+    if window_size is not None:
+        scrolled_window.set_size_request(*window_size)
     if f_sel is not None:
         tree.get_selection().connect("changed", f_sel)
     return store, tree, scrolled_window
@@ -73,8 +75,8 @@ class WordListEditor(PalabraDialog):
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
             , [("Available word lists", 0)]
-            , f_sel=self.on_tree_selection_changed)
-        s_window.set_size_request(256, 196)
+            , f_sel=self.on_tree_selection_changed
+            , window_size=(256, 196))
         for wlist in self.wordlists:
             self.store.append([wlist.name, wlist.path])
         self.main.pack_start(s_window, True, True, 0)
@@ -121,8 +123,8 @@ class WordUsageDialog(PalabraDialog):
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
             , [("Available word lists", 0)]
-            , f_sel=self.on_tree_selection_changed)
-        s_window.set_size_request(256, 196)
+            , f_sel=self.on_tree_selection_changed
+            , window_size=(256, 196))
         hbox.pack_start(s_window, True, True, 0)
         
         button_vbox = gtk.VBox()
@@ -139,8 +141,8 @@ class WordUsageDialog(PalabraDialog):
         # name path
         self.store2, self.tree2, s_window2 = create_tree((str, str)
             , [("Word lists for finding words", 0)]
-            , f_sel=self.on_tree2_selection_changed)
-        s_window2.set_size_request(256, 196)
+            , f_sel=self.on_tree2_selection_changed
+            , window_size=(256, 196))
         hbox.pack_start(s_window2, True, True, 0)        
         
         # populate list stores
@@ -274,17 +276,10 @@ class AccidentalWordsDialog(PalabraDialog):
         combo.connect("changed", on_wordlist_changed)
         wlist_hbox.pack_start(combo, False, False, 0)
         self.main.pack_start(wlist_hbox, False, False, 0)
-        self.store = gtk.ListStore(str, str)
-        self.tree = gtk.TreeView(self.store)
+        self.store, self.tree, s_window = create_tree((str, str)
+            , [(u"Word", 0)], window_size=(300, 300))
         self.tree.get_selection().connect("changed", self.on_selection_changed)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("Word", cell, markup=0)
-        self.tree.append_column(column)
-        scrolled_window = gtk.ScrolledWindow()
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add(self.tree)
-        scrolled_window.set_size_request(300, 300)
-        self.main.pack_start(scrolled_window, True, True, 0)
+        self.main.pack_start(s_window, True, True, 0)
         label = gtk.Label(u"Click to highlight the word(s) in the grid.")
         label.set_alignment(0, 0.5)
         self.main.pack_start(label, False, False, 0)
@@ -645,32 +640,12 @@ class WordListManager(gtk.Dialog):
         self.avg_score_label.set_alignment(1, 0)
         table.attach(self.avg_score_label, 1, 2, 3, 4, gtk.FILL, gtk.FILL)
         
-        self.counts_store = gtk.ListStore(int, int)
-        tree = gtk.TreeView(self.counts_store)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Length", cell, text=0)
-        tree.append_column(column)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Count", cell, text=1)
-        tree.append_column(column)
-        
-        self.score_store = gtk.ListStore(int, int)
-        score_tree = gtk.TreeView(self.score_store)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Score", cell, text=0)
-        score_tree.append_column(column)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(u"Count", cell, text=1)
-        score_tree.append_column(column)
-        
-        length_window = gtk.ScrolledWindow()
-        length_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        length_window.add(tree)
-        length_window.set_size_request(300, 300)
-        score_window = gtk.ScrolledWindow()
-        score_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        score_window.add(score_tree)
-        score_window.set_size_request(300, 300)
+        self.counts_store, tree, length_window = create_tree((int, int)
+            , [(u"Length", 0), (u"Count", 1)]
+            , window_size=(300, 300))
+        self.score_store, score_tree, score_window = create_tree((int, int)
+            , [(u"Score", 0), (u"Count", 1)]
+            , window_size=(300, 300))
         
         props_vbox = gtk.VBox()
         props_vbox.set_border_width(6)
