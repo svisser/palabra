@@ -207,16 +207,10 @@ class SimilarWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
         PalabraDialog.__init__(self, parent, u"View similar words")
         self.puzzle = puzzle
-        self.store = gtk.ListStore(str, str)
-        self.tree = gtk.TreeView(self.store)
-        self.tree.get_selection().connect("changed", self.on_selection_changed)
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn("Similar words", cell, markup=1)
-        self.tree.append_column(column)
-        scrolled_window = gtk.ScrolledWindow()
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add(self.tree)
-        scrolled_window.set_size_request(512, 384)
+        self.store, self.tree, scrolled_window = create_tree((str, str)
+            , [(u"Similar words", 1)]
+            , f_sel=self.on_selection_changed
+            , window_size=(512, 384))
         self.main.pack_start(scrolled_window, True, True, 0)
         label = gtk.Label(u"Click to highlight the words in the grid.")
         label.set_alignment(0, 0.5)
@@ -231,29 +225,41 @@ class SimilarWordsDialog(PalabraDialog):
         self.store.clear()
         items = entries.items()
         items.sort(key=operator.itemgetter(0))
-        for s, words in items:
-            txt = '<span font_desc="Monospace 12">'
-            l_words = len(words)
-            l_s = len(s)
-            txt += s.lower() + ": "
-            for i, (x, y, d, word, pos) in enumerate(words):
-                txt += word[0:pos]
-                txt += '<span foreground="red">'
-                txt += word[pos:pos + l_s]
-                txt += '</span>'
-                txt += word[pos + l_s:]
-                if i < l_words - 1:
+        for key, words in iterate_similars(items):
+            txt = '<span font_desc="Monospace 12">' + key.lower() + ": "
+            for pre, middle, post, comma in words:
+                txt += pre + '<span foreground="red">' + middle + '</span>' + post
+                if comma:
                     txt += ', '
             txt += '</span>'
-            self.store.append([s, txt])
+            self.store.append([key, txt])
     
     def on_selection_changed(self, selection):
         """Highlight all cells associated with the selected entry."""
         store, it = selection.get_selected()
         if it is not None:
-            words = self.entries[store[it][0]]
-            slots = [(x, y, d) for x, y, d, word, offset in words]
+            slots = [(x, y, d) for x, y, d, word, o in self.entries[store[it][0]]]
             highlight_cells(self.pwindow, self.puzzle, "slots", slots)
+
+def iterate_similars(items):
+    """Iterate over all items for the similar words dialog."""
+    for s, words in items:
+        l_words = len(words)
+        l_s = len(s)
+        values = []
+        for i, (x, y, d, word, pos) in enumerate(words):
+            o1 = word[0:pos]
+            o2 = word[pos:pos + l_s]
+            o3 = word[pos + l_s:]
+            values.append((o1, o2, o3, i < l_words - 1))
+        yield s, values
+
+def merge_highlights(data, indices):
+    """Merge the cells in the data corresponding to the given indices."""
+    cells = []
+    for index in indices.split(','):
+        cells.extend([(x, y) for x, y, c in data[int(index)][1]])
+    return cells
 
 class AccidentalWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
@@ -319,13 +325,8 @@ class AccidentalWordsDialog(PalabraDialog):
         """Highlight all cells associated with the selected entry."""
         store, it = selection.get_selected()
         if it is not None:
-            index = self.store[it][1]
-            highlight = []
-            for index in index.split(','):
-                d, cells = self.results[int(index)]
-                highlight.extend(cells)
-            h_cells = [(x, y) for x, y, c in highlight]
-            highlight_cells(self.pwindow, self.puzzle, "cells", h_cells)
+            cells = merge_highlights(self.results, self.store[it][1])
+            highlight_cells(self.pwindow, self.puzzle, "cells", cells)
 
 MATCHING_TEXT = u"Number of matching words:"
 
