@@ -557,9 +557,6 @@ class WordListManager(gtk.Dialog):
         label.set_markup("<b>Word lists</b>")
         label.set_alignment(0, 0)
         wlist_vbox.pack_start(label, False, False, 0)
-        label = gtk.Label(u"Select a word list for more information:")
-        label.set_alignment(0, 0.5)
-        wlist_vbox.pack_start(label, False, False, 0)
         scrolled_window = gtk.ScrolledWindow()
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add(self.tree)
@@ -568,14 +565,48 @@ class WordListManager(gtk.Dialog):
         wlist_vbox.pack_start(buttonbox, False, False, 0)
         main.pack_start(wlist_vbox, False, False, 0)
         
-        table = gtk.Table(4, 2)
+        tabs = gtk.Notebook()
+        tabs.append_page(self.create_contents_tab(), gtk.Label(u"Contents"))
+        tabs.append_page(self.create_props_tab(), gtk.Label(u"Properties"))
+        main.pack_start(tabs, True, True, 0)
+        
+        content = gtk.VBox()
+        content.set_border_width(12)
+        content.set_spacing(18)
+        
+        hbox = gtk.HBox(False, 0)
+        hbox.set_spacing(18)
+        hbox.pack_start(main, True, True, 0)
+        content.pack_start(hbox)
+        label = gtk.Label(u"These settings are saved and loaded when you restart " + constants.TITLE + ".")
+        label.set_alignment(0, 0.5)
+        content.pack_start(label, False, False, 0)
+        
+        # select a word list by default
+        self.display_wordlists()
+        it = self.store.get_iter_first()
+        if it is not None:
+            sel = self.tree.get_selection()
+            sel.select_iter(it)
+        
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.vbox.add(content)
+        
+    def create_contents_tab(self):
+        self.w_store, self.w_tree, s_window = create_tree((str, int)
+            , [(u"Word", 0), (u"Score", 1)])
+            #, f_sel=self.on_tree_selection_changed)
+        vbox = gtk.VBox()
+        vbox.set_border_width(6)
+        vbox.set_spacing(6)
+        vbox.pack_start(s_window)
+        return vbox
+    
+    def create_props_tab(self):
+        table = gtk.Table(3, 2)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
         table.set_row_spacing(0, 18)
-        label = gtk.Label()
-        label.set_markup("<b>Properties of selected word list</b>")
-        label.set_alignment(0, 0)
-        table.attach(label, 0, 2, 0, 1, gtk.FILL, gtk.FILL)        
         
         label = gtk.Label("Number of words:")
         label.set_alignment(0, 0)
@@ -627,37 +658,15 @@ class WordListManager(gtk.Dialog):
         score_window.add(score_tree)
         score_window.set_size_request(300, 300)
         
-        props_vbox = gtk.VBox(False, 0)
+        props_vbox = gtk.VBox()
+        props_vbox.set_border_width(6)
         props_vbox.set_spacing(6)
         props_vbox.pack_start(table)
         tabs = gtk.Notebook()
         tabs.append_page(length_window, gtk.Label(u"Words by length"))
         tabs.append_page(score_window, gtk.Label(u"Words by score"))
         props_vbox.pack_start(tabs)
-        
-        main.pack_start(props_vbox, True, True, 0)
-        
-        content = gtk.VBox()
-        content.set_border_width(12)
-        content.set_spacing(18)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        content.pack_start(hbox)
-        label = gtk.Label(u"These settings are saved and loaded when you restart " + constants.TITLE + ".")
-        label.set_alignment(0, 0.5)
-        content.pack_start(label, False, False, 0)
-        
-        # select a word list by default
-        self.display_wordlists()
-        it = self.store.get_iter_first()
-        if it is not None:
-            sel = self.tree.get_selection()
-            sel.select_iter(it)
-        
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.vbox.add(content)
+        return props_vbox
         
     def add_word_list(self):
         dialog = gtk.FileChooserDialog(u"Add word list"
