@@ -27,6 +27,7 @@ from word import (
     create_wordlists,
     check_accidental_words,
     accidental_entries,
+    search_wordlists,
     search_wordlists_by_pattern,
     similar_entries,
     similar_words,
@@ -566,6 +567,8 @@ class WordListManager(gtk.Dialog):
         main.pack_start(wlist_vbox, False, False, 0)
         
         tabs = gtk.Notebook()
+        tabs.set_property("tab-hborder", 8)
+        tabs.set_property("tab-vborder", 4)
         tabs.append_page(self.create_contents_tab(), gtk.Label(u"Contents"))
         tabs.append_page(self.create_props_tab(), gtk.Label(u"Properties"))
         main.pack_start(tabs, True, True, 0)
@@ -578,7 +581,7 @@ class WordListManager(gtk.Dialog):
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
         content.pack_start(hbox)
-        label = gtk.Label(u"These settings are saved and loaded when you restart " + constants.TITLE + ".")
+        label = gtk.Label(u"These word lists are loaded when you start " + constants.TITLE + ".")
         label.set_alignment(0, 0.5)
         content.pack_start(label, False, False, 0)
         
@@ -595,7 +598,6 @@ class WordListManager(gtk.Dialog):
     def create_contents_tab(self):
         self.w_store, self.w_tree, s_window = create_tree((str, int)
             , [(u"Word", 0), (u"Score", 1)])
-            #, f_sel=self.on_tree_selection_changed)
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
@@ -712,9 +714,10 @@ class WordListManager(gtk.Dialog):
             for wlist in self.palabra_window.wordlists:
                 if wlist.path == path:
                     self.current_wlist = wlist
-                    self.load_word_counts(wlist.words)
+                    self.load_word_list(wlist)
 
-    def load_word_counts(self, words):
+    def load_word_list(self, wlist):
+        words = wlist.words
         total_n_words = sum([len(words[i]) for i in words.keys()])
         self.n_words_label.set_text(str(total_n_words))
         counts = []
@@ -747,6 +750,11 @@ class WordListManager(gtk.Dialog):
             total += (s * count)
         total /= total_n_words
         self.avg_score_label.set_text("%.2f" % total)
+        self.w_store.clear()
+        length = 2
+        for word, score, i_b in search_wordlists([wlist], length, "." * length):
+            txt = '<span font_desc="Monospace 12">' + word + '</span>'
+            self.w_store.append([txt, score])
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
@@ -786,7 +794,7 @@ class WordListManager(gtk.Dialog):
         self.n_words_label.set_text("0")
         self.avg_word_label.set_text("0")
         self.avg_score_label.set_text("0")
-            
+        
 class WordWidget(gtk.DrawingArea):
     def __init__(self, editor):
         super(WordWidget, self).__init__()
