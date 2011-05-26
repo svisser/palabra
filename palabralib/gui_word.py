@@ -814,6 +814,8 @@ class WordListManager(gtk.Dialog):
             self.store.append([p["name"]["value"], p["path"]["value"]])
         n_prefs = len(preferences.prefs["word_files"])
         self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
+        self.word_length_combo.get_model().clear()
+        self.w_store.clear()
         self.counts_store.clear()
         self.score_store.clear()
         self.n_words_label.set_text("0")
