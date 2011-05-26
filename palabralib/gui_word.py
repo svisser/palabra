@@ -653,7 +653,6 @@ class WordListManager(gtk.Dialog):
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Count", cell, text=1)
         tree.append_column(column)
-        tree.get_selection().set_mode(gtk.SELECTION_NONE)
         
         self.score_store = gtk.ListStore(int, int)
         score_tree = gtk.TreeView(self.score_store)
@@ -663,7 +662,6 @@ class WordListManager(gtk.Dialog):
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(u"Count", cell, text=1)
         score_tree.append_column(column)
-        score_tree.get_selection().set_mode(gtk.SELECTION_NONE)
         
         length_window = gtk.ScrolledWindow()
         length_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
