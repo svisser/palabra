@@ -491,10 +491,7 @@ def example(grid):
     
 class GridEditor(gtk.Dialog):
     def __init__(self, parent, size=None):
-        gtk.Dialog.__init__(self, u"Grid editor"
-            , parent, gtk.DIALOG_MODAL)
-        self.set_size_request(512, 384)
-        
+        gtk.Dialog.__init__(self, u"Grid editor", parent, gtk.DIALOG_MODAL)
         self.size = size if size else (15, 15)
         
         table = gtk.Table(2, 2, False)
@@ -521,7 +518,7 @@ class GridEditor(gtk.Dialog):
         table.attach(self.fill_combo, 1, 2, 1, 2)
         
         self.preview = GridPreview()
-        self.preview.set_size_request(256, -1)
+        self.preview.set_size_request(384, 384)
         
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
