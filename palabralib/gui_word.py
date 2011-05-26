@@ -376,7 +376,7 @@ class FindWordsDialog(PalabraDialog):
             self.sort_option = combo.get_active()
             self.launch_pattern(self.pattern)
         combo = gtk.combo_box_new_text()
-        for t in ["Alphabet", "Length"]:
+        for t in ["Alphabet", "Length", "Score"]:
             combo.append_text(t)
         combo.set_active(self.sort_option)
         combo.connect("changed", on_sort_changed)
@@ -404,6 +404,8 @@ class FindWordsDialog(PalabraDialog):
         result = search_wordlists_by_pattern(self.wordlists, pattern)
         if self.sort_option == 0:
             result.sort(key=operator.itemgetter(1))
+        elif self.sort_option == 2:
+            result.sort(key=operator.itemgetter(2), reverse=True)
         self.pattern = pattern
         self.store.clear()
         self.set_n_label(len(result))
