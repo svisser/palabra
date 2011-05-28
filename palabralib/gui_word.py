@@ -652,13 +652,7 @@ class WordListManager(gtk.Dialog):
         label = gtk.Label(u"These word lists are loaded when you start " + constants.TITLE + ".")
         label.set_alignment(0, 0.5)
         content.pack_start(label, False, False, 0)
-        
-        # select a word list by default
         self.display_wordlists()
-        it = self.store.get_iter_first()
-        if it is not None:
-            sel = self.tree.get_selection()
-            sel.select_iter(it)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.vbox.add(content)
         
@@ -673,17 +667,6 @@ class WordListManager(gtk.Dialog):
         vbox.pack_start(s_window)
         hbox = gtk.HBox()
         hbox.set_spacing(6)
-        label = gtk.Label(u"View words by length:")
-        label.set_alignment(0, 0.5)
-        hbox.pack_start(label)
-        self.word_length_combo = gtk.combo_box_new_text()
-        def on_word_length_changed(widget):
-            it = widget.get_active_iter()
-            if it is not None:
-                length = int(widget.get_model().get_value(it, 0))
-                self.load_words_by_length(self.current_wlist, length)
-        self.word_length_combo.connect("changed", on_word_length_changed)
-        hbox.pack_start(self.word_length_combo)
         vbox.pack_start(hbox, False, False, 0)
         return vbox
         
@@ -743,23 +726,16 @@ class WordListManager(gtk.Dialog):
             for wlist in self.palabra_window.wordlists:
                 if wlist.path == path:
                     self.current_wlist = wlist
-                    self.load_words_by_length(wlist)
-                    self.load_word_lengths(wlist)
-                    self.word_length_combo.set_active(0)
+                    self.load_words(wlist)
         
-    def load_words_by_length(self, wlist, word_length=2):
-        self.w_store.clear()
-        results = search_wordlists([wlist], word_length, "." * word_length)
-        for word, score, i_b in results:
-            txt = '<span font_desc="Monospace 12">' + word + '</span>'
-            self.w_store.append([word, txt, score])
-            
-    def load_word_lengths(self, wlist):
-        lengths = [l for l in wlist.words.keys() if wlist.words[l] and l >= 2]
-        lengths.sort()
-        self.word_length_combo.get_model().clear()
-        for l in lengths:
-            self.word_length_combo.append_text(str(l))
+    def load_words(self, wlist):
+        self.w_tree.set_model(None)
+        self.w_store = gtk.ListStore(str, str, int)
+        for l in wlist.words.keys():
+            for word, score in wlist.words[l]:
+                txt = '<span font_desc="Monospace 12">' + word + '</span>'
+                self.w_store.append([word, txt, score])
+        self.w_tree.set_model(self.w_store)
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
@@ -789,12 +765,13 @@ class WordListManager(gtk.Dialog):
         self.display_wordlists()
         
     def display_wordlists(self):
+        self.tree.set_model(None)
         self.store.clear()
         for p in preferences.prefs["word_files"]:
             self.store.append([p["name"]["value"], p["path"]["value"]])
+        self.tree.set_model(self.store)
         n_prefs = len(preferences.prefs["word_files"])
         self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
-        self.word_length_combo.get_model().clear()
         self.w_store.clear()
         
 class WordWidget(gtk.DrawingArea):
