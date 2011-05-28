@@ -93,6 +93,12 @@ def create_label(text, align=None):
     else:
         label.set_alignment(*align)
     return label
+    
+def create_notebook(pages):
+    tabs = gtk.Notebook()
+    for widget, title in pages:
+        tabs.append_page(widget, gtk.Label(title))
+    return tabs
 
 class WordListUnableToStoreDialog(PalabraDialog):
     def __init__(self, parent, unable):
@@ -531,51 +537,38 @@ class WordListPropertiesDialog(PalabraDialog):
         table = gtk.Table(4, 2)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
-        
         table.attach(create_label(u"Word list:"), 0, 1, 0, 1)
         table.attach(create_label(wlist.name, align=(1, 0)), 1, 2, 0, 1)
-        
         table.attach(create_label(u"Number of words:"), 0, 1, 1, 2)
         self.n_words_label = create_label(u"0", align=(1, 0))
         table.attach(self.n_words_label, 1, 2, 1, 2, gtk.FILL, gtk.FILL)
-        
         table.attach(create_label(u"Average word length:"), 0, 1, 2, 3)
         self.avg_word_label = create_label(u"0", align=(1, 0))
         table.attach(self.avg_word_label, 1, 2, 2, 3, gtk.FILL, gtk.FILL)
-        
         table.attach(create_label(u"Average word score:"), 0, 1, 3, 4)
         self.avg_score_label = create_label(u"0", align=(1, 0))
         table.attach(self.avg_score_label, 1, 2, 3, 4, gtk.FILL, gtk.FILL)
-        
-        self.counts_store, tree, length_window = create_tree((int, int)
-            , [(u"Length", 0), (u"Count", 1)]
-            , window_size=(300, 300))
-        self.score_store, score_tree, score_window = create_tree((int, int)
-            , [(u"Score", 0), (u"Count", 1)]
-            , window_size=(300, 300))
+        self.counts_store, tree, l_window = create_tree((int, int)
+            , [(u"Length", 0), (u"Count", 1)], window_size=(300, 300))
+        self.score_store, score_tree, s_window = create_tree((int, int)
+            , [(u"Score", 0), (u"Count", 1)], window_size=(300, 300))
         self.main.pack_start(table)
-        tabs = gtk.Notebook()
-        tabs.append_page(length_window, gtk.Label(u"Words by length"))
-        tabs.append_page(score_window, gtk.Label(u"Words by score"))
-        self.main.pack_start(tabs)
+        pages = [(l_window, u"Words by length"), (s_window, u"Words by score")]
+        self.main.pack_start(create_notebook(pages))
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_word_list_properties(wlist)
 
     def load_word_list_properties(self, wlist):
-        words = wlist.words
-        total_n_words = wlist.count_words()
-        self.n_words_label.set_text(str(total_n_words))
+        self.n_words_label.set_text(str(wlist.count_words()))
         counts = wlist.get_word_counts()
+        scores = wlist.get_score_counts()
         self.counts_store.clear()
-        for l in words.keys():
+        self.score_store.clear()
+        for l in sorted(wlist.words.keys()):
             if counts[l] == 0:
                 continue
             self.counts_store.append([l, counts[l]])
-        self.score_store.clear()
-        scores = wlist.get_score_counts()
-        s_keys = scores.keys()
-        s_keys.sort()
-        for k in s_keys:
+        for k in sorted(scores.keys()):
             self.score_store.append([k, scores[k]])
         self.avg_word_label.set_text("%.2f" % wlist.average_word_length())
         self.avg_score_label.set_text("%.2f" % wlist.average_word_score())
