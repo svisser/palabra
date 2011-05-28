@@ -79,9 +79,16 @@ class ClueTool:
         self.explanation_entry = gtk.Entry()
         self.explanation_changed_id = self.explanation_entry.connect("changed", changed)
         self.explanation_entry.set_sensitive(False)
-        # disable for release
         vbox.pack_start(label, False, False, 3)
         vbox.pack_start(self.explanation_entry, False, False, 0)
+        
+        def on_edit_clue(button):
+            print 'TODO'
+        edit_button = gtk.Button(stock=gtk.STOCK_EDIT)
+        edit_button.connect("clicked", on_edit_clue)
+        align = gtk.Alignment(1, 0.5)
+        align.add(edit_button)
+        vbox.pack_start(align, False, False, 0)
         
         # number x y direction word clue explanation displayed_string
         self.store = gtk.ListStore(int, int, int, str, str, str, str, str)
