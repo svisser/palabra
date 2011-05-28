@@ -650,7 +650,7 @@ class WordListManager(gtk.Dialog):
         
     def create_contents_tab(self):
         # word show_string score
-        self.word_widget = WordWidget()
+        self.word_widget = EditWordWidget()
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
@@ -769,8 +769,7 @@ class WordWidget(gtk.DrawingArea):
     def __init__(self):
         super(WordWidget, self).__init__()
         self.STEP = 24
-        self.words = []
-        self.selection = None
+        self.set_words([])
         self.connect('expose_event', self.expose)
 
     def set_words(self, words):
@@ -811,11 +810,29 @@ class WordWidget(gtk.DrawingArea):
             return None
         return self.words[self.selection][0]
 
+class EditWordWidget(WordWidget):
+    def __init__(self):
+        super(EditWordWidget, self).__init__()
+        self.set_flags(gtk.CAN_FOCUS)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.connect("button_press_event", self.on_button_press)
+        
+    def on_button_press(self, widget, event):
+        offset = self.get_word_offset(event.y)
+        if offset >= len(self.words):
+            self.selection = None
+            self.queue_draw()
+            return True
+        word = self.words[offset][0]
+        if event.button == 1:
+            self.selection = offset
+        self.queue_draw()
+        return True
+
 class EditorWordWidget(WordWidget):
     def __init__(self, editor):
         super(EditorWordWidget, self).__init__()
         self.editor = editor
-        self.set_words([])
         self.set_flags(gtk.CAN_FOCUS)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect("button_press_event", self.on_button_press)
@@ -825,13 +842,13 @@ class EditorWordWidget(WordWidget):
         if offset >= len(self.words):
             self.selection = None
             self.editor.set_overlay(None)
-            return
+            return True
         word = self.words[offset][0]
         if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
             self.editor.insert(word)
             self.selection = None
             self.editor.set_overlay(None)
-        else:
+        elif event.button == 1:
             self.selection = offset
             self.editor.set_overlay(word)
         self.queue_draw()
