@@ -23,6 +23,12 @@ import sys
 
 import constants
 from editor import highlight_cells
+from gui_common import (
+    create_tree,
+    create_scroll,
+    create_label,
+    create_notebook,
+)
 import preferences
 from word import (
     create_wordlists,
@@ -52,53 +58,6 @@ class PalabraDialog(gtk.Dialog):
         self.main.set_spacing(9)
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
-
-def create_tree(types, columns, f_sel=None, window_size=None):
-    store = gtk.ListStore(*types if isinstance(types, tuple) else [types])
-    tree = gtk.TreeView(store)
-    for item in columns:
-        title = item[0]
-        i = item[1]
-        if len(item) > 2:
-            f_edit = item[2]
-        else:
-            f_edit = None
-        cell = gtk.CellRendererText()
-        if f_edit is not None:
-            cell.set_property('editable', True)
-            cell.connect("edited", f_edit)
-        column = gtk.TreeViewColumn(title, cell, markup=i)
-        tree.append_column(column)
-    scroll = create_scroll(tree, size=window_size)
-    if f_sel is not None:
-        tree.get_selection().connect("changed", f_sel)
-    return store, tree, scroll
-
-def create_scroll(widget, viewport=False, size=None):
-    w = gtk.ScrolledWindow()
-    w.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    if viewport:
-        w.add_with_viewport(widget)
-    else:
-        w.add(widget)
-    if size is not None:
-        w.set_size_request(*size)
-    return w
-    
-def create_label(text, align=None):
-    label = gtk.Label()
-    label.set_markup(text)
-    if align is None:
-        label.set_alignment(0, 0.5)
-    else:
-        label.set_alignment(*align)
-    return label
-    
-def create_notebook(pages):
-    tabs = gtk.Notebook()
-    for widget, title in pages:
-        tabs.append_page(widget, gtk.Label(title))
-    return tabs
 
 class WordListUnableToStoreDialog(PalabraDialog):
     def __init__(self, parent, unable):
