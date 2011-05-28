@@ -429,3 +429,4 @@ class CWordList:
                 break
         index = self.words[l_word].index(item)
         self.words[l_word][index] = (word, new_score)
+        cPalabra.update_score(word, len(word), new_score, self.index)

@@ -1093,5 +1093,4 @@ class WordTestCase(unittest.TestCase):
         w1.update_score("score", 40)
         result = search_wordlists([w1], 5, "score")
         self.assertTrue(("score", 40, True) in result)
-        print result
         cPalabra.postprocess()

@@ -1156,6 +1156,18 @@ cPalabra_verify_contained_words(PyObject *self, PyObject *args) {
     return result;
 }
 
+static PyObject*
+cPalabra_update_score(PyObject *self, PyObject *args) {
+    PyObject *word;
+    const int word_length;
+    const int score;
+    const int wlist_index;
+    if (!PyArg_ParseTuple(args, "Oiii", &word, &word_length, &score, &wlist_index))
+        return NULL;
+    update_score(trees[wlist_index][word_length], PyString_AsString(word), score);
+    return Py_None;
+}
+
 static PyMethodDef methods[] = {
     {"search", cPalabra_search, METH_VARARGS, "search"},
     {"preprocess", cPalabra_preprocess, METH_VARARGS, "preprocess"},
@@ -1170,6 +1182,7 @@ static PyMethodDef methods[] = {
     {"compute_counts", cPalabra_compute_counts, METH_VARARGS, "compute_counts"},
     {"get_contained_words", cPalabra_get_contained_words, METH_VARARGS, "get_contained_words"},
     {"verify_contained_words", cPalabra_verify_contained_words, METH_VARARGS, "verify_contained_words"},
+    {"update_score", cPalabra_update_score, METH_VARARGS, "update_score"},
     {NULL, NULL, 0, NULL}
 };
 

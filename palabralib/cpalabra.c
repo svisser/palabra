@@ -25,6 +25,21 @@ PyObject* find_matches(PyObject *list, Tptr p, char *s)
     return list;
 }
 
+void update_score(Tptr p, char *s, int score)
+{
+    if (!p) return;
+    if (*s < p->splitchar)
+        update_score(p->lokid, s, score);
+    if (*s == p->splitchar)
+        if (p->splitchar && *s)
+            update_score(p->eqkid, s + 1, score);
+    if (*s == 0 && p->splitchar == 0) {
+        p->score = score;
+    }
+    if (*s > p->splitchar)
+        update_score(p->hikid, s, score);
+}
+
 void read_counts_str(char *counts_c, int *counts_i, char *s) {
     const int length = strlen(s);
     int i;
