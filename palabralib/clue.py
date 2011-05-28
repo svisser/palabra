@@ -23,6 +23,7 @@ import os
 from gui_common import (
     create_tree,
     create_label,
+    PalabraDialog,
 )
 import transform
 
@@ -53,10 +54,14 @@ def read_clues(path):
                 clues[l_word].append(clue)
     return clues
 
+class EditClueDialog(PalabraDialog):
+    def __init__(self, parent):
+        PalabraDialog.__init__(self, parent, "Edit clue")
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+
 class ClueTool:
-    def __init__(self, editor):
-        self.editor = editor
-        self.last = None
+    def __init__(self, parent):
+        self.parent = parent
         self.settings = {"use_scrolling": True}
         
     def create(self, puzzle):
@@ -74,7 +79,10 @@ class ClueTool:
         self.explanation_entry, self.e_changed_id = create_entry("explanation", u"<b>Explanation</b>")
         
         def on_edit_clue(button):
-            print 'TODO'
+            w = EditClueDialog(self.parent)
+            w.show_all()
+            w.run()
+            w.destroy()
         edit_button = gtk.Button(stock=gtk.STOCK_EDIT)
         edit_button.connect("clicked", on_edit_clue)
         align = gtk.Alignment(1, 0.5)
@@ -114,7 +122,7 @@ class ClueTool:
                 store[it][6] = value
             display = self.create_display_string(n, direction, word, clue)
             store[it][7] = display
-            self.editor.clue(x, y, direction, key, value)
+            self.parent.editor.clue(x, y, direction, key, value)
             self.tree.columns_autosize()
             self.tree.queue_draw()
         
@@ -167,7 +175,7 @@ class ClueTool:
         def locked():
             self.update_current_word(clue, explanation)
             self.settings["use_scrolling"] = False
-            self.editor.set_selection(x, y, direction, full_update=False)
+            self.parent.editor.set_selection(x, y, direction, full_update=False)
             self.settings["use_scrolling"] = True
         self.perform_while_locked(selection, locked)
         

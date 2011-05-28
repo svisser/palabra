@@ -17,6 +17,21 @@
 
 import gtk
 
+class PalabraDialog(gtk.Dialog):
+    def __init__(self, pwindow, title, horizontal=False):
+        gtk.Dialog.__init__(self, title, pwindow, gtk.DIALOG_MODAL)
+        self.pwindow = pwindow
+        hbox = gtk.HBox(False, 0)
+        hbox.set_border_width(12)
+        hbox.set_spacing(18)
+        if horizontal:
+            self.main = gtk.HBox()
+        else:
+            self.main = gtk.VBox()
+        self.main.set_spacing(9)
+        hbox.pack_start(self.main, True, True, 0)
+        self.vbox.pack_start(hbox, True, True, 0)
+
 def create_tree(types, columns, f_sel=None, window_size=None, return_id=False):
     store = gtk.ListStore(*types if isinstance(types, tuple) else [types])
     tree = gtk.TreeView(store)

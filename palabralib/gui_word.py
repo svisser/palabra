@@ -28,6 +28,7 @@ from gui_common import (
     create_scroll,
     create_label,
     create_notebook,
+    PalabraDialog,
 )
 import preferences
 from word import (
@@ -43,21 +44,6 @@ from word import (
 )
 
 LOADING_TEXT = "Loading..."
-
-class PalabraDialog(gtk.Dialog):
-    def __init__(self, pwindow, title, horizontal=False):
-        gtk.Dialog.__init__(self, title, pwindow, gtk.DIALOG_MODAL)
-        self.pwindow = pwindow
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        if horizontal:
-            self.main = gtk.HBox()
-        else:
-            self.main = gtk.VBox()
-        self.main.set_spacing(9)
-        hbox.pack_start(self.main, True, True, 0)
-        self.vbox.pack_start(hbox, True, True, 0)
 
 class WordListUnableToStoreDialog(PalabraDialog):
     def __init__(self, parent, unable):
