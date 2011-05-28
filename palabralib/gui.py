@@ -63,6 +63,7 @@ from gui_word import (
     SimilarWordsDialog,
     WordUsageDialog,
     WordListEditor,
+    WordListUnableToStoreDialog,
 )
 import grid
 from grid import Grid
@@ -1134,8 +1135,21 @@ class PalabraWindow(gtk.Window):
         def activate(item):
             w = WordListManager(self)
             w.show_all()
-            w.run()
-            w.destroy()
+            if w.run() == gtk.RESPONSE_OK:
+                w.destroy()
+                unable = []
+                for wlist in w.modifications:
+                    try:
+                        wlist.write_to_file()
+                    except IOError as e:
+                        unable.append((wlist.name, e.strerror))
+                if unable:
+                    w2 = WordListUnableToStoreDialog(self, unable)
+                    w2.show_all()
+                    w2.run()
+                    w2.destroy()
+            else:
+                w.destroy()
         menu.append(self._create_menu_item(activate
             , u"Manage the word lists available to the program"
             , title=u"_Manage word lists..."))

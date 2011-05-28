@@ -430,3 +430,11 @@ class CWordList:
         index = self.words[l_word].index(item)
         self.words[l_word][index] = (word, new_score)
         cPalabra.update_score(word, len(word), new_score, self.index)
+        
+    def write_to_file(self):
+        """Write the contents of this word list to a file."""
+        with open(self.path, 'w') as f:
+            text = []
+            for l in self.words.keys():
+                text.extend([w + "," + str(score) + "\n" for w, score in self.words[l]])
+            f.write(''.join(text))

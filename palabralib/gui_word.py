@@ -53,7 +53,7 @@ class PalabraDialog(gtk.Dialog):
         self.vbox.pack_start(hbox, True, True, 0)
 
 def create_tree(types, columns, f_sel=None, window_size=None):
-    store = gtk.ListStore(*types)
+    store = gtk.ListStore(*types if isinstance(types, tuple) else [types])
     tree = gtk.TreeView(store)
     for item in columns:
         title = item[0]
@@ -85,6 +85,17 @@ def create_label(text, align=None):
     else:
         label.set_alignment(*align)
     return label
+
+class WordListUnableToStoreDialog(PalabraDialog):
+    def __init__(self, parent, unable):
+        PalabraDialog.__init__(self, parent, u"Unable to store word list(s)")
+        self.main.pack_start(create_label(constants.TITLE + " was unable to store the following word lists:"))
+        self.store, self.tree, window = create_tree(str, [(u"Word list", 0)])
+        for name, error in unable:
+            self.store.append([name + " (" + error + ")"])
+        window.set_size_request(200, 300)
+        self.main.pack_start(window, True, True, 0)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
 
 class WordListEditor(PalabraDialog):
     def __init__(self, parent):
@@ -582,7 +593,7 @@ class WordListManager(gtk.Dialog):
         gtk.Dialog.__init__(self, u"Manage word lists"
             , palabra_window, gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
-        
+        self.modifications = set()
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
             , [(u"Name", 0), (u"Path", 1)]
@@ -651,8 +662,9 @@ class WordListManager(gtk.Dialog):
         self.vbox.add(content)
         
     def create_contents_tab(self):
-        self.w_store, self.w_tree, s_window = create_tree((str, int)
-            , [(u"Word", 0), (u"Score", 1, self.on_edit_score)])
+        # word show_string score
+        self.w_store, self.w_tree, s_window = create_tree((str, str, int)
+            , [(u"Word", 1), (u"Score", 2, self.on_edit_score)])
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
@@ -677,7 +689,10 @@ class WordListManager(gtk.Dialog):
     def on_edit_score(self, cell, path, value):
         it = self.w_store.get_iter(path)
         try:
-            self.w_store.set(it, 1, int(value))
+            word = self.w_store[it][0]
+            self.w_store.set(it, 2, int(value))
+            self.current_wlist.update_score(word, int(value))
+            self.modifications.add(self.current_wlist)
         except ValueError:
             pass
         
@@ -734,7 +749,7 @@ class WordListManager(gtk.Dialog):
         results = search_wordlists([wlist], word_length, "." * word_length)
         for word, score, i_b in results:
             txt = '<span font_desc="Monospace 12">' + word + '</span>'
-            self.w_store.append([txt, score])
+            self.w_store.append([word, txt, score])
             
     def load_word_lengths(self, wlist):
         lengths = [l for l in wlist.words.keys() if wlist.words[l] and l >= 2]
