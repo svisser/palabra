@@ -596,6 +596,14 @@ class WordListPropertiesDialog(PalabraDialog):
         total /= total_n_words
         self.avg_score_label.set_text("%.2f" % total)
 
+class DuplicateWordListDialog(gtk.MessageDialog):
+    def __init__(self, parent):
+        message = u"The word list has not been added because it's already in the list."
+        gtk.MessageDialog.__init__(self, parent, gtk.DIALOG_MODAL
+            , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+        self.set_title(u"Duplicate found")
+
 class WordListManager(gtk.Dialog):
     def __init__(self, palabra_window):
         gtk.Dialog.__init__(self, u"Manage word lists"
@@ -701,13 +709,10 @@ class WordListManager(gtk.Dialog):
             path = dialog.get_filename()
             if path in [p["path"]["value"] for p in preferences.prefs["word_files"]]:
                 dialog.destroy()
-                message = u"The word list has not been added because it's already in the list."
-                mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
-                    , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
-                mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-                mdialog.set_title(u"Duplicate found")
-                mdialog.run()
-                mdialog.destroy()
+                m = DuplicateWordListDialog(self)
+                m.show_all()
+                m.run()
+                m.destroy()
                 return
             dialog.destroy()
             d = NewWordListDialog(self, path)
