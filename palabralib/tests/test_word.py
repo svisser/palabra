@@ -1094,3 +1094,18 @@ class WordTestCase(unittest.TestCase):
         result = search_wordlists([w1], 5, "score")
         self.assertTrue(("score", 40, True) in result)
         cPalabra.postprocess()
+        
+    def testWriteWordLists(self):
+        """Word lists can be written to file."""
+        LOC = "palabralib/tests/test_wordlist.txt"
+        w1 = CWordList(["one", "two", "three"])
+        w1.path = LOC
+        w2 = CWordList("/usr/does/not/exist")
+        w2.name = "fail"
+        self.assertEqual(word.write_wordlists([w1]), [])
+        result = word.write_wordlists([w1, w2])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0][0], "fail")
+        cPalabra.postprocess()
+        if os.path.exists(LOC):
+            os.remove(LOC)

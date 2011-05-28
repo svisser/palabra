@@ -366,6 +366,16 @@ def analyze_words(grid, g_words, g_cs, g_lengths, words):
         result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
         #print x, y, d, result[x, y, d], data
     return result
+    
+def write_wordlists(wlists):
+    """Write the given word lists to a file. Return errors if they occur."""
+    fail = []
+    for wlist in wlists:
+        try:
+            wlist.write_to_file()
+        except IOError as e:
+            fail.append((wlist.name, e.strerror))
+    return fail
 
 class CWordList:
     def __init__(self, content, index=0, name=None, score=0):

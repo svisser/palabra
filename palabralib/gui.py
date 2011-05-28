@@ -78,7 +78,7 @@ from properties import PropertiesWindow
 from puzzle import Puzzle, PuzzleManager
 import transform
 import view
-from word import create_wordlists
+from word import create_wordlists, write_wordlists
 
 def create_splash():
     window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -1137,12 +1137,7 @@ class PalabraWindow(gtk.Window):
             w.show_all()
             if w.run() == gtk.RESPONSE_OK:
                 w.destroy()
-                unable = []
-                for wlist in w.modifications:
-                    try:
-                        wlist.write_to_file()
-                    except IOError as e:
-                        unable.append((wlist.name, e.strerror))
+                unable = write_wordlists(w.modifications)
                 if unable:
                     w2 = WordListUnableToStoreDialog(self, unable)
                     w2.show_all()
