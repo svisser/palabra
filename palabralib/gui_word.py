@@ -19,6 +19,7 @@ import gtk
 import glib
 import operator
 import pangocairo
+import sys
 
 import constants
 from editor import highlight_cells
@@ -689,10 +690,12 @@ class WordListManager(gtk.Dialog):
     def on_edit_score(self, cell, path, value):
         it = self.w_store.get_iter(path)
         try:
-            word = self.w_store[it][0]
-            self.w_store.set(it, 2, int(value))
-            self.current_wlist.update_score(word, int(value))
-            self.modifications.add(self.current_wlist)
+            value = int(value)
+            if constants.MIN_WORD_SCORE <= value <= constants.MAX_WORD_SCORE:
+                word = self.w_store[it][0]
+                self.w_store.set(it, 2, value)
+                self.current_wlist.update_score(word, value)
+                self.modifications.add(self.current_wlist)
         except ValueError:
             pass
         
