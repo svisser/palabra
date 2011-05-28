@@ -533,7 +533,7 @@ class WordListPropertiesDialog(PalabraDialog):
         table.set_row_spacings(6)
         
         table.attach(create_label(u"Word list:"), 0, 1, 0, 1)
-        table.attach(create_label(u"<b>" + wlist.name + u"</b>", align=(1, 0)), 1, 2, 0, 1)
+        table.attach(create_label(wlist.name, align=(1, 0)), 1, 2, 0, 1)
         
         table.attach(create_label(u"Number of words:"), 0, 1, 1, 2)
         self.n_words_label = create_label(u"0", align=(1, 0))
@@ -585,16 +585,20 @@ class WordListPropertiesDialog(PalabraDialog):
         s_keys.sort()
         for k in s_keys:
             self.score_store.append([k, scores[k]])
-        total = 0.0
-        for l, count in counts:
-            total += (l * count)
-        total /= total_n_words
-        self.avg_word_label.set_text("%.2f" % total)
-        total = 0.0
-        for s, count in scores.items():
-            total += (s * count)
-        total /= total_n_words
-        self.avg_score_label.set_text("%.2f" % total)
+        if total_n_words > 0:
+            total = 0.0
+            for l, count in counts:
+                total += (l * count)
+            total /= total_n_words
+            self.avg_word_label.set_text("%.2f" % total)
+            total = 0.0
+            for s, count in scores.items():
+                total += (s * count)
+            total /= total_n_words
+            self.avg_score_label.set_text("%.2f" % total)
+        else:
+            self.avg_word_label.set_text("0")
+            self.avg_score_label.set_text("0")
 
 class DuplicateWordListDialog(gtk.MessageDialog):
     def __init__(self, parent):
