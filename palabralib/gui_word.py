@@ -790,20 +790,23 @@ class WordWidget(gtk.DrawingArea):
         ctx.rectangle(*event.area)
         ctx.fill()
         ctx.set_source_rgb(0, 0, 0)
-        offset = self.get_word_offset(y)
-        n_rows = 30 #(height / self.STEP) + 1
-        for i, (w, score, h) in enumerate(self.words[offset:offset + n_rows]):
-            n = offset + i
+        for n, w, score, h in self.visible_words(y):
             color = (0, 0, 0) if h else (65535.0 / 2, 65535.0 / 2, 65535.0 / 2)
             ctx.set_source_rgb(*[c / 65535.0 for c in color])
-            markup = ['''<span font_desc="Monospace 12"''']
+            markup = ['<span font_desc="Monospace 12"']
             if n == self.selection:
                 ctx.set_source_rgb(65535, 0, 0)
-                markup += [''' underline="double"''']
+                markup += [' underline="single"']
             markup += [">", w, "</span>"]
             pcr_layout.set_markup(''.join(markup))
             ctx.move_to(5, n * self.STEP)
             pcr.show_layout(pcr_layout)
+            
+    def visible_words(self, y):
+        offset = self.get_word_offset(y)
+        n_rows = 30 #(height / self.STEP) + 1
+        for i, (w, score, h) in enumerate(self.words[offset:offset + n_rows]):
+            yield offset + i, w, score, h
 
     def get_selected_word(self):
         if self.selection is None:
