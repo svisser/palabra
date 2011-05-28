@@ -453,12 +453,15 @@ class CWordList:
             f.write(''.join(text))
             
     def count_words(self):
+        """Return the number of words in this word list."""
         return sum([len(self.words[i]) for i in self.words.keys()])
         
     def get_word_counts(self):
+        """Return the number of words in this word list by length."""
         return dict([(k, len(ws)) for k, ws in self.words.items()])
     
     def get_score_counts(self):
+        """Return the number of words in this word list by score."""
         scores = {}
         for k, k_words in self.words.items():
             for w, s in k_words:
@@ -469,6 +472,7 @@ class CWordList:
         return scores
         
     def average_word_length(self):
+        """Return the average length of a word in this word list."""
         counts = self.get_word_counts()
         n_words = self.count_words()
         if n_words == 0:
@@ -479,6 +483,7 @@ class CWordList:
         return total / n_words
         
     def average_word_score(self):
+        """Return the average score of a word in this word list."""
         scores = self.get_score_counts()
         n_words = self.count_words()
         if n_words == 0:

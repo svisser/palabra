@@ -1120,3 +1120,51 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         if os.path.exists(LOC):
             os.remove(LOC)
+            
+    def testCountWords(self):
+        """The number of words in a word list can be computed."""
+        w1 = CWordList([], index=0)
+        self.assertEqual(w1.count_words(), 0)
+        w2 = CWordList(["a", "ab", "abc", "abcd"], index=1)
+        self.assertEqual(w2.count_words(), 4)
+        cPalabra.postprocess()
+        
+    def testComputeWordCounts(self):
+        """The number of words by length can be computed."""
+        w1 = CWordList(["a", "bc", "def", "klm", "ghij"])
+        counts = w1.get_word_counts()
+        self.assertTrue(len(counts), MAX_WORD_LENGTH)
+        self.assertTrue(counts[1], 1)
+        self.assertTrue(counts[2], 1)
+        self.assertTrue(counts[3], 2)
+        self.assertTrue(counts[4], 1)
+        cPalabra.postprocess()
+        
+    def testComputeScoreCounts(self):
+        """The number of words by score can be computed."""
+        w1 = CWordList([("a", 3), ("bc", 4), ("def", 3), ("klm", 4), "ghij"])
+        scores = w1.get_score_counts()
+        self.assertEqual(len(scores), 3)
+        self.assertEqual(scores[3], 2)
+        self.assertEqual(scores[4], 2)
+        self.assertEqual(scores[0], 1)
+        cPalabra.postprocess()
+        
+    def testAverageWordLength(self):
+        """The average word length of words in a word list can be computed."""
+        w1 = CWordList([])
+        self.assertEqual(w1.average_word_length(), 0)
+        w2 = CWordList(["abc", "abcd", "abcde", "abcdef", "abcdefg"])
+        self.assertEqual(w2.average_word_length(), 5)
+        w3 = CWordList(["abc", "abcd", "abcde", "abcdef", "abcdefg", "abcdefgh"])
+        self.assertEqual(w3.average_word_length(), 5.5)
+        cPalabra.postprocess()
+        
+    def testAverageWordScore(self):
+        w1 = CWordList([])
+        self.assertEqual(w1.average_word_score(), 0)
+        w2 = CWordList([("a", 3), ("b", 4), ("c", 5), ("d", 6), ("e", 7)])
+        self.assertEqual(w2.average_word_score(), 5)
+        w3 = CWordList([("a", 3), ("b", 4), ("c", 5), ("d", 6), ("e", 7), ("f", 8)])
+        self.assertEqual(w3.average_word_score(), 5.5)
+        cPalabra.postprocess()
