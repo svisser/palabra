@@ -601,7 +601,12 @@ class WordListManager(gtk.Dialog):
         self.rename_button.set_sensitive(False)        
         self.props_button = gtk.Button(stock=gtk.STOCK_PROPERTIES)
         buttonbox.pack_start(self.props_button, False, False, 0)
-        self.props_button.connect("clicked", lambda b: self.show_word_list_props())
+        def show_word_list_props():
+            w = WordListPropertiesDialog(self, self.current_wlist)
+            w.show_all()
+            w.run()
+            w.destroy()
+        self.props_button.connect("clicked", lambda b: show_word_list_props())
         self.props_button.set_sensitive(False)
         self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
         buttonbox.pack_start(self.remove_button, False, False, 0)
@@ -675,12 +680,6 @@ class WordListManager(gtk.Dialog):
             self.w_store.set(it, 1, int(value))
         except ValueError:
             pass
-    
-    def show_word_list_props(self):
-        w = WordListPropertiesDialog(self, self.current_wlist)
-        w.show_all()
-        w.run()
-        w.destroy()
         
     def add_word_list(self):
         dialog = gtk.FileChooserDialog(u"Add word list"

@@ -1077,3 +1077,21 @@ class WordTestCase(unittest.TestCase):
         self.assertTrue(("abc", 0, True) in result)
         self.assertTrue(("aaa", 0, True) in result)
         cPalabra.postprocess()
+        
+    def testUpdateScore(self):
+        """The score of a word can be updated."""
+        w1 = CWordList([("abc", 10), ("abc", 20), ("def", 0)])
+        w1.update_score("abc", 30)
+        self.assertTrue(("abc", 30) in w1.words[3])
+        self.assertTrue(("abc", 20) in w1.words[3])
+        self.assertTrue(("def", 0) in w1.words[3])
+        cPalabra.postprocess()
+        
+    def testUpdateScoreSearchAfterwards(self):
+        """When searching for words after updating a score, the new score is returned."""
+        w1 = CWordList([("score", 10)])
+        w1.update_score("score", 40)
+        result = search_wordlists([w1], 5, "score")
+        self.assertTrue(("score", 40, True) in result)
+        print result
+        cPalabra.postprocess()

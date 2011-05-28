@@ -305,6 +305,22 @@ def search_wordlists(wordlists, length, constraints, more=None, sort=True, optio
     """
     Search the specified wordlists for words that match
     the constraints and the given length.
+    
+    This function returns a list with tuples, (str, score, bool).
+    The first value is the word, the third value is whether all
+    positions of the word have a matching word, when the
+    more_constraints (more) argument is specified.
+    If more is not specified, the second value
+    in a tuple is True.
+    
+    If more is specified, then constraints must be
+    specified for ALL intersecting words.
+    
+    constraints and more must match with each other
+    (i.e., if intersecting word at position 0 starts with 'a' then
+    main word must also have a constraint 'a' at position 0).
+    
+    Words are returned in alphabetical order.
     """
     def cs_to_str(l, cs):
         result = ['.' for i in xrange(l)]
@@ -401,21 +417,15 @@ class CWordList:
     def search(self, length, constraints, more=None, options=None):
         """
         Search for words that match the given criteria.
-        
-        This function returns a list with tuples, (str, bool).
-        The first value is the word, the second value is whether all
-        positions of the word have a matching word, when the
-        more_constraints (more) argument is specified.
-        If more is not specified, the second value
-        in a tuple is True.
-        
-        If more is specified, then constraints must be
-        specified for ALL intersecting words.
-        
-        constraints and more must match with each other
-        (i.e., if intersecting word at position 0 starts with 'a' then
-        main word must also have a constraint 'a' at position 0).
-        
-        Words are returned in alphabetical order.
         """
         return search_wordlists([self], length, constraints, more, options)
+        
+    def update_score(self, word, new_score):
+        """Update the first occurrence of word with the new score."""
+        l_word = len(word)
+        for w, score in self.words[l_word]:
+            if w == word:
+                item = (w, score)
+                break
+        index = self.words[l_word].index(item)
+        self.words[l_word][index] = (word, new_score)
