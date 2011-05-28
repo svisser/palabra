@@ -613,11 +613,7 @@ class WordListManager(gtk.Dialog):
         wlist_vbox.pack_start(buttonbox, False, False, 0)
         main.pack_start(wlist_vbox, False, False, 0)
         
-        tabs = gtk.Notebook()
-        tabs.set_property("tab-hborder", 8)
-        tabs.set_property("tab-vborder", 4)
-        tabs.append_page(self.create_contents_tab(), gtk.Label(u"Contents"))
-        main.pack_start(tabs, True, True, 0)
+        main.pack_start(self.create_contents_tab(), True, True, 0)
         
         content = gtk.VBox()
         content.set_border_width(12)
@@ -646,6 +642,7 @@ class WordListManager(gtk.Dialog):
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
+        s_window.set_size_request(300, -1)
         vbox.pack_start(s_window)
         hbox = gtk.HBox()
         hbox.set_spacing(6)
