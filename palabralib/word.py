@@ -451,3 +451,39 @@ class CWordList:
             for l in self.words.keys():
                 text.extend([w + "," + str(score) + "\n" for w, score in self.words[l]])
             f.write(''.join(text))
+            
+    def count_words(self):
+        return sum([len(self.words[i]) for i in self.words.keys()])
+        
+    def get_word_counts(self):
+        return dict([(k, len(ws)) for k, ws in self.words.items()])
+    
+    def get_score_counts(self):
+        scores = {}
+        for k, k_words in self.words.items():
+            for w, s in k_words:
+                if s in scores:
+                    scores[s] += 1
+                else:
+                    scores[s] = 1
+        return scores
+        
+    def average_word_length(self):
+        counts = self.get_word_counts()
+        n_words = self.count_words()
+        if n_words == 0:
+            return 0
+        total = 0.0
+        for l in self.words.keys():
+            total += (l * counts[l])
+        return total / n_words
+        
+    def average_word_score(self):
+        scores = self.get_score_counts()
+        n_words = self.count_words()
+        if n_words == 0:
+            return 0
+        total = 0.0
+        for s, count in scores.items():
+            total += (s * count)
+        return total / n_words

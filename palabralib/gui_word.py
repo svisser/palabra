@@ -563,42 +563,22 @@ class WordListPropertiesDialog(PalabraDialog):
 
     def load_word_list_properties(self, wlist):
         words = wlist.words
-        total_n_words = sum([len(words[i]) for i in words.keys()])
+        total_n_words = wlist.count_words()
         self.n_words_label.set_text(str(total_n_words))
-        counts = []
+        counts = wlist.get_word_counts()
         self.counts_store.clear()
-        for k, k_words in words.items():
-            n_words = len(k_words)
-            if k < 2 or n_words == 0:
+        for l in words.keys():
+            if counts[l] == 0:
                 continue
-            counts.append((k, n_words))
-            self.counts_store.append([k, n_words])
+            self.counts_store.append([l, counts[l]])
         self.score_store.clear()
-        scores = {}
-        for k, k_words in words.items():
-            for w, s in k_words:
-                if s in scores:
-                    scores[s] += 1
-                else:
-                    scores[s] = 1
+        scores = wlist.get_score_counts()
         s_keys = scores.keys()
         s_keys.sort()
         for k in s_keys:
             self.score_store.append([k, scores[k]])
-        if total_n_words > 0:
-            total = 0.0
-            for l, count in counts:
-                total += (l * count)
-            total /= total_n_words
-            self.avg_word_label.set_text("%.2f" % total)
-            total = 0.0
-            for s, count in scores.items():
-                total += (s * count)
-            total /= total_n_words
-            self.avg_score_label.set_text("%.2f" % total)
-        else:
-            self.avg_word_label.set_text("0")
-            self.avg_score_label.set_text("0")
+        self.avg_word_label.set_text("%.2f" % wlist.average_word_length())
+        self.avg_score_label.set_text("%.2f" % wlist.average_word_score())
 
 class DuplicateWordListDialog(gtk.MessageDialog):
     def __init__(self, parent):
