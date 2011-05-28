@@ -55,8 +55,17 @@ class PalabraDialog(gtk.Dialog):
 def create_tree(types, columns, f_sel=None, window_size=None):
     store = gtk.ListStore(*types)
     tree = gtk.TreeView(store)
-    for title, i in columns:
+    for item in columns:
+        title = item[0]
+        i = item[1]
+        if len(item) > 2:
+            f_edit = item[2]
+        else:
+            f_edit = None
         cell = gtk.CellRendererText()
+        if f_edit is not None:
+            cell.set_property('editable', True)
+            cell.connect("edited", f_edit)
         column = gtk.TreeViewColumn(title, cell, markup=i)
         tree.append_column(column)
     scrolled_window = gtk.ScrolledWindow()
@@ -638,7 +647,7 @@ class WordListManager(gtk.Dialog):
         
     def create_contents_tab(self):
         self.w_store, self.w_tree, s_window = create_tree((str, int)
-            , [(u"Word", 0), (u"Score", 1)])
+            , [(u"Word", 0), (u"Score", 1, self.on_edit_score)])
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
@@ -654,11 +663,18 @@ class WordListManager(gtk.Dialog):
             it = widget.get_active_iter()
             if it is not None:
                 length = int(widget.get_model().get_value(it, 0))
-                self.load_word_list(self.current_wlist, length)
+                self.load_words_by_length(self.current_wlist, length)
         self.word_length_combo.connect("changed", on_word_length_changed)
         hbox.pack_start(self.word_length_combo)
         vbox.pack_start(hbox, False, False, 0)
         return vbox
+        
+    def on_edit_score(self, cell, path, value):
+        it = self.w_store.get_iter(path)
+        try:
+            self.w_store.set(it, 1, int(value))
+        except ValueError:
+            pass
     
     def show_word_list_props(self):
         w = WordListPropertiesDialog(self, self.current_wlist)
@@ -710,16 +726,14 @@ class WordListManager(gtk.Dialog):
             for wlist in self.palabra_window.wordlists:
                 if wlist.path == path:
                     self.current_wlist = wlist
-                    self.load_word_list(wlist)
+                    self.load_words_by_length(wlist)
                     self.load_word_lengths(wlist)
                     self.word_length_combo.set_active(0)
-
-    def load_word_list(self, wlist, word_length=2):
-        self.load_words_by_length(wlist, word_length)
         
     def load_words_by_length(self, wlist, word_length=2):
         self.w_store.clear()
-        for word, score, i_b in search_wordlists([wlist], word_length, "." * word_length):
+        results = search_wordlists([wlist], word_length, "." * word_length)
+        for word, score, i_b in results:
             txt = '<span font_desc="Monospace 12">' + word + '</span>'
             self.w_store.append([txt, score])
             
