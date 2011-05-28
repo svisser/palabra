@@ -15,17 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import constants
+from collections import namedtuple
 import gobject
 import gtk
 import os
 
+import constants
 from gui_common import (
     create_tree,
     create_label,
     PalabraDialog,
 )
 import transform
+
+ClueFile = namedtuple('ClueFile', ['path', 'name', 'data'])
 
 def read_clues(path):
     if not os.path.exists(path):
@@ -53,6 +56,14 @@ def read_clues(path):
             else:
                 clues[l_word].append(clue)
     return clues
+
+def create_clues(prefs):
+    files = []
+    for data in prefs:
+        path = data["path"]["value"]
+        name = data["name"]["value"]
+        files.append(ClueFile(path, name, read_clues(path)))
+    return files
 
 class EditClueDialog(PalabraDialog):
     def __init__(self, parent):

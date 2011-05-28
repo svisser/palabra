@@ -129,6 +129,7 @@ _BOOL_PREFS = [
 _FILE_PREFS = [
     (constants.PREF_WORD_FILES, [PreferenceFile("/usr/share/dict/words", "Default")])
     , (constants.PREF_PATTERN_FILES, [])
+    , (constants.PREF_CLUE_FILES, [])
 ]
 _STR_PREFS = [
     (constants.PREF_BLACKLIST, "")

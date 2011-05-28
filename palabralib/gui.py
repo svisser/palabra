@@ -38,7 +38,7 @@ import action
 from action import State
 from appearance import AppearanceDialog
 import cPalabra
-from clue import ClueTool
+from clue import ClueTool, create_clues
 import constants
 from export import ExportWindow
 from editor import (
@@ -122,6 +122,7 @@ class PalabraWindow(gtk.Window):
         self.connect("delete-event", self.on_delete)
         self.connect("destroy", lambda widget: quit())
         self.wordlists = []
+        self.clues = []
         self.patterns = None
         self.blacklist = None
         
@@ -1271,14 +1272,20 @@ def main(argv=None):
         print "Reading configuration file..."
         read_config_file()
         print "Loading word lists..."
+        WORD_FILES = preferences.prefs[constants.PREF_WORD_FILES]
         cPalabra.preprocess_all()
-        wordlists = create_wordlists(preferences.prefs["word_files"])
+        wordlists = create_wordlists(WORD_FILES)
         print "Loading grid files..."
         fs = constants.STANDARD_PATTERN_FILES + preferences.prefs[constants.PREF_PATTERN_FILES]
         patterns = read_containers(fs)
+        print "Loading clue files..."
+        CLUE_FILES = preferences.prefs[constants.PREF_CLUE_FILES]
+        #CLUE_FILES += [{"path": {"value": "/home/simeon/projects/palabra/clues.txt"}, "name": {"value": "bla"}}]
+        clues = create_clues(CLUE_FILES)
         
         palabra = PalabraWindow()
         palabra.wordlists = wordlists
+        palabra.clues = clues
         palabra.patterns = patterns
         palabra.show_all()
         if has_splash:
