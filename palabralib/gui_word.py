@@ -698,23 +698,12 @@ class WordListManager(gtk.Dialog):
             pass
         
     def add_word_list(self):
-        dialog = gtk.FileChooserDialog(u"Add word list"
-            , self
-            , gtk.FILE_CHOOSER_ACTION_OPEN
-            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-            , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-        dialog.show_all()
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            path = dialog.get_filename()
-            if path in [p["path"]["value"] for p in preferences.prefs["word_files"]]:
-                dialog.destroy()
-                m = DuplicateWordListDialog(self)
-                m.show_all()
-                m.run()
-                m.destroy()
-                return
-            dialog.destroy()
+        def show_duplicate():
+            m = DuplicateWordListDialog(self)
+            m.show_all()
+            m.run()
+            m.destroy()
+        def show_name_dialog(path):
             d = NewWordListDialog(self, path)
             d.show_all()
             if d.run() == gtk.RESPONSE_OK:
@@ -726,6 +715,21 @@ class WordListManager(gtk.Dialog):
                     , previous=self.palabra_window.wordlists)
                 self.display_wordlists()
             d.destroy()
+        dialog = gtk.FileChooserDialog(u"Add word list"
+            , self
+            , gtk.FILE_CHOOSER_ACTION_OPEN
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.show_all()
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            path = dialog.get_filename()
+            dialog.destroy()
+            paths = [p["path"]["value"] for p in preferences.prefs["word_files"]]
+            if path in paths:
+                show_duplicate()
+                return
+            show_name_dialog(path)
         else:
             dialog.destroy()
         
