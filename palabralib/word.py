@@ -137,7 +137,10 @@ def read_wordlist(path, default_score):
                     or ord_a <= ord_c <= ord_z):
                     break
             else:
-                words.add((lower(word), int(score)))
+                try:
+                    words.add((lower(word), int(score)))
+                except ValueError:
+                    pass
     return words
     
 def check_accidental_words(wordlists, grid):

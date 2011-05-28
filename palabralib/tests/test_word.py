@@ -233,6 +233,17 @@ class WordTestCase(unittest.TestCase):
         if os.path.exists(LOC):
             os.remove(LOC)
             
+    def testInvalidScore(self):
+        """Words with an invalid score are ignored."""
+        LOC = "palabralib/tests/test_wordlist.txt"
+        with open(LOC, 'w') as f:
+            f.write("word,score")
+        clist = CWordList(LOC)
+        self.assertEqual(clist.words[4], [])
+        cPalabra.postprocess()
+        if os.path.exists(LOC):
+            os.remove(LOC)
+            
     def testFileDoesNotExist(self):
         """Loading a file that does not exist results in an empty word list."""
         clist = CWordList('/does/not/exist/file')
