@@ -21,7 +21,7 @@ import operator
 import constants
 from editor import DEFAULT_FILL_OPTIONS
 from files import get_real_filename
-from gui_word import WordWidget
+from gui_word import EditorWordWidget
 from word import visible_entries
 
 WORD_DISPLAY_OPTIONS = [u"Alphabet", u"Score"]
@@ -63,7 +63,7 @@ class WordTool:
         self.main.set_spacing(9)
         self.main.pack_start(buttons, False, False, 0)
         
-        self.view = WordWidget(self.editor)
+        self.view = EditorWordWidget(self.editor)
         sw = gtk.ScrolledWindow(None, None)
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.add_with_viewport(self.view)

@@ -69,14 +69,21 @@ def create_tree(types, columns, f_sel=None, window_size=None):
             cell.connect("edited", f_edit)
         column = gtk.TreeViewColumn(title, cell, markup=i)
         tree.append_column(column)
-    scrolled_window = gtk.ScrolledWindow()
-    scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-    scrolled_window.add(tree)
-    if window_size is not None:
-        scrolled_window.set_size_request(*window_size)
+    scroll = create_scroll(tree, size=window_size)
     if f_sel is not None:
         tree.get_selection().connect("changed", f_sel)
-    return store, tree, scrolled_window
+    return store, tree, scroll
+
+def create_scroll(widget, viewport=False, size=None):
+    w = gtk.ScrolledWindow()
+    w.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+    if viewport:
+        w.add_with_viewport(widget)
+    else:
+        w.add(widget)
+    if size is not None:
+        w.set_size_request(*size)
+    return w
     
 def create_label(text, align=None):
     label = gtk.Label()
@@ -658,13 +665,13 @@ class WordListManager(gtk.Dialog):
         
     def create_contents_tab(self):
         # word show_string score
-        self.w_store, self.w_tree, s_window = create_tree((str, str, int)
-            , [(u"Word", 1), (u"Score", 2, self.on_edit_score)])
+        self.word_widget = WordWidget()
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
-        s_window.set_size_request(300, -1)
-        vbox.pack_start(s_window)
+        window = create_scroll(self.word_widget, True)
+        window.set_size_request(300, -1)
+        vbox.pack_start(window)
         hbox = gtk.HBox()
         hbox.set_spacing(6)
         vbox.pack_start(hbox, False, False, 0)
@@ -729,13 +736,11 @@ class WordListManager(gtk.Dialog):
                     self.load_words(wlist)
         
     def load_words(self, wlist):
-        self.w_tree.set_model(None)
-        self.w_store = gtk.ListStore(str, str, int)
+        words = []
         for l in wlist.words.keys():
-            for word, score in wlist.words[l]:
-                txt = '<span font_desc="Monospace 12">' + word + '</span>'
-                self.w_store.append([word, txt, score])
-        self.w_tree.set_model(self.w_store)
+            words.extend([(w, score, True) for w, score in wlist.words[l]])
+        words.sort(key=operator.itemgetter(0))
+        self.word_widget.set_words(words)
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
@@ -772,51 +777,25 @@ class WordListManager(gtk.Dialog):
         self.tree.set_model(self.store)
         n_prefs = len(preferences.prefs["word_files"])
         self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
-        self.w_store.clear()
-        
+        self.word_widget.set_words([])
+
 class WordWidget(gtk.DrawingArea):
-    def __init__(self, editor):
+    def __init__(self):
         super(WordWidget, self).__init__()
         self.STEP = 24
+        self.words = []
         self.selection = None
-        self.editor = editor
-        self.set_words([])
-        self.set_flags(gtk.CAN_FOCUS)
-        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect('expose_event', self.expose)
-        self.connect("button_press_event", self.on_button_press)
-        
+
     def set_words(self, words):
         self.words = words
         self.selection = None
         self.set_size_request(-1, self.STEP * len(self.words))
         self.queue_draw()
-        
-    def on_button_press(self, widget, event):
-        offset = self.get_word_offset(event.y)
-        if offset >= len(self.words):
-            self.selection = None
-            self.editor.set_overlay(None)
-            return
-        word = self.words[offset][0]
-        if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
-            self.editor.insert(word)
-            self.selection = None
-            self.editor.set_overlay(None)
-        else:
-            self.selection = offset
-            self.editor.set_overlay(word)
-        self.queue_draw()
-        return True
-            
-    def get_selected_word(self):
-        if self.selection is None:
-            return None
-        return self.words[self.selection][0]
-        
+
     def get_word_offset(self, y):
-        return max(0, int(y / self.STEP)) 
-        
+        return max(0, int(y / self.STEP))
+    
     def expose(self, widget, event):
         ctx = widget.window.cairo_create()
         pcr = pangocairo.CairoContext(ctx)
@@ -840,6 +819,37 @@ class WordWidget(gtk.DrawingArea):
             pcr_layout.set_markup(''.join(markup))
             ctx.move_to(5, n * self.STEP)
             pcr.show_layout(pcr_layout)
+
+    def get_selected_word(self):
+        if self.selection is None:
+            return None
+        return self.words[self.selection][0]
+
+class EditorWordWidget(WordWidget):
+    def __init__(self, editor):
+        super(EditorWordWidget, self).__init__()
+        self.editor = editor
+        self.set_words([])
+        self.set_flags(gtk.CAN_FOCUS)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
+        self.connect("button_press_event", self.on_button_press)
+        
+    def on_button_press(self, widget, event):
+        offset = self.get_word_offset(event.y)
+        if offset >= len(self.words):
+            self.selection = None
+            self.editor.set_overlay(None)
+            return
+        word = self.words[offset][0]
+        if event.button == 1 and event.type == gtk.gdk._2BUTTON_PRESS:
+            self.editor.insert(word)
+            self.selection = None
+            self.editor.set_overlay(None)
+        else:
+            self.selection = offset
+            self.editor.set_overlay(word)
+        self.queue_draw()
+        return True
             
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
