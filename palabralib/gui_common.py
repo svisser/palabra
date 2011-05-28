@@ -17,7 +17,7 @@
 
 import gtk
 
-def create_tree(types, columns, f_sel=None, window_size=None):
+def create_tree(types, columns, f_sel=None, window_size=None, return_id=False):
     store = gtk.ListStore(*types if isinstance(types, tuple) else [types])
     tree = gtk.TreeView(store)
     for item in columns:
@@ -35,7 +35,9 @@ def create_tree(types, columns, f_sel=None, window_size=None):
         tree.append_column(column)
     scroll = create_scroll(tree, size=window_size)
     if f_sel is not None:
-        tree.get_selection().connect("changed", f_sel)
+        selection_id = tree.get_selection().connect("changed", f_sel)
+    if return_id:
+        return store, tree, scroll, selection_id
     return store, tree, scroll
 
 def create_scroll(widget, viewport=False, size=None):
@@ -49,13 +51,15 @@ def create_scroll(widget, viewport=False, size=None):
         w.set_size_request(*size)
     return w
     
-def create_label(text, align=None):
+def create_label(text, align=None, padding=None):
     label = gtk.Label()
     label.set_markup(text)
     if align is None:
         label.set_alignment(0, 0.5)
     else:
         label.set_alignment(*align)
+    if padding is not None:
+        label.set_padding(*padding)
     return label
     
 def create_notebook(pages):

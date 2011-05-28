@@ -76,6 +76,8 @@ SYM_90 = "90_degree"
 SYM_180 = "180_degree"
 SYM_DIAGONALS = "diagonals"
 
+DIRECTION_NAMES = {"across": "Across", "down": "Down"}
+
 # canonical identifiers for metadata across various file formats
 # (using simple Dublin Core)
 META_TITLE = 'title'
