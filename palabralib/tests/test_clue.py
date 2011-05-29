@@ -23,10 +23,13 @@ import palabralib.constants as constants
 
 class ClueTestCase(unittest.TestCase):
     LOCATION = "palabralib/tests/test_clues.txt"
+    LOCATION2 = "palabralib/tests/test_clues2.txt"
 
     def tearDown(self):
         if os.path.exists(self.LOCATION):
             os.remove(self.LOCATION)
+        if os.path.exists(self.LOCATION2):
+            os.remove(self.LOCATION2)
             
     def testReadCluesDoesNotExist(self):
         """If the clue database does not exist then an empty dict is returned."""
@@ -77,3 +80,38 @@ class ClueTestCase(unittest.TestCase):
             f.write("This is a compound word,clue")
         result = clue.read_clues(self.LOCATION)
         self.assertEqual(result, {})
+        
+    def testCreateClueFiles(self):
+        """Clue files can be read."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,clue")
+        prefs = [{"path": {"value": self.LOCATION}, "name": {"value": "ClueFile"}}]
+        result = clue.create_clues(prefs)
+        self.assertEqual(result[0].path, self.LOCATION)
+        self.assertEqual(result[0].name, "ClueFile")
+        self.assertEqual(result[0].data, {"word": ["clue"]})
+        
+    def testLookupWordForClues(self):
+        """Looking up for a word in clue files results in a list of clues."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,This is a clue")
+        prefs = [{"path": {"value": self.LOCATION}, "name": {"value": "ClueFile"}}]
+        files = clue.create_clues(prefs)
+        self.assertEqual(clue.lookup_clues(files, "word"), ["This is a clue"])
+        
+    def testLookupWordForCluesMultiple(self):
+        """Clues from multiple files are merged into one list."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,The first clue\nfoobar,Clue for foobar")
+        with open(self.LOCATION2, 'w') as f:
+            f.write("word,The second clue\n")
+        p1 = {"path": {"value": self.LOCATION}, "name": {"value": "P1"}}
+        p2 = {"path": {"value": self.LOCATION2}, "name": {"value": "P2"}}
+        files = clue.create_clues([p1, p2])
+        result = clue.lookup_clues(files, "word")
+        self.assertEqual(len(result), 2)
+        self.assertTrue("The first clue" in result)
+        self.assertTrue("The second clue" in result)
+        result = clue.lookup_clues(files, "foobar")
+        self.assertEqual(len(result), 1)
+        self.assertTrue("Clue for foobar" in result)

@@ -65,6 +65,13 @@ def create_clues(prefs):
         files.append(ClueFile(path, name, read_clues(path)))
     return files
 
+def lookup_clues(files, word):
+    clues = []
+    for c in files:
+        if word in c.data:
+            clues.extend(c.data[word])
+    return clues
+
 class EditClueDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent, "Edit clue")
