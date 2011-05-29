@@ -21,6 +21,10 @@ import operator
 import constants
 from editor import DEFAULT_FILL_OPTIONS
 from files import get_real_filename
+from gui_common import (
+    create_label,
+    create_button,
+)
 from gui_word import EditorWordWidget
 from word import visible_entries
 
@@ -70,9 +74,7 @@ class WordTool:
         self.main.pack_start(sw, True, True, 0)
         
         show_hbox = gtk.HBox()
-        label = gtk.Label(u"Sort words by:")
-        label.set_alignment(0, 0.5)
-        show_hbox.pack_start(label)
+        show_hbox.pack_start(create_label(u"Sort words by:"))
         
         show_combo = gtk.combo_box_new_text()
         for o in WORD_DISPLAY_OPTIONS:
@@ -119,8 +121,9 @@ class FillTool:
         main = gtk.VBox(False, 0)
         main.set_spacing(9)
         
-        button = gtk.Button("Fill")
-        button.connect("pressed", self.on_button_pressed)
+        def on_fill_button_clicked(button):
+            self.editor.fill()
+        button = create_button(u"Fill", f_click=on_fill_button_clicked)
         main.pack_start(button, False, False, 0)
         
         start_combo = gtk.combo_box_new_text()
@@ -132,9 +135,7 @@ class FillTool:
             self.editor.fill_options[constants.FILL_OPTION_START] = self.starts[combo.get_active()][0]
         start_combo.connect("changed", on_start_changed)
         
-        label = gtk.Label(u"Start filling from:")
-        label.set_alignment(0, 0.5)
-        main.pack_start(label, False, False, 0)
+        main.pack_start(create_label(u"Start filling from:"), False, False, 0)
         main.pack_start(start_combo, False, False, 0)
         
         hbox = gtk.HBox(False, 0)
@@ -142,6 +143,3 @@ class FillTool:
         hbox.set_spacing(6)
         hbox.pack_start(main, True, True, 0)
         return hbox
-        
-    def on_button_pressed(self, button):
-        self.editor.fill()
