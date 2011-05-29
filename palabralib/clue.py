@@ -27,7 +27,10 @@ from gui_common import (
     create_label,
     create_notebook,
     PalabraDialog,
+    NameFileDialog,
+    obtain_file,
 )
+import preferences
 import transform
 
 ClueFile = namedtuple('ClueFile', ['path', 'name', 'data'])
@@ -74,17 +77,44 @@ def lookup_clues(files, word):
         if l_word in c.data:
             clues.extend(c.data[l_word])
     return clues
+
+class ClueFileDialog(NameFileDialog):
+    def __init__(self, parent, path, name=None):
+        self.p_title = u"New clue database" if name is None else u"Rename clue database"
+        self.p_message = u"Clue database: <b>" + path + "</b>"
+        self.p_message2 = u"Please give the new clue database a name:"
+        if name is not None:
+            self.p_message2 = u"Please give the clue database a new name:"
+        NameFileDialog.__init__(self, parent, path, name)
     
 class ManageCluesDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent, u"Manage clue databases")
+        self.pwindow = parent
         self.store, self.tree, window = create_tree((str, str)
             , [(u"Name", 0), (u"Path", 1)]
             , f_sel=self.on_file_selected)
         window.set_size_request(300, 300)
         self.main.pack_start(window)
+        
+        buttonbox = gtk.HButtonBox()
+        buttonbox.set_layout(gtk.BUTTONBOX_START)
+        self.add_file_button = gtk.Button(stock=gtk.STOCK_ADD)
+        self.add_file_button.connect("clicked", lambda b: self.on_add_clue_db())
+        buttonbox.pack_start(self.add_file_button, False, False, 0)
+        self.main.pack_start(buttonbox)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_clue_files(parent.clues)
+    
+    def on_add_clue_db(self):
+        paths = [p["path"]["value"] for p in preferences.prefs[constants.PREF_CLUE_FILES]]
+        value = obtain_file(self, u"Add clue database", paths
+            , u"The clue database has not been added because it's already in the list."
+            , ClueFileDialog)
+        if value is not None:
+            preferences.prefs[constants.PREF_CLUE_FILES].append(value)
+            self.pwindow.clues = create_clues(preferences.prefs[constants.PREF_CLUE_FILES])
+            self.load_clue_files(self.pwindow.clues)
         
     def on_file_selected(self, selection):
         store, it = selection.get_selected()

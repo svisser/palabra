@@ -606,7 +606,8 @@ class WordListManager(gtk.Dialog):
             pass
         
     def add_word_list(self):
-        value = obtain_file(self, u"Add word list", constants.PREF_WORD_FILES
+        paths = [p["path"]["value"] for p in preferences.prefs[constants.PREF_WORD_FILES]]
+        value = obtain_file(self, u"Add word list", paths
             , u"The word list has not been added because it's already in the list."
             , NewWordListDialog)
         if value is not None:
