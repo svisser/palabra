@@ -740,9 +740,9 @@ class EditWordWidget(WordWidget):
         return True
 
 class EditorWordWidget(WordWidget):
-    def __init__(self, editor):
+    def __init__(self, parent):
         super(EditorWordWidget, self).__init__()
-        self.editor = editor
+        self.editor = parent.editor
         self.set_flags(gtk.CAN_FOCUS)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect("button_press_event", self.on_button_press)

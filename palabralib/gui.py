@@ -168,7 +168,7 @@ class PalabraWindow(gtk.Window):
             self.ids.append(self.drawing_area.connect(k, e, self, puzzle, e_settings))
         e_tools["clue"] = ClueTool(self)
         e_tools["fill"] = FillTool(self.editor)
-        e_tools["word"] = WordTool(self.editor)
+        e_tools["word"] = WordTool(self)
         
         options_hbox = gtk.HBox(False, 0)
         options_hbox.set_border_width(12)

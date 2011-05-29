@@ -27,8 +27,8 @@ from word import visible_entries
 WORD_DISPLAY_OPTIONS = [u"Alphabet", u"Score"]
 
 class WordTool:
-    def __init__(self, editor):
-        self.editor = editor
+    def __init__(self, parent):
+        self.parent = parent
         self.show_intersect = False
         self.show_used = True
         self.show_order = 0
@@ -63,7 +63,7 @@ class WordTool:
         self.main.set_spacing(9)
         self.main.pack_start(buttons, False, False, 0)
         
-        self.view = EditorWordWidget(self.editor)
+        self.view = EditorWordWidget(self.parent)
         sw = gtk.ScrolledWindow(None, None)
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.add_with_viewport(self.view)
@@ -94,7 +94,7 @@ class WordTool:
     def display_words(self, words=None):
         if words is not None:
             self.words = words
-        shown = visible_entries(self.words, self.editor.puzzle.grid
+        shown = visible_entries(self.words, self.parent.puzzle.grid
             , show_used=self.show_used
             , show_intersect=self.show_intersect
             , show_order=self.show_order)
