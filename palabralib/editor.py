@@ -642,14 +642,12 @@ def on_motion_notify_event(drawing_area, event, window, puzzle, e_settings):
         ex, ey, estate = event.window.get_pointer()
     else:
         ex, ey, estate = event.x, event.y, event.state
-    props = puzzle.view.properties
-    cx, cy = props.screen_to_grid(ex, ey)
+    cx, cy = puzzle.view.properties.screen_to_grid(ex, ey)
     previous = e_settings.current
     e_settings.current = (cx, cy)
-    shift_down = estate & gtk.gdk.SHIFT_MASK
     symms = e_settings.settings["symmetries"]
     actions = compute_motion_actions(puzzle, symms, previous, (cx, cy)
-        , shift_down, mouse_buttons_down)
+        , estate & gtk.gdk.SHIFT_MASK, mouse_buttons_down)
     process_editor_actions(window, puzzle, e_settings, actions)
     return True
     
