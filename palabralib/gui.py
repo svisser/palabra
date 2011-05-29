@@ -46,6 +46,7 @@ from editor import (
     e_tools,
     Editor,
     EDITOR_EVENTS,
+    set_overlay,
 )
 from files import (
     FILETYPES,
@@ -125,6 +126,11 @@ class PalabraWindow(gtk.Window):
         self.clues = []
         self.patterns = None
         self.blacklist = None
+    
+    def _get_puzzle(self):
+        return self.puzzle_manager.current_puzzle
+        
+    puzzle = property(_get_puzzle)
         
     def on_delete(self, window, event):
         self.close_puzzle()

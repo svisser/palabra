@@ -706,11 +706,6 @@ class Editor:
         self.fill_options = {}
         self.fill_options.update(DEFAULT_FILL_OPTIONS)
         
-    def get_puzzle(self):
-        return self.window.puzzle_manager.current_puzzle
-        
-    puzzle = property(get_puzzle)
-        
     def refresh_words(self, force_refresh=False):
         """
         Update the list of words according to active constraints of letters
@@ -722,13 +717,13 @@ class Editor:
         options = {
             constants.SEARCH_OPTION_MIN_SCORE: min_score
         }
-        refresh_words(wordlists, self.puzzle.grid
+        refresh_words(wordlists, self.window.puzzle.grid
             , e_settings.selection, force_refresh, options)
         
     def fill(self):
         for wlist in self.window.wordlists:
-            #backup = copy.deepcopy(self.puzzle.grid)
-            results = fill(self.puzzle.grid, wlist.words, self.fill_options)
+            #backup = copy.deepcopy(self.window.puzzle.grid)
+            results = fill(self.window.puzzle.grid, wlist.words, self.fill_options)
             if False:
                 w = FillDebugDialog(self.window, [backup] + results)
                 w.show_all()
@@ -751,21 +746,21 @@ class Editor:
         
     def insert(self, word):
         """Insert a word in the selected slot."""
-        actions = insert(self.puzzle.grid, e_settings.selection, word)
-        process_editor_actions(self.window, self.puzzle, e_settings, actions)
+        actions = insert(self.window.puzzle.grid, e_settings.selection, word)
+        process_editor_actions(self.window, self.window.puzzle, e_settings, actions)
             
     def set_overlay(self, word=None):
         """
         Display the word in the selected slot without storing it the grid.
         If the word is None, the overlay will be cleared.
         """
-        set_overlay(self.window, self.puzzle, e_settings, word)
+        set_overlay(self.window, self.window.puzzle, e_settings, word)
         
     def refresh_visual_size(self):
         # TODO fix design
-        self.puzzle.view.grid = self.puzzle.grid
-        self.puzzle.view.properties.grid = self.puzzle.grid
-        size = self.puzzle.view.properties.visual_size()
+        self.window.puzzle.view.grid = self.window.puzzle.grid
+        self.window.puzzle.view.properties.grid = self.window.puzzle.grid
+        size = self.window.puzzle.view.properties.visual_size()
         self.window.drawing_area.set_size_request(*size)
 
     def set_selection(self
@@ -779,7 +774,7 @@ class Editor:
         Select (x, y), the direction or both.
         Use other_dir to switch the typing direction to the other direction.
         """
-        set_selection(self.window, self.puzzle, e_settings, x, y, direction, full_update, other_dir, selection_changed)
+        set_selection(self.window, self.window.puzzle, e_settings, x, y, direction, full_update, other_dir, selection_changed)
         
     def get_selection(self):
         """Return the (x, y) of the selected cell."""
