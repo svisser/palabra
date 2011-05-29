@@ -68,10 +68,11 @@ def create_clues(prefs):
     return files
 
 def lookup_clues(files, word):
+    l_word = word.lower()
     clues = []
     for c in files:
-        if word in c.data:
-            clues.extend(c.data[word])
+        if l_word in c.data:
+            clues.extend(c.data[l_word])
     return clues
 
 class ClueTool:

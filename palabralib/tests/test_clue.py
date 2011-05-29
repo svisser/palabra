@@ -115,3 +115,14 @@ class ClueTestCase(unittest.TestCase):
         result = clue.lookup_clues(files, "foobar")
         self.assertEqual(len(result), 1)
         self.assertTrue("Clue for foobar" in result)
+        
+    def testLookupCluesCaseInsensitive(self):
+        """Looking up clues is case insensitive."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,clue")
+        p1 = {"path": {"value": self.LOCATION}, "name": {"value": "P1"}}
+        files = clue.create_clues([p1])
+        result1 = clue.lookup_clues(files, "word")
+        result2 = clue.lookup_clues(files, "Word")
+        self.assertEqual(result1, result2)
+        self.assertTrue("clue" in result1)
