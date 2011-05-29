@@ -287,6 +287,31 @@ class WordTestCase(unittest.TestCase):
         self.assertEquals(clist.search(3, []), [])
         cPalabra.postprocess()
         
+    def testCompoundMaxFile(self):
+        """
+        A word has at most constants.MAX_WORD_LENGTH - 1 (inclusive)
+        non-space characters.
+        """
+        LOC = "palabralib/tests/test_wordlist.txt"
+        with open(LOC, 'w') as f:
+            f.write("a " * (constants.MAX_WORD_LENGTH - 1))
+        clist = CWordList(LOC)
+        result = clist.search(constants.MAX_WORD_LENGTH - 1, [])
+        expected = [((constants.MAX_WORD_LENGTH - 1) * "a", 0, True)]
+        self.assertEquals(result, expected)
+        cPalabra.postprocess()
+    
+    def testCompoundMaxList(self):
+        """
+        A word has at most constants.MAX_WORD_LENGTH - 1 (inclusive)
+        non-space characters.
+        """
+        clist = CWordList(["a " * (constants.MAX_WORD_LENGTH - 1)])
+        result = clist.search(constants.MAX_WORD_LENGTH - 1, [])
+        expected = [((constants.MAX_WORD_LENGTH - 1) * "a", 0, True)]
+        self.assertEquals(result, expected)
+        cPalabra.postprocess()
+        
     def testEmptyWord(self):
         clist = CWordList([""])
         self.assertEquals(clist.search(0, []), [])
