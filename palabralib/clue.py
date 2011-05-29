@@ -121,7 +121,7 @@ class ManageCluesDialog(PalabraDialog):
         
     def load_clue_files(self, clues):
         self.store.clear()
-        for f in clues:
+        for f in sorted(clues, key=lambda f: f.name):
             self.store.append([f.name, f.path])
 
 class ClueTool:

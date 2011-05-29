@@ -664,8 +664,9 @@ class WordListManager(gtk.Dialog):
     def display_wordlists(self):
         self.tree.set_model(None)
         self.store.clear()
-        for p in preferences.prefs["word_files"]:
-            self.store.append([p["name"]["value"], p["path"]["value"]])
+        wlists = [(p["name"]["value"], p["path"]["value"]) for p in preferences.prefs["word_files"]]
+        for wlist in sorted(wlists, key=lambda w: w[0]):
+            self.store.append(wlist)
         self.tree.set_model(self.store)
         n_prefs = len(preferences.prefs["word_files"])
         self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
