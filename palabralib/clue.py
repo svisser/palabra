@@ -18,6 +18,7 @@
 from collections import namedtuple
 import gobject
 import gtk
+import operator
 import os
 
 import constants
@@ -121,7 +122,7 @@ class ManageCluesDialog(PalabraDialog):
         
     def load_clue_files(self, clues):
         self.store.clear()
-        for f in sorted(clues, key=lambda f: f.name):
+        for f in sorted(clues, key=operator.attrgetter('name')):
             self.store.append([f.name, f.path])
 
 class ClueTool:
