@@ -44,11 +44,10 @@ def read_clues(path):
         lower = str.lower
         for line in f:
             line = line.strip("\n")
-            line = line.split(",")
-            l_line = len(line)
-            if not line or l_line != 2:
+            c_index = line.find(",")
+            if c_index < 0:
                 continue
-            word, clue = line
+            word, clue = line[:c_index], line[c_index + 1:]
             if not word or not clue:
                 continue
             clue = clue.strip()

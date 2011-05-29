@@ -72,7 +72,7 @@ class ClueTestCase(unittest.TestCase):
     def testReadCluesMalformedLines(self):
         """Lines that do not have 1 word and 1 clue are rejected."""
         with open(self.LOCATION, 'w') as f:
-            f.write("word\nword,\n,clue\n,\ntoo,much,data\n\n")
+            f.write("word\nword,\n,clue\n,\n\n")
         self.assertEqual(clue.read_clues(self.LOCATION), {})
         
     def testReadCluesRejectCompound(self): # for now, reject compound
@@ -126,3 +126,12 @@ class ClueTestCase(unittest.TestCase):
         result2 = clue.lookup_clues(files, "Word")
         self.assertEqual(result1, result2)
         self.assertTrue("clue" in result1)
+    
+    def testClueWithComma(self):
+        """A clue can have a comma in it."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,clue, with comma")
+        p1 = {"path": {"value": self.LOCATION}, "name": {"value": "P1"}}
+        files = clue.create_clues([p1])
+        result = clue.lookup_clues(files, "word")
+        self.assertEqual(result, ["clue, with comma"])
