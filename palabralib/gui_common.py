@@ -152,6 +152,16 @@ def create_color_button(color, f=None):
     color = gtk.gdk.Color(*color)
     button = gtk.ColorButton()
     button.set_color(color)
-    if f:
+    if f is not None:
         button.connect("color-set", f)
     return button
+    
+def create_combo(options, active=None, f_change=None):
+    combo = gtk.combo_box_new_text()
+    for o in options:
+        combo.append_text(o)
+    if active is not None:
+        combo.set_active(active)
+    if f_change is not None:
+        combo.connect("changed", f_change)
+    return combo

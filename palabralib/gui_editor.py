@@ -24,6 +24,7 @@ from files import get_real_filename
 from gui_common import (
     create_label,
     create_button,
+    create_combo,
 )
 from gui_word import EditorWordWidget
 from word import visible_entries
@@ -75,15 +76,12 @@ class WordTool:
         
         show_hbox = gtk.HBox()
         show_hbox.pack_start(create_label(u"Sort words by:"))
-        
-        show_combo = gtk.combo_box_new_text()
-        for o in WORD_DISPLAY_OPTIONS:
-            show_combo.append_text(o)
-        show_combo.set_active(self.show_order)
         def on_show_changed(widget):
             self.show_order = widget.get_active()
             self.display_words()
-        show_combo.connect("changed", on_show_changed)
+        show_combo = create_combo(WORD_DISPLAY_OPTIONS
+            , active=self.show_order
+            , f_change=on_show_changed)
         show_hbox.pack_start(show_combo)
         self.main.pack_start(show_hbox, False, False, 0)
         
