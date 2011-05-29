@@ -700,5 +700,66 @@ class EditorTestCase(unittest.TestCase):
         actions = editor.determine_editor_actions(*args)
         self.assertEquals(actions, [])
         
+    def testUserMovesMouse(self):
+        """When the user moves the mouse, the current and previous cells are rendered."""
+        p = Puzzle(Grid(15, 15))
+        symms = [constants.SYM_HORIZONTAL]
+        previous = (1, 1)
+        current = (0, 0)
+        shift_down = False
+        mouse_buttons_down = [False, False, False]
+        result = editor.compute_motion_actions(p, symms, previous, current
+            , shift_down, mouse_buttons_down)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].type, 'render')
+        self.assertTrue((0, 0) in result[0].args['cells'])
+        self.assertTrue((0, 14) in result[0].args['cells'])
+        self.assertTrue((1, 1) in result[0].args['cells'])
+        self.assertTrue((1, 13) in result[0].args['cells'])
+        
+    def testUserPressesShiftAndClicks(self):
+        """The user can place a block with shift + left click."""
+        p = Puzzle(Grid(15, 15))
+        symms = []
+        previous = (0, 0)
+        current = (0, 0)
+        shift_down = True
+        mouse_buttons_down = [True, False, False]
+        result = editor.compute_motion_actions(p, symms, previous, current
+            , shift_down, mouse_buttons_down)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].type, 'blocks')
+        self.assertEqual(result[0].args['x'], 0)
+        self.assertEqual(result[0].args['y'], 0)
+        self.assertEqual(result[0].args['status'], True)
+        
+    def testUserPressesShiftAndRightClicks(self):
+        """The user can remove a block with shift + right click."""
+        p = Puzzle(Grid(15, 15))
+        symms = []
+        previous = (0, 0)
+        current = (0, 0)
+        shift_down = True
+        mouse_buttons_down = [False, False, True]
+        result = editor.compute_motion_actions(p, symms, previous, current
+            , shift_down, mouse_buttons_down)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].type, 'blocks')
+        self.assertEqual(result[0].args['x'], 0)
+        self.assertEqual(result[0].args['y'], 0)
+        self.assertEqual(result[0].args['status'], False)
+        
+    def testShiftAndBothMouseButtons(self):
+        """Holding shift and pressing both mouse buttons does nothing."""
+        p = Puzzle(Grid(15, 15))
+        symms = []
+        previous = (0, 0)
+        current = (0, 0)
+        shift_down = True
+        mouse_buttons_down = [True, False, True]
+        result = editor.compute_motion_actions(p, symms, previous, current
+            , shift_down, mouse_buttons_down)
+        self.assertEqual(result, [])
+        
     # TODO: if user clicks an invalid cell, selection dir must be reset to across
     # TODO: if new puzzle is opened, editor settings should be reset

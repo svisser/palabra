@@ -644,23 +644,30 @@ def on_motion_notify_event(drawing_area, event, window, puzzle, e_settings):
         ex, ey, estate = event.x, event.y, event.state
     props = puzzle.view.properties
     cx, cy = props.screen_to_grid(ex, ey)
-    prev_x, prev_y = e_settings.current
+    previous = e_settings.current
     e_settings.current = (cx, cy)
-    actions = []
-    if (prev_x, prev_y) != (cx, cy):
-        grid = puzzle.grid
-        symms = e_settings.settings["symmetries"]
-        c0 = apply_symmetry(grid, symms, prev_x, prev_y)
-        c1 = apply_symmetry(grid, symms, cx, cy)
-        cells = c0 + c1 + [(prev_x, prev_y), (cx, cy)]
-        actions.append(EditorAction("render", {'cells': cells}))
-    if estate & gtk.gdk.SHIFT_MASK:
-        if mouse_buttons_down[0]:
-            actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': True}))
-        elif mouse_buttons_down[2]:
-            actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': False}))
+    shift_down = estate & gtk.gdk.SHIFT_MASK
+    symms = e_settings.settings["symmetries"]
+    actions = compute_motion_actions(puzzle, symms, previous, (cx, cy)
+        , shift_down, mouse_buttons_down)
     process_editor_actions(window, puzzle, e_settings, actions)
     return True
+    
+def compute_motion_actions(puzzle, symmetries, previous, current, shift_down, mouse_buttons_down):
+    """Compute all editor actions that take place when mouse cursor is moved."""
+    actions = []
+    if previous != current:
+        c0 = apply_symmetry(puzzle.grid, symmetries, *previous)
+        c1 = apply_symmetry(puzzle.grid, symmetries, *current)
+        cells = c0 + c1 + [previous, current]
+        actions.append(EditorAction("render", {'cells': cells}))
+    if shift_down:
+        cx, cy = current
+        if mouse_buttons_down[0] and not mouse_buttons_down[2]:
+            actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': True}))
+        elif mouse_buttons_down[2] and not mouse_buttons_down[0]:
+            actions.append(EditorAction("blocks", {'x': cx, 'y': cy, 'status': False}))
+    return actions
 
 def on_expose_event(drawing_area, event, window, puzzle, e_settings):
     """Render the main editing component."""
