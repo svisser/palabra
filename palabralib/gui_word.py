@@ -518,7 +518,7 @@ class WordListManager(PalabraDialog):
             , window_size=(400, 400))
         self.current_wlist = None
         self.add_wlist_button = create_stock_button(gtk.STOCK_ADD, lambda b: self.add_word_list())
-        self.rename_button = create_button(u"Rename", lambda b: self.rename_word_list())
+        self.rename_button = create_button(u"Rename", f_click=lambda b: self.rename_word_list())
         def show_word_list_props():
             w = WordListPropertiesDialog(self, self.current_wlist)
             w.show_all()
