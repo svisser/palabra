@@ -202,6 +202,7 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         
     def testScale(self):
+        """A word list can deal with a variety of words."""
         clist = CWordList(self.MANY_FOUR_WORDS)
         total4 = len(clist.search(4, [], None))
         totals = {}
@@ -211,6 +212,7 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         
     def testMaxWordLength(self):
+        """All words in a word list are shorter than MAX_WORD_LENGTH."""
         l = MAX_WORD_LENGTH + 10
         words = ['a' * l, 'a' * MAX_WORD_LENGTH, 'a' * (MAX_WORD_LENGTH - 1)]
         clist = CWordList(words)
@@ -313,6 +315,7 @@ class WordTestCase(unittest.TestCase):
         cPalabra.postprocess()
         
     def testEmptyWord(self):
+        """An empty word is ignored when creating a word list."""
         clist = CWordList([""])
         self.assertEquals(clist.search(0, []), [])
         cPalabra.postprocess()
