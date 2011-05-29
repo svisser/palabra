@@ -31,6 +31,7 @@ from gui_common import (
     PalabraDialog,
     PalabraMessageDialog,
     NameFileDialog,
+    obtain_file,
 )
 import preferences
 from word import (
@@ -605,41 +606,14 @@ class WordListManager(gtk.Dialog):
             pass
         
     def add_word_list(self):
-        def show_duplicate():
-            message = u"The word list has not been added because it's already in the list."
-            m = PalabraMessageDialog(self, u"Duplicate found", message)
-            m.show_all()
-            m.run()
-            m.destroy()
-        def show_name_dialog(path):
-            d = NewWordListDialog(self, path)
-            d.show_all()
-            if d.run() == gtk.RESPONSE_OK:
-                value = {"name": {"type": "str", "value": d.filename}
-                    , "path": {"type": "str", "value": path}
-                }
-                preferences.prefs["word_files"].append(value)
-                self.palabra_window.wordlists = create_wordlists(preferences.prefs["word_files"]
-                    , previous=self.palabra_window.wordlists)
-                self.display_wordlists()
-            d.destroy()
-        dialog = gtk.FileChooserDialog(u"Add word list"
-            , self
-            , gtk.FILE_CHOOSER_ACTION_OPEN
-            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-            , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-        dialog.show_all()
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            path = dialog.get_filename()
-            dialog.destroy()
-            paths = [p["path"]["value"] for p in preferences.prefs["word_files"]]
-            if path in paths:
-                show_duplicate()
-                return
-            show_name_dialog(path)
-        else:
-            dialog.destroy()
+        value = obtain_file(self, u"Add word list", constants.PREF_WORD_FILES
+            , u"The word list has not been added because it's already in the list."
+            , NewWordListDialog)
+        if value is not None:
+            preferences.prefs[constants.PREF_WORD_FILES].append(value)
+            self.palabra_window.wordlists = create_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
+                , previous=self.palabra_window.wordlists)
+            self.display_wordlists()
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
@@ -668,8 +642,8 @@ class WordListManager(gtk.Dialog):
         if response == gtk.RESPONSE_OK:
             rename_wordlists(preferences.prefs["word_files"]
                 , self.palabra_window.wordlists
-                , path, d.filename)
-            self.store[it][0] = d.filename
+                , path, d.given_name)
+            self.store[it][0] = d.given_name
             self.tree.columns_autosize()
         d.destroy()
         

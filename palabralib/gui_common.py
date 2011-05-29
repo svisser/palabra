@@ -56,8 +56,37 @@ class NameFileDialog(PalabraDialog):
         self.store_name(name)
     
     def store_name(self, name=None):
-        self.filename = name
+        self.given_name = name
         self.ok_button.set_sensitive(False if name is None else len(name) > 0)
+
+def obtain_file(parent, file_dialog_title, pref_key, msg_duplicate, dialog_name):
+    d = gtk.FileChooserDialog(file_dialog_title
+        , parent
+        , gtk.FILE_CHOOSER_ACTION_OPEN
+        , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+        , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+    d.show_all() 
+    if d.run() != gtk.RESPONSE_OK:
+        d.destroy()
+        return
+    path = d.get_filename()
+    d.destroy()
+    paths = [p["path"]["value"] for p in preferences.prefs[pref_key]]
+    if path in paths:
+        m = PalabraMessageDialog(parent, u"Duplicate found", msg_duplicate)
+        m.show_all()
+        m.run()
+        m.destroy()
+        return
+    value = None
+    d = dialog_name(parent, path)
+    d.show_all()
+    if d.run() == gtk.RESPONSE_OK:
+        value = {"name": {"type": "str", "value": d.given_name}
+            , "path": {"type": "str", "value": path}
+        }
+    d.destroy()
+    return value
 
 def create_tree(types, columns, f_sel=None, window_size=None, return_id=False):
     store = gtk.ListStore(*types if isinstance(types, tuple) else [types])
