@@ -77,7 +77,7 @@ def lookup_clues(files, word):
     
 class ManageCluesDialog(PalabraDialog):
     def __init__(self, parent):
-        PalabraDialog.__init__(self, parent, u"Manage clue files")
+        PalabraDialog.__init__(self, parent, u"Manage clue databases")
         self.store, self.tree, window = create_tree((str, str)
             , [(u"Name", 0), (u"Path", 1)]
             , f_sel=self.on_file_selected)

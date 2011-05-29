@@ -1212,8 +1212,8 @@ class PalabraWindow(gtk.Window):
             w.run()
             w.destroy()
         menu.append(self._create_menu_item(activate
-            , u"Manage the clue files available to the program"
-            , title=u"_Manage clue files..."))
+            , u"Manage the clue databases available to the program"
+            , title=u"_Manage clue databases..."))
         
         word_menu = gtk.MenuItem(u"_Clue", True)
         word_menu.set_submenu(menu)
@@ -1281,10 +1281,8 @@ def main(argv=None):
         print "Loading grid files..."
         fs = constants.STANDARD_PATTERN_FILES + preferences.prefs[constants.PREF_PATTERN_FILES]
         patterns = read_containers(fs)
-        print "Loading clue files..."
-        CLUE_FILES = preferences.prefs[constants.PREF_CLUE_FILES]
-        #CLUE_FILES += [{"path": {"value": "/home/simeon/projects/palabra/clues.txt"}, "name": {"value": "bla"}}]
-        clues = create_clues(CLUE_FILES)
+        print "Loading clue databases..."
+        clues = create_clues(preferences.prefs[constants.PREF_CLUE_FILES])
         
         palabra = PalabraWindow()
         palabra.wordlists = wordlists
