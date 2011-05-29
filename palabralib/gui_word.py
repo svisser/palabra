@@ -29,6 +29,8 @@ from gui_common import (
     create_label,
     create_notebook,
     PalabraDialog,
+    PalabraMessageDialog,
+    NameFileDialog,
 )
 import preferences
 from word import (
@@ -450,31 +452,14 @@ class AnagramDialog(gtk.Dialog):
         for s in strings:
             self.store.append([s])
 
-class NewWordListDialog(PalabraDialog):
+class NewWordListDialog(NameFileDialog):
     def __init__(self, parent, path, name=None):
-        title = u"New word list"
+        self.p_title = u"New word list" if name is None else u"Rename word list"
+        self.p_message = u"Word list: <b>" + path + "</b>"
+        self.p_message2 = u"Please give the new word list a name:"
         if name is not None:
-            title = u"Rename word list"
-        PalabraDialog.__init__(self, parent, title)
-        self.main.pack_start(create_label(u"Word list: <b>" + path + "</b>"), False, False, 0)
-        text = u"Please give the new word list a name:"
-        if name is not None:
-            text = u"Please give the word list a new name:"
-        self.main.pack_start(create_label(text), False, False, 0)
-        self.entry = gtk.Entry()
-        def on_entry_changed(widget):
-            self.store_name(widget.get_text().strip())
-        self.entry.connect("changed", on_entry_changed)
-        self.main.pack_start(self.entry, True, True, 0)
-        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-        self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        if name is not None:
-            self.entry.set_text(name)
-        self.store_name(name)
-        
-    def store_name(self, name=None):
-        self.wlist_name = name
-        self.ok_button.set_sensitive(False if name is None else len(name) > 0)
+            self.p_message2 = u"Please give the word list a new name:"
+        NameFileDialog.__init__(self, parent, path, name)
 
 class WordListPropertiesDialog(PalabraDialog):
     def __init__(self, parent, wlist):
@@ -621,7 +606,8 @@ class WordListManager(gtk.Dialog):
         
     def add_word_list(self):
         def show_duplicate():
-            m = DuplicateWordListDialog(self)
+            message = u"The word list has not been added because it's already in the list."
+            m = PalabraMessageDialog(self, u"Duplicate found", message)
             m.show_all()
             m.run()
             m.destroy()
@@ -629,7 +615,7 @@ class WordListManager(gtk.Dialog):
             d = NewWordListDialog(self, path)
             d.show_all()
             if d.run() == gtk.RESPONSE_OK:
-                value = {"name": {"type": "str", "value": d.wlist_name}
+                value = {"name": {"type": "str", "value": d.filename}
                     , "path": {"type": "str", "value": path}
                 }
                 preferences.prefs["word_files"].append(value)
@@ -682,8 +668,8 @@ class WordListManager(gtk.Dialog):
         if response == gtk.RESPONSE_OK:
             rename_wordlists(preferences.prefs["word_files"]
                 , self.palabra_window.wordlists
-                , path, d.wlist_name)
-            self.store[it][0] = d.wlist_name
+                , path, d.filename)
+            self.store[it][0] = d.filename
             self.tree.columns_autosize()
         d.destroy()
         

@@ -32,6 +32,33 @@ class PalabraDialog(gtk.Dialog):
         hbox.pack_start(self.main, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
 
+class PalabraMessageDialog(gtk.MessageDialog):
+    def __init__(self, parent, title, message):
+        gtk.MessageDialog.__init__(self, parent, gtk.DIALOG_MODAL
+            , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
+        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+        self.set_title(title)
+
+class NameFileDialog(PalabraDialog):
+    def __init__(self, parent, path, name=None):
+        PalabraDialog.__init__(self, parent, self.p_title)
+        self.main.pack_start(create_label(self.p_message), False, False, 0)
+        self.main.pack_start(create_label(self.p_message2), False, False, 0)
+        self.entry = gtk.Entry()
+        def on_entry_changed(widget):
+            self.store_name(widget.get_text().strip())
+        self.entry.connect("changed", on_entry_changed)
+        self.main.pack_start(self.entry, True, True, 0)
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        if name is not None:
+            self.entry.set_text(name)
+        self.store_name(name)
+    
+    def store_name(self, name=None):
+        self.filename = name
+        self.ok_button.set_sensitive(False if name is None else len(name) > 0)
+
 def create_tree(types, columns, f_sel=None, window_size=None, return_id=False):
     store = gtk.ListStore(*types if isinstance(types, tuple) else [types])
     tree = gtk.TreeView(store)
