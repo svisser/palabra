@@ -22,8 +22,10 @@ import os
 
 import constants
 from gui_common import (
+    create_button,
     create_tree,
     create_label,
+    create_notebook,
     PalabraDialog,
 )
 import transform
@@ -72,40 +74,26 @@ def lookup_clues(files, word):
             clues.extend(c.data[word])
     return clues
 
-class EditClueDialog(PalabraDialog):
-    def __init__(self, parent):
-        PalabraDialog.__init__(self, parent, "Edit clue")
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-
 class ClueTool:
     def __init__(self, parent):
         self.parent = parent
         self.settings = {"use_scrolling": True}
+    
+    def create_entry(self, vbox, key, title):
+        entry = gtk.Entry()
+        changed = lambda w: self.on_clue_changed(key, w.get_text())
+        c_id = entry.connect("changed", changed)
+        entry.set_sensitive(False)
+        vbox.pack_start(create_label(title), False, False, 3)
+        vbox.pack_start(entry, False, False, 0)
+        return entry, c_id
         
     def create(self, puzzle):
         vbox = gtk.VBox(False, 0)
         vbox.set_spacing(6)
         vbox.set_border_width(6)
-        def create_entry(key, title):
-            entry = gtk.Entry()
-            c_id = entry.connect("changed", lambda w: self.on_clue_changed(w, key))
-            entry.set_sensitive(False)
-            vbox.pack_start(create_label(title), False, False, 3)
-            vbox.pack_start(entry, False, False, 0)
-            return entry, c_id
-        self.clue_entry, self.c_changed_id = create_entry("text", u"<b>Clue</b>")
-        self.explanation_entry, self.e_changed_id = create_entry("explanation", u"<b>Explanation</b>")
-        
-        def on_edit_clue(button):
-            w = EditClueDialog(self.parent)
-            w.show_all()
-            w.run()
-            w.destroy()
-        edit_button = gtk.Button(stock=gtk.STOCK_EDIT)
-        edit_button.connect("clicked", on_edit_clue)
-        align = gtk.Alignment(1, 0.5)
-        align.add(edit_button)
-        vbox.pack_start(align, False, False, 0)
+        result = self.create_entry(vbox, "text", u"<b>Clue</b>")
+        self.clue_entry, self.c_changed_id = result
         
         # number x y direction word clue explanation displayed_string
         types = (int, int, int, str, str, str, str, str)
@@ -113,14 +101,57 @@ class ClueTool:
             , [(u"", 7)]
             , f_sel=self.on_selection_changed
             , return_id=True)
+        vbox.pack_start(gtk.HSeparator(), False, False, 0)
+        
+        o_vbox = gtk.VBox()
+        o_vbox.set_spacing(6)
+        o_vbox.set_border_width(6)
+        result = self.create_entry(o_vbox, "explanation", u"<b>Explanation</b>")
+        self.explanation_entry, self.e_changed_id = result
+        
+        w_hbox = gtk.HBox()
+        w_hbox.set_spacing(6)
+        w_hbox.pack_start(create_label(u"Word:"), False, False, 0)
+        w_entry = gtk.Entry()
+        def on_word_changed(widget):
+            self.load_clues_for_word(widget.get_text().strip())
+        w_entry.connect("changed", on_word_changed)
+        w_hbox.pack_start(w_entry)
+        o_vbox.pack_start(create_label(u"<b>Lookup clues</b>"), False, False, 0)
+        o_vbox.pack_start(w_hbox, False, False, 0)
+        self.c_store, self.c_tree, c_window = create_tree(str
+            , [(u"Clues", 0)]
+            , f_sel=self.on_clue_selected)
+        o_vbox.pack_start(c_window, True, True, 0)
+        self.use_clue_button = create_button(u"Use clue"
+            , align=(0, 0.5), f_click=self.on_use_clicked)
+        self.use_clue_button.set_sensitive(False)
+        o_vbox.pack_start(self.use_clue_button, False, False, 0)
+                
+        pages = [(window, u"Words and clues"), (o_vbox, u"Advanced")]
+        tabs = create_notebook(pages)
+        tabs.set_property("tab-hborder", 4)
+        tabs.set_property("tab-vborder", 2)
+        vbox.pack_start(tabs)
         self.tree.set_headers_visible(False)
         self.load_items(puzzle.grid)
-        vbox.pack_start(gtk.HSeparator(), False, False, 0)
-        vbox.pack_start(create_label(u"<b>Words and clues</b>", padding=(3, 3)), False, False, 0)
-        vbox.pack_start(window, True, True, 0)
         return vbox
         
-    def on_clue_changed(self, widget, key):
+    def on_clue_selected(self, selection):
+        store, it = selection.get_selected()
+        self.use_clue_button.set_sensitive(it is not None)
+    
+    def on_use_clicked(self, button):
+        store, it = self.c_tree.get_selection().get_selected()
+        self.clue_entry.set_text(store[it][0])
+        
+    def load_clues_for_word(self, word):
+        self.c_store.clear()
+        clues = lookup_clues(self.parent.clues, word)
+        for c in sorted(clues):
+            self.c_store.append([gobject.markup_escape_text(c)])
+        
+    def on_clue_changed(self, key, value):
         """
         Update the ListStore/tree and create or update an undoable action.
         """
@@ -132,7 +163,6 @@ class ClueTool:
             direction = store[it][3]
             word = store[it][4]
             clue = store[it][5]
-            value = widget.get_text()
             if key == "text":
                 clue = value
                 store[it][5] = value

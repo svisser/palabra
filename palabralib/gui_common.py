@@ -77,6 +77,16 @@ def create_label(text, align=None, padding=None):
         label.set_padding(*padding)
     return label
     
+def create_button(text, align=None, f_click=None):
+    button = gtk.Button(text)
+    if f_click is not None:
+        button.connect("clicked", f_click)
+    if align is not None:
+        a = gtk.Alignment(*align)
+        a.add(button)
+        return a
+    return button
+    
 def create_notebook(pages):
     tabs = gtk.Notebook()
     for widget, title in pages:
