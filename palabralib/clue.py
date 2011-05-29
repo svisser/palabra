@@ -139,7 +139,8 @@ class ClueTool:
         
     def on_clue_selected(self, selection):
         store, it = selection.get_selected()
-        self.use_clue_button.set_sensitive(it is not None)
+        store, it_main = self.tree.get_selection().get_selected()
+        self.use_clue_button.set_sensitive(it is not None and it_main is not None)
     
     def on_use_clicked(self, button):
         store, it = self.c_tree.get_selection().get_selected()
@@ -147,8 +148,7 @@ class ClueTool:
         
     def load_clues_for_word(self, word):
         self.c_store.clear()
-        clues = lookup_clues(self.parent.clues, word)
-        for c in sorted(clues):
+        for c in sorted(lookup_clues(self.parent.clues, word)):
             self.c_store.append([gobject.markup_escape_text(c)])
         
     def on_clue_changed(self, key, value):
@@ -202,6 +202,8 @@ class ClueTool:
         """Enable or disable the text entries for editing clue data."""
         self.clue_entry.set_sensitive(status)
         self.explanation_entry.set_sensitive(status)
+        store, it = self.c_tree.get_selection().get_selected()
+        self.use_clue_button.set_sensitive(status and it is not None)
         if not status:
             self.clue_entry.set_text("")
             self.explanation_entry.set_text("")
