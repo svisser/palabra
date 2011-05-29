@@ -32,6 +32,7 @@ from gui_common import (
     PalabraMessageDialog,
     NameFileDialog,
     obtain_file,
+    create_combo,
 )
 import preferences
 from word import (
@@ -255,14 +256,11 @@ class AccidentalWordsDialog(PalabraDialog):
         self.collapse = True
         wlist_hbox = gtk.HBox(False, 0)
         wlist_hbox.pack_start(create_label(u"Check for words in list:"), True, True, 0)
-        combo = gtk.combo_box_new_text()
-        for wlist in self.wordlists:
-            combo.append_text(wlist.name)
-        combo.set_active(self.index)    
         def on_wordlist_changed(widget):
             self.index = widget.get_active()
             self.launch_accidental(self.puzzle.grid)
-        combo.connect("changed", on_wordlist_changed)
+        combo = create_combo([w.name for w in self.wordlists]
+            , active=self.index, f_change=on_wordlist_changed)
         wlist_hbox.pack_start(combo, False, False, 0)
         self.main.pack_start(wlist_hbox, False, False, 0)
         self.store, self.tree, s_window = create_tree((str, str)
@@ -349,12 +347,9 @@ class FindWordsDialog(PalabraDialog):
         def on_sort_changed(combo):
             self.sort_option = combo.get_active()
             self.launch_pattern(self.pattern)
-        combo = gtk.combo_box_new_text()
-        for t in ["Alphabet", "Length", "Score"]:
-            combo.append_text(t)
-        combo.set_active(self.sort_option)
-        combo.connect("changed", on_sort_changed)
-        sort_hbox.pack_start(combo, True, True, 0)
+        combo = create_combo(["Alphabet", "Length", "Score"]
+            , active=self.sort_option, f_change=on_sort_changed)
+        sort_hbox.pack_start(combo)
         self.main.pack_start(sort_hbox, False, False, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.launch_pattern(None)
@@ -375,11 +370,7 @@ class FindWordsDialog(PalabraDialog):
     def find_words(self, pattern=None):
         if pattern is None:
             return False
-        result = search_wordlists_by_pattern(self.wordlists, pattern)
-        if self.sort_option == 0:
-            result.sort(key=operator.itemgetter(1))
-        elif self.sort_option == 2:
-            result.sort(key=operator.itemgetter(2), reverse=True)
+        result = search_wordlists_by_pattern(self.wordlists, pattern, sort=self.sort_option)
         self.pattern = pattern
         self.store.clear()
         self.set_n_label(len(result))

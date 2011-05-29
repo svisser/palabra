@@ -314,11 +314,28 @@ class WordTestCase(unittest.TestCase):
         c4 = CWordList(["baltimore", "washington", "huntsville"])
         c4.path = "/this/is/the/path"
         result = word.search_wordlists_by_pattern([c1, c2, c3, c4], "w*")
-        self.assertEquals(len(result), 4)
+        self.assertEqual(len(result), 4)
         self.assertTrue(("Australia", "wombat", 0) in result)
         self.assertTrue(("Marine", "whale", 0) in result)
         self.assertTrue((None, "widget", 0) in result)
         self.assertTrue(("/this/is/the/path", "washington", 0) in result)
+        cPalabra.postprocess()
+    
+    def testSearchByPatternSorting(self):
+        """The result of searching by pattern can be sorted."""
+        c1 = CWordList([("koala", 50), ("australia", 10), ("wombat", 5)], name="Words")
+        # alphabet
+        result = word.search_wordlists_by_pattern([c1], "*", sort=0)
+        expected = [("Words", "australia", 10), ("Words", "koala", 50), ("Words", "wombat", 5)]
+        self.assertEqual(result, expected)
+        # length
+        result = word.search_wordlists_by_pattern([c1], "*", sort=1)
+        expected = [("Words", "koala", 50), ("Words", "wombat", 5), ("Words", "australia", 10)]
+        self.assertEqual(result, expected)
+        # score
+        result = word.search_wordlists_by_pattern([c1], "*", sort=2)
+        expected = [("Words", "koala", 50), ("Words", "australia", 10), ("Words", "wombat", 5)]
+        self.assertEqual(result, expected)
         cPalabra.postprocess()
         
     def testCreateWordLists(self):

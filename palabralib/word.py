@@ -342,7 +342,7 @@ def search_wordlists(wordlists, length, constraints, more=None, sort=True, optio
         result.sort(key=itemgetter(0))
     return result
     
-def search_wordlists_by_pattern(wordlists, pattern):
+def search_wordlists_by_pattern(wordlists, pattern, sort=None):
     """
     Give all (descr, word) pairs of words in wordlists that match the
     pattern. descr is either the name of the wordlist or its path.
@@ -351,6 +351,13 @@ def search_wordlists_by_pattern(wordlists, pattern):
     for wlist in wordlists:
         name = wlist.name if wlist.name is not None else wlist.path
         result.extend([(name, w, score) for w, score in wlist.find_by_pattern(pattern)])
+    if sort is not None:
+        if sort == 0: # alphabet
+            result.sort(key=itemgetter(1))
+        elif sort == 1: # length
+            result.sort(key=lambda r: len(r[1]))
+        elif sort == 2: # score
+            result.sort(key=itemgetter(2), reverse=True)
     return result
     
 def analyze_words(grid, g_words, g_cs, g_lengths, words):
