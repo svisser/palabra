@@ -123,9 +123,7 @@ def read_wordlist(path, default_score):
                 word, score = line[0], default_score
             elif l_line == 2:
                 word, score = line
-            word = word.strip()
-            if " " in word:
-                continue # for now, reject compound
+            word = word.replace(" ", '')
             if len(word) > constants.MAX_WORD_LENGTH:
                 continue    
             for c in word:
@@ -396,8 +394,8 @@ class CWordList:
         else:
             self.path = None
             words = [(w if isinstance(w, tuple) else (w, score)) for w in content]
-            # for now, reject compound
-            words = [item for item in words if " " not in item[0]]
+            # for now, concat compound words
+            words = [(w.replace(" ", ''), score) for w, score in words]
             # reject all non-alphabet chars
             ord_A = ord("A")
             ord_Z = ord("Z")

@@ -277,13 +277,13 @@ class WordTestCase(unittest.TestCase):
         with open(LOC, 'w') as f:
             f.write("word spaces")
         clist = CWordList(LOC)
-        self.assertEquals(clist.search(10, []), [])
+        self.assertEquals(clist.search(10, []), [("wordspaces", 0, True)])
         self.assertEquals(clist.search(11, []), [])
         cPalabra.postprocess()
         
     def testCompoundTwo(self):
         clist = CWordList(["a a"])
-        self.assertEquals(clist.search(2, []), [])
+        self.assertEquals(clist.search(2, []), [("aa", 0, True)])
         self.assertEquals(clist.search(3, []), [])
         cPalabra.postprocess()
         
