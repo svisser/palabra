@@ -141,7 +141,13 @@ def create_button(text, align=None, f_click=None):
         a.add(button)
         return a
     return button
-    
+
+def create_stock_button(stock, f_click=None):
+    button = gtk.Button(stock=stock)
+    if f_click is not None:
+        button.connect("clicked", f_click)
+    return button
+
 def create_notebook(pages, border=None):
     tabs = gtk.Notebook()
     for widget, title in pages:

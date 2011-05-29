@@ -24,6 +24,7 @@ import sys
 import constants
 from editor import highlight_cells
 from gui_common import (
+    create_button,
     create_tree,
     create_scroll,
     create_label,
@@ -33,6 +34,7 @@ from gui_common import (
     NameFileDialog,
     obtain_file,
     create_combo,
+    create_stock_button,
 )
 import preferences
 from word import (
@@ -491,10 +493,23 @@ class DuplicateWordListDialog(gtk.MessageDialog):
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
         self.set_title(u"Duplicate found")
 
+def get_words_by_length(wlist):
+    words = []
+    for l in wlist.words.keys():
+        words.extend([(w, score, True) for w, score in wlist.words[l]])
+    words.sort(key=operator.itemgetter(0))
+    return words
+
+def iterate_word_lists():
+    data = preferences.prefs[constants.PREF_WORD_FILES]
+    wlists = [(p["name"]["value"], p["path"]["value"]) for p in data]
+    for wlist in sorted(wlists, key=operator.itemgetter(0)):
+        yield wlist
+
 class WordListManager(PalabraDialog):
-    def __init__(self, palabra_window):
-        super(WordListManager, self).__init__(palabra_window, u"Manage word lists")
-        self.palabra_window = palabra_window
+    def __init__(self, parent):
+        super(WordListManager, self).__init__(parent, u"Manage word lists")
+        self.palabra_window = parent
         self.modifications = set()
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
@@ -502,40 +517,33 @@ class WordListManager(PalabraDialog):
             , f_sel=self.on_selection_changed
             , window_size=(400, 400))
         self.current_wlist = None
-        
-        buttonbox = gtk.HButtonBox()
-        buttonbox.set_layout(gtk.BUTTONBOX_START)
-        
-        self.add_wlist_button = gtk.Button(stock=gtk.STOCK_ADD)
-        buttonbox.pack_start(self.add_wlist_button, False, False, 0)
-        self.add_wlist_button.connect("clicked", lambda button: self.add_word_list())
-        self.rename_button = gtk.Button("Rename")
-        buttonbox.pack_start(self.rename_button, False, False, 0)
-        self.rename_button.connect("clicked", lambda button: self.rename_word_list())
-        self.rename_button.set_sensitive(False)        
-        self.props_button = gtk.Button(stock=gtk.STOCK_PROPERTIES)
-        buttonbox.pack_start(self.props_button, False, False, 0)
+        self.add_wlist_button = create_stock_button(gtk.STOCK_ADD, lambda b: self.add_word_list())
+        self.rename_button = create_button(u"Rename", lambda b: self.rename_word_list())
         def show_word_list_props():
             w = WordListPropertiesDialog(self, self.current_wlist)
             w.show_all()
             w.run()
             w.destroy()
-        self.props_button.connect("clicked", lambda b: show_word_list_props())
-        self.props_button.set_sensitive(False)
-        self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
-        buttonbox.pack_start(self.remove_button, False, False, 0)
-        self.remove_button.connect("clicked", lambda button: self.remove_word_list())
-        self.remove_button.set_sensitive(False)
-                
-        wlist_vbox = gtk.VBox(False, 0)
+        self.props_button = create_stock_button(gtk.STOCK_PROPERTIES, lambda b: show_word_list_props())
+        self.remove_button = create_stock_button(gtk.STOCK_REMOVE, lambda b: self.remove_word_list())
+        buttonbox = gtk.HButtonBox()
+        buttonbox.set_layout(gtk.BUTTONBOX_START)
+        buttonbox.pack_start(self.add_wlist_button)
+        buttonbox.pack_start(self.rename_button)
+        buttonbox.pack_start(self.props_button)
+        buttonbox.pack_start(self.remove_button)
+        self.wlist_sensitives = [self.rename_button, self.props_button, self.remove_button]
+        for b in self.wlist_sensitives:
+            b.set_sensitive(False)
+        wlist_vbox = gtk.VBox()
         wlist_vbox.set_spacing(12)
         wlist_vbox.pack_start(create_label("<b>Word lists</b>"), False, False, 0)
-        wlist_vbox.pack_start(s_window, True, True, 0)
+        wlist_vbox.pack_start(s_window)
         wlist_vbox.pack_start(buttonbox, False, False, 0)
-        main = gtk.HBox(False, 0)
+        main = gtk.HBox()
         main.set_spacing(18)
         main.pack_start(wlist_vbox, False, False, 0)
-        main.pack_start(self.create_contents_tab(), True, True, 0)
+        main.pack_start(self.create_contents_tab())
         self.main.pack_start(main)
         label = create_label(u"These word lists are loaded when you start " + constants.TITLE + ".")
         self.main.pack_start(label, False, False, 0)
@@ -543,19 +551,17 @@ class WordListManager(PalabraDialog):
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
     def create_contents_tab(self):
-        # word show_string score
         self.word_widget = EditWordWidget()
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
-        window = create_scroll(self.word_widget, True)
-        window.set_size_request(300, -1)
-        vbox.pack_start(window)
+        vbox.pack_start(create_scroll(self.word_widget, True, size=(300, -1)))
         hbox = gtk.HBox()
         hbox.set_spacing(6)
         vbox.pack_start(hbox, False, False, 0)
         return vbox
         
+    # TODO not in use
     def on_edit_score(self, cell, path, value):
         it = self.w_store.get_iter(path)
         try:
@@ -581,21 +587,14 @@ class WordListManager(PalabraDialog):
         
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
-        for b in [self.remove_button, self.rename_button, self.props_button]:
+        for b in self.wlist_sensitives:
             b.set_sensitive(it is not None)
         if it is not None:
             path = store[it][1]
             for wlist in self.palabra_window.wordlists:
                 if wlist.path == path:
                     self.current_wlist = wlist
-                    self.load_words(wlist)
-        
-    def load_words(self, wlist):
-        words = []
-        for l in wlist.words.keys():
-            words.extend([(w, score, True) for w, score in wlist.words[l]])
-        words.sort(key=operator.itemgetter(0))
-        self.word_widget.set_words(words)
+                    self.word_widget.set_words(get_words_by_length(wlist))
         
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
@@ -604,7 +603,7 @@ class WordListManager(PalabraDialog):
         d.show_all()
         response = d.run()
         if response == gtk.RESPONSE_OK:
-            rename_wordlists(preferences.prefs["word_files"]
+            rename_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
                 , self.palabra_window.wordlists
                 , path, d.given_name)
             self.store[it][0] = d.given_name
@@ -614,9 +613,9 @@ class WordListManager(PalabraDialog):
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store[it][1]
-        n_prefs, n_wlists = remove_wordlist(preferences.prefs["word_files"]
+        n_prefs, n_wlists = remove_wordlist(preferences.prefs[constants.PREF_WORD_FILES]
             , self.palabra_window.wordlists, path)
-        preferences.prefs["word_files"] = n_prefs
+        preferences.prefs[constants.PREF_WORD_FILES] = n_prefs
         self.palabra_window.wordlists = n_wlists
         try:
             self.palabra_window.editor.refresh_words(True)
@@ -625,14 +624,11 @@ class WordListManager(PalabraDialog):
         self.display_wordlists()
         
     def display_wordlists(self):
-        self.tree.set_model(None)
         self.store.clear()
-        wlists = [(p["name"]["value"], p["path"]["value"]) for p in preferences.prefs["word_files"]]
-        for wlist in sorted(wlists, key=lambda w: w[0]):
+        wlists = list(iterate_word_lists())
+        for wlist in wlists:
             self.store.append(wlist)
-        self.tree.set_model(self.store)
-        n_prefs = len(preferences.prefs["word_files"])
-        self.add_wlist_button.set_sensitive(n_prefs < constants.MAX_WORD_LISTS)
+        self.add_wlist_button.set_sensitive(len(wlists) < constants.MAX_WORD_LISTS)
         self.word_widget.set_words([])
 
 class WordWidget(gtk.DrawingArea):
