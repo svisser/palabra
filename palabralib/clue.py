@@ -103,6 +103,10 @@ class ManageCluesDialog(PalabraDialog):
         self.add_file_button = gtk.Button(stock=gtk.STOCK_ADD)
         self.add_file_button.connect("clicked", lambda b: self.on_add_clue_db())
         buttonbox.pack_start(self.add_file_button, False, False, 0)
+        self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
+        buttonbox.pack_start(self.remove_button, False, False, 0)
+        self.remove_button.connect("clicked", lambda button: self.on_remove_db())
+        self.remove_button.set_sensitive(False)
         self.main.pack_start(buttonbox)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_clue_files(parent.clues)
@@ -116,9 +120,19 @@ class ManageCluesDialog(PalabraDialog):
             preferences.prefs[constants.PREF_CLUE_FILES].append(value)
             self.pwindow.clues = create_clues(preferences.prefs[constants.PREF_CLUE_FILES])
             self.load_clue_files(self.pwindow.clues)
+    
+    def on_remove_db(self):
+        store, it = self.tree.get_selection().get_selected()
+        path = self.store[it][1]
+        n_prefs = [p for p in preferences.prefs[constants.PREF_CLUE_FILES] if p["path"]["value"] != path]
+        preferences.prefs[constants.PREF_CLUE_FILES] = n_prefs
+        n_clues = [f for f in self.pwindow.clues if f.path != path]
+        self.pwindow.clues = n_clues
+        self.load_clue_files(n_clues)
         
     def on_file_selected(self, selection):
         store, it = selection.get_selected()
+        self.remove_button.set_sensitive(it is not None)
         
     def load_clue_files(self, clues):
         self.store.clear()
