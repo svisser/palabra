@@ -39,6 +39,9 @@ MAX_WORD_LISTS = 64 # also in .c
 MIN_WORD_SCORE = -1000000
 MAX_WORD_SCORE = 1000000
 
+# appearance
+MAX_LINE_WIDTH = 32
+
 # transform types (used in gui.py/update_window to indicate postprocessing)
 TRANSFORM_NONE = 0
 TRANSFORM_CONTENT = 1

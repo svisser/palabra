@@ -147,3 +147,11 @@ def create_notebook(pages):
     for widget, title in pages:
         tabs.append_page(widget, gtk.Label(title))
     return tabs
+    
+def create_color_button(color, f=None):
+    color = gtk.gdk.Color(*color)
+    button = gtk.ColorButton()
+    button.set_color(color)
+    if f:
+        button.connect("color-set", f)
+    return button
