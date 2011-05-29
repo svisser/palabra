@@ -390,7 +390,7 @@ class EditorTestCase(unittest.TestCase):
         self.assertEquals(g2.count_chars(include_blanks=False), 10)
         cPalabra.postprocess()
         
-    def testAttemptFillTwo(self):
+    def testAttemptFillDoesNotFit(self):
         g = Grid(5, 5)
         g2 = editor.attempt_fill(g, ["doesnotfit"])
         self.assertEquals(g, g2)
@@ -650,7 +650,7 @@ class EditorTestCase(unittest.TestCase):
         actions = editor.determine_editor_actions(*args)
         self.assertEquals(actions, [])
         
-    def testKeyHomeNotAvailable(self):
+    def testKeyEndNotAvailable(self):
         """Pressing the End key has no effect when cell is not available."""
         self.grid.set_void(5, 5, True)
         args = self.grid, (5, 5, "across"), gtk.keysyms.End
