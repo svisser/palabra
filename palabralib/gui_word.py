@@ -51,7 +51,7 @@ LOADING_TEXT = "Loading..."
 
 class WordListUnableToStoreDialog(PalabraDialog):
     def __init__(self, parent, unable):
-        PalabraDialog.__init__(self, parent, u"Unable to store word list(s)")
+        super(WordListUnableToStoreDialog, self).__init__(parent, u"Unable to store word list(s)")
         self.main.pack_start(create_label(constants.TITLE + " was unable to store the following word lists:"))
         self.store, self.tree, window = create_tree(str, [(u"Word list", 0)])
         for name, error in unable:
@@ -79,15 +79,13 @@ class WordListEditor(PalabraDialog):
 
 class WordUsageDialog(PalabraDialog):
     def __init__(self, parent):
-        PalabraDialog.__init__(self, parent
+        super(WordUsageDialog, self).__init__(parent
             , u"Configure word list usage", horizontal=True)
         self.wordlists = parent.wordlists
-        tabs = gtk.Notebook()
-        tabs.set_property("tab-hborder", 8)
-        tabs.set_property("tab-vborder", 4)
-        tabs.append_page(self.create_find_words(parent), gtk.Label(u"Finding words"))
-        tabs.append_page(self.create_blacklist(parent), gtk.Label(u"Blacklist"))
-        self.main.pack_start(tabs, True, True, 0)
+        pages = [(self.create_find_words(parent), u"Finding words")
+            , (self.create_blacklist(parent), u"Blacklist")
+        ]
+        self.main.pack_start(create_notebook(pages, border=(8, 4)))
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         
@@ -95,10 +93,7 @@ class WordUsageDialog(PalabraDialog):
         vbox = gtk.VBox()
         vbox.set_border_width(9)
         vbox.set_spacing(9)
-        self.blacklist_combo = gtk.combo_box_new_text()
-        self.blacklist_combo.append_text('')
-        for wlist in self.wordlists:
-            self.blacklist_combo.append_text(wlist.name)
+        self.blacklist_combo = create_combo([''] + [w.name for w in self.wordlists])
         for i, wlist in enumerate(self.wordlists):
             if preferences.prefs[constants.PREF_BLACKLIST] == wlist.path:
                 self.blacklist_combo.set_active(i + 1)
@@ -193,7 +188,7 @@ class WordUsageDialog(PalabraDialog):
 
 class SimilarWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
-        PalabraDialog.__init__(self, parent, u"View similar words")
+        super(SimilarWordsDialog, self).__init__(parent, u"View similar words")
         self.puzzle = puzzle
         self.store, self.tree, scrolled_window = create_tree((str, str)
             , [(u"Similar words", 1)]
@@ -249,7 +244,7 @@ def merge_highlights(data, indices):
 
 class AccidentalWordsDialog(PalabraDialog):
     def __init__(self, parent, puzzle):
-        PalabraDialog.__init__(self, parent, u"View accidental words")
+        super(AccidentalWordsDialog, self).__init__(parent, u"View accidental words")
         self.puzzle = puzzle
         self.wordlists = parent.wordlists
         self.index = 0
@@ -311,7 +306,7 @@ MATCHING_TEXT = u"Number of matching words:"
 
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):
-        PalabraDialog.__init__(self, parent, u"Find words")
+        super(FindWordsDialog, self).__init__(parent, u"Find words")
         self.wordlists = parent.wordlists
         self.sort_option = 0
         self.pattern = None
@@ -451,11 +446,11 @@ class NewWordListDialog(NameFileDialog):
         self.p_message2 = u"Please give the new word list a name:"
         if name is not None:
             self.p_message2 = u"Please give the word list a new name:"
-        NameFileDialog.__init__(self, parent, path, name)
+        super(NewWordListDialog, self).__init__(parent, path, name)
 
 class WordListPropertiesDialog(PalabraDialog):
     def __init__(self, parent, wlist):
-        PalabraDialog.__init__(self, parent, u"Word list properties")
+        super(WordListPropertiesDialog, self).__init__(parent, u"Word list properties")
         table = gtk.Table(4, 2)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
@@ -503,16 +498,16 @@ class DuplicateWordListDialog(gtk.MessageDialog):
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
         self.set_title(u"Duplicate found")
 
-class WordListManager(gtk.Dialog):
+class WordListManager(PalabraDialog):
     def __init__(self, palabra_window):
-        gtk.Dialog.__init__(self, u"Manage word lists"
-            , palabra_window, gtk.DIALOG_MODAL)
+        super(WordListManager, self).__init__(palabra_window, u"Manage word lists")
         self.palabra_window = palabra_window
         self.modifications = set()
         # name path
         self.store, self.tree, s_window = create_tree((str, str)
             , [(u"Name", 0), (u"Path", 1)]
-            , f_sel=self.on_selection_changed)
+            , f_sel=self.on_selection_changed
+            , window_size=(400, 400))
         self.current_wlist = None
         
         buttonbox = gtk.HButtonBox()
@@ -539,36 +534,20 @@ class WordListManager(gtk.Dialog):
         self.remove_button.connect("clicked", lambda button: self.remove_word_list())
         self.remove_button.set_sensitive(False)
                 
-        main = gtk.HBox(False, 0)
-        main.set_spacing(18)
-        
         wlist_vbox = gtk.VBox(False, 0)
         wlist_vbox.set_spacing(12)
-        label = gtk.Label()
-        label.set_markup("<b>Word lists</b>")
-        label.set_alignment(0, 0)
-        wlist_vbox.pack_start(label, False, False, 0)
-        s_window.set_size_request(400, 400)
+        wlist_vbox.pack_start(create_label("<b>Word lists</b>"), False, False, 0)
         wlist_vbox.pack_start(s_window, True, True, 0)
         wlist_vbox.pack_start(buttonbox, False, False, 0)
+        main = gtk.HBox(False, 0)
+        main.set_spacing(18)
         main.pack_start(wlist_vbox, False, False, 0)
-        
         main.pack_start(self.create_contents_tab(), True, True, 0)
-        
-        content = gtk.VBox()
-        content.set_border_width(12)
-        content.set_spacing(18)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_spacing(18)
-        hbox.pack_start(main, True, True, 0)
-        content.pack_start(hbox)
-        label = gtk.Label(u"These word lists are loaded when you start " + constants.TITLE + ".")
-        label.set_alignment(0, 0.5)
-        content.pack_start(label, False, False, 0)
+        self.main.pack_start(main)
+        label = create_label(u"These word lists are loaded when you start " + constants.TITLE + ".")
+        self.main.pack_start(label, False, False, 0)
         self.display_wordlists()
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.vbox.add(content)
         
     def create_contents_tab(self):
         # word show_string score

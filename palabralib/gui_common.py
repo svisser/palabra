@@ -142,10 +142,13 @@ def create_button(text, align=None, f_click=None):
         return a
     return button
     
-def create_notebook(pages):
+def create_notebook(pages, border=None):
     tabs = gtk.Notebook()
     for widget, title in pages:
         tabs.append_page(widget, gtk.Label(title))
+    if border is not None:
+        tabs.set_property("tab-hborder", border[0])
+        tabs.set_property("tab-vborder", border[1])
     return tabs
     
 def create_color_button(color, f=None):

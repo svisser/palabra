@@ -193,10 +193,7 @@ class ClueTool:
         o_vbox.pack_start(self.use_clue_button, False, False, 0)
                 
         pages = [(window, u"Words and clues"), (o_vbox, u"Advanced")]
-        tabs = create_notebook(pages)
-        tabs.set_property("tab-hborder", 4)
-        tabs.set_property("tab-vborder", 2)
-        vbox.pack_start(tabs)
+        vbox.pack_start(create_notebook(pages, border=(4, 2)))
         self.tree.set_headers_visible(False)
         self.load_items(puzzle.grid)
         return vbox
