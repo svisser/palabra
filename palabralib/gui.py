@@ -38,7 +38,7 @@ import action
 from action import State
 from appearance import AppearanceDialog
 import cPalabra
-from clue import ClueTool, create_clues
+from clue import ClueTool, create_clues, ManageCluesDialog
 import constants
 from export import ExportWindow
 from editor import (
@@ -1207,10 +1207,13 @@ class PalabraWindow(gtk.Window):
         menu = gtk.Menu()
         
         def activate(item):
-            print "TODO"
+            w = ManageCluesDialog(self)
+            w.show_all()
+            w.run()
+            w.destroy()
         menu.append(self._create_menu_item(activate
             , u"Manage the clue files available to the program"
-            , title=u"_Manage clues..."))
+            , title=u"_Manage clue files..."))
         
         word_menu = gtk.MenuItem(u"_Clue", True)
         word_menu.set_submenu(menu)

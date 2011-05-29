@@ -74,6 +74,25 @@ def lookup_clues(files, word):
         if l_word in c.data:
             clues.extend(c.data[l_word])
     return clues
+    
+class ManageCluesDialog(PalabraDialog):
+    def __init__(self, parent):
+        PalabraDialog.__init__(self, parent, u"Manage clue files")
+        self.store, self.tree, window = create_tree((str, str)
+            , [(u"Name", 0), (u"Path", 1)]
+            , f_sel=self.on_file_selected)
+        window.set_size_request(300, 300)
+        self.main.pack_start(window)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.load_clue_files(parent.clues)
+        
+    def on_file_selected(self, selection):
+        store, it = selection.get_selected()
+        
+    def load_clue_files(self, clues):
+        self.store.clear()
+        for f in clues:
+            self.store.append([f.name, f.path])
 
 class ClueTool:
     def __init__(self, parent):
