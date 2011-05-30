@@ -492,9 +492,9 @@ class PalabraWindow(gtk.Window):
         create_tool_button(gtk.STOCK_OPEN, lambda i: self.open_puzzle())
         create_tool_button(gtk.STOCK_SAVE, lambda i: self.save_puzzle(False), True)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
-        self.undo_tool_item = create_tool_button(gtk.STOCK_UNDO, lambda i: self.undo_action())
+        self.undo_tool_item = create_tool_button(gtk.STOCK_UNDO, lambda i: self.do_action("undo"))
         self.undo_tool_item.set_sensitive(False)
-        self.redo_tool_item = create_tool_button(gtk.STOCK_REDO, lambda i: self.redo_action())
+        self.redo_tool_item = create_tool_button(gtk.STOCK_REDO, lambda i: self.do_action("redo"))
         self.redo_tool_item.set_sensitive(False)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         def view_puzzle_properties():
@@ -525,7 +525,6 @@ class PalabraWindow(gtk.Window):
         item.connect("activate", activate)
         item.connect("select", select)
         item.connect("deselect", deselect)
-        
         if is_puzzle_sensitive:
             item.set_sensitive(False)
             self.puzzle_toggle_items += [item]
@@ -625,14 +624,11 @@ class PalabraWindow(gtk.Window):
         preferences.destroy()
         self.update_window()
         
-    def undo_action(self):
-        s = action.stack.undo(self.puzzle_manager.current_puzzle)
-        self.update_window(True)
-        if s.clue_slot:
-            self.set_selection(*s.clue_slot)
-        
-    def redo_action(self):
-        s = action.stack.redo(self.puzzle_manager.current_puzzle)
+    def do_action(self, task):
+        if task == "undo":
+            s = action.stack.undo(self.puzzle_manager.current_puzzle)
+        elif task == "redo":
+            s = action.stack.redo(self.puzzle_manager.current_puzzle)
         self.update_window(True)
         if s.clue_slot:
             self.set_selection(*s.clue_slot)
@@ -644,7 +640,7 @@ class PalabraWindow(gtk.Window):
         self.add_accel_group(accel_group)
         
         self.undo_menu_item = self._create_menu_item(
-            lambda item: self.undo_action()
+            lambda item: self.do_action("undo")
             , u"Undo the last action"
             , image=gtk.STOCK_UNDO
             , accelerator="<Ctrl>Z"
@@ -653,7 +649,7 @@ class PalabraWindow(gtk.Window):
         menu.append(self.undo_menu_item)
         
         self.redo_menu_item = self._create_menu_item(
-            lambda item: self.redo_action()
+            lambda item: self.do_action("redo")
             , u"Redo the last undone action"
             , image=gtk.STOCK_REDO
             , accelerator="<Shift><Ctrl>Z"
