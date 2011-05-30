@@ -218,11 +218,22 @@ class PalabraWindow(gtk.Window):
         self.panel.show_all()
         
     def get_selection(self, slot=False):
+        """
+        Return the currently selected cell. If slot=True then return
+        the currently selected slot. (-1, -1) is returned if the currently
+        'selected' cell is not valid anymore.
+        """
         x, y, d = e_settings.selection
+        puzzle = self.puzzle_manager.current_puzzle
         if slot:
-            puzzle = self.puzzle_manager.current_puzzle
             sx, sy = puzzle.grid.get_start_word(x, y, d)
+            # check for validness because selection may have become invalid
+            # to due grid transform
+            if not puzzle.grid.is_valid(sx, sy):
+                return (-1, -1)
             return (x, y, d, puzzle.grid.word_length(sx, sy, d))
+        if not puzzle.grid.is_valid(x, y):
+            return (-1, -1)
         return (x, y)
             
     def set_selection(self, x, y, direction=None, selection_changed=True):
