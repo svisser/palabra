@@ -56,7 +56,11 @@ from files import (
     export_puzzle,
     read_containers,
 )
-from gui_common import create_label
+from gui_common import (
+    create_label,
+    create_notebook,
+    create_scroll,
+)
 from gui_editor import WordTool, FillTool
 from gui_prefs import PreferencesWindow
 from gui_word import (
@@ -220,36 +224,24 @@ class PalabraWindow(gtk.Window):
         e_tools["fill"] = FillTool(self.editor)
         e_tools["word"] = WordTool(self)
         
-        options_hbox = gtk.HBox(False, 0)
+        options_hbox = gtk.HBox()
         options_hbox.set_border_width(12)
         options_hbox.set_spacing(18)
         
-        options_vbox = gtk.VBox(False, 0)
+        options_vbox = gtk.VBox()
         options_vbox.set_spacing(15)
-        options_hbox.pack_start(options_vbox, True, True, 0)
+        options_hbox.pack_start(options_vbox)
         
-        options = gtk.VBox(False, 0)
-        options_vbox.pack_start(options, True, True, 0)
+        options = gtk.VBox()
+        options_vbox.pack_start(options)
         
-        scrolled_window = gtk.ScrolledWindow(None, None)
-        scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        scrolled_window.add_with_viewport(self.drawing_area)
-        main = gtk.VBox(False, 0)
-        main.pack_start(scrolled_window, True, True, 0)
+        main = gtk.VBox()
+        main.pack_start(create_scroll(self.drawing_area, viewport=True))
         
-        tabs = gtk.Notebook()
-        tabs.set_border_width(8)
-        tabs.set_size_request(300, -1)
-        tabs.set_show_border(False)
-        tabs.set_property("tab-hborder", 16)
-        tabs.set_property("tab-vborder", 8)
-        tool = e_tools["word"].create()
-        tabs.append_page(tool, gtk.Label(u"Word"))
-        #tool = e_tools["fill"].create()
-        #tabs.append_page(tool, gtk.Label(u"Fill"))
-        tool = e_tools["clue"].create(puzzle)
+        tab_word = (e_tools["word"].create(), u"Word")
+        tab_clue = (e_tools["clue"].create(puzzle), u"Clue")
+        #tab_fill = (e_tools["fill"].create(), u"Fill")
         e_tools["clue"].set_clue_editor_status(False)
-        tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
             if num == 0:
                 word = e_tools["word"].get_selected_word()
@@ -258,7 +250,11 @@ class PalabraWindow(gtk.Window):
             else:
                 self.editor.set_overlay(None)
                 e_tools["word"].deselect()
-        tabs.connect("switch-page", on_switch_page)
+        pages = [tab_word, tab_clue]
+        tabs = create_notebook(pages, border=(16, 8), f_switch=on_switch_page)
+        tabs.set_border_width(8)
+        tabs.set_size_request(300, -1)
+        tabs.set_show_border(False)
         
         paned = gtk.HPaned()
         paned.pack1(main, True, False)
