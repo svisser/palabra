@@ -210,10 +210,23 @@ class ClueTool:
         return vbox
         
     def on_next_clue(self, button):
-        pass
+        store, it = self.tree.get_selection().get_selected()
+        it_n = store.iter_next(it)
+        if it_n is None:
+            it_n = store.get_iter_first()
+        self.select_iter(store, it_n)
         
     def on_prev_clue(self, button):
-        pass
+        store, it = self.tree.get_selection().get_selected()
+        n = store.iter_n_children(None)
+        index = store.get_path(it)[0] - 1
+        if index < 0:
+            index = store.iter_n_children(None) - 1
+        self.select_iter(store, store.iter_nth_child(None, index))
+        
+    def select_iter(self, store, it):
+        x, y, d = store[it][1], store[it][2], store[it][3]
+        self.parent.set_selection(x=x, y=y, direction=d)
         
     def on_clue_selected(self, selection):
         store, it = selection.get_selected()
@@ -313,7 +326,7 @@ class ClueTool:
         """Select the word starting at the given (x, y, direction)."""
         if x < 0 or y < 0:
             return
-        selection = self.tree.get_selection()            
+        selection = self.tree.get_selection()
         for row in self.store:
             if (row[1], row[2], row[3]) == (x, y, direction):
                 def locked():
