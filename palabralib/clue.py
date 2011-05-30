@@ -107,6 +107,8 @@ class ManageCluesDialog(PalabraDialog):
         self.remove_button.connect("clicked", lambda button: self.on_remove_db())
         self.remove_button.set_sensitive(False)
         self.main.pack_start(buttonbox)
+        label = create_label(u"These clue databases are loaded when you start " + constants.TITLE + ".")
+        self.main.pack_start(label, False, False, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_clue_files(parent.clues)
     
