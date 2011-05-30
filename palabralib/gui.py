@@ -56,6 +56,7 @@ from files import (
     export_puzzle,
     read_containers,
 )
+from gui_common import create_label
 from gui_editor import WordTool, FillTool
 from gui_prefs import PreferencesWindow
 from gui_word import (
@@ -103,6 +104,24 @@ def determine_status_message(status):
         ,"words: ", str(status["word_count"]), ", "
         ,"letters: ", str(status["actual_char_count"]), " / ", str(status["char_count"])
         ])
+
+class ClosePuzzleDialog(gtk.Dialog):
+    def __init__(self, parent):
+        super(ClosePuzzleDialog, self).__init__(u"Close without saving"
+            , parent
+            , gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_MODAL
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_NO, gtk.RESPONSE_NO
+            , gtk.STOCK_YES, gtk.RESPONSE_YES))
+        self.set_default_response(gtk.RESPONSE_CLOSE)
+        self.set_resizable(False)
+        label = create_label(u"Save the changes to the current puzzle before closing?")
+        hbox = gtk.HBox()
+        image = gtk.Image()
+        image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
+        hbox.pack_start(image, False, False, 0)
+        hbox.pack_start(label, True, False, 10)
+        self.vbox.pack_start(hbox, False, False, 10)
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -263,17 +282,14 @@ class PalabraWindow(gtk.Window):
     def new_puzzle(self):
         self.close_puzzle()
         if not self.puzzle_manager.has_puzzle():
-            window = NewWindow(self)
-            window.show_all()
-            
-            response = window.run()
-            if response == gtk.RESPONSE_ACCEPT:
+            w = NewWindow(self)
+            w.show_all() 
+            if w.run() == gtk.RESPONSE_ACCEPT:
                 self.update_title(None)
-                configuration = window.get_configuration()
-                self.puzzle_manager.new_puzzle(configuration)
+                self.puzzle_manager.new_puzzle(w.get_configuration())
                 e_settings.reset_controls()
                 self.load_puzzle()
-            window.destroy()
+            w.destroy()
     
     def open_puzzle(self):
         self.close_puzzle()
@@ -425,44 +441,24 @@ class PalabraWindow(gtk.Window):
             self.update_window(True)
 
     def check_close_puzzle(self):
+        """
+        Return a tuple with two booleans: (need_to_close, need_to_save).
+        need_to_close = whether the puzzle needs to be closed
+        need_to_save = whether the puzzle needs to be saved before closing
+        """
         if not self.puzzle_manager.has_puzzle():
+            return False, False 
+        if action.stack.distance_from_saved == 0:
+            return True, False
+        d = ClosePuzzleDialog(self)
+        d.show_all()
+        response = d.run()
+        d.destroy()
+        if response == gtk.RESPONSE_YES:
+            return True, True
+        elif response == gtk.RESPONSE_CANCEL:
             return False, False
-
-        need_to_close = True
-        need_to_save = False
-        if action.stack.distance_from_saved != 0:
-            image = gtk.Image()
-            image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
-            dialog = gtk.Dialog(u"Close puzzle"
-                , self
-                , gtk.DIALOG_DESTROY_WITH_PARENT | gtk.DIALOG_MODAL
-                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                , gtk.STOCK_NO, gtk.RESPONSE_NO
-                , gtk.STOCK_YES, gtk.RESPONSE_YES))
-            dialog.set_default_response(gtk.RESPONSE_CLOSE)
-            dialog.set_title(u"Close without saving")
-
-            label = gtk.Label(u"Save the changes to the current puzzle before closing?")
-            hbox = gtk.HBox(False, 0)
-            hbox.pack_start(image, False, False, 0)
-            hbox.pack_start(label, True, False, 10)
-            dialog.vbox.pack_start(hbox, False, False, 10)
-            dialog.set_resizable(False)
-            dialog.set_modal(True)
-            dialog.show_all()
-            
-            response = dialog.run()
-            if response == gtk.RESPONSE_YES:
-                need_to_close = True
-                need_to_save = True
-            elif response == gtk.RESPONSE_CANCEL:
-                need_to_close = False
-                need_to_save = False
-            else:
-                need_to_close = True
-                need_to_save = False
-            dialog.destroy()
-        return need_to_close, need_to_save
+        return True, False
     
     def export_clues(self, export_title, export_function, **args):
         dialog = gtk.FileChooserDialog(export_title
