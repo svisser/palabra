@@ -230,7 +230,7 @@ class PalabraWindow(gtk.Window):
             # check for validness because selection may have become invalid
             # to due grid transform
             if not puzzle.grid.is_valid(sx, sy):
-                return (-1, -1)
+                return (-1, -1, "across", -1)
             return (x, y, d, puzzle.grid.word_length(sx, sy, d))
         if not puzzle.grid.is_valid(x, y):
             return (-1, -1)
