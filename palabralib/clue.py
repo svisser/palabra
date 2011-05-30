@@ -161,6 +161,15 @@ class ClueTool:
         result = self.create_entry(vbox, "text", u"<b>Clue</b>")
         self.clue_entry, self.c_changed_id = result
         
+        np_box = gtk.HButtonBox()
+        self.prev_button = create_button(u"Previous", f_click=self.on_prev_clue)
+        self.next_button = create_button(u"Next", f_click=self.on_next_clue)
+        np_box.pack_start(self.prev_button)
+        np_box.pack_start(self.next_button)
+        align = gtk.Alignment(1, 0.5)
+        align.add(np_box)
+        vbox.pack_start(align, False, False, 0)
+        
         # number x y direction word clue explanation displayed_string
         types = (int, int, int, str, str, str, str, str)
         self.store, self.tree, window, self.selection_id = create_tree(types
@@ -199,6 +208,12 @@ class ClueTool:
         self.tree.set_headers_visible(False)
         self.load_items(puzzle.grid)
         return vbox
+        
+    def on_next_clue(self, button):
+        pass
+        
+    def on_prev_clue(self, button):
+        pass
         
     def on_clue_selected(self, selection):
         store, it = selection.get_selected()
@@ -267,6 +282,8 @@ class ClueTool:
         self.explanation_entry.set_sensitive(status)
         store, it = self.c_tree.get_selection().get_selected()
         self.use_clue_button.set_sensitive(status and it is not None)
+        self.next_button.set_sensitive(status)
+        self.prev_button.set_sensitive(status)
         if not status:
             self.clue_entry.set_text("")
             self.explanation_entry.set_text("")

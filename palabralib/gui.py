@@ -207,6 +207,7 @@ class PalabraWindow(gtk.Window):
         #tool = e_tools["fill"].create()
         #tabs.append_page(tool, gtk.Label(u"Fill"))
         tool = e_tools["clue"].create(puzzle)
+        e_tools["clue"].set_clue_editor_status(False)
         tabs.append_page(tool, gtk.Label(u"Clue"))
         def on_switch_page(tabs, do_not_use, num):
             if num == 0:
