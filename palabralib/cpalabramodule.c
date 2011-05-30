@@ -855,46 +855,87 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
             }
             if (l_is_left) {
                 has_left_border_line = l_is_border;
-                if (x == 0 && y == 1) {
-                    printf("Adding left %i\n", l_is_border);
-                }
                 PyObject* r = Py_BuildValue("(ffifiii)", sx_p + start, sy_q, 0, cell_size, bar, l_is_border, 0);
                 PyList_Append(result, r);
                 Py_DECREF(r);
             } else if (l_is_top) {
                 int is_lb = 1;
                 int is_rb = 1;
-                int dxl = 0;
-                int dxr = 0;
-
+                // TODO refactor
                 int x1_y1_left_outerborder = 0;
                 int x1_y_left_outerborder = 0;
                 int x_y1_left_innerborder = 0;
                 int x_y_left_innerborder = 0;
+                int x_y_left_outerborder = 0;
+                int xm1_y_top_innerborder = 0;
+                int x_ym1_left_outerborder = 0;
+                int xm1_y_top_outerborder = 0;
+                int x1_y_left_innerborder = 0;
+                int x1_y_top_innerborder = 0;
+                int x1_y_top_outerborder = 0;
+                int x1_ym1_left_innerborder = 0;
+                int x1_ym1_left_outerborder = 0;
+                int x_ym1_left_innerborder = 0;
                 Py_ssize_t v;
                 for (v = 0; v < n_lines; v++) {
-                    if (strcmp(all_t[v], "left") != 0) continue;
                     const int v_x = all_x[v];
                     const int v_y = all_y[v];
                     const int is_outerborder = strcmp(all_s[v], "outerborder") == 0;
                     const int is_innerborder = strcmp(all_s[v], "innerborder") == 0;
-                    if (v_x == x + 1 && v_y == y - 1 && is_outerborder)
+                    const int is_left = strcmp(all_t[v], "left") == 0;
+                    if (v_x == x + 1 && v_y == y - 1 && is_outerborder && is_left)
                         x1_y1_left_outerborder = 1;
-                    if (v_x == x + 1 && v_y == y && is_outerborder)
+                    if (v_x == x + 1 && v_y == y && is_outerborder && is_left)
                         x1_y_left_outerborder = 1;
-                    if (v_x == x && v_y == y - 1 && is_innerborder)
+                    if (v_x == x && v_y == y - 1 && is_innerborder && is_left)
                         x_y1_left_innerborder = 1;
-                    if (v_x == x && v_y == y && is_innerborder)
+                    if (v_x == x && v_y == y && is_innerborder && is_left)
                         x_y_left_innerborder = 1;
+                    if (v_x == x && v_y == y && is_outerborder && is_left)
+                        x_y_left_outerborder = 1;
+                    if (v_x == x - 1 && v_y == y && is_innerborder && !is_left)
+                        xm1_y_top_innerborder = 1;
+                    if (v_x == x - 1 && v_y == y && is_outerborder && !is_left)
+                        xm1_y_top_outerborder = 1;
+                    if (v_x == x && v_y == y - 1 && is_outerborder && is_left)
+                        x_ym1_left_outerborder = 1;
+                    if (v_x == x + 1 && v_y == y && is_innerborder && is_left)
+                        x1_y_left_innerborder = 1;
+                    if (v_x == x + 1 && v_y == y && is_innerborder && !is_left)
+                        x1_y_top_innerborder = 1;
+                    if (v_x == x + 1 && v_y == y && is_outerborder && !is_left)
+                        x1_y_top_outerborder = 1;
+                    if (v_x == x + 1 && v_y == y - 1 && is_innerborder && is_left)
+                        x1_ym1_left_innerborder = 1;
+                    if (v_x == x + 1 && v_y == y - 1 && is_outerborder && is_left)
+                        x1_ym1_left_outerborder = 1;
+                    if (v_x == x && v_y == y - 1 && is_innerborder && is_left)
+                        x_ym1_left_innerborder = 1;
                 }
+                // exclude cases in which lb or rb is not needed
                 if (x1_y1_left_outerborder || x1_y_left_outerborder) is_rb = 0;
                 if (x_y1_left_innerborder || x_y_left_innerborder) is_lb = 0;
                 
-                float rx = sx_p - dxl;
+                // corners on left side
+                if (xm1_y_top_innerborder && x_y_left_outerborder) is_lb = 0;
+                if (xm1_y_top_outerborder && x_ym1_left_outerborder) is_lb = 0;
+                
+                // corners on right side
+                if (x1_y_left_innerborder && x1_y_top_innerborder) is_rb = 0;
+                if (x1_ym1_left_innerborder && x1_y_top_outerborder) is_rb = 0;
+                
+                float rx = sx_p;
                 float ry = sy_q + start;
-                float rdx = cell_size + dxl + dxr;
-                if (x == 0 && y == 1) {
-                    printf("Adding top 1 %i\n", l_is_border);
+                float rdx = cell_size;
+                // extend borders to make them fit in the corners
+                if (l_is_border) {
+                    if (x_y_left_innerborder || x_ym1_left_innerborder) {
+                        rx -= line_width;
+                        rdx += line_width;
+                    }
+                    if (x1_ym1_left_outerborder || x1_y_left_outerborder) {
+                        rdx += line_width;
+                    }
                 }
                 PyObject* r = Py_BuildValue("(fffiiii)", rx, ry, rdx, 0, bar, l_is_border, 0);
                 PyList_Append(result, r);
@@ -902,20 +943,13 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 // lines that are sticking out (could be normal lines or borders)
                 // these are marked as 'special'
                 if (is_lb) {
-                    if (x == 0 && y == 1) {
-                        printf("Adding top 2 %i\n", l_is_border);
-                    }
                     int is_border = l_is_border || has_left_border_line;
-                    printf("%i %i at %i %i\n", l_is_border, has_left_border_line, x, y);
                     PyObject *r1 = Py_BuildValue("(ffiiiii)"
-                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, is_border, 1);
+                        , sx_p - border_width, sy_q + start, border_width, 0, 0, is_border, 1);
                     PyList_Append(result, r1);
                     Py_DECREF(r1);
                 }
                 if (is_rb) {
-                    if (x == 0 && y == 1) {
-                        printf("Adding top 3 %i\n", l_is_border);
-                    }
                     int is_border = l_is_border || has_right_border_line;
                     PyObject *r2 = Py_BuildValue("(ffiiiii)"
                         , sx_p + cell_size, sy_q + start, border_width, 0, 0, is_border, 1);
