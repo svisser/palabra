@@ -475,62 +475,34 @@ class PalabraWindow(gtk.Window):
             export_function(self.puzzle_manager.current_puzzle, filename, **args)
         dialog.destroy()
         
-    def view_puzzle_properties(self):
-        dialog = PropertiesWindow(self, self.puzzle_manager.current_puzzle)
-        dialog.show_all()
-        dialog.run()
-        dialog.destroy()
-        
     def create_toolbar(self):
         toolbar = gtk.Toolbar()
         toolbar.set_orientation(gtk.ORIENTATION_HORIZONTAL)
-        
-        item = gtk.ToolButton()
-        item.set_stock_id(gtk.STOCK_NEW)
-        item.connect("clicked", lambda item: self.new_puzzle())
-        item.show()
-        toolbar.insert(item, -1)
-        
-        item = gtk.ToolButton()
-        item.set_stock_id(gtk.STOCK_OPEN)
-        item.connect("clicked", lambda item: self.open_puzzle())
-        item.show()
-        toolbar.insert(item, -1)
-        
-        item = gtk.ToolButton()
-        item.set_stock_id(gtk.STOCK_SAVE)
-        item.connect("clicked", lambda item: self.save_puzzle(False))
-        item.show()
-        item.set_sensitive(False)
-        toolbar.insert(item, -1)
-        self.puzzle_toggle_items += [item]
-        
+        def create_tool_button(stock, f_click, p_sensitive=False):
+            item = gtk.ToolButton()
+            item.set_stock_id(stock)
+            item.connect("clicked", f_click)
+            item.show()
+            toolbar.insert(item, -1)
+            if p_sensitive:
+                item.set_sensitive(False)
+                self.puzzle_toggle_items += [item]
+            return item
+        create_tool_button(gtk.STOCK_NEW, lambda i: self.new_puzzle())
+        create_tool_button(gtk.STOCK_OPEN, lambda i: self.open_puzzle())
+        create_tool_button(gtk.STOCK_SAVE, lambda i: self.save_puzzle(False), True)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
-        
-        self.undo_tool_item = gtk.ToolButton()
-        self.undo_tool_item.set_stock_id(gtk.STOCK_UNDO)
-        self.undo_tool_item.connect("clicked", lambda item: self.undo_action())
-        self.undo_tool_item.show()
-        toolbar.insert(self.undo_tool_item, -1)
+        self.undo_tool_item = create_tool_button(gtk.STOCK_UNDO, lambda i: self.undo_action())
         self.undo_tool_item.set_sensitive(False)
-        
-        self.redo_tool_item = gtk.ToolButton()
-        self.redo_tool_item.set_stock_id(gtk.STOCK_REDO)
-        self.redo_tool_item.connect("clicked", lambda item: self.redo_action())
-        self.redo_tool_item.show()
-        toolbar.insert(self.redo_tool_item, -1)
+        self.redo_tool_item = create_tool_button(gtk.STOCK_REDO, lambda i: self.redo_action())
         self.redo_tool_item.set_sensitive(False)
-        
         toolbar.insert(gtk.SeparatorToolItem(), -1)
-        
-        item = gtk.ToolButton()
-        item.set_stock_id(gtk.STOCK_PROPERTIES)
-        item.connect("clicked", lambda item: self.view_puzzle_properties())
-        item.show()
-        item.set_sensitive(False)
-        toolbar.insert(item, -1)
-        self.puzzle_toggle_items += [item]
-        
+        def view_puzzle_properties():
+            d = PropertiesWindow(self, self.puzzle_manager.current_puzzle)
+            d.show_all()
+            d.run()
+            d.destroy()
+        create_tool_button(gtk.STOCK_PROPERTIES, lambda i: view_puzzle_properties(), True)
         return toolbar
         
     def _create_menu_item(self, activate, tooltip
