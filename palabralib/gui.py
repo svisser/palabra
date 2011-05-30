@@ -245,13 +245,12 @@ class PalabraWindow(gtk.Window):
             | gtk.gdk.KEY_RELEASE_MASK
             | gtk.gdk.POINTER_MOTION_HINT_MASK
             )
-        puzzle = self.puzzle_manager.current_puzzle
-        puzzle.view.refresh_visual_size(self.drawing_area)
+        self.puzzle.view.refresh_visual_size(self.drawing_area)
         self.drawing_area.queue_draw()
         self.editor = Editor(self)
         self.ids = []
         for k, e in EDITOR_EVENTS.items():
-            self.ids.append(self.drawing_area.connect(k, e, self, puzzle, e_settings))
+            self.ids.append(self.drawing_area.connect(k, e, self, self.puzzle, e_settings))
         e_tools["clue"] = ClueTool(self)
         e_tools["fill"] = FillTool(self.editor)
         e_tools["word"] = WordTool(self)
@@ -271,7 +270,7 @@ class PalabraWindow(gtk.Window):
         main.pack_start(create_scroll(self.drawing_area, viewport=True))
         
         tab_word = (e_tools["word"].create(), u"Word")
-        tab_clue = (e_tools["clue"].create(puzzle), u"Clue")
+        tab_clue = (e_tools["clue"].create(self.puzzle), u"Clue")
         #tab_fill = (e_tools["fill"].create(), u"Fill")
         e_tools["clue"].set_clue_editor_status(False)
         def on_switch_page(tabs, do_not_use, num):
@@ -303,15 +302,14 @@ class PalabraWindow(gtk.Window):
         'selected' cell is not valid anymore.
         """
         x, y, d = e_settings.selection
-        puzzle = self.puzzle_manager.current_puzzle
         if slot:
-            sx, sy = puzzle.grid.get_start_word(x, y, d)
+            sx, sy = self.puzzle.grid.get_start_word(x, y, d)
             # check for validness because selection may have become invalid
             # to due grid transform
-            if not puzzle.grid.is_valid(sx, sy):
+            if not self.puzzle.grid.is_valid(sx, sy):
                 return (-1, -1, "across", -1)
-            return (x, y, d, puzzle.grid.word_length(sx, sy, d))
-        if not puzzle.grid.is_valid(x, y):
+            return (x, y, d, self.puzzle.grid.word_length(sx, sy, d))
+        if not self.puzzle.grid.is_valid(x, y):
             return (-1, -1)
         return (x, y)
             
@@ -413,26 +411,24 @@ class PalabraWindow(gtk.Window):
         self.set_title(compute_title(path))
     
     def save_puzzle(self, save_as=False):
-        puzzle = self.puzzle_manager.current_puzzle
         backup = preferences.prefs[constants.PREF_COPY_BEFORE_SAVE]
-        if save_as or self.puzzle_manager.current_puzzle.filename is None:
+        if save_as or self.puzzle.filename is None:
             d = PalabraSavePuzzleDialog(self, save_as)
             d.show_all() 
             if d.run() == gtk.RESPONSE_OK:
                 filetype = d.get_filetype()
                 filename = d.get_filename()
                 extension = FILETYPES[filetype]['pattern']
-                puzzle.update_type(filetype, filename, extension)
-                FILETYPES[filetype]['writer'](puzzle, backup)
+                self.puzzle.update_type(filetype, filename, extension)
+                FILETYPES[filetype]['writer'](self.puzzle, backup)
                 self.update_title(filename)
             d.destroy()
         else:
-            FILETYPES[puzzle.type]['writer'](puzzle, backup)
+            FILETYPES[self.puzzle.type]['writer'](self.puzzle, backup)
         action.stack.distance_from_saved = 0
         
     def export_puzzle(self):
-        puzzle = self.puzzle_manager.current_puzzle
-        w = ExportWindow(self, puzzle)
+        w = ExportWindow(self, self.puzzle)
         w.show_all() 
         if w.run() == gtk.RESPONSE_OK:
             w.hide()
@@ -443,8 +439,7 @@ class PalabraWindow(gtk.Window):
             d.set_do_overwrite_confirmation(True)
             d.show_all() 
             if d.run() == gtk.RESPONSE_OK:
-                export_puzzle(self.puzzle_manager.current_puzzle
-                    , d.get_filename(), w.options)
+                export_puzzle(self.puzzle, d.get_filename(), w.options)
             d.destroy()
         w.destroy()
     
@@ -521,7 +516,7 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item.set_sensitive(False)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         def view_puzzle_properties():
-            d = PropertiesWindow(self, self.puzzle_manager.current_puzzle)
+            d = PropertiesWindow(self, self.puzzle)
             d.show_all()
             d.run()
             d.destroy()
@@ -631,27 +626,26 @@ class PalabraWindow(gtk.Window):
         return file_menu
         
     def resize_grid(self):
-        window = SizeWindow(self, self.puzzle_manager.current_puzzle)
-        window.show_all()
-        response = window.run()
-        if response == gtk.RESPONSE_ACCEPT:
-            width, height = window.get_size()
-            if (self.puzzle_manager.current_puzzle.grid.size != (width, height)):
+        w = SizeWindow(self, self.puzzle_manager.current_puzzle)
+        w.show_all() 
+        if w.run() == gtk.RESPONSE_ACCEPT:
+            width, height = w.get_size()
+            if (self.puzzle.grid.size != (width, height)):
                 self.transform_grid(transform.resize_grid, width=width, height=height)
-        window.destroy()
+        w.destroy()
         
     def view_preferences(self):
-        preferences = PreferencesWindow(self)
-        preferences.show_all()
-        preferences.run()
-        preferences.destroy()
+        w = PreferencesWindow(self)
+        w.show_all()
+        w.run()
+        w.destroy()
         self.update_window()
         
     def do_action(self, task):
         if task == "undo":
-            s = action.stack.undo(self.puzzle_manager.current_puzzle)
+            s = action.stack.undo(self.puzzle)
         elif task == "redo":
-            s = action.stack.redo(self.puzzle_manager.current_puzzle)
+            s = action.stack.redo(self.puzzle)
         self.update_window(True)
         if s.clue_slot:
             self.set_selection(*s.clue_slot)
@@ -845,7 +839,7 @@ class PalabraWindow(gtk.Window):
                 widget.show()
             else:
                 widget.hide()
-        
+
         activate = lambda item: toggle_widget(self.toolbar, item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Show or hide the toolbar")
