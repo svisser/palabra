@@ -241,7 +241,7 @@ class ClueTool:
         """Construct the displayed string for a word/clue item."""
         c = gobject.markup_escape_text(clue) if len(clue) > 0 else '<span foreground="red">No clue yet.</span>'
         d = constants.DIRECTION_NAMES[direction]
-        return ''.join(["<b>", d, ", ", str(n), "</b>:\n<i>", word, "</i>\n", c])
+        return ''.join(["<b>", d, ", ", str(n), "</b>: <i>", word, "</i>\n", c])
 
     def load_items(self, grid):
         """Load all word/clue items and put them in the ListStore."""
