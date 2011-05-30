@@ -123,6 +123,28 @@ class ClosePuzzleDialog(gtk.Dialog):
         hbox.pack_start(label, True, False, 10)
         self.vbox.pack_start(hbox, False, False, 10)
 
+class PalabraAboutDialog(gtk.AboutDialog):
+    def __init__(self, parent):
+        super(PalabraAboutDialog, self).__init__()
+        self.set_title(u"About " + constants.TITLE)
+        self.set_program_name(constants.TITLE)
+        self.set_comments(u"Crossword creation software")
+        self.set_version(constants.VERSION)
+        self.set_authors([u"Simeon Visser <simeonvisser@gmail.com>"])
+        self.set_copyright(u"Copyright © 2009 - 2011 Simeon Visser")
+        def on_click_website(dialog, link):
+            webbrowser.open(link)
+        gtk.about_dialog_set_url_hook(on_click_website)
+        self.set_website(constants.WEBSITE)
+        self.set_license(u"""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+                
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.""")
+        self.set_wrap_license(True)
+        self.set_transient_for(parent)
+        self.connect("response", lambda dialog, response: dialog.destroy())
+
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
@@ -759,12 +781,11 @@ class PalabraWindow(gtk.Window):
         self.update_undo_redo()
     
     def update_undo_redo(self):
-        has_undo = action.stack.has_undo()
-        has_redo = action.stack.has_redo()
-        self.undo_menu_item.set_sensitive(has_undo)
-        self.redo_menu_item.set_sensitive(has_redo)
-        self.undo_tool_item.set_sensitive(has_undo)
-        self.redo_tool_item.set_sensitive(has_redo)
+        """Update the controls for undo and redo."""
+        for i in [self.undo_menu_item, self.undo_tool_item]:
+            i.set_sensitive(action.stack.has_undo())
+        for i in [self.redo_menu_item, self.redo_tool_item]:
+            i.set_sensitive(action.stack.has_redo())
         
     def update_window(self
         , content_changed=False
@@ -818,13 +839,13 @@ class PalabraWindow(gtk.Window):
     def create_view_menu(self):
         menu = gtk.Menu()
         
-        def toggle_toolbar(widget):
-            if widget.active:
-                self.toolbar.show()
+        def toggle_widget(widget, active):
+            if active:
+                widget.show()
             else:
-                self.toolbar.hide() 
+                widget.hide()
         
-        activate = lambda item: toggle_toolbar(item)
+        activate = lambda item: toggle_widget(self.toolbar, item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Show or hide the toolbar")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -835,13 +856,7 @@ class PalabraWindow(gtk.Window):
         item.connect("deselect", deselect)
         menu.append(item)
         
-        def toggle_statusbar(widget):
-            if widget.active:
-                self.statusbar.show()
-            else:
-                self.statusbar.hide()
-        
-        activate = lambda item: toggle_statusbar(item)
+        activate = lambda item: toggle_widget(self.statusbar, item.active)
         select = lambda item: self.update_status(constants.STATUS_MENU
             , u"Show or hide the statusbar")
         deselect = lambda item: self.pop_status(constants.STATUS_MENU)
@@ -914,11 +929,10 @@ class PalabraWindow(gtk.Window):
         
     def edit_appearance(self):
         puzzle = self.puzzle_manager.current_puzzle
-        editor = AppearanceDialog(self, puzzle.view.properties)
-        editor.show_all()
-        if editor.run() == gtk.RESPONSE_OK:
-            app = editor.gather_appearance()
-            for key, value in app.items():
+        d = AppearanceDialog(self, puzzle.view.properties)
+        d.show_all()
+        if d.run() == gtk.RESPONSE_OK:
+            for key, value in d.gather_appearance().items():
                 puzzle.view.properties[key] = value
             try:
                 e_settings.force_redraw = True
@@ -926,7 +940,7 @@ class PalabraWindow(gtk.Window):
             except AttributeError:
                 pass
             self.panel.queue_draw()
-        editor.destroy()
+        d.destroy()
         
     def create_patterns(self):
         size = self.puzzle_manager.current_puzzle.grid.size
@@ -1202,36 +1216,17 @@ class PalabraWindow(gtk.Window):
     def create_help_menu(self):
         menu = gtk.Menu()
         
+        def on_help_about_activate(widget):
+            d = PalabraAboutDialog(self)
+            d.show_all()
         menu.append(self._create_menu_item(
-            self.on_help_about_activate
+            on_help_about_activate
             , u"About this program"
             , image=gtk.STOCK_ABOUT))
         
         help_menu = gtk.MenuItem(u"_Help", True)
         help_menu.set_submenu(menu)
         return help_menu
-        
-    def on_help_about_activate(self, widget, data=None):
-        dialog = gtk.AboutDialog()
-        dialog.set_title(u"About " + constants.TITLE)
-        dialog.set_program_name(constants.TITLE)
-        dialog.set_comments(u"Crossword creation software")
-        dialog.set_version(constants.VERSION)
-        dialog.set_authors([u"Simeon Visser <simeonvisser@gmail.com>"])
-        dialog.set_copyright(u"Copyright © 2009 - 2011 Simeon Visser")
-        def on_click_website(dialog, link):
-            webbrowser.open(link)
-        gtk.about_dialog_set_url_hook(on_click_website)
-        dialog.set_website(constants.WEBSITE)
-        dialog.set_license(u"""This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-                
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.""")
-        dialog.set_wrap_license(True)
-        dialog.set_transient_for(self)
-        dialog.connect("response", lambda dialog, response: dialog.destroy())
-        dialog.show_all()
 
 def quit():
     gtk.main_quit()
