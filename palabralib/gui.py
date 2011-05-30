@@ -198,12 +198,12 @@ class PalabraWindow(gtk.Window):
         self.menubar.append(self.create_clue_menu())
         self.menubar.append(self.create_help_menu())
         self.toolbar = self.create_toolbar()
-        self.panel = gtk.VBox(False, 0)
+        self.panel = gtk.VBox()
         self.statusbar = gtk.Statusbar()
-        self.main = gtk.VBox(False, 0)
+        self.main = gtk.VBox()
         self.main.pack_start(self.menubar, False, False, 0)
         self.main.pack_start(self.toolbar, False, False, 0)
-        self.main.pack_start(self.panel, True, True, 0)
+        self.main.pack_start(self.panel)
         self.main.pack_start(self.statusbar, False, False, 0)
         self.add(self.main)
         self.connect("delete-event", self.on_delete)
@@ -452,7 +452,7 @@ class PalabraWindow(gtk.Window):
         need_to_close, need_to_save = self.check_close_puzzle()
         if need_to_close:
             if need_to_save:
-                self.save_puzzle(False)
+                self.save_puzzle()
             self.puzzle_manager.current_puzzle = None
             action.stack.clear()
             self.to_empty_panel()
@@ -508,7 +508,7 @@ class PalabraWindow(gtk.Window):
             return item
         create_tool_button(gtk.STOCK_NEW, lambda i: self.new_puzzle())
         create_tool_button(gtk.STOCK_OPEN, lambda i: self.open_puzzle())
-        create_tool_button(gtk.STOCK_SAVE, lambda i: self.save_puzzle(False), True)
+        create_tool_button(gtk.STOCK_SAVE, lambda i: self.save_puzzle(), True)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         self.undo_tool_item = create_tool_button(gtk.STOCK_UNDO, lambda i: self.do_action("undo"))
         self.undo_tool_item.set_sensitive(False)
@@ -575,7 +575,7 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
-            lambda item: self.save_puzzle(False)
+            lambda item: self.save_puzzle()
             , u"Save the current puzzle"
             , image=gtk.STOCK_SAVE
             , accelerator="<Ctrl>S"
