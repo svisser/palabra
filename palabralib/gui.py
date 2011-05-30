@@ -1165,14 +1165,14 @@ class PalabraWindow(gtk.Window):
         menu.append(self._create_menu_item(activate
             , u"Configure how word lists are used in the program"
             , title=u"Configure word list _usage..."))
-        def activate(item):
-            w = WordListEditor(self)
-            w.show_all()
-            w.run()
-            w.destroy()
-        menu.append(self._create_menu_item(activate
-            , u"Create new word lists and edit existing word lists"
-            , title=u"_Edit word lists..."))
+        #def activate(item):
+        #    w = WordListEditor(self)
+        #    w.show_all()
+        #    w.run()
+        #    w.destroy()
+        #menu.append(self._create_menu_item(activate
+        #    , u"Create new word lists and edit existing word lists"
+        #    , title=u"_Edit word lists..."))
         
         menu.append(gtk.SeparatorMenuItem())
         
