@@ -597,6 +597,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
 
 static PyObject*
 cPalabra_compute_lines(PyObject *self, PyObject *args) {
+    // left lines must be returned before top lines (needed for compute_render_lines)
     PyObject *grid;
     if (!PyArg_ParseTuple(args, "O", &grid))
         return NULL;
@@ -632,6 +633,7 @@ cPalabra_compute_lines(PyObject *self, PyObject *args) {
             Py_DECREF(item);
             Py_DECREF(py_void);
             
+            // e == 0 (left) or e == 1 (top)
             for (e = 0; e < 2; e++) {
                 int dx = e == 0 ? -1 : 0;
                 int dy = e == 0 ? 0 : -1;
@@ -771,6 +773,21 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
         if (!PyArg_ParseTuple(cell, "ii", &x, &y))
             return NULL;
         PyObject *cell_lines = PyDict_GetItem(grid_lines, cell);
+        
+        int has_left_border_line = 0;
+        int has_right_border_line = 0;
+        
+        // peek at cell to the right to see if there's a border
+        Py_ssize_t m;
+        for (m = 0; m < n_lines; m++) {
+            if (all_x[m] == x + 1
+                && all_y[m] == y
+                && strcmp(all_t[m], "left") == 0
+                && strcmp(all_s[m], "innerborder") == 0) {
+                has_right_border_line = 1;
+                break;
+            }
+        }
 
         Py_ssize_t l;
         for (l = 0; l < PyList_Size(cell_lines); l++) {
@@ -837,8 +854,10 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 }
             }
             if (l_is_left) {
-                //if ((x == 1 && y == 0) || (x == 1 && y == 1))
-                //    printf("%i %i | %f %f %f %f | %f %f\n", x, y, sx_p, sy_q, start, cell_size, sx_p + start, sy_q);
+                has_left_border_line = l_is_border;
+                if (x == 0 && y == 1) {
+                    printf("Adding left %i\n", l_is_border);
+                }
                 PyObject* r = Py_BuildValue("(ffifiii)", sx_p + start, sy_q, 0, cell_size, bar, l_is_border, 0);
                 PyList_Append(result, r);
                 Py_DECREF(r);
@@ -874,18 +893,32 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 float rx = sx_p - dxl;
                 float ry = sy_q + start;
                 float rdx = cell_size + dxl + dxr;
+                if (x == 0 && y == 1) {
+                    printf("Adding top 1 %i\n", l_is_border);
+                }
                 PyObject* r = Py_BuildValue("(fffiiii)", rx, ry, rdx, 0, bar, l_is_border, 0);
                 PyList_Append(result, r);
                 Py_DECREF(r);
+                // lines that are sticking out (could be normal lines or borders)
+                // these are marked as 'special'
                 if (is_lb) {
+                    if (x == 0 && y == 1) {
+                        printf("Adding top 2 %i\n", l_is_border);
+                    }
+                    int is_border = l_is_border || has_left_border_line;
+                    printf("%i %i at %i %i\n", l_is_border, has_left_border_line, x, y);
                     PyObject *r1 = Py_BuildValue("(ffiiiii)"
-                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, l_is_border, 1);
+                        , sx_p - dxl - border_width, sy_q + start, border_width, 0, 0, is_border, 1);
                     PyList_Append(result, r1);
                     Py_DECREF(r1);
                 }
                 if (is_rb) {
+                    if (x == 0 && y == 1) {
+                        printf("Adding top 3 %i\n", l_is_border);
+                    }
+                    int is_border = l_is_border || has_right_border_line;
                     PyObject *r2 = Py_BuildValue("(ffiiiii)"
-                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, l_is_border, 1);
+                        , sx_p + cell_size, sy_q + start, border_width, 0, 0, is_border, 1);
                     PyList_Append(result, r2);
                     Py_DECREF(r2);
                 }

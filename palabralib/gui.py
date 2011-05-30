@@ -47,6 +47,7 @@ from editor import (
     Editor,
     EDITOR_EVENTS,
     set_overlay,
+    set_selection,
 )
 from files import (
     FILETYPES,
@@ -94,6 +95,14 @@ def create_splash():
     image.show()
     hbox.show()
     return window
+
+def determine_status_message(status):
+    return ''.join(
+        ["Blocks: ", str(status["block_count"]), " ("
+        ,"%.2f" % status["block_percentage"], "%), "
+        ,"words: ", str(status["word_count"]), ", "
+        ,"letters: ", str(status["actual_char_count"]), " / ", str(status["char_count"])
+        ])
 
 class PalabraWindow(gtk.Window):
     def __init__(self):
@@ -237,13 +246,8 @@ class PalabraWindow(gtk.Window):
         return (x, y)
             
     def set_selection(self, x, y, direction=None, selection_changed=True):
-        try:
-            self.editor.set_selection(x=x
-                , y=y
-                , direction=direction
-                , selection_changed=selection_changed)
-        except AttributeError:
-            pass
+        set_selection(self, self.puzzle, e_settings, x=x, y=y
+            , direction=direction, selection_changed=selection_changed)
         
     def update_status(self, context_string, message):
         context_id = self.statusbar.get_context_id(context_string)
@@ -809,7 +813,7 @@ class PalabraWindow(gtk.Window):
             selection = self.get_selection()
             if content_changed and transform >= constants.TRANSFORM_STRUCTURE:
                 status = puzzle.grid.determine_status(False)
-                message = self.determine_status_message(status)
+                message = determine_status_message(status)
                 self.update_status(constants.STATUS_GRID, message)
                 # if grid structure changes, set selection again
                 # (it may have changed)
@@ -817,18 +821,15 @@ class PalabraWindow(gtk.Window):
                     sel_x, sel_y = selection
                     self.set_selection(x=sel_x, y=sel_y, selection_changed=selection_changed)
             if selection is not None:
-                sel_x, sel_y = selection
-                valid = puzzle.grid.is_valid(sel_x, sel_y)
+                valid = puzzle.grid.is_valid(*selection)
                 for item, predicate in self.selection_toggle_items:
                     item.set_sensitive(valid and predicate(puzzle))
-                if valid and not puzzle.grid.is_available(sel_x, sel_y):
+                if valid and not puzzle.grid.is_available(*selection):
                     self.set_selection(-1, -1)
-                
         for item in self.puzzle_toggle_items:
             item.set_sensitive(puzzle is not None)
         if content_changed and transform >= constants.TRANSFORM_CONTENT:
             self.update_undo_redo()
-        
         try:
             # TODO refactor content_changed away
             if content_changed:
@@ -848,15 +849,6 @@ class PalabraWindow(gtk.Window):
         except AttributeError:
             pass
         self.panel.queue_draw()
-        
-    @staticmethod
-    def determine_status_message(status):
-        return ''.join(
-            ["Blocks: ", str(status["block_count"]), " ("
-            ,"%.2f" % status["block_percentage"], "%), "
-            ,"words: ", str(status["word_count"]), ", "
-            ,"letters: ", str(status["actual_char_count"]), " / ", str(status["char_count"])
-            ])
         
     def create_view_menu(self):
         menu = gtk.Menu()

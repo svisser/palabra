@@ -603,12 +603,18 @@ class GridView:
         ctx_set_line_width(props_line_width)
         ctx_set_source_rgb(*[c / 65535.0 for c in props_border_color])
         for rx, ry, rdx, rdy, bar, border, special in the_lines:
+            if not bar and border and special:
+                ctx_move_to(rx, ry)
+                ctx_rel_line_to(rdx, rdy)
+        ctx_stroke()
+        # lines that are sticking out with normal line width
+        ctx_set_source_rgb(*[c / 65535.0 for c in props_line_color])
+        for rx, ry, rdx, rdy, bar, border, special in the_lines:
             if not bar and not border and special:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
         ctx_stroke()
         # lines
-        ctx_set_source_rgb(*[c / 65535.0 for c in props_line_color])
         for rx, ry, rdx, rdy, bar, border, special in the_lines:
             if not bar and not border and not special:
                 ctx_move_to(rx, ry)
