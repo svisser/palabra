@@ -43,6 +43,12 @@ class Puzzle:
         
     def __ne__(self, other):
         return not self.__eq__(other)
+        
+    def update_type(self, filetype, filename, extension):
+        if not filename.endswith(extension):
+            filename = filename + extension
+        self.filename = filename
+        self.type = filetype
 
 class PuzzleManager:
     def __init__(self):

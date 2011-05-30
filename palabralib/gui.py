@@ -149,6 +149,38 @@ class PalabraAboutDialog(gtk.AboutDialog):
         self.set_transient_for(parent)
         self.connect("response", lambda dialog, response: dialog.destroy())
 
+def compute_title(path=None):
+    title = u"Unsaved puzzle - " + constants.TITLE
+    if path is not None:
+        filename_start = path.rfind(os.sep) + 1
+        filename = path[filename_start:]
+        title = ''.join([filename, u" - ", constants.TITLE])
+    return title
+
+class PalabraSavePuzzleDialog(gtk.FileChooserDialog):
+    def __init__(self, parent, save_as=False):
+        title = u"Save puzzle"
+        if save_as:
+            title = u"Save puzzle as..."
+        super(PalabraSavePuzzleDialog, self).__init__(title
+            , parent
+            , gtk.FILE_CHOOSER_ACTION_SAVE
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+        self.set_do_overwrite_confirmation(True)
+        self.filters = {}
+        for key in FILETYPES['keys']:
+            description = FILETYPES[key]['description']
+            pattern = FILETYPES[key]['pattern']
+            f = gtk.FileFilter()
+            f.set_name(description + ' (*' + pattern + ')')
+            f.add_pattern('*' + pattern)
+            self.add_filter(f)
+            self.filters[f] = key
+    
+    def get_filetype(self):
+        return self.filters[self.get_filter()]
+
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
@@ -377,50 +409,23 @@ class PalabraWindow(gtk.Window):
             dialog.destroy()
             
     def update_title(self, path=None):
-        title = u"Unsaved puzzle - " + constants.TITLE
-        if path is not None:
-            filename_start = path.rfind(os.sep) + 1
-            filename = path[filename_start:]
-            title = ''.join([filename, u" - ", constants.TITLE])
-        self.set_title(title)
+        """Update the title of the window, possibly including a filename."""
+        self.set_title(compute_title(path))
     
     def save_puzzle(self, save_as=False):
         puzzle = self.puzzle_manager.current_puzzle
         backup = preferences.prefs[constants.PREF_COPY_BEFORE_SAVE]
         if save_as or self.puzzle_manager.current_puzzle.filename is None:
-            title = u"Save puzzle"
-            if save_as:
-                title = u"Save puzzle as"
-            dialog = gtk.FileChooserDialog(title
-                , self
-                , gtk.FILE_CHOOSER_ACTION_SAVE
-                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-            dialog.set_do_overwrite_confirmation(True)
-            
-            filters = {}
-            for key in FILETYPES['keys']:
-                description = FILETYPES[key]['description']
-                pattern = FILETYPES[key]['pattern']
-                f = gtk.FileFilter()
-                f.set_name(description + ' (*' + pattern + ')')
-                f.add_pattern('*' + pattern)
-                dialog.add_filter(f)
-                filters[f] = key
-
-            dialog.show_all()
-            response = dialog.run()
-            if response == gtk.RESPONSE_OK:
-                filetype = filters[dialog.get_filter()]
-                filename = dialog.get_filename()
+            d = PalabraSavePuzzleDialog(self, save_as)
+            d.show_all() 
+            if d.run() == gtk.RESPONSE_OK:
+                filetype = d.get_filetype()
+                filename = d.get_filename()
                 extension = FILETYPES[filetype]['pattern']
-                if not filename.endswith(extension):
-                    filename = filename + extension
-                puzzle.filename = filename
-                puzzle.type = filetype
+                puzzle.update_type(filetype, filename, extension)
                 FILETYPES[filetype]['writer'](puzzle, backup)
                 self.update_title(filename)
-            dialog.destroy()
+            d.destroy()
         else:
             FILETYPES[puzzle.type]['writer'](puzzle, backup)
         action.stack.distance_from_saved = 0
