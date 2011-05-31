@@ -85,7 +85,7 @@ class WordUsageDialog(PalabraDialog):
             , u"Configure word list usage", horizontal=True)
         self.wordlists = parent.wordlists
         pages = [(self.create_find_words(parent), u"Finding words")
-            , (self.create_blacklist(parent), u"Blacklist")
+            #, (self.create_blacklist(parent), u"Blacklist")
         ]
         self.main.pack_start(create_notebook(pages, border=(8, 4)))
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
@@ -153,6 +153,8 @@ class WordUsageDialog(PalabraDialog):
         score_hbox.pack_start(self.find_min_score_spinner, False, False, 0)
         vbox.pack_start(hbox)
         vbox.pack_start(score_hbox, False, False, 0)
+        label = create_label(u"These settings are loaded when you start " + constants.TITLE + ".")
+        vbox.pack_start(label, False, False, 0)
         return vbox
         
     def on_tree_selection_changed(self, selection):
@@ -180,11 +182,11 @@ class WordUsageDialog(PalabraDialog):
         # this dict gets updated to preferences.prefs
         c = {}
         c[constants.PREF_FIND_WORD_FILES] = [path for name, path in self.store2]
-        b_index = self.blacklist_combo.get_active()
-        if b_index >= 1:
-            c[constants.PREF_BLACKLIST] = self.wordlists[b_index - 1].path
-        else:
-            c[constants.PREF_BLACKLIST] = ''
+        #b_index = self.blacklist_combo.get_active()
+        #if b_index >= 1:
+        #    c[constants.PREF_BLACKLIST] = self.wordlists[b_index - 1].path
+        #else:
+        #    c[constants.PREF_BLACKLIST] = ''
         c[constants.PREF_FIND_WORD_MIN_SCORE] = self.find_min_score_spinner.get_value_as_int()
         return c
 
