@@ -30,6 +30,7 @@ from gui_common import (
     PalabraDialog,
     NameFileDialog,
     obtain_file,
+    create_stock_button,
 )
 import preferences
 import transform
@@ -93,22 +94,21 @@ class ManageCluesDialog(PalabraDialog):
         self.pwindow = parent
         self.store, self.tree, window = create_tree((str, str)
             , [(u"Name", 0), (u"Path", 1)]
-            , f_sel=self.on_file_selected)
-        window.set_size_request(300, 300)
-        self.main.pack_start(window)
-        
+            , f_sel=self.on_file_selected
+            , window_size=(300, 300))
+        self.pack(window)
         buttonbox = gtk.HButtonBox()
         buttonbox.set_layout(gtk.BUTTONBOX_START)
-        self.add_file_button = gtk.Button(stock=gtk.STOCK_ADD)
-        self.add_file_button.connect("clicked", lambda b: self.on_add_clue_db())
+        self.add_file_button = create_stock_button(gtk.STOCK_ADD
+            , f_click=lambda b: self.on_add_clue_db())
         buttonbox.pack_start(self.add_file_button, False, False, 0)
-        self.remove_button = gtk.Button(stock=gtk.STOCK_REMOVE)
+        self.remove_button = create_stock_button(gtk.STOCK_REMOVE
+            , f_click=lambda b: self.on_remove_db())
         buttonbox.pack_start(self.remove_button, False, False, 0)
-        self.remove_button.connect("clicked", lambda button: self.on_remove_db())
         self.remove_button.set_sensitive(False)
-        self.main.pack_start(buttonbox)
+        self.pack(buttonbox)
         label = create_label(u"These clue databases are loaded when you start " + constants.TITLE + ".")
-        self.main.pack_start(label, False, False, 0)
+        self.pack(label, False)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_clue_files(parent.clues)
     
@@ -139,6 +139,23 @@ class ManageCluesDialog(PalabraDialog):
         self.store.clear()
         for f in sorted(clues, key=operator.attrgetter('name')):
             self.store.append([f.name, f.path])
+
+def create_display_string(n, direction, word, clue):
+    """Construct the displayed string for a word/clue item."""
+    c = gobject.markup_escape_text(clue) if len(clue) > 0 else '<span foreground="red">No clue yet.</span>'
+    d = constants.DIRECTION_NAMES[direction]
+    return ''.join(["<b>", d, ", ", str(n), "</b>: <i>", word, "</i>\n", c])
+
+def compute_clue_items(grid):
+    """
+    Compute a list of clue items that are displayed in the main clue control.
+    """
+    items = []
+    for row in grid.gather_words():
+        n, x, y, d, word, clue, explanation = row
+        display = create_display_string(n, d, word, clue)
+        items.append((n, x, y, d, word, clue, explanation, display))
+    return items
 
 class ClueTool:
     def __init__(self, parent):
@@ -260,26 +277,16 @@ class ClueTool:
                 store[it][5] = value
             elif key == "explanation":
                 store[it][6] = value
-            display = self.create_display_string(n, direction, word, clue)
+            display = create_display_string(n, direction, word, clue)
             store[it][7] = display
             self.parent.editor.clue(x, y, direction, key, value)
             self.tree.columns_autosize()
             self.tree.queue_draw()
-        
-    def create_display_string(self, n, direction, word, clue):
-        """Construct the displayed string for a word/clue item."""
-        c = gobject.markup_escape_text(clue) if len(clue) > 0 else '<span foreground="red">No clue yet.</span>'
-        d = constants.DIRECTION_NAMES[direction]
-        return ''.join(["<b>", d, ", ", str(n), "</b>: <i>", word, "</i>\n", c])
 
     def load_items(self, grid):
         """Load all word/clue items and put them in the ListStore."""
         def locked():
-            items = []
-            for row in grid.gather_words():
-                n, x, y, d, word, clue, explanation = row
-                display = self.create_display_string(n, d, word, clue)
-                items.append((n, x, y, d, word, clue, explanation, display))
+            items = compute_clue_items(grid)
             # use hashing check so we are not
             # constantly clearing / setting the clues
             current_hash = hash(''.join([str(i) for i in items]))
@@ -334,9 +341,9 @@ class ClueTool:
         """Select the word starting at the given (x, y, direction)."""
         if x < 0 or y < 0:
             return
-        selection = self.tree.get_selection()
         for row in self.store:
             if (row[1], row[2], row[3]) == (x, y, direction):
+                selection = self.tree.get_selection()
                 def locked():
                     selection.select_path(row.path)
                     if self.settings["use_scrolling"]:
