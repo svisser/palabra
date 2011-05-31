@@ -437,6 +437,10 @@ class PalabraWindow(gtk.Window):
         self.update_window()
         
     def close_puzzle(self):
+        """
+        Ask the user if the puzzle needs to be closed and/or saved
+        and perform these actions if desired.
+        """
         need_to_close, need_to_save = self.check_close_puzzle()
         if need_to_close:
             if need_to_save:
@@ -467,22 +471,8 @@ class PalabraWindow(gtk.Window):
             return False, False
         return True, False
     
-    def export_clues(self, export_title, export_function, **args):
-        dialog = gtk.FileChooserDialog(export_title
-            , self
-            , gtk.FILE_CHOOSER_ACTION_SAVE
-            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-            , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-        dialog.set_do_overwrite_confirmation(True)
-        dialog.show_all()
-        
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            filename = dialog.get_filename()
-            export_function(self.puzzle_manager.current_puzzle, filename, **args)
-        dialog.destroy()
-        
     def create_toolbar(self):
+        """Create the buttons in the toolbar."""
         toolbar = gtk.Toolbar()
         toolbar.set_orientation(gtk.ORIENTATION_HORIZONTAL)
         def create_tool_button(stock, f_click, p_sensitive=False):
