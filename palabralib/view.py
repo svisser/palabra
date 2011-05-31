@@ -23,6 +23,10 @@ import pangocairo
 
 import constants
 import cPalabra
+from gui_common import (
+    create_label,
+    create_scroll,
+)
 from preferences import read_pref_color
 
 SETTINGS_PREVIEW = {
@@ -665,20 +669,12 @@ class GridPreview(gtk.VBox):
         self.preview_surface = None
         self.preview_pattern = None
         self.render_mode = mode
-        
-        label = gtk.Label()
-        label.set_alignment(0, 0)
-        label.set_markup(''.join(["<b>", header, "</b>"]))
-        
         self.drawing_area = gtk.DrawingArea()
         self.drawing_area.connect("expose_event", self.on_expose_event)
-        
-        self.scrolled_window = gtk.ScrolledWindow(None, None)
-        self.scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-        self.scrolled_window.add_with_viewport(self.drawing_area)
-        
-        self.pack_start(label, False, False, 6)
-        self.pack_start(self.scrolled_window, True, True, 0)
+        self.scrolled_window = create_scroll(self.drawing_area, viewport=True)
+        text = ''.join(["<b>", header, "</b>"])
+        self.pack_start(create_label(text, align=(0, 0)), False, False, 6)
+        self.pack_start(self.scrolled_window)
         
     def display(self, grid):
         self.view = GridView(grid)
