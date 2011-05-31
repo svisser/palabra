@@ -144,6 +144,7 @@ class ClueTool:
     def __init__(self, parent):
         self.parent = parent
         self.settings = {"use_scrolling": True}
+        self.content_hash = None
     
     def create_entry(self, vbox, key, title):
         entry = gtk.Entry()
@@ -274,12 +275,19 @@ class ClueTool:
     def load_items(self, grid):
         """Load all word/clue items and put them in the ListStore."""
         def locked():
-            self.store.clear()
+            items = []
             for row in grid.gather_words():
                 n, x, y, d, word, clue, explanation = row
                 display = self.create_display_string(n, d, word, clue)
-                item = (n, x, y, d, word, clue, explanation, display)
-                self.store.append(item)
+                items.append((n, x, y, d, word, clue, explanation, display))
+            # use hashing check so we are not
+            # constantly clearing / setting the clues
+            current_hash = hash(''.join([str(i) for i in items]))
+            if current_hash != self.content_hash:
+                self.content_hash = current_hash
+                self.store.clear()
+                for item in items:
+                    self.store.append(item)
         selection = self.tree.get_selection()
         self.perform_while_locked(selection, locked)
         
