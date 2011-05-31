@@ -183,11 +183,22 @@ def create_menubar(funcs):
         m.append(f())
     return m
     
-def launch_dialog(dialog, arg0, arg1=None):
+def launch_dialog(dialog, arg0, arg1=None, arg2=None):
     if arg1 is None:
         w = dialog(arg0)
-    else:
+    elif arg2 is None:
         w = dialog(arg0, arg1)
+    else:
+        w = dialog(arg0, arg1, arg2)
+    w.show_all()
+    response = w.run()
+    w.destroy()
+    return response
+    
+def launch_file_dialog(dialog, parent):
+    w = dialog(parent)
     w.show_all()
     w.run()
+    filename = w.get_filename()
     w.destroy()
+    return filename

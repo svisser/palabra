@@ -485,13 +485,12 @@ class WordListPropertiesDialog(PalabraDialog):
         self.avg_word_label.set_text("%.2f" % wlist.average_word_length())
         self.avg_score_label.set_text("%.2f" % wlist.average_word_score())
 
-class DuplicateWordListDialog(gtk.MessageDialog):
+class DuplicateWordListDialog(PalabraMessageDialog):
     def __init__(self, parent):
-        message = u"The word list has not been added because it's already in the list."
-        gtk.MessageDialog.__init__(self, parent, gtk.DIALOG_MODAL
-            , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-        self.set_title(u"Duplicate found")
+        super(DuplicateWordListDialog, self).__init__(parent
+            , u"Duplicate found"
+            , u"The word list has not been added because it's already in the list."
+        )
 
 def get_words_by_length(wlist):
     words = []

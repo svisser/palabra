@@ -62,6 +62,8 @@ from gui_common import (
     create_scroll,
     create_menubar,
     launch_dialog,
+    launch_file_dialog,
+    PalabraMessageDialog,
 )
 from gui_editor import WordTool, FillTool
 from gui_prefs import PreferencesWindow
@@ -160,6 +162,51 @@ def compute_title(path=None):
         title = ''.join([filename, u" - ", constants.TITLE])
     return title
 
+class PalabraOpenPuzzleDialog(gtk.FileChooserDialog):
+    def __init__(self, parent):
+        if False: # TODO
+            preview = gtk.DrawingArea()
+            from view import GridView
+            view = GridView(Grid(15, 15))
+            def on_expose_event(preview, event):
+                context = preview.window.cairo_create()
+                view.render(context, constants.VIEW_MODE_PREVIEW)
+            preview.connect("expose_event", on_expose_event)
+            def on_selection_changed(filechooser):
+                path = filechooser.get_preview_filename() 
+                if path and os.path.isfile(path):
+                    puzzle = read_crossword(path)
+                    view.grid = puzzle.grid
+                    view.properties.cell["size"] = 12
+                    view.properties.default.char["font"] = "Sans 7"
+                    view.refresh_visual_size(preview)
+                    preview.queue_draw()
+        super(PalabraOpenPuzzleDialog, self).__init__(u"Open puzzle"
+            , parent
+            , gtk.FILE_CHOOSER_ACTION_OPEN
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        #self.set_preview_widget(preview)
+        #self.connect("selection-changed", on_selection_changed)
+        for key, f in compute_filters(include_all=True):
+            self.add_filter(f)
+
+def compute_filters(include_all=False):
+    filters = []
+    for key in FILETYPES['keys']:
+        description = FILETYPES[key]['description']
+        pattern = FILETYPES[key]['pattern']
+        f = gtk.FileFilter()
+        f.set_name(description + ' (*' + pattern + ')')
+        f.add_pattern('*' + pattern)
+        filters.append((key, f))
+    if include_all:
+        f = gtk.FileFilter()
+        f.set_name(u"All files")
+        f.add_pattern("*")
+        filters.append(("all", f))
+    return filters
+
 class PalabraSavePuzzleDialog(gtk.FileChooserDialog):
     def __init__(self, parent, save_as=False):
         title = u"Save puzzle"
@@ -172,22 +219,23 @@ class PalabraSavePuzzleDialog(gtk.FileChooserDialog):
             , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
         self.set_do_overwrite_confirmation(True)
         self.filters = {}
-        for key in FILETYPES['keys']:
-            description = FILETYPES[key]['description']
-            pattern = FILETYPES[key]['pattern']
-            f = gtk.FileFilter()
-            f.set_name(description + ' (*' + pattern + ')')
-            f.add_pattern('*' + pattern)
+        for key, f in compute_filters():
             self.add_filter(f)
             self.filters[f] = key
     
     def get_filetype(self):
         return self.filters[self.get_filter()]
 
+class PalabraOpenPuzzleErrorDialog(PalabraMessageDialog):
+    def __init__(self, parent, message):
+        super(PalabraOpenPuzzleErrorDialog, self).__init__(parent
+            , u"Error when opening file", message
+        )
+
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
-        self.clear_title()
+        self.update_title(clear=True)
         self.set_size_request(800, 600)
         self.puzzle_toggle_items = []
         self.selection_toggle_items = []
@@ -230,14 +278,103 @@ class PalabraWindow(gtk.Window):
         if not self.puzzle_manager.has_puzzle():
             quit()
         
-    def to_empty_panel(self):
-        for widget in self.panel.get_children():
-            self.panel.remove(widget)
-        self.drawing_area.unset_flags(gtk.CAN_FOCUS)
-        for i in self.ids:
-            self.drawing_area.disconnect(i)
+    def get_selection(self, slot=False):
+        """
+        Return the currently selected cell. If slot=True then return
+        the currently selected slot. (-1, -1) is returned if the currently
+        'selected' cell is not valid anymore.
+        """
+        x, y, d = e_settings.selection
+        if slot:
+            sx, sy = self.puzzle.grid.get_start_word(x, y, d)
+            # check for validness because selection may have become invalid
+            # to due grid transform
+            if not self.puzzle.grid.is_valid(sx, sy):
+                return (-1, -1, "across", -1)
+            return (x, y, d, self.puzzle.grid.word_length(sx, sy, d))
+        if not self.puzzle.grid.is_valid(x, y):
+            return (-1, -1)
+        return (x, y)
+            
+    def set_selection(self, x, y, direction=None, selection_changed=True, full_update=True):
+        set_selection(self, self.puzzle, e_settings, x=x, y=y
+            , direction=direction, selection_changed=selection_changed
+            , full_update=full_update)
+        
+    def update_status(self, context_string, message):
+        context_id = self.statusbar.get_context_id(context_string)
+        self.statusbar.pop(context_id)
+        self.statusbar.push(context_id, message)
+
+    def pop_status(self, context_string):
+        context_id = self.statusbar.get_context_id(context_string)
+        self.statusbar.pop(context_id)
+        return context_id
+        
+    def new_puzzle(self):
+        self.close_puzzle()
+        if not self.puzzle_manager.has_puzzle():
+            w = NewWindow(self)
+            w.show_all() 
+            if w.run() == gtk.RESPONSE_ACCEPT:
+                self.update_title(None)
+                self.puzzle_manager.new_puzzle(w.get_configuration())
+                e_settings.reset_controls()
+                self.load_puzzle()
+            w.destroy()
     
-    def to_edit_panel(self):
+    def open_puzzle(self):
+        self.close_puzzle()
+        if self.puzzle_manager.has_puzzle():
+            return
+        filename = launch_file_dialog(PalabraOpenPuzzleDialog, self)
+        if filename is None:
+            return
+        try:
+            puzzle = read_crossword(filename)
+        except ParserError, e:
+            launch_dialog(PalabraOpenPuzzleErrorDialog, self, e.message)
+        puzzle.filename = filename
+        self.update_title(filename)
+        self.puzzle_manager.current_puzzle = puzzle
+        self.load_puzzle()
+            
+    def update_title(self, path=None, clear=False):
+        """Update the title of the window, possibly including a filename."""
+        self.set_title(constants.TITLE if clear else compute_title(path))
+    
+    def save_puzzle(self, save_as=False):
+        backup = preferences.prefs[constants.PREF_COPY_BEFORE_SAVE]
+        if save_as or self.puzzle.filename is None:
+            d = PalabraSavePuzzleDialog(self, save_as)
+            d.show_all() 
+            if d.run() == gtk.RESPONSE_OK:
+                filetype = d.get_filetype()
+                filename = d.get_filename()
+                extension = FILETYPES[filetype]['pattern']
+                self.puzzle.update_type(filetype, filename, extension)
+                FILETYPES[filetype]['writer'](self.puzzle, backup)
+                self.update_title(filename)
+            d.destroy()
+        else:
+            FILETYPES[self.puzzle.type]['writer'](self.puzzle, backup)
+        action.stack.distance_from_saved = 0
+        
+    def export_puzzle(self):
+        response = launch_dialog(ExportWindow, self, self.puzzle)
+        if response == gtk.RESPONSE_OK:
+            d = gtk.FileChooserDialog(u"Export location", self
+                , gtk.FILE_CHOOSER_ACTION_SAVE
+                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+            d.set_do_overwrite_confirmation(True)
+            d.show_all() 
+            if d.run() == gtk.RESPONSE_OK:
+                export_puzzle(self.puzzle, d.get_filename(), w.options)
+            d.destroy()
+    
+    def load_puzzle(self):
+        action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)
         self.drawing_area = gtk.DrawingArea()
         self.drawing_area.set_flags(gtk.CAN_FOCUS)
         self.drawing_area.add_events(
@@ -297,163 +434,6 @@ class PalabraWindow(gtk.Window):
         paned.set_position(w - 300)
         self.panel.pack_start(paned, True, True, 0)
         self.panel.show_all()
-        
-    def get_selection(self, slot=False):
-        """
-        Return the currently selected cell. If slot=True then return
-        the currently selected slot. (-1, -1) is returned if the currently
-        'selected' cell is not valid anymore.
-        """
-        x, y, d = e_settings.selection
-        if slot:
-            sx, sy = self.puzzle.grid.get_start_word(x, y, d)
-            # check for validness because selection may have become invalid
-            # to due grid transform
-            if not self.puzzle.grid.is_valid(sx, sy):
-                return (-1, -1, "across", -1)
-            return (x, y, d, self.puzzle.grid.word_length(sx, sy, d))
-        if not self.puzzle.grid.is_valid(x, y):
-            return (-1, -1)
-        return (x, y)
-            
-    def set_selection(self, x, y, direction=None, selection_changed=True, full_update=True):
-        set_selection(self, self.puzzle, e_settings, x=x, y=y
-            , direction=direction, selection_changed=selection_changed
-            , full_update=full_update)
-        
-    def update_status(self, context_string, message):
-        context_id = self.statusbar.get_context_id(context_string)
-        self.statusbar.pop(context_id)
-        self.statusbar.push(context_id, message)
-
-    def pop_status(self, context_string):
-        context_id = self.statusbar.get_context_id(context_string)
-        self.statusbar.pop(context_id)
-        return context_id
-        
-    def new_puzzle(self):
-        self.close_puzzle()
-        if not self.puzzle_manager.has_puzzle():
-            w = NewWindow(self)
-            w.show_all() 
-            if w.run() == gtk.RESPONSE_ACCEPT:
-                self.update_title(None)
-                self.puzzle_manager.new_puzzle(w.get_configuration())
-                e_settings.reset_controls()
-                self.load_puzzle()
-            w.destroy()
-    
-    def open_puzzle(self):
-        self.close_puzzle()
-        if not self.puzzle_manager.has_puzzle():
-            if False: # TODO
-                preview = gtk.DrawingArea()
-                from view import GridView
-                view = GridView(Grid(15, 15))
-                def on_expose_event(preview, event):
-                    context = preview.window.cairo_create()
-                    view.render(context, constants.VIEW_MODE_PREVIEW)
-                preview.connect("expose_event", on_expose_event)
-                def on_selection_changed(filechooser):
-                    path = filechooser.get_preview_filename() 
-                    if path and os.path.isfile(path):
-                        puzzle = read_crossword(path)
-                        view.grid = puzzle.grid
-                        view.properties.cell["size"] = 12
-                        view.properties.default.char["font"] = "Sans 7"
-                        view.refresh_visual_size(preview)
-                        preview.queue_draw()
-
-            dialog = gtk.FileChooserDialog(u"Open puzzle"
-                , self
-                , gtk.FILE_CHOOSER_ACTION_OPEN
-                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-            #dialog.set_preview_widget(preview)
-            #dialog.connect("selection-changed", on_selection_changed)
-            for key in FILETYPES['keys']:
-                description = FILETYPES[key]['description']
-                pattern = FILETYPES[key]['pattern']
-                f = gtk.FileFilter()
-                f.set_name(description + ' (*' + pattern + ')')
-                f.add_pattern('*' + pattern)
-                dialog.add_filter(f)
-            f = gtk.FileFilter()
-            f.set_name(u"All files")
-            f.add_pattern("*")
-            dialog.add_filter(f)
-            
-            dialog.show_all()
-            response = dialog.run()
-            if response == gtk.RESPONSE_OK:
-                dialog.hide()
-                
-                def show_error(title, message):
-                    mdialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL
-                        , gtk.MESSAGE_INFO, gtk.BUTTONS_NONE, message)
-                    mdialog.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
-                    mdialog.set_title(title)
-                    mdialog.run()
-                    mdialog.destroy()
-                    
-                filename = dialog.get_filename()
-                try:
-                    puzzle = read_crossword(filename)
-                except ParserError, e:
-                    title = u"Error when opening file"
-                    show_error(title, e.message)
-                else:
-                    puzzle.filename = filename
-                    self.update_title(filename)
-                    
-                    self.puzzle_manager.current_puzzle = puzzle
-                    self.load_puzzle()
-            dialog.destroy()
-            
-    def update_title(self, path=None):
-        """Update the title of the window, possibly including a filename."""
-        self.set_title(compute_title(path))
-        
-    def clear_title(self):
-        """Set the program name as title."""
-        self.set_title(constants.TITLE)
-    
-    def save_puzzle(self, save_as=False):
-        backup = preferences.prefs[constants.PREF_COPY_BEFORE_SAVE]
-        if save_as or self.puzzle.filename is None:
-            d = PalabraSavePuzzleDialog(self, save_as)
-            d.show_all() 
-            if d.run() == gtk.RESPONSE_OK:
-                filetype = d.get_filetype()
-                filename = d.get_filename()
-                extension = FILETYPES[filetype]['pattern']
-                self.puzzle.update_type(filetype, filename, extension)
-                FILETYPES[filetype]['writer'](self.puzzle, backup)
-                self.update_title(filename)
-            d.destroy()
-        else:
-            FILETYPES[self.puzzle.type]['writer'](self.puzzle, backup)
-        action.stack.distance_from_saved = 0
-        
-    def export_puzzle(self):
-        w = ExportWindow(self, self.puzzle)
-        w.show_all() 
-        if w.run() == gtk.RESPONSE_OK:
-            w.hide()
-            d = gtk.FileChooserDialog(u"Export location", self
-                , gtk.FILE_CHOOSER_ACTION_SAVE
-                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-            d.set_do_overwrite_confirmation(True)
-            d.show_all() 
-            if d.run() == gtk.RESPONSE_OK:
-                export_puzzle(self.puzzle, d.get_filename(), w.options)
-            d.destroy()
-        w.destroy()
-    
-    def load_puzzle(self):
-        action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)
-        self.to_edit_panel()
         self.update_window()
         
     def close_puzzle(self):
@@ -463,7 +443,11 @@ class PalabraWindow(gtk.Window):
                 self.save_puzzle()
             self.puzzle_manager.current_puzzle = None
             action.stack.clear()
-            self.to_empty_panel()
+            for widget in self.panel.get_children():
+                self.panel.remove(widget)
+            self.drawing_area.unset_flags(gtk.CAN_FOCUS)
+            for i in self.ids:
+                self.drawing_area.disconnect(i)
             self.update_window()
 
     def check_close_puzzle(self):
@@ -476,10 +460,7 @@ class PalabraWindow(gtk.Window):
             return False, False 
         if action.stack.distance_from_saved == 0:
             return True, False
-        d = ClosePuzzleDialog(self)
-        d.show_all()
-        response = d.run()
-        d.destroy()
+        response = launch_dialog(ClosePuzzleDialog, self)
         if response == gtk.RESPONSE_YES:
             return True, True
         elif response == gtk.RESPONSE_CANCEL:
@@ -523,12 +504,8 @@ class PalabraWindow(gtk.Window):
         self.redo_tool_item = create_tool_button(gtk.STOCK_REDO, lambda i: self.do_action("redo"))
         self.redo_tool_item.set_sensitive(False)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
-        def view_puzzle_properties():
-            d = PropertiesWindow(self, self.puzzle)
-            d.show_all()
-            d.run()
-            d.destroy()
-        create_tool_button(gtk.STOCK_PROPERTIES, lambda i: view_puzzle_properties(), True)
+        activate = lambda i: launch_dialog(PropertiesWindow, self, self.puzzle)
+        create_tool_button(gtk.STOCK_PROPERTIES, activate, True)
         return toolbar
         
     def _create_menu_item(self, activate, tooltip
@@ -795,7 +772,7 @@ class PalabraWindow(gtk.Window):
         , selection_changed=True):
         puzzle = self.puzzle
         if puzzle is None:
-            self.clear_title()
+            self.update_title(clear=True)
             self.pop_status(constants.STATUS_GRID)
         else:
             if transform >= constants.TRANSFORM_STRUCTURE:

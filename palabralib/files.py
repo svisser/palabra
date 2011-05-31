@@ -116,7 +116,7 @@ def determine_file_type(filename):
         try:
             doc = etree.parse(filename)
         except etree.XMLSyntaxError:
-            raise ParserError(u"This is not an XML file.")
+            raise ParserError(u"This is not a valid Palabra puzzle file.")
         root = doc.getroot()
         if root.tag == "Puzzles":
             t = constants.PUZZLE_XPF
