@@ -60,6 +60,8 @@ from gui_common import (
     create_label,
     create_notebook,
     create_scroll,
+    create_menubar,
+    launch_dialog,
 )
 from gui_editor import WordTool, FillTool
 from gui_prefs import PreferencesWindow
@@ -185,24 +187,24 @@ class PalabraSavePuzzleDialog(gtk.FileChooserDialog):
 class PalabraWindow(gtk.Window):
     def __init__(self):
         super(PalabraWindow, self).__init__()
-        self.set_title(constants.TITLE)
+        self.clear_title()
         self.set_size_request(800, 600)
         self.puzzle_toggle_items = []
         self.selection_toggle_items = []
         self.puzzle_manager = PuzzleManager()
-        self.menubar = gtk.MenuBar()
-        self.menubar.append(self.create_file_menu())
-        self.menubar.append(self.create_edit_menu())
-        self.menubar.append(self.create_view_menu())
-        self.menubar.append(self.create_grid_menu())
-        self.menubar.append(self.create_word_menu())
-        self.menubar.append(self.create_clue_menu())
-        self.menubar.append(self.create_help_menu())
+        MENUBAR = [self.create_file_menu
+            , self.create_edit_menu
+            , self.create_view_menu
+            , self.create_grid_menu
+            , self.create_word_menu
+            , self.create_clue_menu
+            , self.create_help_menu
+        ]
         self.toolbar = self.create_toolbar()
         self.panel = gtk.VBox()
         self.statusbar = gtk.Statusbar()
         self.main = gtk.VBox()
-        self.main.pack_start(self.menubar, False, False, 0)
+        self.main.pack_start(create_menubar(MENUBAR), False, False, 0)
         self.main.pack_start(self.toolbar, False, False, 0)
         self.main.pack_start(self.panel)
         self.main.pack_start(self.statusbar, False, False, 0)
@@ -411,6 +413,10 @@ class PalabraWindow(gtk.Window):
     def update_title(self, path=None):
         """Update the title of the window, possibly including a filename."""
         self.set_title(compute_title(path))
+        
+    def clear_title(self):
+        """Set the program name as title."""
+        self.set_title(constants.TITLE)
     
     def save_puzzle(self, save_as=False):
         backup = preferences.prefs[constants.PREF_COPY_BEFORE_SAVE]
@@ -628,20 +634,14 @@ class PalabraWindow(gtk.Window):
         return file_menu
         
     def resize_grid(self):
-        w = SizeWindow(self, self.puzzle_manager.current_puzzle)
+        w = SizeWindow(self, self.puzzle)
         w.show_all() 
         if w.run() == gtk.RESPONSE_ACCEPT:
             width, height = w.get_size()
             if (self.puzzle.grid.size != (width, height)):
-                self.transform_grid(transform.resize_grid, width=width, height=height)
+                self.transform_grid(transform.resize_grid
+                    , width=width, height=height)
         w.destroy()
-        
-    def view_preferences(self):
-        w = PreferencesWindow(self)
-        w.show_all()
-        w.run()
-        w.destroy()
-        self.update_window()
         
     def do_action(self, task):
         if task == "undo":
@@ -685,8 +685,14 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
+        def view_preferences():
+            w = PreferencesWindow(self)
+            w.show_all()
+            w.run()
+            w.destroy()
+            self.update_window()
         menu.append(self._create_menu_item(
-            lambda item: self.view_preferences()
+            lambda item: view_preferences()
             , u"Configure the program"
             , image=gtk.STOCK_PREFERENCES))
                 
@@ -788,23 +794,24 @@ class PalabraWindow(gtk.Window):
     def update_window(self
         , transform=constants.TRANSFORM_STRUCTURE
         , selection_changed=True):
-        puzzle = self.puzzle_manager.current_puzzle
+        puzzle = self.puzzle
         if puzzle is None:
-            self.set_title(constants.TITLE)
+            self.clear_title()
             self.pop_status(constants.STATUS_GRID)
         else:
             if transform >= constants.TRANSFORM_STRUCTURE:
                 message = determine_status_message(puzzle.grid)
                 self.update_status(constants.STATUS_GRID, message)
-            selection = self.get_selection()
-            if selection is not None:
-                # if grid structure changes, set selection again
-                # (it may have changed)
-                if transform >= constants.TRANSFORM_STRUCTURE:
-                    sel_x, sel_y = selection
-                    self.set_selection(x=sel_x, y=sel_y
+                selection = self.get_selection()
+                if selection is not None:
+                    # if grid structure changes, set selection again
+                    # (it may have changed)
+                    x, y = selection
+                    self.set_selection(x=x, y=y
                         , selection_changed=selection_changed
                         , full_update=False)
+            selection = self.get_selection()
+            if selection is not None:
                 valid = puzzle.grid.is_valid(*selection)
                 for item, predicate in self.selection_toggle_items:
                     item.set_sensitive(valid and predicate(puzzle))
@@ -1153,30 +1160,18 @@ class PalabraWindow(gtk.Window):
         
         menu.append(gtk.SeparatorMenuItem())
         
-        def activate(item):
-            w = FindWordsDialog(self)
-            w.show_all()
-            w.run()
-            w.destroy()        
+        activate = lambda i: launch_dialog(FindWordsDialog, self)
         menu.append(self._create_menu_item(activate
             , u"Find words in word lists according to a pattern"
             , title=u"_Find words..."))
         
-        def activate(item):
-            w = AccidentalWordsDialog(self, self.puzzle_manager.current_puzzle)
-            w.show_all()
-            w.run()
-            w.destroy()
+        activate = lambda i: launch_dialog(AccidentalWordsDialog, self, self.puzzle)
         menu.append(self._create_menu_item(activate
             , u"View words that may have accidentally appeared in the grid"
             , title=u"View _accidental words..."
             , is_puzzle_sensitive=True))
         
-        def activate(item):
-            w = SimilarWordsDialog(self, self.puzzle_manager.current_puzzle)
-            w.show_all()
-            w.run()
-            w.destroy()
+        activate = lambda i: launch_dialog(SimilarWordsDialog, self, self.puzzle)
         menu.append(self._create_menu_item(activate
             , u"View words that have a part in common"
             , title=u"View _similar words..."
@@ -1189,11 +1184,7 @@ class PalabraWindow(gtk.Window):
     def create_clue_menu(self):
         menu = gtk.Menu()
         
-        def activate(item):
-            w = ManageCluesDialog(self)
-            w.show_all()
-            w.run()
-            w.destroy()
+        activate = lambda i: launch_dialog(ManageCluesDialog, self)
         menu.append(self._create_menu_item(activate
             , u"Manage the clue databases available to the program"
             , title=u"_Manage clue databases..."))

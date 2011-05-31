@@ -176,3 +176,18 @@ def create_combo(options, active=None, f_change=None):
     if f_change is not None:
         combo.connect("changed", f_change)
     return combo
+
+def create_menubar(funcs):
+    m = gtk.MenuBar()
+    for f in funcs:
+        m.append(f())
+    return m
+    
+def launch_dialog(dialog, arg0, arg1=None):
+    if arg1 is None:
+        w = dialog(arg0)
+    else:
+        w = dialog(arg0, arg1)
+    w.show_all()
+    w.run()
+    w.destroy()
