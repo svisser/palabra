@@ -101,7 +101,8 @@ def create_splash():
     hbox.show()
     return window
 
-def determine_status_message(status):
+def determine_status_message(grid):
+    status = grid.determine_status(False)
     return ''.join(
         ["Blocks: ", str(status["block_count"]), " ("
         ,"%.2f" % status["block_percentage"], "%), "
@@ -792,19 +793,18 @@ class PalabraWindow(gtk.Window):
             self.set_title(constants.TITLE)
             self.pop_status(constants.STATUS_GRID)
         else:
-            selection = self.get_selection()
             if transform >= constants.TRANSFORM_STRUCTURE:
-                status = puzzle.grid.determine_status(False)
-                message = determine_status_message(status)
+                message = determine_status_message(puzzle.grid)
                 self.update_status(constants.STATUS_GRID, message)
+            selection = self.get_selection()
+            if selection is not None:
                 # if grid structure changes, set selection again
                 # (it may have changed)
-                if selection is not None:
+                if transform >= constants.TRANSFORM_STRUCTURE:
                     sel_x, sel_y = selection
                     self.set_selection(x=sel_x, y=sel_y
                         , selection_changed=selection_changed
                         , full_update=False)
-            if selection is not None:
                 valid = puzzle.grid.is_valid(*selection)
                 for item, predicate in self.selection_toggle_items:
                     item.set_sensitive(valid and predicate(puzzle))
