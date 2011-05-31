@@ -118,3 +118,35 @@ class ViewTestCase(unittest.TestCase):
         for i_pre, i_post in zip(pre, post):
             self.assertEquals(i_pre[0], i_post[0])
             self.assertNotEquals(i_pre[1], i_post[1])
+            
+    def testVisualSize(self):
+        """
+        The visual dimensions of a 1x1 grid equals 2x border width + cell width.
+        """
+        p = Puzzle(Grid(1, 1))
+        props = p.view.properties
+        props["border", "width"] = 5
+        props["cell", "size"] = 64
+        self.assertEqual(props.visual_size(False), (5 + 64 + 5, 5 + 64 + 5))
+        
+    def testVisualSizeTwo(self):
+        """The visual dimensions can vary for width and height."""
+        p = Puzzle(Grid(3, 2))
+        props = p.view.properties
+        props["border", "width"] = 5
+        props["cell", "size"] = 64
+        props["line", "width"] = 3
+        width = 5 + 64 + 3 + 64 + 3 + 64 + 5
+        height = 5 + 64 + 3 + 64 + 5
+        self.assertEqual(props.visual_size(False), (width, height))
+        
+    def testVisualSizePadding(self):
+        p = Puzzle(Grid(2, 1))
+        props = p.view.properties
+        props.margin = (10, 20)
+        props["border", "width"] = 5
+        props["cell", "size"] = 64
+        props["line", "width"] = 3
+        width = 10 + 5 + 64 + 3 + 64 + 5 + 10
+        height = 20 + 5 + 64 + 5 + 20
+        self.assertEqual(props.visual_size(True), (width, height))
