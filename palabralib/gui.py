@@ -424,14 +424,14 @@ class PalabraWindow(gtk.Window):
         pages = [tab_word, tab_clue]
         tabs = create_notebook(pages, border=(16, 8), f_switch=on_switch_page)
         tabs.set_border_width(8)
-        tabs.set_size_request(300, -1)
+        tabs.set_size_request(375, -1)
         tabs.set_show_border(False)
         
         paned = gtk.HPaned()
         paned.pack1(main, True, False)
         paned.pack2(tabs, True, False)
         w, h = self.get_size()
-        paned.set_position(w - 300)
+        paned.set_position(w - 375)
         self.panel.pack_start(paned, True, True, 0)
         self.panel.show_all()
         self.update_window()

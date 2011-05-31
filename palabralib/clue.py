@@ -210,18 +210,26 @@ class ClueTool:
             self.load_clues_for_word(widget.get_text().strip())
         w_entry.connect("changed", on_word_changed)
         w_hbox.pack_start(w_entry)
-        o_vbox.pack_start(create_label(u"<b>Lookup clues</b>"), False, False, 0)
-        o_vbox.pack_start(w_hbox, False, False, 0)
+        
+        l_vbox = gtk.VBox()
+        l_vbox.set_spacing(6)
+        l_vbox.set_border_width(6)
+        
+        l_vbox.pack_start(create_label(u"<b>Lookup clues</b>"), False, False, 0)
+        l_vbox.pack_start(w_hbox, False, False, 0)
         self.c_store, self.c_tree, c_window = create_tree(str
             , [(u"Clues", 0)]
             , f_sel=self.on_clue_selected)
-        o_vbox.pack_start(c_window, True, True, 0)
+        l_vbox.pack_start(c_window, True, True, 0)
         self.use_clue_button = create_button(u"Use clue"
             , align=(0, 0.5), f_click=self.on_use_clicked)
         self.use_clue_button.set_sensitive(False)
-        o_vbox.pack_start(self.use_clue_button, False, False, 0)
+        l_vbox.pack_start(self.use_clue_button, False, False, 0)
                 
-        pages = [(window, u"Words and clues"), (o_vbox, u"Advanced")]
+        pages = [(window, u"Words and clues")
+            , (l_vbox, u"Lookup")
+            , (o_vbox, u"Advanced")
+        ]
         vbox.pack_start(create_notebook(pages, border=(4, 2)))
         self.tree.set_headers_visible(False)
         self.load_items(puzzle.grid)
