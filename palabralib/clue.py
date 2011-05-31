@@ -318,7 +318,7 @@ class ClueTool:
         def locked():
             self.update_current_word(clue, explanation)
             self.settings["use_scrolling"] = False
-            self.parent.editor.set_selection(x, y, direction, full_update=False)
+            self.parent.set_selection(x, y, direction, full_update=False)
             self.settings["use_scrolling"] = True
         self.perform_while_locked(selection, locked)
         

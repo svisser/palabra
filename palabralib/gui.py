@@ -313,9 +313,10 @@ class PalabraWindow(gtk.Window):
             return (-1, -1)
         return (x, y)
             
-    def set_selection(self, x, y, direction=None, selection_changed=True):
+    def set_selection(self, x, y, direction=None, selection_changed=True, full_update=True):
         set_selection(self, self.puzzle, e_settings, x=x, y=y
-            , direction=direction, selection_changed=selection_changed)
+            , direction=direction, selection_changed=selection_changed
+            , full_update=full_update)
         
     def update_status(self, context_string, message):
         context_id = self.statusbar.get_context_id(context_string)
@@ -446,7 +447,7 @@ class PalabraWindow(gtk.Window):
     def load_puzzle(self):
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)
         self.to_edit_panel()
-        self.update_window(True)
+        self.update_window()
         
     def close_puzzle(self):
         need_to_close, need_to_save = self.check_close_puzzle()
@@ -456,7 +457,7 @@ class PalabraWindow(gtk.Window):
             self.puzzle_manager.current_puzzle = None
             action.stack.clear()
             self.to_empty_panel()
-            self.update_window(True)
+            self.update_window()
 
     def check_close_puzzle(self):
         """
@@ -646,7 +647,7 @@ class PalabraWindow(gtk.Window):
             s = action.stack.undo(self.puzzle)
         elif task == "redo":
             s = action.stack.redo(self.puzzle)
-        self.update_window(True)
+        self.update_window()
         if s.clue_slot:
             self.set_selection(*s.clue_slot)
         
@@ -766,7 +767,8 @@ class PalabraWindow(gtk.Window):
             t = transform.type
         except AttributeError:
             t = constants.TRANSFORM_STRUCTURE
-        self.update_window(True, transform=t, selection_changed=selection_changed)
+        print "transforming", t, selection_changed
+        self.update_window(transform=t, selection_changed=selection_changed)
         
     def transform_clues(self, transform, **args):
         puzzle = self.puzzle_manager.current_puzzle
@@ -783,7 +785,6 @@ class PalabraWindow(gtk.Window):
             i.set_sensitive(action.stack.has_redo())
         
     def update_window(self
-        , content_changed=False
         , transform=constants.TRANSFORM_STRUCTURE
         , selection_changed=True):
         puzzle = self.puzzle_manager.current_puzzle
@@ -792,7 +793,7 @@ class PalabraWindow(gtk.Window):
             self.pop_status(constants.STATUS_GRID)
         else:
             selection = self.get_selection()
-            if content_changed and transform >= constants.TRANSFORM_STRUCTURE:
+            if transform >= constants.TRANSFORM_STRUCTURE:
                 status = puzzle.grid.determine_status(False)
                 message = determine_status_message(status)
                 self.update_status(constants.STATUS_GRID, message)
@@ -800,7 +801,9 @@ class PalabraWindow(gtk.Window):
                 # (it may have changed)
                 if selection is not None:
                     sel_x, sel_y = selection
-                    self.set_selection(x=sel_x, y=sel_y, selection_changed=selection_changed)
+                    self.set_selection(x=sel_x, y=sel_y
+                        , selection_changed=selection_changed
+                        , full_update=False)
             if selection is not None:
                 valid = puzzle.grid.is_valid(*selection)
                 for item, predicate in self.selection_toggle_items:
@@ -809,21 +812,18 @@ class PalabraWindow(gtk.Window):
                     self.set_selection(-1, -1)
         for item in self.puzzle_toggle_items:
             item.set_sensitive(puzzle is not None)
-        if content_changed and transform >= constants.TRANSFORM_CONTENT:
-            self.update_undo_redo()
+        self.update_undo_redo()
         try:
-            # TODO refactor content_changed away
-            if content_changed:
-                if transform >= constants.TRANSFORM_STRUCTURE:
-                    # TODO modify when arbitrary number schemes are implemented
-                    self.editor.puzzle.grid.assign_numbers()
-                if transform >= constants.TRANSFORM_CONTENT:
-                    # reload all word/clue items and select current word
-                    grid = self.puzzle_manager.current_puzzle.grid
-                    selection = e_settings.selection
-                    p, q = grid.get_start_word(*selection)
-                    e_tools["clue"].load_items(grid)
-                    e_tools["clue"].select(p, q, selection[2])
+            if transform >= constants.TRANSFORM_STRUCTURE:
+                # TODO modify when arbitrary number schemes are implemented
+                self.puzzle.grid.assign_numbers()
+            if transform >= constants.TRANSFORM_CONTENT:
+                # reload all word/clue items and select current word
+                grid = self.puzzle_manager.current_puzzle.grid
+                selection = e_settings.selection
+                p, q = grid.get_start_word(*selection)
+                e_tools["clue"].load_items(grid)
+                e_tools["clue"].select(p, q, selection[2])
             e_settings.force_redraw = True
             self.editor.refresh_words()
             self.editor.refresh_visual_size()

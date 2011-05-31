@@ -767,20 +767,3 @@ class Editor:
         self.window.puzzle.view.properties.grid = self.window.puzzle.grid
         size = self.window.puzzle.view.properties.visual_size()
         self.window.drawing_area.set_size_request(*size)
-
-    def set_selection(self
-        , x=None
-        , y=None
-        , direction=None
-        , full_update=True
-        , other_dir=False
-        , selection_changed=True):
-        """
-        Select (x, y), the direction or both.
-        Use other_dir to switch the typing direction to the other direction.
-        """
-        set_selection(self.window, self.window.puzzle, e_settings, x, y, direction, full_update, other_dir, selection_changed)
-        
-    def get_selection(self):
-        """Return the (x, y) of the selected cell."""
-        return (e_settings.selection.x, e_settings.selection.y)
