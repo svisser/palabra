@@ -774,7 +774,6 @@ class PalabraWindow(gtk.Window):
             t = transform.type
         except AttributeError:
             t = constants.TRANSFORM_STRUCTURE
-        print "transforming", t, selection_changed
         self.update_window(transform=t, selection_changed=selection_changed)
         
     def transform_clues(self, transform, **args):
