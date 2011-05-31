@@ -29,6 +29,7 @@ from gui_common import (
     create_scroll,
     create_label,
     create_notebook,
+    create_entry,
     PalabraDialog,
     PalabraMessageDialog,
     NameFileDialog,
@@ -306,19 +307,17 @@ class AccidentalWordsDialog(PalabraDialog):
             cells = merge_highlights(self.results, self.store[it][1])
             highlight_cells(self.pwindow, self.puzzle, "cells", cells)
 
-MATCHING_TEXT = u"Number of matching words:"
-
 class FindWordsDialog(PalabraDialog):
     def __init__(self, parent):
         super(FindWordsDialog, self).__init__(parent, u"Find words")
         self.wordlists = parent.wordlists
         self.sort_option = 0
         self.pattern = None
-        label = create_label(u"Use ? for an unknown letter and * for zero or more unknown letters.")
-        self.main.pack_start(label, False, False, 0)
-        entry = gtk.Entry()
-        entry.connect("changed", self.on_entry_changed)
-        self.main.pack_start(entry, False, False, 0)
+        self.pack(create_label(u"Use ? for an unknown letter and * for zero or more unknown letters."))
+        def on_entry_changed(widget):
+            glib.source_remove(self.timer)
+            self.launch_pattern(widget.get_text().strip())
+        self.pack(create_entry(f_change=on_entry_changed), False)
         # word path score
         self.store, self.tree, s_window = create_tree((str, str, int)
             , [(u"Word", 0), (u"Word list", 1), (u"Score", 2)]
@@ -326,46 +325,42 @@ class FindWordsDialog(PalabraDialog):
         )
         self.tree.get_column(0).set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
         self.tree.get_column(0).set_fixed_width(250)
-        self.main.pack_start(s_window)
+        self.pack(s_window)
         self.n_label = create_label("")
         self.set_n_label(0)
-        self.main.pack_start(self.n_label, False, False, 0)
+        self.pack(self.n_label, False)
         sort_hbox = gtk.HBox(False, 6)
         sort_hbox.pack_start(create_label(u"Sort by:"), False, False, 0)
         def on_sort_changed(combo):
             self.sort_option = combo.get_active()
             self.launch_pattern(self.pattern)
-        combo = create_combo(["Alphabet", "Length", "Score"]
-            , active=self.sort_option, f_change=on_sort_changed)
-        sort_hbox.pack_start(combo)
-        self.main.pack_start(sort_hbox, False, False, 0)
+        sort_hbox.pack_start(create_combo(["Alphabet", "Length", "Score"]
+            , active=self.sort_option, f_change=on_sort_changed))
+        self.pack(sort_hbox, False)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.launch_pattern(None)
         
     def set_n_label(self, n):
-        self.n_label.set_text(MATCHING_TEXT + " " + str(n))
-        
-    def on_entry_changed(self, widget):
-        glib.source_remove(self.timer)
-        self.launch_pattern(widget.get_text().strip())
+        """Display the number of words that match the user's pattern."""
+        self.n_label.set_text(u"Number of matching words: " + str(n))
         
     def launch_pattern(self, pattern=None):
+        """Start a timer and display the words when the timer has expired."""
         self.store.clear()
         if pattern is not None and len(pattern) > 0:
             self.store.append([LOADING_TEXT, '', 0])
-        self.timer = glib.timeout_add(constants.INPUT_DELAY, self.find_words, pattern)
-        
-    def find_words(self, pattern=None):
-        if pattern is None:
+        def find_words(pattern=None):
+            if pattern is None:
+                return False
+            result = search_wordlists_by_pattern(self.wordlists, pattern, sort=self.sort_option)
+            self.pattern = pattern
+            self.store.clear()
+            self.set_n_label(len(result))
+            for name, word, score in result:
+                t1 = '<span font_desc="Monospace 12">' + word + '</span>'
+                self.store.append([t1, name, score])
             return False
-        result = search_wordlists_by_pattern(self.wordlists, pattern, sort=self.sort_option)
-        self.pattern = pattern
-        self.store.clear()
-        self.set_n_label(len(result))
-        for name, word, score in result:
-            t1 = '<span font_desc="Monospace 12">' + word + '</span>'
-            self.store.append([t1, name, score])
-        return False
+        self.timer = glib.timeout_add(constants.INPUT_DELAY, find_words, pattern)
 
 class AnagramDialog(gtk.Dialog):
     def __init__(self, parent):
@@ -378,9 +373,7 @@ class AnagramDialog(gtk.Dialog):
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
         
-        entry = gtk.Entry()
-        entry.connect("changed", self.on_buffer_changed)
-        main.pack_start(entry, False, False, 0)
+        main.pack_start(create_entry(f_change=self.on_buffer_changed), False, False, 0)
         
         self.store = gtk.ListStore(str)
         self.tree = gtk.TreeView(self.store)

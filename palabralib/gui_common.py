@@ -29,8 +29,12 @@ class PalabraDialog(gtk.Dialog):
         else:
             self.main = gtk.VBox()
         self.main.set_spacing(9)
-        hbox.pack_start(self.main, True, True, 0)
-        self.vbox.pack_start(hbox, True, True, 0)
+        hbox.pack_start(self.main)
+        self.vbox.pack_start(hbox)
+        
+    def pack(self, widget, expand=True):
+        args = (True, True) if expand else (False, False)
+        self.main.pack_start(widget, *args)
 
 class PalabraMessageDialog(gtk.MessageDialog):
     def __init__(self, parent, title, message):
@@ -176,6 +180,12 @@ def create_combo(options, active=None, f_change=None):
     if f_change is not None:
         combo.connect("changed", f_change)
     return combo
+
+def create_entry(f_change=None):
+    entry = gtk.Entry()
+    if f_change is not None:
+        entry.connect("changed", f_change)
+    return entry
 
 def create_menubar(funcs):
     m = gtk.MenuBar()
