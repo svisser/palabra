@@ -476,7 +476,7 @@ def tile_from_cell(width, height, x, y):
     pattern.blocks = [(p, q) for p in xs for q in ys]
     return pattern
     
-def fill_from_cell(width, height, content):
+def fill_with_content(width, height, content):
     full = [(p, q) for p in xrange(width) for q in xrange(height)]
     pattern = Pattern()
     if content == "block":
@@ -484,10 +484,6 @@ def fill_from_cell(width, height, content):
     elif content == "void":
         pattern.voids = full
     return pattern
-    
-def example(grid):
-    p = tile_from_cell(grid.width, grid.height, 1, 1)
-    apply_pattern(grid, p)
     
 class GridEditor(gtk.Dialog):
     def __init__(self, parent, size=None):
@@ -578,5 +574,5 @@ class GridEditor(gtk.Dialog):
             content = "block"
         elif index == 2:
             content = "void"
-        pattern = fill_from_cell(self.grid.width, self.grid.height, content)
+        pattern = fill_with_content(self.grid.width, self.grid.height, content)
         self.display_pattern(pattern)
