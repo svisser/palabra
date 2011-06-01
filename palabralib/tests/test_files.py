@@ -75,29 +75,29 @@ class FilesTestCase(unittest.TestCase):
         write_xpf(self.puzzle, backup=True)
         results = read_xpf(self.LOCATION + "~", warnings=False)
         results[0].filename = self.LOCATION
-        self.assertEquals(self.puzzle, results[0])
+        self.assertEqual(self.puzzle, results[0])
         
     def testIPUZBackup(self):
         write_ipuz(self.ipuzzle, backup=False)
         write_ipuz(self.ipuzzle, backup=True)
         results = read_ipuz(self.LOCATION + "~", warnings=False)
         results[0].filename = self.LOCATION
-        self.assertEquals(self.ipuzzle, results[0])
+        self.assertEqual(self.ipuzzle, results[0])
         
     def testHexColor(self):
         for c0 in ["#abcdef", "#654321"]:
             c1 = color_to_hex(hex_to_color(c0), include=True)
-            self.assertEquals(c0, c1)
+            self.assertEqual(c0, c1)
         for c0 in ["abcdef", "eb8832", "123456"]:
             c1 = color_to_hex(hex_to_color(c0), include=False)
-            self.assertEquals(c0, c1)
+            self.assertEqual(c0, c1)
         
     def testXPFMeta(self):
         self.puzzle.metadata.update(METADATA)
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION, warnings=False)
-        self.assertEquals(len(results), 1)
-        self.assertEquals(results[0], self.puzzle)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0], self.puzzle)
             
     def testReadWriteXPF(self):
         self.puzzle.grid.set_block(0, 0, True)
@@ -111,8 +111,8 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.notepad = '''\"Notepad with weird chars < > & " \"'''
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION, warnings=False)
-        self.assertEquals(len(results), 1)
-        self.assertEquals(self.puzzle, results[0])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(self.puzzle, results[0])
     
     def testReadWriteIPUZ(self):
         self.ipuzzle.grid.set_block(0, 0, True)
@@ -124,8 +124,8 @@ class FilesTestCase(unittest.TestCase):
         self.ipuzzle.metadata['difficulty'] = "This is the difficulty"
         write_ipuz(self.ipuzzle, False)
         results = read_ipuz(self.LOCATION, warnings=False)
-        self.assertEquals(len(results), 1)
-        self.assertEquals(self.ipuzzle, results[0])
+        self.assertEqual(len(results), 1)
+        self.assertEqual(self.ipuzzle, results[0])
         
     def testIPUZTech(self):
         self.ipuzzle.grid.set_block(3, 4, True)
@@ -134,7 +134,7 @@ class FilesTestCase(unittest.TestCase):
         self.ipuzzle.metadata['empty'] = "_"
         write_ipuz(self.ipuzzle, False)
         results = read_ipuz(self.LOCATION, warnings=False)
-        self.assertEquals(self.ipuzzle, results[0])
+        self.assertEqual(self.ipuzzle, results[0])
         
     def testStyleIPUZ(self):
         props = self.ipuzzle.view.properties
@@ -147,7 +147,7 @@ class FilesTestCase(unittest.TestCase):
         props.styles[4, 4] = style
         write_ipuz(self.ipuzzle, False)
         results = read_ipuz(self.LOCATION, warnings=False)
-        self.assertEquals(self.ipuzzle, results[0])
+        self.assertEqual(self.ipuzzle, results[0])
         
     def testStyleXPF(self):
         props = self.puzzle.view.properties
@@ -157,7 +157,7 @@ class FilesTestCase(unittest.TestCase):
         props.styles[4, 4] = style
         write_xpf(self.puzzle, False)
         results = read_xpf(self.LOCATION, warnings=False)
-        self.assertEquals(self.puzzle, results[0])
+        self.assertEqual(self.puzzle, results[0])
         
         # test 'gray' as shade color
         with open(self.LOCATION, 'r') as f:
@@ -170,7 +170,7 @@ class FilesTestCase(unittest.TestCase):
         self.puzzle.view.properties.styles[4, 4]["cell", "color"] = (32767, 32767, 32767)
         s1 = self.puzzle.view.properties.styles[4, 4]
         s2 = results[0].view.properties.styles[4, 4]
-        self.assertEquals(s1, s2)
+        self.assertEqual(s1, s2)
         
     def testXPFErrors(self):
         with open(self.LOCATION2, 'w') as f:
@@ -286,17 +286,17 @@ class FilesTestCase(unittest.TestCase):
         propsL = results[0].view.properties
         def process(c):
             return hex_to_color(color_to_hex(c))
-        self.assertEquals(propsL["bar", "width"], 5)
-        self.assertEquals(propsL["border", "width"], 4)
-        self.assertEquals(propsL["border", "color"], process((1234, 2345, 3456)))
-        self.assertEquals(propsL["cell", "size"], 64)
-        self.assertEquals(propsL["line", "width"], 3)
-        self.assertEquals(propsL["line", "color"], process((4567, 5678, 6789)))
-        self.assertEquals(propsL["block", "color"], process((7890, 8901, 9012)))
-        self.assertEquals(propsL["block", "margin"], 20)
-        self.assertEquals(propsL["char", "color"], process((1111, 2222, 3333)))
-        self.assertEquals(propsL["cell", "color"], process((4444, 5555, 6666)))
-        self.assertEquals(propsL["number", "color"], process((7777, 8888, 9999)))
+        self.assertEqual(propsL["bar", "width"], 5)
+        self.assertEqual(propsL["border", "width"], 4)
+        self.assertEqual(propsL["border", "color"], process((1234, 2345, 3456)))
+        self.assertEqual(propsL["cell", "size"], 64)
+        self.assertEqual(propsL["line", "width"], 3)
+        self.assertEqual(propsL["line", "color"], process((4567, 5678, 6789)))
+        self.assertEqual(propsL["block", "color"], process((7890, 8901, 9012)))
+        self.assertEqual(propsL["block", "margin"], 20)
+        self.assertEqual(propsL["char", "color"], process((1111, 2222, 3333)))
+        self.assertEqual(propsL["cell", "color"], process((4444, 5555, 6666)))
+        self.assertEqual(propsL["number", "color"], process((7777, 8888, 9999)))
         
     def testXPFFont(self):
         props = self.puzzle.view.properties
@@ -305,16 +305,16 @@ class FilesTestCase(unittest.TestCase):
         write_xpf(self.puzzle)
         results = read_xpf(self.LOCATION, warnings=False)
         propsL = results[0].view.properties
-        self.assertEquals(propsL["char", "size"][0], 55)
-        self.assertEquals(propsL["number", "size"][0], 33)
+        self.assertEqual(propsL["char", "size"][0], 55)
+        self.assertEqual(propsL["number", "size"][0], 33)
         
     def testReadCrossword(self):
         write_xpf(self.puzzle)
         p = read_crossword(self.LOCATION, warnings=False)
-        self.assertEquals(self.puzzle, p)
+        self.assertEqual(self.puzzle, p)
         write_ipuz(self.ipuzzle)
         p = read_crossword(self.LOCATION, warnings=False)
-        self.assertEquals(self.ipuzzle, p)
+        self.assertEqual(self.ipuzzle, p)
         
     def testReadCrosswordErrors(self):
         with open(self.LOCATION, 'w') as f:
@@ -324,7 +324,7 @@ class FilesTestCase(unittest.TestCase):
     def testDetermineFileType(self):
         with open(self.LOCATION, 'w') as f:
             f.write('<NotQuitePuzzles></NotQuitePuzzles>')
-        self.assertEquals(determine_file_type(self.LOCATION), None)
+        self.assertEqual(determine_file_type(self.LOCATION), None)
         self.assertRaises(ParserError, read_crossword, self.LOCATION, warnings=False)
         
     def testComputeHeader(self):
@@ -336,21 +336,21 @@ class FilesTestCase(unittest.TestCase):
         p.metadata[constants.META_PUBLISHER] = "Publisher"
         p.metadata[constants.META_DATE] = "2011/01/01"
         header = compute_header(p, "%T %A %E %C %P %D")
-        self.assertEquals(header, "Title Author Editor Copyright Publisher 2011/01/01")
+        self.assertEqual(header, "Title Author Editor Copyright Publisher 2011/01/01")
         self.puzzle.filename = None
         header = compute_header(p, "%F %L")
-        self.assertEquals(header, "%F %L")
+        self.assertEqual(header, "%F %L")
         self.puzzle.filename = self.LOCATION
         header = compute_header(p, "%F %L")
-        self.assertEquals(header, os.path.basename(self.LOCATION) + " " + self.LOCATION)
+        self.assertEqual(header, os.path.basename(self.LOCATION) + " " + self.LOCATION)
         p.grid.set_block(0, 0, True)
         p.grid.set_block(5, 0, True)
         header = compute_header(p, "%W %H %N %B")
-        self.assertEquals(header, "15 15 31 2")
+        self.assertEqual(header, "15 15 31 2")
         header = compute_header(p, "%G")
-        self.assertEquals(header, "%G")
+        self.assertEqual(header, "%G")
         header = compute_header(p, "%G", page_n=3)
-        self.assertEquals(header, "4")
+        self.assertEqual(header, "4")
         
     def testReadWritePatterns(self):
         """Container files with grid patterns can be read and written."""
