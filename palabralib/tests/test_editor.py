@@ -681,6 +681,29 @@ class EditorTestCase(unittest.TestCase):
             actions = editor.determine_editor_actions(*args)
             self.assertEquals(len(actions), 1)
             self.assertEquals(actions[0].type, "selection")
+    
+    def testKeyArrowChangeTypingDir(self):
+        """When the option is enabled, some arrows keys change typing direction."""
+        args = self.grid, (5, 5, "down"), gtk.keysyms.Right
+        actions = editor.determine_editor_actions(*args, arrows_change_dir=True)
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[1].type, "swapdir")
+        args = self.grid, (5, 5, "across"), gtk.keysyms.Down
+        actions = editor.determine_editor_actions(*args, arrows_change_dir=True)
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[1].type, "swapdir")
+    
+    def testKeyArrowsChangeTypingDirNot(self):
+        """
+        The left and up arrows keys are unaffected by the arrows_change_dir option.
+        """
+        for key in [gtk.keysyms.Left, gtk.keysyms.Up]:
+            for d in ["across", "down"]:
+                args = self.grid, (5, 5, d), key
+                actions = editor.determine_editor_actions(*args, arrows_change_dir=True)
+                self.assertEqual(len(actions), 1)
             
     def testKeyDelete(self):
         """Pressing the delete key results in a char deletion."""
