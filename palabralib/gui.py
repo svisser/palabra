@@ -226,6 +226,15 @@ class PalabraSavePuzzleDialog(gtk.FileChooserDialog):
     def get_filetype(self):
         return self.filters[self.get_filter()]
 
+class PalabraExportPuzzleDialog(gtk.FileChooserDialog):
+    def __init__(self, parent):
+        super(PalabraExportPuzzleDialog, self).__init__(u"Export location"
+            , parent
+            , gtk.FILE_CHOOSER_ACTION_SAVE
+            , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
+            , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+        self.set_do_overwrite_confirmation(True)
+
 class PalabraOpenPuzzleErrorDialog(PalabraMessageDialog):
     def __init__(self, parent, message):
         super(PalabraOpenPuzzleErrorDialog, self).__init__(parent
@@ -314,14 +323,13 @@ class PalabraWindow(gtk.Window):
     def new_puzzle(self):
         self.close_puzzle()
         if not self.puzzle_manager.has_puzzle():
-            w = NewWindow(self)
-            w.show_all() 
-            if w.run() == gtk.RESPONSE_ACCEPT:
+            f_done = lambda w: w.get_configuration()
+            response, configuration = launch_dialog(NewWindow, self, f_done=f_done)
+            if response == gtk.RESPONSE_ACCEPT:
                 self.update_title(None)
-                self.puzzle_manager.new_puzzle(w.get_configuration())
+                self.puzzle_manager.new_puzzle(configuration)
                 e_settings.reset_controls()
                 self.load_puzzle()
-            w.destroy()
     
     def open_puzzle(self):
         self.close_puzzle()
@@ -361,17 +369,12 @@ class PalabraWindow(gtk.Window):
         action.stack.distance_from_saved = 0
         
     def export_puzzle(self):
-        response = launch_dialog(ExportWindow, self, self.puzzle)
+        f_done = lambda w: w.options
+        response, options = launch_dialog(ExportWindow, self, self.puzzle, f_done=f_done)
         if response == gtk.RESPONSE_OK:
-            d = gtk.FileChooserDialog(u"Export location", self
-                , gtk.FILE_CHOOSER_ACTION_SAVE
-                , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
-                , gtk.STOCK_SAVE, gtk.RESPONSE_OK))
-            d.set_do_overwrite_confirmation(True)
-            d.show_all() 
-            if d.run() == gtk.RESPONSE_OK:
-                export_puzzle(self.puzzle, d.get_filename(), w.options)
-            d.destroy()
+            filename = launch_file_dialog(PalabraExportPuzzleDialog, self)
+            if filename is not None:
+                export_puzzle(self.puzzle, filename, options)
     
     def load_puzzle(self):
         action.stack.push(State(self.puzzle_manager.current_puzzle.grid), initial=True)

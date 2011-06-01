@@ -201,7 +201,7 @@ def create_menubar(funcs):
         m.append(f())
     return m
     
-def launch_dialog(dialog, arg0, arg1=None, arg2=None):
+def launch_dialog(dialog, arg0, arg1=None, arg2=None, f_done=None):
     if arg1 is None:
         w = dialog(arg0)
     elif arg2 is None:
@@ -210,7 +210,11 @@ def launch_dialog(dialog, arg0, arg1=None, arg2=None):
         w = dialog(arg0, arg1, arg2)
     w.show_all()
     response = w.run()
+    if f_done is not None:
+        result = f_done(w)
     w.destroy()
+    if f_done is not None:
+        return response, result
     return response
     
 def launch_file_dialog(dialog, parent):
