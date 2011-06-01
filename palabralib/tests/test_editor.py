@@ -24,6 +24,12 @@ from palabralib.puzzle import Puzzle
 import palabralib.constants as constants
 import palabralib.editor as editor
 
+class EditorMockWindow:
+    def __init__(self):
+        self.called = 0
+    def transform_grid(self, transform, **args):
+        self.called += 1
+
 class EditorTestCase(unittest.TestCase):
     def setUp(self):
         self.grid = Grid(15, 15)
@@ -783,6 +789,44 @@ class EditorTestCase(unittest.TestCase):
         result = editor.compute_motion_actions(p, symms, previous, current
             , shift_down, mouse_buttons_down)
         self.assertEqual(result, [])
+    
+    def testProcessEditorActionsBlocks(self):
+        """
+        When processing a blocks action in the editor,
+        transform_grid of the window gets called.
+        """
+        window = EditorMockWindow()
+        a = editor.EditorAction('blocks', {'x': 3, 'y': 3, 'status': True})
+        editor.process_editor_actions(window, self.puzzle, self.e_settings, [a])
+        self.assertEqual(window.called, 1)
+        
+    def testProcessEditorActionsBlocksTwo(self):
+        """If a blocks action takes place on an invalid cell, nothing happens."""
+        window = EditorMockWindow()
+        a = editor.EditorAction('blocks', {'x': -1, 'y': -1, 'status': True})
+        editor.process_editor_actions(window, self.puzzle, self.e_settings, [a])
+        self.assertEqual(window.called, 0)
+        
+    def testProcessEditorActionsChars(self):
+        """
+        When processing a chars action in the editor,
+        transform_grid of the window gets called.
+        """
+        window = EditorMockWindow()
+        a = editor.EditorAction('chars', {'cells': [(3, 3, 'A')]})
+        editor.process_editor_actions(window, self.puzzle, self.e_settings, [a])
+        self.assertEqual(window.called, 1)
+        
+    def testLockedGrid(self):
+        """When the grid is locked, no actions can modify the grid."""
+        window = EditorMockWindow()
+        self.e_settings.settings["locked_grid"] = True
+        a1 = editor.EditorAction('blocks', {'x': 3, 'y': 3, 'status': True})
+        editor.process_editor_actions(window, self.puzzle, self.e_settings, [a1])
+        self.assertEqual(window.called, 0)
+        a2 = editor.EditorAction('chars', {'cells': [(3, 3, 'A')]})
+        editor.process_editor_actions(window, self.puzzle, self.e_settings, [a2])
+        self.assertEqual(window.called, 0)
         
     # TODO: if user clicks an invalid cell, selection dir must be reset to across
     # TODO: if new puzzle is opened, editor settings should be reset
