@@ -157,6 +157,23 @@ def compute_clue_items(grid):
         items.append((n, x, y, d, word, clue, explanation, display))
     return items
 
+def store_get_item(target, store, it):
+    """
+    Return the next/previous item in the store, based on the given iter.
+    Return the first/last item when the end/beginning of the store has been reached.
+    """
+    if target == "next":
+        it_n = store.iter_next(it)
+        if it_n is None:
+            it_n = store.get_iter_first()
+        return it_n
+    elif target == "previous":
+        n = store.iter_n_children(None)
+        index = store.get_path(it)[0] - 1
+        if index < 0:
+            index = store.iter_n_children(None) - 1
+        return store.iter_nth_child(None, index)
+
 class ClueTool:
     def __init__(self, parent):
         self.parent = parent
@@ -178,9 +195,14 @@ class ClueTool:
         result = self.create_entry(vbox, "text", u"<b>Clue</b>")
         self.clue_entry, self.c_changed_id = result
         
+        def on_cycle_clue(target):
+            it = store_get_item(target, *self.tree.get_selection().get_selected())
+            self.select_iter(self.tree.get_model(), it)
+        f_next = lambda b: on_cycle_clue("next")
+        f_prev = lambda b: on_cycle_clue("previous")
         np_box = gtk.HButtonBox()
-        self.prev_button = create_button(u"Previous", f_click=self.on_prev_clue)
-        self.next_button = create_button(u"Next", f_click=self.on_next_clue)
+        self.prev_button = create_button(u"Previous", f_click=f_prev)
+        self.next_button = create_button(u"Next", f_click=f_next)
         np_box.pack_start(self.prev_button)
         np_box.pack_start(self.next_button)
         align = gtk.Alignment(1, 0.5)
@@ -233,21 +255,6 @@ class ClueTool:
         self.tree.set_headers_visible(False)
         self.load_items(puzzle.grid)
         return vbox
-        
-    def on_next_clue(self, button):
-        store, it = self.tree.get_selection().get_selected()
-        it_n = store.iter_next(it)
-        if it_n is None:
-            it_n = store.get_iter_first()
-        self.select_iter(store, it_n)
-        
-    def on_prev_clue(self, button):
-        store, it = self.tree.get_selection().get_selected()
-        n = store.iter_n_children(None)
-        index = store.get_path(it)[0] - 1
-        if index < 0:
-            index = store.iter_n_children(None) - 1
-        self.select_iter(store, store.iter_nth_child(None, index))
         
     def select_iter(self, store, it):
         x, y, d = store[it][1], store[it][2], store[it][3]
