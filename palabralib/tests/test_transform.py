@@ -67,8 +67,8 @@ class TransformTestCase(unittest.TestCase):
     def testModifyChars(self):
         """transform.modify_chars modifies a character of a puzzle."""
         a = transform.modify_chars(self.puzzle, [(3, 3, 'C'), (4, 5, 'D')])
-        self.assertEquals(self.grid.get_char(3, 3), "C")
-        self.assertEquals(self.grid.get_char(4, 5), "D")
+        self.assertEqual(self.grid.get_char(3, 3), "C")
+        self.assertEqual(self.grid.get_char(4, 5), "D")
         
     def testModifyClue(self):
         a = transform.modify_clue(self.puzzle, 3, 3, "across", "text", "foo")
@@ -91,19 +91,36 @@ class TransformTestCase(unittest.TestCase):
         self.grid.set_block(0, 0, True)
         self.grid.set_block(5, 5, True)
         transform.clear_blocks(self.puzzle)
-        self.assertEquals(self.grid.count_blocks(), 0)
+        self.assertEqual(self.grid.count_blocks(), 0)
     
     def testClearBars(self):
         """transform.clear_bars removes all bars of a puzzle."""
         self.grid.set_bar(3, 3, "top", True)
         self.grid.set_bar(7, 7, "left", True)
         transform.clear_bars(self.puzzle)
-        self.assertEquals(self.grid.has_bar(3, 3, "top"), False)
-        self.assertEquals(self.grid.has_bar(7, 7, "left"), False)
+        self.assertEqual(self.grid.has_bar(3, 3, "top"), False)
+        self.assertEqual(self.grid.has_bar(7, 7, "left"), False)
         
     def testClearVoids(self):
         """transform.clear_voids removes all voids of a puzzle."""
         self.grid.set_void(0, 0, True)
         self.grid.set_void(5, 5, True)
         transform.clear_voids(self.puzzle)
-        self.assertEquals(self.grid.count_voids(), 0)
+        self.assertEqual(self.grid.count_voids(), 0)
+        
+    def testReplaceGrid(self):
+        """The grid can be replaced completely."""
+        p = Puzzle(Grid(15, 15))
+        next = Grid(3, 3)
+        next.set_block(2, 2, True)
+        transform.replace_grid(p, next)
+        self.assertEqual(p.grid.size, (3, 3))
+        self.assertEqual(p.grid.is_block(2, 2), True)
+        
+    def testModifyBlocksWithChars(self):
+        """When placing one or more blocks, the characters are removed."""
+        self.grid.set_char(3, 3, 'A')
+        self.grid.set_char(5, 5, 'B')
+        transform.modify_blocks(self.puzzle, [(3, 3, True), (5, 5, False)])
+        self.assertEqual(self.puzzle.grid.data[3][3]["char"], '')
+        self.assertEqual(self.puzzle.grid.data[5][5]["char"], 'B')
