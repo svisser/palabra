@@ -26,38 +26,38 @@ class PuzzleTestCase(unittest.TestCase):
         self.puzzle = Puzzle(Grid(14, 14))
         
     def testEquality(self):
-        self.assertEquals(self.puzzle, Puzzle(Grid(14, 14)))
-        self.assertNotEquals(self.puzzle, None)
-        self.assertEquals(self.puzzle != None, True)
+        self.assertEqual(self.puzzle, Puzzle(Grid(14, 14)))
+        self.assertNotEqual(self.puzzle, None)
+        self.assertEqual(self.puzzle != None, True)
         
     def testEquality2(self):
         p = Puzzle(Grid(14, 14))
         self.puzzle.type = "FOO"
         p.type = "FOO2"
-        self.assertNotEquals(self.puzzle, p)
+        self.assertNotEqual(self.puzzle, p)
         
     def testEquality3(self):
         p = Puzzle(Grid(14, 14))
         self.puzzle.filename = "BLA"
         p.filename = "BLA2"
-        self.assertNotEquals(self.puzzle, p)
+        self.assertNotEqual(self.puzzle, p)
     
     def testEquality4(self):
         p = Puzzle(Grid(14, 14))
         self.puzzle.metadata["title"] = "This is the title"
         p.metadata["title"] = "This is a different title"
-        self.assertNotEquals(self.puzzle, p)
+        self.assertNotEqual(self.puzzle, p)
         
     def testEquality5(self):
         p = Puzzle(Grid(14, 14))
         self.puzzle.notepad = "BAR"
         p.notepad = "BAR2"
-        self.assertNotEquals(self.puzzle, p)
+        self.assertNotEqual(self.puzzle, p)
         
     def testEquality6(self):
         p = Puzzle(Grid(14, 14))
         p.grid = Grid(30, 30)
-        self.assertNotEquals(self.puzzle, p)
+        self.assertNotEqual(self.puzzle, p)
     
     def testUpdateType(self):
         """When updating the type of a puzzle, the extension is added if needed."""
@@ -75,14 +75,14 @@ class GridTestCase(unittest.TestCase):
         self.square_grid = Grid(15, 15)
         
     def testEquality(self):
-        self.assertEquals(self.grid, Grid(12, 15))
-        self.assertNotEquals(self.grid, None)
-        self.assertEquals(self.grid != None, True)
-        self.assertNotEquals(self.grid, Grid(13, 15))
-        self.assertNotEquals(self.grid, Grid(12, 16))
+        self.assertEqual(self.grid, Grid(12, 15))
+        self.assertNotEqual(self.grid, None)
+        self.assertEqual(self.grid != None, True)
+        self.assertNotEqual(self.grid, Grid(13, 15))
+        self.assertNotEqual(self.grid, Grid(12, 16))
         grid2 = Grid(12, 15)
         grid2.set_block(5, 5, True)
-        self.assertNotEquals(self.grid, grid2)
+        self.assertNotEqual(self.grid, grid2)
         
     def testBasicSize(self):
         """Basic functionality - size."""
@@ -91,7 +91,7 @@ class GridTestCase(unittest.TestCase):
         
     def testNumber(self):
         self.grid.set_number(5, 5, 20)
-        self.assertEquals(self.grid.get_number(5, 5), 20)
+        self.assertEqual(self.grid.get_number(5, 5), 20)
 
     def testBasicBlock(self):
         """Basic functionality - blocks."""
@@ -129,24 +129,24 @@ class GridTestCase(unittest.TestCase):
         self.assertEqual(self.grid.is_void(0, 0), False)
         self.grid.set_void(5, 5, True)
         self.grid.set_block(5, 5, True)
-        self.assertEquals(self.grid.is_void(5, 5), False)
+        self.assertEqual(self.grid.is_void(5, 5), False)
         
     def testIsValid(self):
         """A cell is valid when its coordinates are within bounds."""
         for j in xrange(self.grid.height):
             for i in xrange(self.grid.width):
-                self.assertEquals(self.grid.is_valid(i, j), True)
-        self.assertEquals(self.grid.is_valid(-1, 1), False)
-        self.assertEquals(self.grid.is_valid(1, -1), False)
-        self.assertEquals(self.grid.is_valid(100, 1), False)
-        self.assertEquals(self.grid.is_valid(1, 100), False)
+                self.assertEqual(self.grid.is_valid(i, j), True)
+        self.assertEqual(self.grid.is_valid(-1, 1), False)
+        self.assertEqual(self.grid.is_valid(1, -1), False)
+        self.assertEqual(self.grid.is_valid(100, 1), False)
+        self.assertEqual(self.grid.is_valid(1, 100), False)
     
     def testIsStartWordInvalidCell(self):
         """An invalid cell cannot be the start of a word."""
-        self.assertEquals(self.grid.is_start_word(-1, 0), False)
-        self.assertEquals(self.grid.is_start_word(0, -1), False)
-        self.assertEquals(self.grid.is_start_word(self.grid.width + 10, 0), False)
-        self.assertEquals(self.grid.is_start_word(0, self.grid.height + 10), False)
+        self.assertEqual(self.grid.is_start_word(-1, 0), False)
+        self.assertEqual(self.grid.is_start_word(0, -1), False)
+        self.assertEqual(self.grid.is_start_word(self.grid.width + 10, 0), False)
+        self.assertEqual(self.grid.is_start_word(0, self.grid.height + 10), False)
         
     def testIsStartHorizontalWordOne(self):
         """A single cell (ended by a block) is not a horizontal word."""
@@ -333,22 +333,22 @@ class GridTestCase(unittest.TestCase):
             
     def testGetStartWordFour(self):
         p, q = self.grid.get_start_word(0, 0, "across")
-        self.assertEquals((0, 0), (p, q))
+        self.assertEqual((0, 0), (p, q))
             
     def testGetEndWord(self):
-        self.assertEquals(self.grid.get_end_word(0, 0, "across"), (self.grid.width - 1, 0))
+        self.assertEqual(self.grid.get_end_word(0, 0, "across"), (self.grid.width - 1, 0))
         for i in xrange(10):
             self.grid.set_block(i, i, True)
-        self.assertEquals(self.grid.get_end_word(0, 0, "across"), (0, 0))
+        self.assertEqual(self.grid.get_end_word(0, 0, "across"), (0, 0))
         for i in xrange(8):
-            self.assertEquals(self.grid.get_end_word(0, i + 2, "across"), (i + 1, i + 2))
-        self.assertEquals(self.grid.get_end_word(0, 0, "down"), (0, 0))
+            self.assertEqual(self.grid.get_end_word(0, i + 2, "across"), (i + 1, i + 2))
+        self.assertEqual(self.grid.get_end_word(0, 0, "down"), (0, 0))
         for i in xrange(8):
-            self.assertEquals(self.grid.get_end_word(i + 2, 0, "down"), (i + 2, i + 1))
+            self.assertEqual(self.grid.get_end_word(i + 2, 0, "down"), (i + 2, i + 1))
             
     def testInvalidCells(self):
-        self.assertEquals(self.grid.get_check_count(-5, -5), -1)
-        self.assertEquals(self.grid.is_part_of_word(-5, -5, "across"), False)
+        self.assertEqual(self.grid.get_check_count(-5, -5), -1)
+        self.assertEqual(self.grid.is_part_of_word(-5, -5, "across"), False)
             
     def testCheckCountBlocks(self):
         """Check counts range from -1 to 2 for blocks/voids to default cells."""
@@ -380,7 +380,7 @@ class GridTestCase(unittest.TestCase):
     def testCheckCountAll(self):
         counts = self.grid.get_check_count_all()
         for x, y in self.grid.cells():
-            self.assertEquals(counts[x, y], self.grid.get_check_count(x, y))
+            self.assertEqual(counts[x, y], self.grid.get_check_count(x, y))
         self.grid.set_block(0, 1, True)
         self.grid.set_block(1, 0, True)
         self.grid.set_block(5, 5, True)
@@ -388,7 +388,7 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_void(11, 1, True)
         counts = self.grid.get_check_count_all()
         for x, y in self.grid.cells():
-            self.assertEquals(counts[x, y], self.grid.get_check_count(x, y))
+            self.assertEqual(counts[x, y], self.grid.get_check_count(x, y))
         
     def testIsPartOfWordAcross(self):
         """A word consists of 2+ letters."""
@@ -414,12 +414,12 @@ class GridTestCase(unittest.TestCase):
         
     def testIsPartOfWordAvailable(self):
         """A cell that is not available cannot be part of a word."""
-        self.assertEquals(self.grid.is_part_of_word(5, 5, "across"), True)
+        self.assertEqual(self.grid.is_part_of_word(5, 5, "across"), True)
         self.grid.set_block(5, 5, True)
-        self.assertEquals(self.grid.is_part_of_word(5, 5, "across"), False)
-        self.assertEquals(self.grid.is_part_of_word(6, 6, "across"), True)
+        self.assertEqual(self.grid.is_part_of_word(5, 5, "across"), False)
+        self.assertEqual(self.grid.is_part_of_word(6, 6, "across"), True)
         self.grid.set_void(6, 6, True)
-        self.assertEquals(self.grid.is_part_of_word(6, 6, "across"), False)
+        self.assertEqual(self.grid.is_part_of_word(6, 6, "across"), False)
         
     def testSlotOne(self):
         """A slot consists of all cells starting from the first cell of that slot."""
@@ -427,15 +427,15 @@ class GridTestCase(unittest.TestCase):
         indir = [(x, y) for x, y in self.grid.in_direction(p, q, "across")]
         cells = [cell for cell in self.grid.slot(5, 0, "across")]
         for cell in cells:
-            self.assertEquals(cell in indir, True)
-        self.assertEquals(len(cells), self.grid.width)
+            self.assertEqual(cell in indir, True)
+        self.assertEqual(len(cells), self.grid.width)
         
     def testSlotTwo(self):
         """A slot of length 1 is also a slot."""
         self.grid.set_block(1, 0, True)
         cells = [cell for cell in self.grid.slot(0, 0, "across")]
-        self.assertEquals(cells, [(0, 0)])
-        self.assertEquals(len(cells), 1)
+        self.assertEqual(cells, [(0, 0)])
+        self.assertEqual(len(cells), 1)
         
     def testInDirectionNormal(self):
         """Direction iterator returns all cells in the given direction."""
@@ -515,21 +515,21 @@ class GridTestCase(unittest.TestCase):
         
     def testWordCounts(self):
         counts = self.grid.determine_word_counts()
-        self.assertEquals(counts["across"], 15)
-        self.assertEquals(counts["down"], 12)
-        self.assertEquals(counts[12], 15)
-        self.assertEquals(counts[15], 12)
+        self.assertEqual(counts["across"], 15)
+        self.assertEqual(counts["down"], 12)
+        self.assertEqual(counts[12], 15)
+        self.assertEqual(counts[15], 12)
         for i in xrange(2, 16):
             if i == 12 or i == 15:
                 continue
-            self.assertEquals(i not in counts, True)
+            self.assertEqual(i not in counts, True)
         for l, c in counts["total"]:
             if l == 12:
-                self.assertEquals(c, 15)
+                self.assertEqual(c, 15)
             elif l == 15:
-                self.assertEquals(c, 12)
+                self.assertEqual(c, 12)
             else:
-                self.assertEquals(c, 0)
+                self.assertEqual(c, 0)
     
     def testGatherWordOne(self):
         word = self.grid.gather_word(0, 0, "across", "_")
@@ -553,17 +553,17 @@ class GridTestCase(unittest.TestCase):
         
     def testGatherWordTwo(self):
         self.grid.set_block(4, 0, True)
-        self.assertEquals(self.grid.gather_word(4, 0, "across"), "")
-        self.assertEquals(self.grid.gather_word(4, 0, "down"), "")
+        self.assertEqual(self.grid.gather_word(4, 0, "across"), "")
+        self.assertEqual(self.grid.gather_word(4, 0, "down"), "")
         
         self.grid.set_char(0, 0, "A")
         self.grid.set_char(1, 0, "B")
         self.grid.set_char(2, 0, "C")
         self.grid.set_char(3, 0, "D")
-        self.assertEquals(self.grid.gather_word(0, 0, "across"), "ABCD")
+        self.assertEqual(self.grid.gather_word(0, 0, "across"), "ABCD")
         
         self.grid.set_block(0, 4, True)
-        self.assertEquals(self.grid.gather_word(0, 0, "down", "x"), "Axxx")
+        self.assertEqual(self.grid.gather_word(0, 0, "down", "x"), "Axxx")
         
     def testWordLength(self):
         length = self.grid.word_length(0, 0, "across")
@@ -588,9 +588,9 @@ class GridTestCase(unittest.TestCase):
         g.set_block(0, 1, True)
         g.set_block(1, 2, True)
         g.set_block(2, 1, True)
-        self.assertEquals(g.mean_word_length(), 0)
+        self.assertEqual(g.mean_word_length(), 0)
         g = Grid(5, 5)
-        self.assertEquals(g.mean_word_length(), 5)
+        self.assertEqual(g.mean_word_length(), 5)
         g.set_block(0, 0, True)
         self.assertAlmostEqual(g.mean_word_length(), (8 * 5 + 2 * 4) / 10.0)
         g.set_block(1, 1, True)
@@ -606,10 +606,10 @@ class GridTestCase(unittest.TestCase):
         g.set_block(1, 2, True)
         g.set_block(2, 1, True)
         counts = g.get_check_count_all()
-        self.assertEquals(g.mean_word_length(counts), 0)
+        self.assertEqual(g.mean_word_length(counts), 0)
         g = Grid(5, 5)
         counts = g.get_check_count_all()
-        self.assertEquals(g.mean_word_length(counts), 5)
+        self.assertEqual(g.mean_word_length(counts), 5)
         g.set_block(0, 0, True)
         counts = g.get_check_count_all()
         self.assertAlmostEqual(g.mean_word_length(counts), (8 * 5 + 2 * 4) / 10.0)
@@ -647,22 +647,22 @@ class GridTestCase(unittest.TestCase):
         
     def testCountWords(self):
         count = self.grid.width + self.grid.height
-        self.assertEquals(self.grid.count_words(), count)
+        self.assertEqual(self.grid.count_words(), count)
         self.grid.set_block(2, 2, True)
         count = self.grid.width + self.grid.height + 2
-        self.assertEquals(self.grid.count_words(), count)
+        self.assertEqual(self.grid.count_words(), count)
         self.grid.set_bar(4, 4, "top", True)
         count = self.grid.width + self.grid.height + 3
-        self.assertEquals(self.grid.count_words(), count)
+        self.assertEqual(self.grid.count_words(), count)
         self.grid.set_bar(4, 5, "top", True)
         count = self.grid.width + self.grid.height + 3
-        self.assertEquals(self.grid.count_words(), count)
+        self.assertEqual(self.grid.count_words(), count)
         self.grid.set_bar(4, 4, "left", True)
         count = self.grid.width + self.grid.height + 4
-        self.assertEquals(self.grid.count_words(), count)
+        self.assertEqual(self.grid.count_words(), count)
         self.grid.set_bar(5, 4, "left", True)
         count = self.grid.width + self.grid.height + 4
-        self.assertEquals(self.grid.count_words(), count)
+        self.assertEqual(self.grid.count_words(), count)
         
     def testCountVoids(self):
         self.assertEqual(self.grid.count_voids(), 0)
@@ -678,25 +678,25 @@ class GridTestCase(unittest.TestCase):
     def testEntries(self):
         count = self.grid.count_words()
         entries = self.grid.entries()
-        self.assertEquals(len(entries), count)
+        self.assertEqual(len(entries), count)
         
     def testGatherWords(self):
         count = self.grid.count_words()
         words = [item for item in self.grid.gather_words()]
-        self.assertEquals(len(words), count)
+        self.assertEqual(len(words), count)
         
         counts = self.grid.determine_word_counts()
         for d in ["across", "down"]:
             d_count = counts[d]
             d_words = [item for item in self.grid.gather_words(d)]
-            self.assertEquals(len(d_words), d_count)
+            self.assertEqual(len(d_words), d_count)
             
     def testGatherWordsEntries(self):
         entries = self.grid.entries()
         for d in ["across", "down"]:
             words = [item[4] for item in self.grid.gather_words(d)]
             for word in words:
-                self.assertEquals(word in entries, True)
+                self.assertEqual(word in entries, True)
 
     def testResize(self):
         for i in [2, 4, 6, 8]:
@@ -826,21 +826,21 @@ class GridTestCase(unittest.TestCase):
             self.grid.set_block(x, y, True)
         self.grid.clear_blocks()
         for x, y in self.grid.cells():
-            self.assertEquals(self.grid.is_block(x, y), False)
+            self.assertEqual(self.grid.is_block(x, y), False)
             
     def testClearVoids(self):
         for x, y in self.grid.cells():
             self.grid.set_void(x, y, True)
         self.grid.clear_voids()
         for x, y in self.grid.cells():
-            self.assertEquals(self.grid.is_void(x, y), False)
+            self.assertEqual(self.grid.is_void(x, y), False)
     
     def testClearClues(self):
         for x, y in self.grid.cells():
             self.grid.store_clue(x, y, "across", "text", "foo")
         self.grid.clear_clues()
         for x, y in self.grid.cells():
-            self.assertEquals(self.grid.get_clues(x, y), {})
+            self.assertEqual(self.grid.get_clues(x, y), {})
                 
     def testClearBars(self):
         for x, y in self.grid.cells():
@@ -853,21 +853,21 @@ class GridTestCase(unittest.TestCase):
                 
     def testCells(self):
         n = sum([1 for x, y in self.grid.cells()])
-        self.assertEquals(n, self.grid.width * self.grid.height)
+        self.assertEqual(n, self.grid.width * self.grid.height)
         
     def testWords(self):
         n = sum([1 for n, x, y in self.grid.words(False)])
-        self.assertEquals(n, self.grid.width + self.grid.height - 1)
+        self.assertEqual(n, self.grid.width + self.grid.height - 1)
         
         n = sum([1 for n, x, y in self.grid.words(True)])
-        self.assertEquals(n, self.grid.width + self.grid.height)
+        self.assertEqual(n, self.grid.width + self.grid.height)
         
         self.grid.set_block(2, 2, True)
         
         n = sum([1 for n, x, y in self.grid.words(False)])
-        self.assertEquals(n, 28)
+        self.assertEqual(n, 28)
         n = sum([1 for n, x, y in self.grid.words(True)])
-        self.assertEquals(n, 29)
+        self.assertEqual(n, 29)
         
         # added to test the appearance of d value (should not cause Python error)
         l = [d for n, x, y, d in self.grid.words(True, True)]
@@ -877,21 +877,21 @@ class GridTestCase(unittest.TestCase):
         
     def testHorizontalWords(self):
         n = len([1 for x in self.grid.words_by_direction("across")])
-        self.assertEquals(self.grid.height, n)
+        self.assertEqual(self.grid.height, n)
         
         for y in xrange(self.grid.height):
             self.grid.set_block(2, y, True)
         xs = [x for n, x, y in self.grid.words_by_direction("across")]
-        self.assertEquals(xs, [0, 3] * self.grid.height)
+        self.assertEqual(xs, [0, 3] * self.grid.height)
         
     def testVerticalWords(self):
         n = len([1 for x in self.grid.words_by_direction("down")])
-        self.assertEquals(self.grid.width, n)
+        self.assertEqual(self.grid.width, n)
         
         for x in xrange(self.grid.width):
             self.grid.set_block(x, 2, True)
         ys = [y for n, x, y in self.grid.words_by_direction("down")]
-        self.assertEquals(ys, [0] * self.grid.width + [3] * self.grid.width)
+        self.assertEqual(ys, [0] * self.grid.width + [3] * self.grid.width)
         
     def testInsertRow(self):
         width, height = self.grid.width, self.grid.height
@@ -899,25 +899,25 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_block(0, 1, True)
         
         self.grid.insert_row(0, True)
-        self.assertEquals(self.grid.width, width)
-        self.assertEquals(self.grid.height, height + 1)
+        self.assertEqual(self.grid.width, width)
+        self.assertEqual(self.grid.height, height + 1)
         bs = [self.grid.is_block(x, y) for x, y in [(0, 0), (0, 1), (0, 2)]]
-        self.assertEquals(bs, [False, True, True])
+        self.assertEqual(bs, [False, True, True])
         for x, y in self.grid.in_direction(0, 0, "across"):
-            self.assertEquals(self.grid.is_block(x, y), False)
-            self.assertEquals(self.grid.get_char(x, y), "")
+            self.assertEqual(self.grid.is_block(x, y), False)
+            self.assertEqual(self.grid.get_char(x, y), "")
 
         self.grid.insert_row(1, False)
-        self.assertEquals(self.grid.width, width)
-        self.assertEquals(self.grid.height, height + 2)
+        self.assertEqual(self.grid.width, width)
+        self.assertEqual(self.grid.height, height + 2)
         cells = [(0, 0), (0, 1), (0, 2), (0, 3)]
         bs = [self.grid.is_block(x, y) for x, y in cells]
-        self.assertEquals(bs, [False, True, False, True])
+        self.assertEqual(bs, [False, True, False, True])
         
     def testInsertRowBars(self):
         self.grid.set_bar(5, 5, "top", True)
         self.grid.insert_row(5, True)
-        self.assertEquals(self.grid.has_bar(5, 5, "top"), True)
+        self.assertEqual(self.grid.has_bar(5, 5, "top"), True)
         
     def testInsertColumn(self):
         width, height = self.grid.width, self.grid.height
@@ -925,34 +925,34 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_block(1, 0, True)
         
         self.grid.insert_column(0, True)
-        self.assertEquals(self.grid.width, width + 1)
-        self.assertEquals(self.grid.height, height)
+        self.assertEqual(self.grid.width, width + 1)
+        self.assertEqual(self.grid.height, height)
         bs = [self.grid.is_block(x, y) for x, y in [(0, 0), (1, 0), (2, 0)]]
-        self.assertEquals(bs, [False, True, True])
+        self.assertEqual(bs, [False, True, True])
         for x, y in self.grid.in_direction(0, 0, "down"):
-            self.assertEquals(self.grid.is_block(x, y), False)
-            self.assertEquals(self.grid.get_char(x, y), "")
+            self.assertEqual(self.grid.is_block(x, y), False)
+            self.assertEqual(self.grid.get_char(x, y), "")
 
         self.grid.insert_column(1, False)
-        self.assertEquals(self.grid.width, width + 2)
-        self.assertEquals(self.grid.height, height)
+        self.assertEqual(self.grid.width, width + 2)
+        self.assertEqual(self.grid.height, height)
         cells = [(0, 0), (1, 0), (2, 0), (3, 0)]
         bs = [self.grid.is_block(x, y) for x, y in cells]
-        self.assertEquals(bs, [False, True, False, True])
+        self.assertEqual(bs, [False, True, False, True])
         
     def testInsertColumnBars(self):
         self.grid.set_bar(5, 5, "left", True)
         self.grid.insert_column(5, True)
-        self.assertEquals(self.grid.has_bar(5, 5, "left"), True)
+        self.assertEqual(self.grid.has_bar(5, 5, "left"), True)
         
     def testRemoveRow(self):
         width, height = self.grid.width, self.grid.height
         for x in xrange(self.grid.width):
             self.grid.set_block(x, 0, True)
         self.grid.remove_row(0)
-        self.assertEquals(self.grid.height, height - 1)
+        self.assertEqual(self.grid.height, height - 1)
         for x in xrange(self.grid.width):
-            self.assertEquals(self.grid.is_block(x, 0), False)
+            self.assertEqual(self.grid.is_block(x, 0), False)
             
     def _set_clues_one(self, direction):
         # top-left corner:
@@ -992,59 +992,59 @@ class GridTestCase(unittest.TestCase):
     
     def testNeighbors(self):
         ns = [(x, y) for x, y in self.grid.neighbors(0, 0)]
-        self.assertEquals(len(ns), 2)
-        self.assertEquals((0, 1) in ns, True)
-        self.assertEquals((1, 0) in ns, True)
+        self.assertEqual(len(ns), 2)
+        self.assertEqual((0, 1) in ns, True)
+        self.assertEqual((1, 0) in ns, True)
         ns2 = [(x, y) for x, y in self.grid.neighbors(0, 0, diagonals=True)]
-        self.assertEquals(len(ns2), 3)
+        self.assertEqual(len(ns2), 3)
         for n in ns:
-            self.assertEquals(n in ns2, True)
-        self.assertEquals((1, 1) in ns2, True)
+            self.assertEqual(n in ns2, True)
+        self.assertEqual((1, 1) in ns2, True)
         
     def testNeighborsEightNeighbors(self):
         """A cell surrounded by other cells has four or eight neighbors."""
         ns = [(x, y) for x, y in self.grid.neighbors(5, 5)]
-        self.assertEquals(len(ns), 4)
-        self.assertEquals((5, 6) in ns, True)
-        self.assertEquals((6, 5) in ns, True)
-        self.assertEquals((4, 5) in ns, True)
-        self.assertEquals((5, 4) in ns, True)
+        self.assertEqual(len(ns), 4)
+        self.assertEqual((5, 6) in ns, True)
+        self.assertEqual((6, 5) in ns, True)
+        self.assertEqual((4, 5) in ns, True)
+        self.assertEqual((5, 4) in ns, True)
         ns2 = [(x, y) for x, y in self.grid.neighbors(5, 5, diagonals=True)]
-        self.assertEquals(len(ns2), 8)
+        self.assertEqual(len(ns2), 8)
         for n in ns:
-            self.assertEquals(n in ns2, True)
-        self.assertEquals((4, 4) in ns2, True)
-        self.assertEquals((6, 4) in ns2, True)
-        self.assertEquals((6, 6) in ns2, True)
-        self.assertEquals((4, 6) in ns2, True)
+            self.assertEqual(n in ns2, True)
+        self.assertEqual((4, 4) in ns2, True)
+        self.assertEqual((6, 4) in ns2, True)
+        self.assertEqual((6, 6) in ns2, True)
+        self.assertEqual((4, 6) in ns2, True)
         
     def testNeighborsNone(self):
         """A single cell has no neighbors."""
         g = Grid(1, 1)
         ns = [(x, y) for x, y in g.neighbors(0, 0)]
-        self.assertEquals(len(ns), 0)
+        self.assertEqual(len(ns), 0)
             
     def testOpenSquares(self):
         """A cell is open if it does not touch a block, including diagonally."""
         g = Grid(5, 5)
-        self.assertEquals(len(g.compute_open_squares()), 5 * 5)
+        self.assertEqual(len(g.compute_open_squares()), 5 * 5)
         g.set_block(2, 2, True)
-        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 1 - 8)
+        self.assertEqual(len(g.compute_open_squares()), (5 * 5) - 1 - 8)
         g.set_block(0, 0, True)
-        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
+        self.assertEqual(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
         g.set_block(1, 1, True)
-        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
+        self.assertEqual(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
         
     def testOpenSquaresVoid(self):
         """A cell is oen if it does not touch a void, including diagonally."""
         g = Grid(5, 5)
-        self.assertEquals(len(g.compute_open_squares()), 5 * 5)
+        self.assertEqual(len(g.compute_open_squares()), 5 * 5)
         g.set_void(2, 2, True)
-        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 1 - 8)
+        self.assertEqual(len(g.compute_open_squares()), (5 * 5) - 1 - 8)
         g.set_void(0, 0, True)
-        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
+        self.assertEqual(len(g.compute_open_squares()), (5 * 5) - 9 - 1 - 2)
         g.set_void(1, 1, True)
-        self.assertEquals(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
+        self.assertEqual(len(g.compute_open_squares()), (5 * 5) - 9 - 3 - 2)
         
     def testOpenSquaresSingle(self):
         """A single cell is open."""
@@ -1054,101 +1054,101 @@ class GridTestCase(unittest.TestCase):
     def testOpenSquaresCount(self):
         """If count=True then the number of open squares are computed."""
         g = Grid(5, 5)
-        self.assertEquals(g.compute_open_squares(count=True), 5 * 5)
+        self.assertEqual(g.compute_open_squares(count=True), 5 * 5)
         g.set_block(2, 2, True)
-        self.assertEquals(g.compute_open_squares(count=True), (5 * 5) - 1 - 8)
+        self.assertEqual(g.compute_open_squares(count=True), (5 * 5) - 1 - 8)
         g.set_block(0, 0, True)
-        self.assertEquals(g.compute_open_squares(count=True), (5 * 5) - 9 - 1 - 2)
+        self.assertEqual(g.compute_open_squares(count=True), (5 * 5) - 9 - 1 - 2)
         g.set_block(1, 1, True)
-        self.assertEquals(g.compute_open_squares(count=True), (5 * 5) - 9 - 3 - 2)
+        self.assertEqual(g.compute_open_squares(count=True), (5 * 5) - 9 - 3 - 2)
 
     def testIsConnected(self):
         g = Grid(5, 5)
-        self.assertEquals(g.is_connected(), True)
+        self.assertEqual(g.is_connected(), True)
         for i in xrange(5):
             g.set_block(i, i, True)
-        self.assertEquals(g.is_connected(), False)
+        self.assertEqual(g.is_connected(), False)
         for i in xrange(5):
             g.set_block(i, i, False)
-            self.assertEquals(g.is_connected(), True)
+            self.assertEqual(g.is_connected(), True)
             g.set_block(i, i, True)
         for i in xrange(5):
             for j in xrange(5):
                 g.set_block(i, j, True)
-        self.assertEquals(g.is_connected(), True)
+        self.assertEqual(g.is_connected(), True)
        
     def testRemoveRowDirty(self):
         self._set_clues_one("down")
         self.grid.remove_row(1)
         results = [(2, 0, False), (0, 1, False), (1, 1, False), (2, 2, True)]
         for x, y, value in results:
-            self.assertEquals("down" in self.grid.get_clues(x, y), value)
-        self.assertEquals(self.grid.get_clues(2, 2)["down"]["text"], "D")
+            self.assertEqual("down" in self.grid.get_clues(x, y), value)
+        self.assertEqual(self.grid.get_clues(2, 2)["down"]["text"], "D")
         
     def testRemoveRowDirtyTwo(self):
         self._set_clues_one("down")
         self.grid.remove_row(2)
-        self.assertEquals("down" in self.grid.get_clues(2, 0), False)
+        self.assertEqual("down" in self.grid.get_clues(2, 0), False)
         
     def testRemoveColumn(self):
         width, height = self.grid.width, self.grid.height
         for y in xrange(self.grid.height):
             self.grid.set_block(0, y, True)
         self.grid.remove_column(0)
-        self.assertEquals(width - 1, self.grid.width)
+        self.assertEqual(width - 1, self.grid.width)
         for y in xrange(self.grid.height):
-            self.assertEquals(self.grid.is_block(0, y), False)
+            self.assertEqual(self.grid.is_block(0, y), False)
             
     def testRemoveColumnDirty(self):
         self._set_clues_one("across")
         self.grid.remove_column(1)
         results = [(0, 2, False), (1, 0, False), (1, 1, False), (2, 2, True)]
         for x, y, value in results:
-            self.assertEquals("across" in self.grid.get_clues(x, y), value)
-        self.assertEquals(self.grid.get_clues(2, 2)["across"]["text"], "D")
+            self.assertEqual("across" in self.grid.get_clues(x, y), value)
+        self.assertEqual(self.grid.get_clues(2, 2)["across"]["text"], "D")
         
     def testRemoveColumnDirtyTwo(self):
         self._set_clues_one("across")
         self.grid.remove_row(2)
-        self.assertEquals("across" in self.grid.get_clues(0, 2), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 2), False)
         
     def testShiftGridUpDirtyOne(self):
         self._set_clues_one("down")
         self.grid.shift_up()
-        self.assertEquals("down" in self.grid.get_clues(0, 0), False)
-        self.assertEquals("down" in self.grid.get_clues(1, 1), False)
+        self.assertEqual("down" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("down" in self.grid.get_clues(1, 1), False)
 
     def testShiftGridUpDirtyTwo(self):    
         self.grid.set_block(0, 3, True)
         self._set_clues_one("down")
         self.grid.shift_up()
-        self.assertEquals("down" in self.grid.get_clues(0, 0), True)
-        self.assertEquals(self.grid.get_clues(0, 0)["down"]["text"], "B")
-        self.assertEquals("down" in self.grid.get_clues(1, 1), False)
+        self.assertEqual("down" in self.grid.get_clues(0, 0), True)
+        self.assertEqual(self.grid.get_clues(0, 0)["down"]["text"], "B")
+        self.assertEqual("down" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridLeftDirtyOne(self):
         self._set_clues_one("across")
         self.grid.shift_left()
-        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
-        self.assertEquals("across" in self.grid.get_clues(1, 1), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridLeftDirtyTwo(self):
         self.grid.set_block(3, 0, True)
         self._set_clues_one("across")
         self.grid.shift_left()
-        self.assertEquals("across" in self.grid.get_clues(0, 0), True)
-        self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "B")
-        self.assertEquals("across" in self.grid.get_clues(1, 1), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), True)
+        self.assertEqual(self.grid.get_clues(0, 0)["across"]["text"], "B")
+        self.assertEqual("across" in self.grid.get_clues(1, 1), False)
         
     def testShiftGridRightDirtyOne(self):
         self._set_clues_two("across")
         self.grid.shift_right()
         clue = self.grid.get_clues(self.grid.width - 1, self.grid.height - 3)
-        self.assertEquals("across" in clue, False)
+        self.assertEqual("across" in clue, False)
         clue = self.grid.get_clues(0, self.grid.height - 2)
-        self.assertEquals("across" in clue, False)
+        self.assertEqual("across" in clue, False)
         clue = self.grid.get_clues(0, self.grid.height - 1)
-        self.assertEquals("across" in clue, False)
+        self.assertEqual("across" in clue, False)
         
     def testShiftGridRightDirtyTwo(self):
         self._set_clues_two("across")
@@ -1156,18 +1156,18 @@ class GridTestCase(unittest.TestCase):
         self.grid.store_clue(3, self.grid.height - 1, "across", "text", "E")
         self.grid.shift_right()
         clue = self.grid.get_clues(4, self.grid.height - 1)
-        self.assertEquals("across" in clue, True)
-        self.assertEquals(clue["across"]["text"], "E")
+        self.assertEqual("across" in clue, True)
+        self.assertEqual(clue["across"]["text"], "E")
         
     def testShiftGridDownDirtyOne(self):
         self._set_clues_two("down")
         self.grid.shift_down()
         clue = self.grid.get_clues(self.grid.width - 3, self.grid.height - 1)
-        self.assertEquals("down" in clue, False)
+        self.assertEqual("down" in clue, False)
         clue = self.grid.get_clues(self.grid.width - 2, 0)
-        self.assertEquals("down" in clue, False)
+        self.assertEqual("down" in clue, False)
         clue = self.grid.get_clues(self.grid.width - 1, 0)
-        self.assertEquals("down" in clue, False)
+        self.assertEqual("down" in clue, False)
         
     def testShiftGridDownDirtyTwo(self):
         self._set_clues_two("down")
@@ -1175,49 +1175,49 @@ class GridTestCase(unittest.TestCase):
         self.grid.store_clue(self.grid.width - 1, 3, "down", "text", "E")
         self.grid.shift_down()
         clue = self.grid.get_clues(self.grid.width - 1, 4)
-        self.assertEquals("down" in clue, True)
-        self.assertEquals(clue["down"]["text"], "E")
+        self.assertEqual("down" in clue, True)
+        self.assertEqual(clue["down"]["text"], "E")
 
     def testShiftGridUpBars(self):
         self.grid.set_bar(1, 1, "top", True)
         self.grid.shift_up()
-        self.assertEquals(self.grid.has_bar(1, 0, "top"), False)
+        self.assertEqual(self.grid.has_bar(1, 0, "top"), False)
         
     def testShiftGridLeftBars(self):
         self.grid.set_bar(1, 1, "left", True)
         self.grid.shift_left()
-        self.assertEquals(self.grid.has_bar(0, 1, "left"), False)
+        self.assertEqual(self.grid.has_bar(0, 1, "left"), False)
         
     def testModifyCharDirty(self):
         self.grid.store_clue(0, 0, "across", "text", "A")
         self.grid.set_char(0, 0, "B")
-        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
         
         self.grid.store_clue(0, 0, "across", "text", "C")
         self.grid.set_char(5, 0, "D")
-        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
         
         self.grid.store_clue(0, 0, "across", "text", "E")
         for x in xrange(1, self.grid.width):
             for y in xrange(1, self.grid.height):
                 self.grid.set_char(x, y, "F")
-        self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "E")
+        self.assertEqual(self.grid.get_clues(0, 0)["across"]["text"], "E")
         
     def testModifyBlockDirtyOne(self):
         self.grid.store_clue(0, 0, "across", "text", "A")
         self.grid.set_block(0, 0, True)
-        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
         
     def testModifyBlockDirtyTwo(self):
         self.grid.store_clue(0, 0, "across", "text", "C")
         self.grid.set_block(5, 0, True)
-        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
         
         self.grid.store_clue(0, 0, "across", "text", "E")
         for x in xrange(1, self.grid.width):
             for y in xrange(1, self.grid.height):
                 self.grid.set_block(x, y, True)
-        self.assertEquals(self.grid.get_clues(0, 0)["across"]["text"], "E")
+        self.assertEqual(self.grid.get_clues(0, 0)["across"]["text"], "E")
         
     def testModifyBlockDirtyThree(self):
         """
@@ -1230,24 +1230,24 @@ class GridTestCase(unittest.TestCase):
         self.grid.store_clue(6, 5, "across", "text", "C")
         self.grid.store_clue(5, 6, "down", "text", "D")
         self.grid.set_block(5, 5, False)
-        self.assertEquals("down" in self.grid.get_clues(5, 0), False)
-        self.assertEquals("across" in self.grid.get_clues(0, 5), False)
-        self.assertEquals("across" in self.grid.get_clues(6, 5), False)
-        self.assertEquals("down" in self.grid.get_clues(5, 6), False)
+        self.assertEqual("down" in self.grid.get_clues(5, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 5), False)
+        self.assertEqual("across" in self.grid.get_clues(6, 5), False)
+        self.assertEqual("down" in self.grid.get_clues(5, 6), False)
         
     def testSetBarDirtyOne(self):
         self.grid.store_clue(0, 0, "across", "text", "A")
         self.grid.store_clue(0, 0, "down", "text", "B")
         self.grid.set_bar(5, 0, "left", True)
-        self.assertEquals("across" in self.grid.get_clues(0, 0), False)
-        self.assertEquals("down" in self.grid.get_clues(0, 0), True)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("down" in self.grid.get_clues(0, 0), True)
         
     def testSetBarDirtyTwo(self):
         self.grid.store_clue(0, 0, "across", "text", "A")
         self.grid.store_clue(0, 0, "down", "text", "B")
         self.grid.set_bar(0, 5, "top", True)
-        self.assertEquals("across" in self.grid.get_clues(0, 0), True)
-        self.assertEquals("down" in self.grid.get_clues(0, 0), False)
+        self.assertEqual("across" in self.grid.get_clues(0, 0), True)
+        self.assertEqual("down" in self.grid.get_clues(0, 0), False)
         
     def testHorizontalFlip(self):
         self.grid.set_block(0, 0, True)
@@ -1256,11 +1256,11 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_char(6, 3, "B")
         self.grid.set_bar(1, 4, "left", True)
         self.grid.horizontal_flip()
-        self.assertEquals(self.grid.is_block(self.grid.width - 1, 0), True)
-        self.assertEquals(self.grid.is_block(0, 1), True)
-        self.assertEquals(self.grid.get_char(6, 2), "A")
-        self.assertEquals(self.grid.get_char(5, 3), "B")
-        self.assertEquals(self.grid.has_bar(self.grid.width - 1, 4, "left"), True)
+        self.assertEqual(self.grid.is_block(self.grid.width - 1, 0), True)
+        self.assertEqual(self.grid.is_block(0, 1), True)
+        self.assertEqual(self.grid.get_char(6, 2), "A")
+        self.assertEqual(self.grid.get_char(5, 3), "B")
+        self.assertEqual(self.grid.has_bar(self.grid.width - 1, 4, "left"), True)
         
     def testVerticalFlip(self):
         self.grid.set_block(0, 0, True)
@@ -1270,12 +1270,12 @@ class GridTestCase(unittest.TestCase):
         self.grid.set_char(4, 8, "C")
         self.grid.set_bar(5, 1, "top", True)
         self.grid.vertical_flip()
-        self.assertEquals(self.grid.is_block(0, self.grid.height - 1), True)
-        self.assertEquals(self.grid.is_block(1, 0), True)
-        self.assertEquals(self.grid.get_char(2, 7), "A")
-        self.assertEquals(self.grid.get_char(3, 8), "B")
-        self.assertEquals(self.grid.get_char(4, 6), "C")
-        self.assertEquals(self.grid.has_bar(5, self.grid.height - 1, "top"), True)
+        self.assertEqual(self.grid.is_block(0, self.grid.height - 1), True)
+        self.assertEqual(self.grid.is_block(1, 0), True)
+        self.assertEqual(self.grid.get_char(2, 7), "A")
+        self.assertEqual(self.grid.get_char(3, 8), "B")
+        self.assertEqual(self.grid.get_char(4, 6), "C")
+        self.assertEqual(self.grid.has_bar(5, self.grid.height - 1, "top"), True)
         
     def testDiagonalFlip(self):
         # TODO use self.grid when size assertion in diagonal_flip() is no longer needed
@@ -1285,110 +1285,110 @@ class GridTestCase(unittest.TestCase):
         self.square_grid.store_clue(0, 0, "across", "text", "This is a clue")
         self.square_grid.store_clue(3, 4, "down", "text", "This is a clue2")
         self.square_grid.diagonal_flip()
-        self.assertEquals(self.square_grid.is_block(1, 0), True)
-        self.assertEquals(self.square_grid.is_block(3, 3), True)
-        self.assertEquals(self.square_grid.get_char(0, 5), "A")
-        self.assertEquals(self.square_grid.get_clues(0, 0)["down"]["text"], "This is a clue")
-        self.assertEquals(self.square_grid.get_clues(4, 3)["across"]["text"], "This is a clue2")
+        self.assertEqual(self.square_grid.is_block(1, 0), True)
+        self.assertEqual(self.square_grid.is_block(3, 3), True)
+        self.assertEqual(self.square_grid.get_char(0, 5), "A")
+        self.assertEqual(self.square_grid.get_clues(0, 0)["down"]["text"], "This is a clue")
+        self.assertEqual(self.square_grid.get_clues(4, 3)["across"]["text"], "This is a clue2")
         
     def testDiagonalFlipBars(self):
         # TODO use self.grid when size assertion in diagonal_flip() is no longer needed
         self.square_grid.set_bar(1, 1, "top", True)
         self.square_grid.diagonal_flip()
-        self.assertEquals(self.square_grid.has_bar(1, 1, "left"), True)
+        self.assertEqual(self.square_grid.has_bar(1, 1, "left"), True)
         
         self.square_grid.set_bar(3, 3, "left", True)
         self.square_grid.diagonal_flip()
-        self.assertEquals(self.square_grid.has_bar(3, 3, "top"), True)
+        self.assertEqual(self.square_grid.has_bar(3, 3, "top"), True)
         
         self.square_grid.set_bar(10, 3, "top", True)
         self.square_grid.diagonal_flip()
-        self.assertEquals(self.square_grid.has_bar(3, 10, "left"), True)
+        self.assertEqual(self.square_grid.has_bar(3, 10, "left"), True)
         
         self.square_grid.set_bar(3, 10, "left", True)
         self.square_grid.diagonal_flip()
-        self.assertEquals(self.square_grid.has_bar(10, 3, "top"), True)
+        self.assertEqual(self.square_grid.has_bar(10, 3, "top"), True)
         
         self.square_grid.set_bar(7, 7, "left", True)
         self.square_grid.set_bar(7, 7, "top", True)
         self.square_grid.diagonal_flip()
-        self.assertEquals(self.square_grid.has_bar(7, 7, "left"), True)
-        self.assertEquals(self.square_grid.has_bar(7, 7, "top"), True)
+        self.assertEqual(self.square_grid.has_bar(7, 7, "left"), True)
+        self.assertEqual(self.square_grid.has_bar(7, 7, "top"), True)
         
     def testIsAvailable(self):
         """A cell is available when text can be entered into it."""
-        self.assertEquals(self.grid.is_available(0, 0), True)
+        self.assertEqual(self.grid.is_available(0, 0), True)
         self.grid.set_block(0, 0, True)
-        self.assertEquals(self.grid.is_available(0, 0), False)
-        self.assertEquals(self.grid.is_available(1, 0), True)
+        self.assertEqual(self.grid.is_available(0, 0), False)
+        self.assertEqual(self.grid.is_available(1, 0), True)
         self.grid.set_void(1, 0, True)
-        self.assertEquals(self.grid.is_available(1, 0), False)
-        self.assertEquals(self.grid.is_available(-1, -1), False)
-        self.assertEquals(self.grid.is_available(100, 100), False)
+        self.assertEqual(self.grid.is_available(1, 0), False)
+        self.assertEqual(self.grid.is_available(-1, -1), False)
+        self.assertEqual(self.grid.is_available(100, 100), False)
         
     def testGatherConstraints(self):
         self.grid.set_block(5, 0, True)
         self.grid.set_char(0, 0, 'A')
-        self.assertEquals(self.grid.gather_constraints(5, 0, "across"), [])
-        self.assertEquals(self.grid.gather_constraints(0, 0, "across"), [(0, 'a')])
+        self.assertEqual(self.grid.gather_constraints(5, 0, "across"), [])
+        self.assertEqual(self.grid.gather_constraints(0, 0, "across"), [(0, 'a')])
         
         self.grid.set_block(5, 0, False)
         self.grid.set_bar(5, 0, "left", True)
-        self.assertEquals(self.grid.gather_constraints(5, 0, "across"), [])
-        self.assertEquals(self.grid.gather_constraints(0, 0, "across"), [(0, 'a')])
+        self.assertEqual(self.grid.gather_constraints(5, 0, "across"), [])
+        self.assertEqual(self.grid.gather_constraints(0, 0, "across"), [(0, 'a')])
         
         self.grid.set_void(0, 5, True)
         self.grid.set_char(0, 4, 'Z')
-        self.assertEquals(self.grid.gather_constraints(0, 5, "down"), [])
-        self.assertEquals(self.grid.gather_constraints(0, 0, "down"), [(0, 'a'), (4, 'z')])
+        self.assertEqual(self.grid.gather_constraints(0, 5, "down"), [])
+        self.assertEqual(self.grid.gather_constraints(0, 0, "down"), [(0, 'a'), (4, 'z')])
         
     def testGatherAllConstraints(self):
         self.grid.set_block(0, 0, True)
         self.grid.set_block(1, 1, True)
         self.grid.set_block(2, 2, True)
         self.grid.set_block(3, 3, True)
-        self.assertEquals(self.grid.gather_all_constraints(0, 3, "across"), [(2, 14, []), (1, 13, []), (0, 12, [])])
-        self.assertEquals(self.grid.gather_all_constraints(3, 0, "down"), [(2, 11, []), (1, 10, []), (0, 9, [])])
+        self.assertEqual(self.grid.gather_all_constraints(0, 3, "across"), [(2, 14, []), (1, 13, []), (0, 12, [])])
+        self.assertEqual(self.grid.gather_all_constraints(3, 0, "down"), [(2, 11, []), (1, 10, []), (0, 9, [])])
         
     def testDecomposeWord(self):
-        self.assertEquals(decompose_word("abc", 0, 0, "across"), [(0, 0, 'a'), (1, 0, 'b'), (2, 0, 'c')])
-        self.assertEquals(decompose_word("def", 0, 0, "down"), [(0, 0, 'd'), (0, 1, 'e'), (0, 2, 'f')])
+        self.assertEqual(decompose_word("abc", 0, 0, "across"), [(0, 0, 'a'), (1, 0, 'b'), (2, 0, 'c')])
+        self.assertEqual(decompose_word("def", 0, 0, "down"), [(0, 0, 'd'), (0, 1, 'e'), (0, 2, 'f')])
         
     def testClues(self):
         ac = [clue for clue in self.grid.clues("across")]
         dc = [clue for clue in self.grid.clues("down")]
         ac2 = [(1, 0, 0, {})] + [(13 + i, 0, i + 1, {}) for i in xrange(self.grid.height - 1)] 
-        self.assertEquals(ac, ac2)
+        self.assertEqual(ac, ac2)
         dc2 = [(1 + i, i, 0, {}) for i in xrange(self.grid.width)]
-        self.assertEquals(dc, dc2)
+        self.assertEqual(dc, dc2)
         self.grid.data[0][0]["clues"] = {"down": {"text": "TEST"}}
         dc = [clue for clue in self.grid.clues("down")]
         dc3 = [(1, 0, 0, {"text": "TEST"})] + [(1 + i, i, 0, {}) for i in xrange(1, self.grid.width)]
-        self.assertEquals(dc, dc3)
+        self.assertEqual(dc, dc3)
         
     def testNumbering(self):
         g = Grid(15, 15)
-        self.assertEquals(g.data[0][0]["number"], 1)
+        self.assertEqual(g.data[0][0]["number"], 1)
         g = Grid(15, 15, number_mode=constants.NUMBERING_MANUAL)
         for x, y in g.cells():
-            self.assertEquals(g.data[y][x]["number"], 0)
+            self.assertEqual(g.data[y][x]["number"], 0)
         g.set_number(5, 5, 33)
-        self.assertEquals(g.data[5][5]["number"], 33)
+        self.assertEqual(g.data[5][5]["number"], 33)
         
     def testCountComplete(self):
         counts = self.grid.count_complete()
-        self.assertEquals(counts["across"], 0)
-        self.assertEquals(counts["down"], 0)
+        self.assertEqual(counts["across"], 0)
+        self.assertEqual(counts["down"], 0)
         for x in xrange(self.grid.width):
             self.grid.set_char(x, 0, 'A')
         counts = self.grid.count_complete()
-        self.assertEquals(counts["across"], 1)
-        self.assertEquals(counts["down"], 0)
+        self.assertEqual(counts["across"], 1)
+        self.assertEqual(counts["down"], 0)
         for y in xrange(self.grid.height):
             self.grid.set_char(0, y, 'A')
         counts = self.grid.count_complete()
-        self.assertEquals(counts["across"], 1)
-        self.assertEquals(counts["down"], 1)
+        self.assertEqual(counts["across"], 1)
+        self.assertEqual(counts["down"], 1)
         
     def testStatus(self):
         self.grid.set_block(0, 0, True)
@@ -1403,7 +1403,7 @@ class GridTestCase(unittest.TestCase):
             , "block_percentage"
         ]
         for key in KEYS:
-            self.assertEquals(key in status, True)
+            self.assertEqual(key in status, True)
         status = self.grid.determine_status(full=True)
         KEYS2 = ["mean_word_length"
             , "blank_count"
@@ -1418,12 +1418,12 @@ class GridTestCase(unittest.TestCase):
             , "complete_count"
         ]
         for key in KEYS + KEYS2:
-            self.assertEquals(key in status, True)
-        self.assertEquals(status["block_count"], 1)
-        self.assertEquals(status["void_count"], 1)
-        self.assertEquals(status["actual_char_count"], 1)
-        self.assertEquals(status["checked_count"], (self.grid.width * self.grid.height) - 3)
-        self.assertEquals(status["unchecked_count"], 1);
+            self.assertEqual(key in status, True)
+        self.assertEqual(status["block_count"], 1)
+        self.assertEqual(status["void_count"], 1)
+        self.assertEqual(status["actual_char_count"], 1)
+        self.assertEqual(status["checked_count"], (self.grid.width * self.grid.height) - 3)
+        self.assertEqual(status["unchecked_count"], 1);
         
     def testGridString(self):
         s = str(self.grid)
@@ -1433,55 +1433,55 @@ class GridTestCase(unittest.TestCase):
         g = Grid(12, 15)
         g.set_void(0, 0, True)
         u = str(g)
-        self.assertNotEquals(s, t)
-        self.assertNotEquals(s, u)
-        self.assertNotEquals(t, u)
+        self.assertNotEqual(s, t)
+        self.assertNotEqual(s, u)
+        self.assertNotEqual(t, u)
         
     def testDiagonalCells(self):
         g = Grid(5, 5)
         s = g.generate_diagonals(0)
-        self.assertEquals(len(s), 7)
-        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 2)
+        self.assertEqual(len(s), 7)
+        self.assertEqual(sum([len(i) for i in s]), len(list(g.cells())) - 2)
         g.set_block(1, 1, True)
         s = g.generate_diagonals(0)
-        self.assertEquals(len(s), 6)
-        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 5)
+        self.assertEqual(len(s), 6)
+        self.assertEqual(sum([len(i) for i in s]), len(list(g.cells())) - 5)
         g.set_void(3, 3, True)
         s = g.generate_diagonals(0)
-        self.assertEquals(len(s), 5)
-        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 8)
+        self.assertEqual(len(s), 5)
+        self.assertEqual(sum([len(i) for i in s]), len(list(g.cells())) - 8)
         result = [[(0, 1), (1, 0)]
             , [(0, 3), (1, 2), (2, 1), (3, 0)]
             , [(0, 4), (1, 3), (2, 2), (3, 1), (4, 0)]
             , [(1, 4), (2, 3), (3, 2), (4, 1)]
             , [(3, 4), (4, 3)]]
-        self.assertEquals(s, result)
+        self.assertEqual(s, result)
         s = g.generate_diagonals(1)
-        self.assertEquals(sum([len(i) for i in s]), len(list(g.cells())) - 7)
+        self.assertEqual(sum([len(i) for i in s]), len(list(g.cells())) - 7)
         
     def testCellOfSlot(self):
         g = Grid(5, 5)
         g.set_block(0, 0, True)
-        self.assertEquals(g.get_cell_of_slot((3, 0, "across"), "start"), (1, 0))
-        self.assertEquals(g.get_cell_of_slot((3, 0, "across"), "end"), (4, 0))
-        self.assertEquals(g.get_cell_of_slot((3, 0, "down"), "start"), (3, 0))
-        self.assertEquals(g.get_cell_of_slot((3, 0, "down"), "end"), (3, 4))
+        self.assertEqual(g.get_cell_of_slot((3, 0, "across"), "start"), (1, 0))
+        self.assertEqual(g.get_cell_of_slot((3, 0, "across"), "end"), (4, 0))
+        self.assertEqual(g.get_cell_of_slot((3, 0, "down"), "start"), (3, 0))
+        self.assertEqual(g.get_cell_of_slot((3, 0, "down"), "end"), (3, 4))
         
     def testGenerateAllSlots(self):
         g = Grid(5, 5)
         slots = g.generate_all_slots()
         # across + across(reverse) + down + down(reverse) + ne + se + sw + nw
-        self.assertEquals(len(slots), 5 + 5 + 5 + 5 + 7 + 7 + 7 + 7)
+        self.assertEqual(len(slots), 5 + 5 + 5 + 5 + 7 + 7 + 7 + 7)
         fives = [s for s in slots if len(s[1]) == 5]
-        self.assertEquals(len(fives), 5 + 5 + 5 + 5 + 1 + 1 + 1 + 1)
+        self.assertEqual(len(fives), 5 + 5 + 5 + 5 + 1 + 1 + 1 + 1)
         fours = [s for s in slots if len(s[1]) == 4]
-        self.assertEquals(len(fours), 0 + 0 + 0 + 0 + 2 + 2 + 2 + 2)
+        self.assertEqual(len(fours), 0 + 0 + 0 + 0 + 2 + 2 + 2 + 2)
         threes = [s for s in slots if len(s[1]) == 3]
-        self.assertEquals(len(threes), 0 + 0 + 0 + 0 + 2 + 2 + 2 + 2)
+        self.assertEqual(len(threes), 0 + 0 + 0 + 0 + 2 + 2 + 2 + 2)
         twos = [s for s in slots if len(s[1]) == 2]
-        self.assertEquals(len(twos), 0 + 0 + 0 + 0 + 2 + 2 + 2 + 2)
+        self.assertEqual(len(twos), 0 + 0 + 0 + 0 + 2 + 2 + 2 + 2)
         ones = [s for s in slots if len(s[1]) == 1]
-        self.assertEquals(len(ones), 0)
+        self.assertEqual(len(ones), 0)
         
     def testGenerateAllSlotsBlockVoid(self):
         #   _ _ _
@@ -1497,9 +1497,9 @@ class GridTestCase(unittest.TestCase):
         g.set_void(4, 4, True)
         slots = g.generate_all_slots()
         # across + across(reverse) + down + down(reverse) + ne + se + sw + nw
-        self.assertEquals(len(slots), 6 + 6 + 6 + 6 + 6 + 6 + 6 + 6)
+        self.assertEqual(len(slots), 6 + 6 + 6 + 6 + 6 + 6 + 6 + 6)
         twos = [s for s in slots if len(s[1]) == 2]
-        self.assertEquals(len(twos), 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2)
+        self.assertEqual(len(twos), 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2)
         
     def testGenerateAllSlotsWords(self):
         # _ A _ _ _
@@ -1524,7 +1524,7 @@ class GridTestCase(unittest.TestCase):
         g.set_char(1, 1, 'A')
         slots = g.generate_all_slots()
         dirs_with_a = [d for d, cells in slots if (1, 1, 'A') in cells]
-        self.assertEquals(len(dirs_with_a), 8)
+        self.assertEqual(len(dirs_with_a), 8)
         self.assertTrue("across" in dirs_with_a)
         self.assertTrue("down" in dirs_with_a)
         self.assertTrue("acrossr" in dirs_with_a)
@@ -1546,7 +1546,7 @@ class GridTestCase(unittest.TestCase):
         g.set_char(1, 2, 'L')
         g.set_char(2, 2, 'S')
         g.set_char(3, 3, 'U')
-        self.assertEquals(determine_scrabble_score(g), 10)
+        self.assertEqual(determine_scrabble_score(g), 10)
         g2 = Grid(3, 3)
         g2.set_char(0, 0, 'D')
         g2.set_char(1, 0, 'G')
@@ -1557,7 +1557,7 @@ class GridTestCase(unittest.TestCase):
         g2.set_char(0, 2, 'F')
         g2.set_char(1, 2, 'H')
         g2.set_char(2, 2, 'V')
-        self.assertEquals(determine_scrabble_score(g2), 28)
+        self.assertEqual(determine_scrabble_score(g2), 28)
         g3 = Grid(3, 3)
         g3.set_char(0, 0, 'W')
         g3.set_char(1, 0, 'Y')
@@ -1566,7 +1566,7 @@ class GridTestCase(unittest.TestCase):
         g3.set_char(1, 1, 'X')
         g3.set_char(2, 1, 'Q')
         g3.set_char(0, 2, 'Z')
-        self.assertEquals(determine_scrabble_score(g3), 49)
+        self.assertEqual(determine_scrabble_score(g3), 49)
         
     def testConvertToShape(self):
         """Converting an empty grid to a shape means removing all cells."""
