@@ -26,6 +26,7 @@ from itertools import chain
 import action
 from appearance import CellPropertiesDialog
 import constants
+from gui_common import launch_dialog
 from grid import Grid, decompose_word
 import preferences
 from preferences import read_pref_color
@@ -577,68 +578,58 @@ def on_button_press(grid, event, prev, next):
 def has_chars(grid, x, y, direction):
     return any([grid.data[q][p]["char"] != '' for p, q in grid.slot(x, y, direction)])
 
+def view_cell_properties(window, puzzle, x, y):
+    props = {"cell": (x, y), "grid": puzzle.grid, "defaults": {}}
+    for k in DEFAULTS_CELL:
+        props[k] = puzzle.view.properties.style(x, y)[k]
+        props["defaults"][k] = puzzle.view.properties.style()[k]
+    f_done = lambda w: w.gather_appearance()
+    response, appearance = launch_dialog(CellPropertiesDialog, window, props, f_done=f_done)
+    if response == gtk.RESPONSE_OK:
+        puzzle.view.properties.update(x, y, appearance.items())
+        _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
+
+def on_clear_slot_select(grid, direction, x, y):
+    sx, sy = grid.get_start_word(x, y, direction)
+    msg = ''.join(["Clear all letters in the slot: "
+        , str(grid.data[sy][sx]["number"]), " "
+        , {"across": "across", "down": "down"}[direction]])
+    return msg
+
+def clearable(grid, slot):
+    return grid.is_part_of_word(*slot) and has_chars(grid, *slot)
+
 def _create_popup_menu(window, puzzle, button, time, x, y):
-    menu = gtk.Menu()
-    def on_clear_slot_select(item, direction, x, y):
-        grid = puzzle.grid
-        sx, sy = grid.get_start_word(x, y, direction)
-        msg = ''.join(["Clear all letters in the slot: "
-            , str(grid.data[sy][sx]["number"]), " "
-            , {"across": "across", "down": "down"}[direction]])
-        window.update_status(constants.STATUS_MENU, msg)
-    on_clear_slot_deselect = lambda item: window.pop_status(constants.STATUS_MENU)
-    on_clear_slot = lambda item, d: clear_slot_of(window, puzzle.grid, x, y, d)
-    clearable = lambda slot: puzzle.grid.is_part_of_word(*slot) and has_chars(puzzle.grid, *slot)
-    item = gtk.MenuItem("Clear across slot")
-    item.connect("activate", on_clear_slot, "across")
-    item.connect("select", on_clear_slot_select, "across", x, y)
-    item.connect("deselect", on_clear_slot_deselect)
-    item.set_sensitive(clearable((x, y, "across")))
-    menu.append(item)
-    item = gtk.MenuItem("Clear down slot")
-    item.connect("activate", on_clear_slot, "down")
-    item.connect("select", on_clear_slot_select, "down", x, y)
-    item.connect("deselect", on_clear_slot_deselect)
-    item.set_sensitive(clearable((x, y, "down")))
-    menu.append(item)
-    menu.append(gtk.SeparatorMenuItem())
-    def on_cell_properties():
-        grid = puzzle.grid
-        def determine_type(c):
-            if grid.is_block(*c):
-                return "block"
-            elif grid.is_void(*c):
-                return "void"
-            return "letter"
-        props = {"cell": (x, y), "grid": grid, "defaults": {}}
-        for k in DEFAULTS_CELL:
-            props[k] = puzzle.view.properties.style(x, y)[k]
-            props["defaults"][k] = puzzle.view.properties.style()[k]
-        w = CellPropertiesDialog(window, props)
-        w.show_all()
-        if w.run() == gtk.RESPONSE_OK:
-            puzzle.view.properties.update(x, y, w.gather_appearance().items())
-            _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
-        w.destroy()
     def create_item(title, activate, tooltip):
-        select = lambda item: window.update_status(constants.STATUS_MENU, tooltip)
-        deselect = lambda item: window.pop_status(constants.STATUS_MENU)
         item = gtk.MenuItem(title)
         item.connect("activate", activate)
+        select = lambda item: window.update_status(constants.STATUS_MENU, tooltip)
         item.connect("select", select)
-        item.connect("deselect", deselect)
+        item.connect("deselect", lambda i: window.pop_status(constants.STATUS_MENU))
         return item
-    activate = lambda i: on_cell_properties()
+    menu = gtk.Menu()
+    on_clear_slot_deselect = lambda item: window.pop_status(constants.STATUS_MENU)
+    activate = lambda i: clear_slot_of(window, puzzle.grid, x, y, "across")
+    tooltip = on_clear_slot_select(puzzle.grid, "across", x, y)
+    item = create_item(u"Clear across slot", activate, tooltip)
+    item.set_sensitive(clearable(puzzle.grid, (x, y, "across")))
+    menu.append(item)
+    activate = lambda i: clear_slot_of(window, puzzle.grid, x, y, "down")
+    tooltip = on_clear_slot_select(puzzle.grid, "down", x, y)
+    item = create_item(u"Clear down slot", activate, tooltip)
+    item.set_sensitive(clearable(puzzle.grid, (x, y, "down")))
+    menu.append(item)
+    menu.append(gtk.SeparatorMenuItem())
+    activate = lambda i: view_cell_properties(window, puzzle, x, y)
     item = create_item(u"Properties", activate, u"View properties of this cell")
     menu.append(item)
     menu.show_all()
     menu.popup(None, None, None, button, time)
 
-def clear_slot_of(window, grid, x, y, direction):
+def clear_slot_of(window, grid, x, y, d):
     """Clear all letters of the slot in the specified direction
     that contains (x, y)."""
-    chars = [(r, s, "") for r, s in grid.slot(x, y, direction)
-        if grid.data[s][r]["char"] != '']
+    chars = [(r, s, "") for r, s in grid.slot(x, y, d) if grid.data[s][r]["char"] != '']
     if len(chars) > 0:
         window.transform_grid(transform.modify_chars, chars=chars)
 

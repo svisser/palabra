@@ -858,6 +858,36 @@ class EditorTestCase(unittest.TestCase):
         words = editor.compute_words(g, [wlist], self.e_settings.selection)
         self.assertEqual(words, [])
         cPalabra.postprocess()
+    
+    def testClearSlotOf(self):
+        """Clearing a slot clears all characters in that slot."""
+        g = Grid(3, 3)
+        CELLS = [(0, 0), (1, 0), (2, 0)]
+        for x, y in CELLS:
+            g.set_char(x, y, 'A')
+        window = EditorMockWindow()
+        editor.clear_slot_of(window, g, 1, 0, "across")
+        self.assertEqual(window.called, 1)
+        for cell in CELLS:
+            self.assertTrue(g.get_char(*cell), '')
+    
+    def testClearSlotOfNothingToClear(self):
+        """
+        When there are no characters to remove, transform_grid is not called.
+        """
+        g = Grid(3, 3)
+        window = EditorMockWindow()
+        editor.clear_slot_of(window, g, 1, 0, "down")
+        self.assertEqual(window.called, 0)
+    
+    def testSlotClearable(self):
+        """A slot is clearable if it has chars and it is part of a word."""
+        g = Grid(3, 3)
+        g.set_block(1, 0, True)
+        self.assertEqual(editor.clearable(g, (0, 0, "across")), False)
+        self.assertEqual(editor.clearable(g, (0, 1, "across")), False)
+        g.set_char(0, 2, 'A')
+        self.assertEqual(editor.clearable(g, (1, 2, "across")), True)
         
     # TODO: if user clicks an invalid cell, selection dir must be reset to across
     # TODO: if new puzzle is opened, editor settings should be reset
