@@ -37,32 +37,32 @@ class EditorTestCase(unittest.TestCase):
         
     def testCharSlots(self):
         slots = editor.get_char_slots(self.grid, 'K')
-        self.assertEquals(slots, [])
+        self.assertEqual(slots, [])
         cells = [(i, i) for i in xrange(5)]
         for i, j in cells:
             self.grid.set_char(i, j, 'K')
         slots = editor.get_char_slots(self.grid, 'K')
-        self.assertEquals(len(slots), 5)
+        self.assertEqual(len(slots), 5)
         lengths = [l for x, y, d, l in slots]
-        self.assertEquals(lengths.count(1), 5)
-        self.assertEquals([(x, y) for x, y, d, l in slots], cells)
+        self.assertEqual(lengths.count(1), 5)
+        self.assertEqual([(x, y) for x, y, d, l in slots], cells)
     
     def testLengthSlots(self):
         for l in [-1, 0, 14]:
             slots = editor.get_length_slots(self.grid, l)
-            self.assertEquals(slots, [])
+            self.assertEqual(slots, [])
         slots = editor.get_length_slots(self.grid, 15)
-        self.assertEquals(len(slots), 30)
+        self.assertEqual(len(slots), 30)
         for x, y, d, l in slots:
-            self.assertEquals(l, 15)
-        self.assertEquals(len([1 for x, y, d, l in slots if d == "across"]), 15)
-        self.assertEquals(len([1 for x, y, d, l in slots if d == "down"]), 15)
+            self.assertEqual(l, 15)
+        self.assertEqual(len([1 for x, y, d, l in slots if d == "across"]), 15)
+        self.assertEqual(len([1 for x, y, d, l in slots if d == "down"]), 15)
         
     def testOpenSlots(self):
         slots = editor.get_open_slots(self.grid)
-        self.assertEquals(len(slots), len(self.grid.compute_open_squares()))
+        self.assertEqual(len(slots), len(self.grid.compute_open_squares()))
         for x, y, d, l in slots:
-            self.assertEquals(l, 1)
+            self.assertEqual(l, 1)
             
     def testExpandSlots(self):
         slots_a = [(0, 0, "across", 5)]
@@ -71,19 +71,19 @@ class EditorTestCase(unittest.TestCase):
         exp_d = [(3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9)]
         result_a = editor.expand_slots(slots_a)
         result_d = editor.expand_slots(slots_d)
-        self.assertEquals(result_a, exp_a)
-        self.assertEquals(result_d, exp_d)
-        self.assertEquals(editor.expand_slots(slots_a + slots_d), exp_a + exp_d)
+        self.assertEqual(result_a, exp_a)
+        self.assertEqual(result_d, exp_d)
+        self.assertEqual(editor.expand_slots(slots_a + slots_d), exp_a + exp_d)
         
     def testHighlights(self):
         """Clearing the highlights means no cells are highlighted."""
         cells = editor.compute_highlights(self.grid, clear=True)
-        self.assertEquals(cells, [])
+        self.assertEqual(cells, [])
         
     def testHighlightsLength(self):
         """Slots can be highlighted by length."""
         slots = editor.compute_highlights(self.grid, "length", 15)
-        self.assertEquals(len(slots), self.grid.count_words())
+        self.assertEqual(len(slots), self.grid.count_words())
         for s in slots:
             self.assertTrue(s[3], 15)
         
@@ -92,18 +92,18 @@ class EditorTestCase(unittest.TestCase):
         for i in xrange(5):
             self.grid.set_char(i, i, 'A')
         cells = editor.compute_highlights(self.grid, "char", 'A')
-        self.assertEquals(len(cells), 5)
+        self.assertEqual(len(cells), 5)
         
     def testHighlightsOpen(self):
         """All open cells can be highlighted."""
         cells = editor.compute_highlights(self.grid, "open")
-        self.assertEquals(len(cells), len(list(self.grid.cells())))
+        self.assertEqual(len(cells), len(list(self.grid.cells())))
         
     def testHighlightsTwo(self):
         """Highlighting individual cells results in slots of length 1."""
         arg = [(1, 1), (5, 5), (3, 4), (4, 3)]
         cells = editor.compute_highlights(self.grid, "cells", arg)
-        self.assertEquals(len(arg), len(cells))
+        self.assertEqual(len(arg), len(cells))
         for x, y in arg:
             self.assertTrue((x, y, "across", 1) in cells)
     
@@ -119,26 +119,26 @@ class EditorTestCase(unittest.TestCase):
         self.assertTrue((0, 0, "down", 15) in result)
         
     def testSymmetryInvalid(self):
-        self.assertEquals(editor.apply_symmetry(self.grid, [], -1, -1), [])
+        self.assertEqual(editor.apply_symmetry(self.grid, [], -1, -1), [])
 
     def testSymmetryHorizontal(self):
         symms = [constants.SYM_HORIZONTAL]
         for x in xrange(5):
             result = editor.apply_symmetry(self.grid, symms, x, x)
-            self.assertEquals(result, [(x, self.grid.height - 1 - x)])
-        self.assertEquals(editor.apply_symmetry(self.grid, symms, 7, 7), [(7, 7)])
+            self.assertEqual(result, [(x, self.grid.height - 1 - x)])
+        self.assertEqual(editor.apply_symmetry(self.grid, symms, 7, 7), [(7, 7)])
         
     def testSymmetryVertical(self):
         symms = [constants.SYM_VERTICAL]
         for x in xrange(5):
             result = editor.apply_symmetry(self.grid, symms, x, x)
-            self.assertEquals(result, [(self.grid.width - 1 - x, x)])
-        self.assertEquals(editor.apply_symmetry(self.grid, symms, 7, 7), [(7, 7)])
+            self.assertEqual(result, [(self.grid.width - 1 - x, x)])
+        self.assertEqual(editor.apply_symmetry(self.grid, symms, 7, 7), [(7, 7)])
 
     def _checkSymms(self, result, expect):
         for c in expect:
             self.assertTrue(c in result)
-        self.assertEquals(len(result), len(expect))
+        self.assertEqual(len(result), len(expect))
 
     def testSymmetryTwo(self):
         expect = [(0, self.grid.height - 1)
@@ -170,41 +170,41 @@ class EditorTestCase(unittest.TestCase):
         self._checkSymms(result, [(0, 1), (14, 13), (13, 14)])
         
     def testTransformBlocks(self):
-        self.assertEquals(editor.transform_blocks(self.grid, [], -1, -1, True), [])
+        self.assertEqual(editor.transform_blocks(self.grid, [], -1, -1, True), [])
         result = editor.transform_blocks(self.grid, [], 0, 0, True)
-        self.assertEquals(result, [(0, 0, True)])
+        self.assertEqual(result, [(0, 0, True)])
         result = editor.transform_blocks(self.grid, [constants.SYM_180], 0, 0, True)
-        self.assertEquals(result, [(0, 0, True), (14, 14, True)])
+        self.assertEqual(result, [(0, 0, True), (14, 14, True)])
         
     def testTransformBlocksTwo(self):
         self.grid.set_block(0, 0, True)
         result = editor.transform_blocks(self.grid, [], 0, 0, True)
-        self.assertEquals(result, [])
+        self.assertEqual(result, [])
         result = editor.transform_blocks(self.grid, [constants.SYM_180], 14, 14, True)
-        self.assertEquals(result, [(14, 14, True)])
+        self.assertEqual(result, [(14, 14, True)])
         result = editor.transform_blocks(self.grid, [], 0, 0, False)
-        self.assertEquals(result, [(0, 0, False)])
+        self.assertEqual(result, [(0, 0, False)])
         result = editor.transform_blocks(self.grid, [constants.SYM_180], 14, 14, False)
-        self.assertEquals(result, [(0, 0, False)])
+        self.assertEqual(result, [(0, 0, False)])
         
     def testComputeWordCellsNone(self):
         o = editor.compute_word_cells(self.grid, None, 0, 0, "across")
-        self.assertEquals(o, [])
+        self.assertEqual(o, [])
         
     def testComputeWordCellsOne(self):
         o = editor.compute_word_cells(self.grid, "palabra", 0, 0, "across")
         expect = [(0, 0, 'P'), (1, 0, 'A'), (2, 0, 'L'), (3, 0, 'A'), (4, 0, 'B'), (5, 0, 'R'), (6, 0, 'A')]
-        self.assertEquals(o, expect)
+        self.assertEqual(o, expect)
         
     def testComputeWordCellsTwo(self):
         self.grid.set_char(0, 0, 'P')
         self.grid.set_char(3, 0, 'A')
         o = editor.compute_word_cells(self.grid, "palabra", 0, 0, "across")
         expect = [(1, 0, 'A'), (2, 0, 'L'), (4, 0, 'B'), (5, 0, 'R'), (6, 0, 'A')]
-        self.assertEquals(o, expect)
+        self.assertEqual(o, expect)
         o = editor.compute_word_cells(self.grid, "PALABRA", 0, 0, "across")
         expect = [(1, 0, 'A'), (2, 0, 'L'), (4, 0, 'B'), (5, 0, 'R'), (6, 0, 'A')]
-        self.assertEquals(o, expect)
+        self.assertEqual(o, expect)
         
     def testSelection(self):
         for i in xrange(self.grid.width):
@@ -217,13 +217,13 @@ class EditorTestCase(unittest.TestCase):
         """Cells behind a block are not part of the selection."""
         self.grid.set_block(5, 0, True)
         result = editor.compute_editor_of_cell([(6, 0)], self.puzzle, self.e_settings)
-        self.assertEquals(result, [])
+        self.assertEqual(result, [])
         
     def testSelectionThree(self):
         """Cells behind a void are not part of the selection."""
         self.grid.set_void(5, 0, True)
         result = editor.compute_editor_of_cell([(6, 0)], self.puzzle, self.e_settings)
-        self.assertEquals(result, [])
+        self.assertEqual(result, [])
         
     def testCurrentOne(self):
         self.e_settings.current = (1, 0)
@@ -280,7 +280,7 @@ class EditorTestCase(unittest.TestCase):
         g.set_block(1, 0, True)
         self.warnings[constants.WARN_CONSECUTIVE] = True
         result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
-        self.assertEquals(result, [])
+        self.assertEqual(result, [])
         g.set_block(1, 1, True)
         result = list(editor.compute_warnings_of_cells(g, list(g.cells()), self.warnings))
         self.assertTrue((0, 0) in result)
@@ -312,60 +312,60 @@ class EditorTestCase(unittest.TestCase):
     def testComputeSelectionOtherDir(self):
         s = self.e_settings.selection
         next = editor.compute_selection(s, other_dir=True)
-        self.assertEquals(next[0], s.x)
-        self.assertEquals(next[1], s.y)
-        self.assertEquals(next[2], "down")
+        self.assertEqual(next[0], s.x)
+        self.assertEqual(next[1], s.y)
+        self.assertEqual(next[2], "down")
         
     def testComputeSelectionPos(self):
         s = self.e_settings.selection
         next = editor.compute_selection(s, x=5, y=3)
-        self.assertEquals(next[0], 5)
-        self.assertEquals(next[1], 3)
-        self.assertEquals(next[2], "across")
+        self.assertEqual(next[0], 5)
+        self.assertEqual(next[1], 3)
+        self.assertEqual(next[2], "across")
         
     def testComputeSelectionDir(self):
         s = self.e_settings.selection
         next = editor.compute_selection(s, direction="down")
-        self.assertEquals(next[0], s.x)
-        self.assertEquals(next[1], s.y)
-        self.assertEquals(next[2], "down")
+        self.assertEqual(next[0], s.x)
+        self.assertEqual(next[1], s.y)
+        self.assertEqual(next[2], "down")
         
     def testComputeSelectionPosDir(self):
         s = self.e_settings.selection
         next = editor.compute_selection(s, x=2, y=7, direction="down")
-        self.assertEquals(next[0], 2)
-        self.assertEquals(next[1], 7)
-        self.assertEquals(next[2], "down")
+        self.assertEqual(next[0], 2)
+        self.assertEqual(next[1], 7)
+        self.assertEqual(next[2], "down")
         
     def testComputeSelectionAlone(self):
         s = self.e_settings.selection
         next = editor.compute_selection(s, x=2)
-        self.assertEquals(next[0], 2)
-        self.assertEquals(next[1], 0)
-        self.assertEquals(next[2], "across")
+        self.assertEqual(next[0], 2)
+        self.assertEqual(next[1], 0)
+        self.assertEqual(next[2], "across")
         next = editor.compute_selection(s, y=2)
-        self.assertEquals(next[0], 0)
-        self.assertEquals(next[1], 2)
-        self.assertEquals(next[2], "across")
+        self.assertEqual(next[0], 0)
+        self.assertEqual(next[1], 2)
+        self.assertEqual(next[2], "across")
         
     def testSearchArgsOne(self):
         g = Grid(5, 5)
         l, cs, more = editor.compute_search_args(g, (0, 0, "across"))
-        self.assertEquals(l, 5)
-        self.assertEquals(cs, [])
-        self.assertEquals(len(more), 5)
+        self.assertEqual(l, 5)
+        self.assertEqual(cs, [])
+        self.assertEqual(len(more), 5)
         for i in xrange(5):
-            self.assertEquals(more[i], (0, 5, []))
+            self.assertEqual(more[i], (0, 5, []))
             
     def testSearchArgsInvalid(self):
         result = editor.compute_search_args(Grid(5, 5), (-1, -1, "across"), True)
-        self.assertEquals(result, None)
+        self.assertEqual(result, None)
         
     def testSearchArgsLengthOne(self):
         g = Grid(5, 5)
         g.set_block(1, 0, True)
         result = editor.compute_search_args(g, (0, 0, "across"), True)
-        self.assertEquals(result, None)
+        self.assertEqual(result, None)
         
     def testSearchArgsFullyFilledIn(self):
         g = Grid(5, 5)
@@ -375,25 +375,25 @@ class EditorTestCase(unittest.TestCase):
         g.set_char(3, 0, 'A')
         g.set_char(4, 0, 'A')
         result = editor.compute_search_args(g, (0, 0, "across"), False)
-        self.assertEquals(result, None)
+        self.assertEqual(result, None)
         l, cs, more = editor.compute_search_args(g, (0, 0, "across"), True)
-        self.assertEquals(l, 5)
-        self.assertEquals(len(cs), 5)
-        self.assertEquals(len(more), 5)
+        self.assertEqual(l, 5)
+        self.assertEqual(len(cs), 5)
+        self.assertEqual(len(more), 5)
         
     def testAttemptFill(self):
         g = Grid(5, 5)
         g2 = editor.attempt_fill(g, ["koala"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 5)
+        self.assertEqual(g2.count_chars(include_blanks=False), 5)
         g = Grid(5, 5)
         g2 = editor.attempt_fill(g, ["koala", "steam"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 10)
+        self.assertEqual(g2.count_chars(include_blanks=False), 10)
         cPalabra.postprocess()
         
     def testAttemptFillDoesNotFit(self):
         g = Grid(5, 5)
         g2 = editor.attempt_fill(g, ["doesnotfit"])
-        self.assertEquals(g, g2)
+        self.assertEqual(g, g2)
         cPalabra.postprocess()
         
     def testAttemptFillIntersect(self):
@@ -401,7 +401,7 @@ class EditorTestCase(unittest.TestCase):
         g.set_block(1, 1, True)
         g.set_block(2, 2, True)
         g2 = editor.attempt_fill(g, ["foo", "fix"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 5)
+        self.assertEqual(g2.count_chars(include_blanks=False), 5)
         cPalabra.postprocess()
         
     def testAttemptFillIntersectTwo(self):
@@ -412,32 +412,32 @@ class EditorTestCase(unittest.TestCase):
         g = Grid(3, 3)
         g.set_block(1, 1, True)
         g2 = editor.attempt_fill(g, words)
-        self.assertEquals(g2.count_chars(include_blanks=False), 8)
+        self.assertEqual(g2.count_chars(include_blanks=False), 8)
         counts = dict([(g2.data[y][x]["char"], 1) for x, y in g2.cells() if not g2.data[y][x]["block"]])
-        self.assertEquals(len(counts), 8)
+        self.assertEqual(len(counts), 8)
         words.reverse()
         g3 = editor.attempt_fill(g, words)
-        self.assertEquals(g2.count_chars(include_blanks=False), 8)
+        self.assertEqual(g2.count_chars(include_blanks=False), 8)
         counts = dict([(g2.data[y][x]["char"], 1) for x, y in g3.cells() if not g2.data[y][x]["block"]])
-        self.assertEquals(len(counts), 8)
+        self.assertEqual(len(counts), 8)
         cPalabra.postprocess()
         
     def testAttemptFillNoIntersectingAcross(self):
         g = Grid(3, 1)
         g2 = editor.attempt_fill(g, ["abc"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 3)
+        self.assertEqual(g2.count_chars(include_blanks=False), 3)
         
     def testAttemptFillNoIntersectingDown(self):
         g = Grid(1, 3)
         g2 = editor.attempt_fill(g, ["def"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 3)
+        self.assertEqual(g2.count_chars(include_blanks=False), 3)
         
     def testAttemptFillVoids(self):
         g = Grid(3, 3)
         g.set_void(0, 0, True)
         g.set_void(2, 2, True)
         g2 = editor.attempt_fill(g, ["axa", "bxb"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 5)
+        self.assertEqual(g2.count_chars(include_blanks=False), 5)
         
     def testAttemptFillAlreadyFilledIn(self):
         g = Grid(3, 3)
@@ -445,7 +445,7 @@ class EditorTestCase(unittest.TestCase):
         g.set_block(2, 2, True)
         g.set_char(0, 0, 'A')
         g2 = editor.attempt_fill(g, ["aaa"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 3)
+        self.assertEqual(g2.count_chars(include_blanks=False), 3)
         
     def testAttemptFillVarLengths(self):
         g = Grid(5, 5)
@@ -453,14 +453,14 @@ class EditorTestCase(unittest.TestCase):
             for x in xrange(y, 5):
                 g.set_block(x, y, True)
         g2 = editor.attempt_fill(g, ["aaaa", "bbb", "cc"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 9)
+        self.assertEqual(g2.count_chars(include_blanks=False), 9)
         
     def testAttemptFillTwo(self):
         # A B
         # D C
         g = Grid(2, 2)
         g2 = editor.attempt_fill(g, ["ab", "bc", "dc", "ad"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 4)
+        self.assertEqual(g2.count_chars(include_blanks=False), 4)
         
     def testAttemptFillNine(self):
         # K L M
@@ -468,119 +468,119 @@ class EditorTestCase(unittest.TestCase):
         # Q R S
         g = Grid(3, 3)
         g2 = editor.attempt_fill(g, ["klm", "nop", "qrs", "knq", "lor", "mps"])
-        self.assertEquals(g2.count_chars(include_blanks=False), 9)
+        self.assertEqual(g2.count_chars(include_blanks=False), 9)
         
     def testOnTypingPeriod(self):
         """If the user types a period then a block is placed and selection is moved."""
         actions = editor.on_typing(self.grid, gtk.keysyms.period, (0, 0, "across"))
-        self.assertEquals(len(actions), 2)
-        self.assertEquals(actions[0].type, "blocks")
-        self.assertEquals(actions[0].args, {'x': 0, 'y': 0, 'status': True})
-        self.assertEquals(actions[1].type, "selection")
-        self.assertEquals(actions[1].args, {'x': 1, 'y': 0})
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].type, "blocks")
+        self.assertEqual(actions[0].args, {'x': 0, 'y': 0, 'status': True})
+        self.assertEqual(actions[1].type, "selection")
+        self.assertEqual(actions[1].args, {'x': 1, 'y': 0})
         
     def testOnTypingPeriodTwo(self):
         """If the current direction is down then the selected cell moves down."""
         actions = editor.on_typing(self.grid, gtk.keysyms.period, (0, 0, "down"))
-        self.assertEquals(len(actions), 2)
-        self.assertEquals(actions[1].type, "selection")
-        self.assertEquals(actions[1].args, {'x': 0, 'y': 1})
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[1].type, "selection")
+        self.assertEqual(actions[1].args, {'x': 0, 'y': 1})
         
     def testOnTypingPeriodThree(self):
         """If the user types next to a block, the selection is not moved."""
         self.grid.set_block(1, 0, True)
         actions = editor.on_typing(self.grid, gtk.keysyms.period, (0, 0, "across"))
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "blocks")
-        self.assertEquals(actions[0].args, {'x': 0, 'y': 0, 'status': True})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "blocks")
+        self.assertEqual(actions[0].args, {'x': 0, 'y': 0, 'status': True})
         
     def testOnTypingChar(self):
         """If the user types a valid character then it is placed and selection is moved."""
         actions = editor.on_typing(self.grid, gtk.keysyms.k, (1, 1, "across"))
-        self.assertEquals(len(actions), 2)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(1, 1, 'K')]})
-        self.assertEquals(actions[1].type, "selection")
-        self.assertEquals(actions[1].args, {'x': 2, 'y': 1})
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(1, 1, 'K')]})
+        self.assertEqual(actions[1].type, "selection")
+        self.assertEqual(actions[1].args, {'x': 2, 'y': 1})
         
     def testOnTypingInvalidChar(self):
         """If the user types an invalid character then nothing happens."""
         actions = editor.on_typing(self.grid, gtk.keysyms.slash, (5, 5, "down"))
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testOnTypingInvalidCell(self):
         """If the user types when no valid cell is selected then nothing happens."""
         actions = editor.on_typing(self.grid, gtk.keysyms.a, (-1, -1, "across"))
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testOnTypingNotAvailableCell(self):
         """If the user types while an unavailable cell is selected then nothing happens."""
         self.grid.set_block(3, 3, True)
         actions = editor.on_typing(self.grid, gtk.keysyms.a, (3, 3, "across"))
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testOnTypingCharAlreadyThere(self):
         """If the user types a character that is already there then only selection moves."""
         self.grid.set_char(5, 5, 'A')
         actions = editor.on_typing(self.grid, gtk.keysyms.a, (5, 5, "down"))
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "selection")
-        self.assertEquals(actions[0].args, {'x': 5, 'y': 6})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[0].args, {'x': 5, 'y': 6})
         
     def testOnDeleteNothingThere(self):
         """If the user deletes an empty cell then nothing happens."""
         actions = editor.on_delete(self.grid, (0, 0, "across"))
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testOnDeleteChar(self):
         """If the user deletes a character then it is removed."""
         self.grid.set_char(4, 4, 'P')
         actions = editor.on_delete(self.grid, (4, 4, "across"))
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(4, 4, '')]})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(4, 4, '')]})
         
     def testSelectionDeltaUpRight(self):
         """Applying a selection delta is possible when cell is available."""
         actions = editor.apply_selection_delta(self.grid, (3, 3, "across"), 0, -1)
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "selection")
-        self.assertEquals(actions[0].args, {'x': 3, 'y': 2})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[0].args, {'x': 3, 'y': 2})
         actions = editor.apply_selection_delta(self.grid, (4, 4, "across"), 1, 0)
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "selection")
-        self.assertEquals(actions[0].args, {'x': 5, 'y': 4})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[0].args, {'x': 5, 'y': 4})
         
     def testSelectionDeltaUpFail(self):
         """Applying a selection delta fails when no cell is available."""
         actions = editor.apply_selection_delta(self.grid, (5, 0, "across"), 0, -1)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         self.grid.set_block(3, 3, True)
         actions = editor.apply_selection_delta(self.grid, (3, 4, "across"), 0, -1)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testBackspaceCurrentCell(self):
         """Character is removed from cell when user presses backspace."""
         self.grid.set_char(3, 3, 'A')
         actions = editor.on_backspace(self.grid, (3, 3, "across"))
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(3, 3, '')]})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(3, 3, '')]})
         
     def testBackspacePreviousCell(self):
         """Move selection to previous cell on backspace and remove char there."""
         self.grid.set_char(3, 3, 'A')
         actions = editor.on_backspace(self.grid, (4, 3, "across"))
-        self.assertEquals(len(actions), 2)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(3, 3, '')]})
-        self.assertEquals(actions[1].type, "selection")
-        self.assertEquals(actions[1].args, {'x': 3, 'y': 3})
+        self.assertEqual(len(actions), 2)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(3, 3, '')]})
+        self.assertEqual(actions[1].type, "selection")
+        self.assertEqual(actions[1].args, {'x': 3, 'y': 3})
         
     def testInsertWordInvalid(self):
         """A word cannot be inserted when the selected slot is invalid."""
         actions = editor.insert(self.grid, (-1, -1, "across"), "australia")
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testInsertWordCells(self):
         """A word cannot be inserted when there are no empty cells."""
@@ -589,7 +589,7 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_char(1, 0, 'P')
         self.grid.set_char(2, 0, 'Y')
         actions = editor.insert(self.grid, (0, 0, "across"), "spy")
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testInsertWordCellsAvailable(self):
         """A word can be inserted when there are empty cells."""
@@ -597,9 +597,9 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_char(0, 0, 'A')
         self.grid.set_char(1, 0, 'B')
         actions = editor.insert(self.grid, (0, 0, "across"), "abc")
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(2, 0, 'C')]})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(2, 0, 'C')]})
         
     def testInsertWordCellsMatch(self):
         """Existing characters don't have to match the inserted word."""
@@ -607,9 +607,9 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_char(0, 0, 'D')
         self.grid.set_char(1, 0, 'E')
         actions = editor.insert(self.grid, (0, 0, "across"), "abc")
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(2, 0, 'C')]})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(2, 0, 'C')]})
         
     def testKeyBackspace(self):
         """Pressing backspace in the editor results at least one action."""
@@ -622,56 +622,56 @@ class EditorTestCase(unittest.TestCase):
         args = self.grid, (5, 5, "across"), gtk.keysyms.Tab
         actions = editor.determine_editor_actions(*args)
         self.assertTrue(len(actions), 1)
-        self.assertEquals(actions[0].type, "swapdir")
+        self.assertEqual(actions[0].type, "swapdir")
         args = self.grid, (-1, -1, "across"), gtk.keysyms.Tab
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         self.grid.set_block(5, 5, True)
         args = self.grid, (5, 5, "across"), gtk.keysyms.Tab
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
     
     def testKeyHome(self):
         """Pressing the Home key has no effect when nothing is selected."""
         args = self.grid, (-1, -1, "across"), gtk.keysyms.Home
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testKeyHomeNotAvailable(self):
         """Pressing the Home key has no effect when cell is not available."""
         self.grid.set_void(5, 5, True)
         args = self.grid, (5, 5, "across"), gtk.keysyms.Home
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testKeyEnd(self):
         """Pressing the End key has no effect when nothing is selected."""
         args = self.grid, (-1, -1, "across"), gtk.keysyms.End
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testKeyEndNotAvailable(self):
         """Pressing the End key has no effect when cell is not available."""
         self.grid.set_void(5, 5, True)
         args = self.grid, (5, 5, "across"), gtk.keysyms.End
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testKeyHomeWorks(self):
         """Pressing the Home key results in a selection action."""
         args = self.grid, (5, 5, "across"), gtk.keysyms.Home
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "selection")
-        self.assertEquals(actions[0].args, {'x': 0, 'y': 5})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[0].args, {'x': 0, 'y': 5})
         
     def testKeyEndWorks(self):
         """Pressing the End key results in a selection action."""
         args = self.grid, (5, 5, "across"), gtk.keysyms.End
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "selection")
-        self.assertEquals(actions[0].args, {'x': self.grid.width - 1, 'y': 5})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "selection")
+        self.assertEqual(actions[0].args, {'x': self.grid.width - 1, 'y': 5})
         
     def testKeyArrow(self):
         """Pressing an arrow key results in a selection action."""
@@ -679,8 +679,8 @@ class EditorTestCase(unittest.TestCase):
         for key in KEYS:
             args = self.grid, (5, 5, "across"), key
             actions = editor.determine_editor_actions(*args)
-            self.assertEquals(len(actions), 1)
-            self.assertEquals(actions[0].type, "selection")
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0].type, "selection")
     
     def testKeyArrowChangeTypingDir(self):
         """When the option is enabled, some arrows keys change typing direction."""
@@ -710,18 +710,18 @@ class EditorTestCase(unittest.TestCase):
         self.grid.set_char(5, 5, 'A')
         args = self.grid, (5, 5, "across"), gtk.keysyms.Delete
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions[0].type, "chars")
-        self.assertEquals(actions[0].args, {'cells': [(5, 5, '')]})
+        self.assertEqual(len(actions), 1)
+        self.assertEqual(actions[0].type, "chars")
+        self.assertEqual(actions[0].args, {'cells': [(5, 5, '')]})
         
     def testKeyOthers(self):
         """Pressing other keys may or may not have an action as result."""
         args = self.grid, (5, 5, "across"), gtk.keysyms.c
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(len(actions), 2)
+        self.assertEqual(len(actions), 2)
         args = self.grid, (5, 5, "across"), gtk.keysyms.equal
         actions = editor.determine_editor_actions(*args)
-        self.assertEquals(actions, [])
+        self.assertEqual(actions, [])
         
     def testUserMovesMouse(self):
         """When the user moves the mouse, the current and previous cells are rendered."""
