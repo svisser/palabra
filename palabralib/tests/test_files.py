@@ -35,6 +35,7 @@ from palabralib.files import (
     write_ipuz,
     compute_header,
 )
+import palabralib.files as files
 from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
 from palabralib.view import CellStyle, _relative_to
@@ -51,6 +52,8 @@ METADATA = {
 class FilesTestCase(unittest.TestCase):
     LOCATION = "palabralib/tests/test.puzzle"
     LOCATION2 = "palabralib/tests/test.not_puzzle"
+    LOCATION3 = "palabralib/tests/test.container"
+    _LOCATION3B = "tests/test.container"
     
     def setUp(self):
         # XPF
@@ -63,7 +66,7 @@ class FilesTestCase(unittest.TestCase):
         self.ipuzzle.filename = self.LOCATION
         
     def tearDown(self):
-        for f in [self.LOCATION, self.LOCATION2]:
+        for f in [self.LOCATION, self.LOCATION2, self.LOCATION3]:
             if os.path.exists(f):
                 os.remove(f)
                 
@@ -348,3 +351,25 @@ class FilesTestCase(unittest.TestCase):
         self.assertEquals(header, "%G")
         header = compute_header(p, "%G", page_n=3)
         self.assertEquals(header, "4")
+        
+    def testReadWritePatterns(self):
+        """Container files with grid patterns can be read and written."""
+        p1 = Puzzle(Grid(15, 15))
+        g = Grid(3, 3)
+        g.set_block(1, 1, True)
+        g.set_void(2, 2, True)
+        g.assign_numbers()
+        p2 = Puzzle(g)
+        files.write_containers([(self.LOCATION3, {}, [p1, p2])])
+        result = files.read_containers([self._LOCATION3B])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0][0], files.get_real_filename(self._LOCATION3B))
+        puzzles = result[0][2]
+        self.assertEqual(len(puzzles), 2)
+        self.assertEqual(puzzles[0].grid, p1.grid)
+        self.assertEqual(puzzles[1].grid, p2.grid)
+        
+    def testReadContainerDoesNotExist(self):
+        """When a container file does not exist, None is returned."""
+        result = files.read_containers(["/does/not/exist"])
+        self.assertEqual(result, [(None, {}, [])])
