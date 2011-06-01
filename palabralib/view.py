@@ -26,6 +26,7 @@ import cPalabra
 from gui_common import (
     create_label,
     create_scroll,
+    create_drawing_area,
 )
 from preferences import read_pref_color
 
@@ -212,7 +213,6 @@ class GridViewProperties:
             return sx
         elif y is not None:
             return sy
-        return None
         
     def screen_to_grid(self, screen_x, screen_y):
         """
@@ -669,11 +669,9 @@ class GridPreview(gtk.VBox):
         self.preview_surface = None
         self.preview_pattern = None
         self.render_mode = mode
-        self.drawing_area = gtk.DrawingArea()
-        self.drawing_area.connect("expose_event", self.on_expose_event)
+        self.drawing_area = create_drawing_area(self.on_expose_event)
         self.scrolled_window = create_scroll(self.drawing_area, viewport=True)
-        text = ''.join(["<b>", header, "</b>"])
-        self.pack_start(create_label(text, align=(0, 0)), False, False, 6)
+        self.pack_start(create_label("<b>" + header + "</b>"), False, False, 6)
         self.pack_start(self.scrolled_window)
         
     def display(self, grid):

@@ -200,6 +200,11 @@ def create_menubar(funcs):
     for f in funcs:
         m.append(f())
     return m
+
+def create_drawing_area(f_expose):
+    drawing_area = gtk.DrawingArea()
+    drawing_area.connect("expose_event", f_expose)
+    return drawing_area
     
 def launch_dialog(dialog, arg0, arg1=None, arg2=None, f_done=None):
     if arg1 is None:
