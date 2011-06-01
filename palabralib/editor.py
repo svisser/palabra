@@ -737,17 +737,6 @@ class Editor:
                 break
             self.window.transform_grid(transform.modify_chars, chars=results[0])
             break
-            
-    def clue(self, x, y, direction, key, value):
-        """
-        Update the clue data by creating or updating the latest undo action.
-        """
-        self.window.transform_clues(transform.modify_clue
-                , x=x
-                , y=y
-                , direction=direction
-                , key=key
-                , value=value)
         
     def insert(self, word):
         """Insert a word in the selected slot."""

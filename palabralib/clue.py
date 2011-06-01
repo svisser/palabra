@@ -293,7 +293,12 @@ class ClueTool:
                 store[it][6] = value
             display = create_display_string(n, direction, word, clue)
             store[it][7] = display
-            self.parent.editor.clue(x, y, direction, key, value)
+            self.parent.transform_clues(transform.modify_clue
+                    , x=x
+                    , y=y
+                    , direction=direction
+                    , key=key
+                    , value=value)
             self.tree.columns_autosize()
             self.tree.queue_draw()
 
