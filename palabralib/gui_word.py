@@ -605,10 +605,7 @@ class WordListManager(PalabraDialog):
             preferences.prefs[constants.PREF_BLACKLIST] = ''
         if path in preferences.prefs[constants.PREF_FIND_WORD_FILES]:
             preferences.prefs[constants.PREF_FIND_WORD_FILES].remove(path)
-        try:
-            self.palabra_window.editor.refresh_words(True)
-        except AttributeError:
-            pass
+        self.palabra_window.refresh_words(True)
         self.display_wordlists()
         
     def display_wordlists(self):

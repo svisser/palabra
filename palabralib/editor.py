@@ -691,18 +691,13 @@ EDITOR_EVENTS = {
     , "key_press_event": on_key_press_event
     , "key_release_event": on_key_release_event
 }
-    
-def refresh_words(wordlists, grid, selection, force_refresh=False, options=None):
-    """
-    Update the list of words according to active constraints of letters
-    and the current settings (e.g., show only words with intersections).
-    """
+
+def compute_words(grid, wordlists, selection, force_refresh=False, options=None):
+    """Compute the words that should be displayed in the main words control."""
     args = compute_search_args(grid, selection, force_refresh)
     if args:
-        result = search_wordlists(wordlists, *args, options=options)
-    else:
-        result = []
-    e_tools["word"].display_words(result)
+        return search_wordlists(wordlists, *args, options=options)
+    return []
 
 class Editor:
     def __init__(self, window):
@@ -710,20 +705,6 @@ class Editor:
         self.blacklist = []
         self.fill_options = {}
         self.fill_options.update(DEFAULT_FILL_OPTIONS)
-        
-    def refresh_words(self, force_refresh=False):
-        """
-        Update the list of words according to active constraints of letters
-        and the current settings (e.g., show only words with intersections).
-        """
-        f_wlists = preferences.prefs[constants.PREF_FIND_WORD_FILES]
-        wordlists = [wlist for wlist in self.window.wordlists if wlist.path in f_wlists]
-        min_score = preferences.prefs[constants.PREF_FIND_WORD_MIN_SCORE]
-        options = {
-            constants.SEARCH_OPTION_MIN_SCORE: min_score
-        }
-        refresh_words(wordlists, self.window.puzzle.grid
-            , e_settings.selection, force_refresh, options)
         
     def fill(self):
         for wlist in self.window.wordlists:
@@ -749,10 +730,3 @@ class Editor:
         If the word is None, the overlay will be cleared.
         """
         set_overlay(self.window, self.window.puzzle, e_settings, word)
-        
-    def refresh_visual_size(self):
-        # TODO fix design
-        self.window.puzzle.view.grid = self.window.puzzle.grid
-        self.window.puzzle.view.properties.grid = self.window.puzzle.grid
-        size = self.window.puzzle.view.properties.visual_size()
-        self.window.drawing_area.set_size_request(*size)

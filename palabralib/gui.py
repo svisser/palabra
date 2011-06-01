@@ -42,6 +42,7 @@ from clue import ClueTool, create_clues, ManageCluesDialog
 import constants
 from export import ExportWindow
 from editor import (
+    compute_words,
     e_settings,
     e_tools,
     Editor,
@@ -753,6 +754,23 @@ class PalabraWindow(gtk.Window):
         action.stack.push(s)
         self.update_undo_redo()
     
+    def refresh_words(self, force_refresh=False):
+        """
+        Update the list of words according to active constraints of letters
+        and the current settings (e.g., show only words with intersections).
+        """
+        if self.puzzle is None:
+            return
+        f_wlists = preferences.prefs[constants.PREF_FIND_WORD_FILES]
+        wordlists = [wlist for wlist in self.wordlists if wlist.path in f_wlists]
+        min_score = preferences.prefs[constants.PREF_FIND_WORD_MIN_SCORE]
+        options = {
+            constants.SEARCH_OPTION_MIN_SCORE: min_score
+        }
+        words = compute_words(self.puzzle.grid
+            , wordlists, e_settings.selection, force_refresh, options)
+        e_tools["word"].display_words(words)
+    
     def update_undo_redo(self):
         """Update the controls for undo and redo."""
         for i in [self.undo_menu_item, self.undo_tool_item]:
@@ -789,7 +807,7 @@ class PalabraWindow(gtk.Window):
         for item in self.puzzle_toggle_items:
             item.set_sensitive(puzzle is not None)
         self.update_undo_redo()
-        try:
+        if self.puzzle is not None:
             if transform >= constants.TRANSFORM_STRUCTURE:
                 # TODO modify when arbitrary number schemes are implemented
                 self.puzzle.grid.assign_numbers()
@@ -800,12 +818,19 @@ class PalabraWindow(gtk.Window):
                 p, q = grid.get_start_word(*selection)
                 e_tools["clue"].load_items(grid)
                 e_tools["clue"].select(p, q, selection[2])
-            e_settings.force_redraw = True
-            self.editor.refresh_words()
-            self.editor.refresh_visual_size()
-        except AttributeError:
-            pass
+        e_settings.force_redraw = True
+        self.refresh_words()
+        self.refresh_editor()
         self.panel.queue_draw()
+        
+    def refresh_editor(self):
+        # TODO fix design
+        if self.puzzle is None:
+            return
+        self.puzzle.view.grid = self.puzzle.grid
+        self.puzzle.view.properties.grid = self.puzzle.grid
+        size = self.puzzle.view.properties.visual_size()
+        self.drawing_area.set_size_request(*size)
         
     def create_view_menu(self):
         menu = gtk.Menu()
@@ -905,11 +930,8 @@ class PalabraWindow(gtk.Window):
         if d.run() == gtk.RESPONSE_OK:
             for key, value in d.gather_appearance().items():
                 puzzle.view.properties[key] = value
-            try:
-                e_settings.force_redraw = True
-                self.editor.refresh_visual_size()
-            except AttributeError:
-                pass
+            e_settings.force_redraw = True
+            self.refresh_editor()
             self.panel.queue_draw()
         d.destroy()
         
