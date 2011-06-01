@@ -1115,6 +1115,10 @@ class PalabraWindow(gtk.Window):
         menu.append(self._create_menu_item(activate
             , u"Configure how word lists are used in the program"
             , title=u"Configure word list _usage..."))
+        activate = lambda i: launch_dialog(FindWordsDialog, self)
+        menu.append(self._create_menu_item(activate
+            , u"Find words in word lists according to a pattern"
+            , title=u"_Find words..."))
         #def activate(item):
         #    w = WordListEditor(self)
         #    w.show_all()
@@ -1125,18 +1129,12 @@ class PalabraWindow(gtk.Window):
         #    , title=u"_Edit word lists..."))
         
         menu.append(gtk.SeparatorMenuItem())
-        
-        activate = lambda i: launch_dialog(FindWordsDialog, self)
-        menu.append(self._create_menu_item(activate
-            , u"Find words in word lists according to a pattern"
-            , title=u"_Find words..."))
-        
+
         activate = lambda i: launch_dialog(AccidentalWordsDialog, self, self.puzzle)
         menu.append(self._create_menu_item(activate
             , u"View words that may have accidentally appeared in the grid"
             , title=u"View _accidental words..."
             , is_puzzle_sensitive=True))
-        
         activate = lambda i: launch_dialog(SimilarWordsDialog, self, self.puzzle)
         menu.append(self._create_menu_item(activate
             , u"View words that have a part in common"
