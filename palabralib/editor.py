@@ -139,6 +139,10 @@ def compute_word_cells(grid, word, x, y, d):
     return [(x, y, c.upper()) for x, y, c in result if grid.data[y][x]["char"] == ""]
 
 def compute_search_args(grid, slot, force=False):
+    """
+    Compute the arguments for searching words,
+    based on the given grid and slot.
+    """
     x, y, d = slot
     if not grid.is_available(x, y):
         return None
@@ -208,7 +212,7 @@ def compute_highlights(grid, f=None, arg=None, clear=False):
     return cells
 
 def compute_warnings_of_cells(grid, cells, settings):
-    """Determine undesired cells."""
+    """Determine undesired cells based on warning settings."""
     lengths = {}
     starts = {}
     warn_unchecked = settings[constants.WARN_UNCHECKED]
@@ -405,8 +409,9 @@ def process_editor_actions(window, puzzle, e_settings, actions):
         elif a.type == "popup":
             x = a.args['x']
             y = a.args['y']
-            event = a.args['event']
-            _create_popup_menu(window, puzzle, event, x, y)
+            button = a.args['button']
+            time = a.args['time']
+            _create_popup_menu(window, puzzle, button, time, x, y)
         elif a.type == "render":
             cells = a.args['cells']
             _render_cells(puzzle, cells, e_settings, window.drawing_area)
@@ -441,6 +446,10 @@ def on_delete(grid, selection):
     return []
 
 def compute_selection(prev, x=None, y=None, direction=None, other_dir=False):
+    """
+    Compute a new selection based on the previous selection
+    and the desired modifications.
+    """
     if other_dir:
         direction = {"across": "down", "down": "across"}[prev.direction]
     nx = x if x is not None else prev[0]
@@ -558,30 +567,28 @@ def on_button_press(grid, event, prev, next):
                 actions.append(EditorAction("selection", {'x': x, 'y': y}))
         elif event.button == 3:
             if grid.is_valid(x, y):
-                actions.append(EditorAction("popup", {'event': event, 'x': x, 'y': y}))
+                actions.append(EditorAction("popup", {'button': event.button
+                    , 'time': event.time, 'x': x, 'y': y}))
                 # popup menu right-click should not interfere with
                 # normal editing controls
                 mouse_buttons_down[2] = False
     return actions
 
-def _create_popup_menu(window, puzzle, event, x, y):
+def has_chars(grid, x, y, direction):
+    return any([grid.data[q][p]["char"] != '' for p, q in grid.slot(x, y, direction)])
+
+def _create_popup_menu(window, puzzle, button, time, x, y):
     menu = gtk.Menu()
-    update_status = window.update_status
-    pop_status = window.pop_status
     def on_clear_slot_select(item, direction, x, y):
         grid = puzzle.grid
         sx, sy = grid.get_start_word(x, y, direction)
         msg = ''.join(["Clear all letters in the slot: "
             , str(grid.data[sy][sx]["number"]), " "
             , {"across": "across", "down": "down"}[direction]])
-        update_status(constants.STATUS_MENU, msg)
-    on_clear_slot_deselect = lambda item: pop_status(constants.STATUS_MENU)
+        window.update_status(constants.STATUS_MENU, msg)
+    on_clear_slot_deselect = lambda item: window.pop_status(constants.STATUS_MENU)
     on_clear_slot = lambda item, d: clear_slot_of(window, puzzle.grid, x, y, d)
-    def has_chars(x, y, direction):
-        grid = puzzle.grid
-        return any([grid.data[q][p]["char"] != ''
-            for p, q in grid.slot(x, y, direction)])
-    clearable = lambda slot: puzzle.grid.is_part_of_word(*slot) and has_chars(*slot)
+    clearable = lambda slot: puzzle.grid.is_part_of_word(*slot) and has_chars(puzzle.grid, *slot)
     item = gtk.MenuItem("Clear across slot")
     item.connect("activate", on_clear_slot, "across")
     item.connect("select", on_clear_slot_select, "across", x, y)
@@ -595,7 +602,7 @@ def _create_popup_menu(window, puzzle, event, x, y):
     item.set_sensitive(clearable((x, y, "down")))
     menu.append(item)
     menu.append(gtk.SeparatorMenuItem())
-    def on_cell_properties(item):
+    def on_cell_properties():
         grid = puzzle.grid
         def determine_type(c):
             if grid.is_block(*c):
@@ -613,11 +620,19 @@ def _create_popup_menu(window, puzzle, event, x, y):
             puzzle.view.properties.update(x, y, w.gather_appearance().items())
             _render_cells(puzzle, [(x, y)], e_settings, window.drawing_area)
         w.destroy()
-    item = gtk.MenuItem("Properties")
-    item.connect("activate", on_cell_properties)
+    def create_item(title, activate, tooltip):
+        select = lambda item: window.update_status(constants.STATUS_MENU, tooltip)
+        deselect = lambda item: window.pop_status(constants.STATUS_MENU)
+        item = gtk.MenuItem(title)
+        item.connect("activate", activate)
+        item.connect("select", select)
+        item.connect("deselect", deselect)
+        return item
+    activate = lambda i: on_cell_properties()
+    item = create_item(u"Properties", activate, u"View properties of this cell")
     menu.append(item)
     menu.show_all()
-    menu.popup(None, None, None, event.button, event.time)
+    menu.popup(None, None, None, button, time)
 
 def clear_slot_of(window, grid, x, y, direction):
     """Clear all letters of the slot in the specified direction
