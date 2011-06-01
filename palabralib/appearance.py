@@ -36,14 +36,14 @@ class AppearanceDialog(PalabraDialog):
     def __init__(self, palabra_window, properties):
         PalabraDialog.__init__(self, palabra_window, u"Appearance")
         self.palabra_window = palabra_window
-        hbox = gtk.HBox(False, 0)
+        hbox = gtk.HBox()
         hbox.set_spacing(18)
-        hbox.pack_start(self.create_content(properties), True, True, 0)
+        hbox.pack_start(self.create_content(properties))
         mode = constants.VIEW_MODE_PREVIEW_SOLUTION
         self.preview = GridPreview(mode=mode, cell_size=None)
         self.preview.set_size_request(200, 200)
         hbox.pack_start(self.preview, False, False, 0)
-        self.main.pack_start(hbox)
+        self.pack(hbox)
         g = Grid(3, 3)
         g.set_block(0, 2, True)
         g.set_void(2, 0, True)
@@ -55,13 +55,13 @@ class AppearanceDialog(PalabraDialog):
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
         
     def create_content(self, properties):
-        main = gtk.VBox(False, 0)
+        main = gtk.VBox()
         main.set_spacing(6)
         
         table = gtk.Table(10, 3)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
-        main.pack_start(table, True, True, 0)
+        main.pack_start(table)
         
         def create_label(label):
             align = gtk.Alignment(0, 0.5)
