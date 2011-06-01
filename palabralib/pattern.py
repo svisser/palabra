@@ -20,6 +20,11 @@ import gtk
 
 from files import ParserError
 from grid import Grid
+from gui_common import (
+    create_combo,
+    create_label,
+    PalabraDialog,
+)
 import preferences
 from view import GridPreview
 
@@ -444,8 +449,6 @@ class PatternFileEditor(gtk.Dialog):
                 patterns[store.get_value(parent, 1)] = [id]
         return patterns
 
-    # TODO staticmethod ?
-
     def get_file(self, store, path):
         return store.get_value(store.get_iter(path), 1)
 
@@ -485,9 +488,9 @@ def fill_with_content(width, height, content):
         pattern.voids = full
     return pattern
     
-class GridEditor(gtk.Dialog):
+class GridEditor(PalabraDialog):
     def __init__(self, parent, size=None):
-        gtk.Dialog.__init__(self, u"Grid editor", parent, gtk.DIALOG_MODAL)
+        super(GridEditor, self).__init__(parent, u"Grid editor", horizontal=True)
         self.size = size if size else (15, 15)
         
         table = gtk.Table(2, 2, False)
@@ -506,30 +509,20 @@ class GridEditor(gtk.Dialog):
         
         radio = gtk.RadioButton(radio, u"Fill with: ")
         radio.connect("toggled", self.on_option_toggle, "fill")
-        self.fill_combo = gtk.combo_box_new_text()
-        self.fill_combo.append_text(u"")
-        self.fill_combo.append_text(u"Block")
-        self.fill_combo.connect("changed", self.on_fill_changed)
+        self.fill_combo = create_combo([u"", u"Block"], f_change=self.on_fill_changed)
         table.attach(radio, 0, 1, 1, 2)
         table.attach(self.fill_combo, 1, 2, 1, 2)
         
         self.preview = GridPreview()
         self.preview.set_size_request(384, 384)
-        
-        hbox = gtk.HBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(18)
-        alignment = gtk.Alignment(0, 0, 0, 0)
+
+        alignment = gtk.Alignment()
         alignment.add(table)
-        label = gtk.Label()
-        label.set_markup("<b>Options</b>")
-        label.set_alignment(0, 0)
         vbox2 = gtk.VBox(False, 6)
-        vbox2.pack_start(label, False, False, 0)
+        vbox2.pack_start(create_label(u"<b>Options</b>"), False, False, 0)
         vbox2.pack_start(alignment, False, False, 0)
-        hbox.pack_start(vbox2, False, False, 0)
-        hbox.pack_start(self.preview, False, False, 0)
-        self.vbox.pack_start(hbox, True, True, 0)
+        self.pack(vbox2, False)
+        self.pack(self.preview, False)
         
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
@@ -561,8 +554,8 @@ class GridEditor(gtk.Dialog):
         if index == 0:
             self.display_pattern(None)
             return
-        x, y = self.tile_starts[index - 1]
-        pattern = tile_from_cell(self.grid.width, self.grid.height, x, y)
+        width, height = self.grid.size
+        pattern = tile_from_cell(width, height, *self.tile_starts[index - 1])
         self.display_pattern(pattern)
         
     def on_fill_changed(self, combo):
@@ -570,9 +563,6 @@ class GridEditor(gtk.Dialog):
         if index == 0:
             self.display_pattern(None)
             return
-        elif index == 1:
-            content = "block"
-        elif index == 2:
-            content = "void"
-        pattern = fill_with_content(self.grid.width, self.grid.height, content)
-        self.display_pattern(pattern)
+        content = {1: "block", 2: "void"}[index]
+        width, height = self.grid.size
+        self.display_pattern(fill_with_content(width, height, content))
