@@ -117,3 +117,16 @@ class ActionTestCase(unittest.TestCase):
         for i in xrange(5):
             self.stack.redo(self.puzzle)
         self.assertEquals(self.puzzle.grid.count_blocks(), 10)
+        
+    def testMergeClueActions(self):
+        """Repeated clue modifications to the same slot are merged."""
+        self.stack.push(State(self.grid), initial=True)
+        self.grid.data[0][0]["clues"]["across"] = {"text": "Bla"}
+        self.stack.push(State(self.grid, clue_slot=(0, 0, 'across')))
+        self.grid.data[0][0]["clues"]["across"] = {"text": "Blalala"}
+        self.stack.push(State(self.grid, clue_slot=(0, 0, 'across')))
+        self.assertEqual(len(self.stack.undo_stack), 2)
+        self.stack.undo(self.puzzle)
+        self.assertEqual(self.puzzle.grid.data[0][0]["clues"], {})
+        self.stack.redo(self.puzzle)
+        self.assertEqual(self.puzzle.grid.data[0][0]["clues"], {"across": {"text": "Blalala"}})
