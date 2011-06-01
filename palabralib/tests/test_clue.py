@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+import gtk
 import os
 
 import palabralib.clue as clue
@@ -135,3 +136,25 @@ class ClueTestCase(unittest.TestCase):
         files = clue.create_clues([p1])
         result = clue.lookup_clues(files, "word")
         self.assertEqual(result, ["clue, with comma"])
+        
+    def testClueIterNext(self):
+        """It is possible to cycle forward through a list store."""
+        store = gtk.ListStore(str)
+        store.append(["1"])
+        store.append(["2"])
+        store.append(["3"])
+        it = clue.store_get_item("next", store, store.iter_nth_child(None, 0))
+        self.assertEqual(store[it][0], "2")
+        it = clue.store_get_item("next", store, store.iter_nth_child(None, 2))
+        self.assertEqual(store[it][0], "1")
+        
+    def testClueIterPrevious(self):
+        """It is possible to cycle backward through a list store."""
+        store = gtk.ListStore(str)
+        store.append(["1"])
+        store.append(["2"])
+        store.append(["3"])
+        it = clue.store_get_item("previous", store, store.iter_nth_child(None, 2))
+        self.assertEqual(store[it][0], "2")
+        it = clue.store_get_item("previous", store, store.iter_nth_child(None, 0))
+        self.assertEqual(store[it][0], "3")

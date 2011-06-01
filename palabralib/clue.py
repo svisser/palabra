@@ -189,7 +189,7 @@ class ClueTool:
         return entry, c_id
         
     def create(self, puzzle):
-        vbox = gtk.VBox(False, 0)
+        vbox = gtk.VBox()
         vbox.set_spacing(6)
         vbox.set_border_width(6)
         result = self.create_entry(vbox, "text", u"<b>Clue</b>")
