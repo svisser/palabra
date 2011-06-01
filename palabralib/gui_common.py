@@ -152,6 +152,14 @@ def create_stock_button(stock, f_click=None):
         button.connect("clicked", f_click)
     return button
 
+def create_check_button(label, active=None, f_toggle=None):
+    button = gtk.CheckButton(label)
+    if active is not None:
+        button.set_active(active)
+    if f_toggle is not None:
+        button.connect("toggled", f_toggle)
+    return button
+
 def create_notebook(pages, border=None, f_switch=None):
     tabs = gtk.Notebook()
     for widget, title in pages:

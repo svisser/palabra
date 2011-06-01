@@ -19,11 +19,18 @@ import gtk
 
 import constants
 from gui_common import (
+    create_label,
+    create_button,
     create_color_button,
+    create_check_button,
     PalabraDialog,
 )
 from grid import Grid
 from view import GridPreview, _relative_to, DEFAULTS_CELL
+
+def color_tuple(button):
+    color = button.get_color()
+    return color.red, color.green, color.blue
 
 class AppearanceDialog(PalabraDialog):
     def __init__(self, palabra_window, properties):
@@ -156,9 +163,6 @@ class AppearanceDialog(PalabraDialog):
         self.preview.refresh(force=True)
         
     def gather_appearance(self):
-        def color_tuple(button):
-            color = button.get_color()
-            return color.red, color.green, color.blue
         a = {}
         a["block", "margin"] = self.block_margin_spinner.get_value_as_int()
         a["border", "width"] = self.border_width_spinner.get_value_as_int()
@@ -177,98 +181,68 @@ class AppearanceDialog(PalabraDialog):
         a["number", "size"] = (p, _relative_to(key, p / 100.0, d=a))
         return a
 
-class CellPropertiesDialog(gtk.Dialog):
+class CellPropertiesDialog(PalabraDialog):
     def __init__(self, palabra_window, properties):
-        gtk.Dialog.__init__(self, u"Cell properties", palabra_window
-            , gtk.DIALOG_MODAL)
-        self.set_title('Properties of cell')
+        super(CellPropertiesDialog, self).__init__(palabra_window, u"Cell properties")
         self.palabra_window = palabra_window
         self.properties = properties
         x, y = properties["cell"]
-
-        grid_cell = properties["grid"].data[y][x]
+        c1 = (u"Background color", ("cell", "color"))
+        c2 = (u"Block color", ("block", "color"))
+        c3 = (u"Letter color", ("char", "color"))
+        c4 = (u"Number color", ("number", "color"))
+        self.colors = [c1, c2, c3, c4]
+        
         self.grid = Grid(1, 1)
-        self.grid.data[0][0].update(grid_cell)
+        self.grid.data[0][0].update(properties["grid"].data[y][x])
         
         table = gtk.Table(3, 3, False)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
-        
         def create_row(table, title, value, x, y):
-            label = gtk.Label()
-            label.set_markup(title)
-            label.set_alignment(0, 0.5)
-            table.attach(label, x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
-            label = gtk.Label(value)
-            label.set_alignment(0, 0)
-            table.attach(label, x + 1, x + 2, y, y + 1)
-        def create_color_row(table, title, button, reset, x, y):
-            label = gtk.Label()
-            label.set_markup(title)
-            label.set_alignment(0, 0.5)
-            table.attach(label, x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
-            align = gtk.Alignment(0, 0.5)
-            align.add(button)
-            table.attach(align, x + 1, x + 2, y, y + 1)
-            align = gtk.Alignment(0, 0.5)
-            align.add(reset)
-            table.attach(align, x + 2, x + 3, y, y + 1)
-        
-        self.colors = [("cell", "color")
-            , ("block", "color")
-            , ("char", "color")
-            , ("number", "color")
-        ]
-        types = {"letter": u"Letter", "block": u"Block", "void": u"Void"}
-        def on_color_set(button, key):
-            color = button.get_color()
-            self._on_update(key, (color.red, color.green, color.blue))
-        for key in self.colors:
+            table.attach(create_label(title), x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
+            table.attach(create_label(value, align=(0, 0)), x + 1, x + 2, y, y + 1)
+        def create_color_row(table, title, b_align, r_align, x, y):
+            table.attach(create_label(title), x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
+            table.attach(b_align, x + 1, x + 2, y, y + 1)
+            table.attach(r_align, x + 2, x + 3, y, y + 1)
+        on_color_set = lambda button, key: self._on_update(key, color_tuple(button))    
+        for i, (title, key) in enumerate(self.colors):
             attr = '_'.join(list(key) + ["button"])
             setattr(self, attr, create_color_button(properties[key]))
             getattr(self, attr).connect("color-set", on_color_set, key)
             attr2 = '_'.join(list(key) + ["reset", "button"])
             setattr(self, attr2, gtk.Button(u"Reset"))
             getattr(self, attr2).connect("clicked", self.on_color_reset, key)
-        create_color_row(table, "Background color"
-            , self.cell_color_button, self.cell_color_reset_button, 0, 0)
-        create_color_row(table, "Block color"
-            , self.block_color_button, self.block_color_reset_button, 0, 1)
-        create_color_row(table, "Letter color"
-            , self.char_color_button, self.char_color_reset_button, 0, 2)
-        create_color_row(table, "Number color"
-            , self.number_color_button, self.number_color_reset_button, 0, 3)
+            b_align = gtk.Alignment(0, 0.5)
+            b_align.add(getattr(self, attr))
+            r_align = gtk.Alignment(0, 0.5)
+            r_align.add(getattr(self, attr2))
+            create_color_row(table, title, b_align, r_align, 0, i)
         
-        label = gtk.Label()
-        label.set_markup("Other options")
-        label.set_alignment(0, 0.5)
-        table.attach(label, 0, 1, 4, 5, gtk.FILL, gtk.FILL)
-        self.circle_button = gtk.CheckButton(label="Display circle")
-        self.circle_button.set_active(properties["circle"])
-        def on_circle_toggled(button):
-            self._on_update("circle", button.get_active())
-        self.circle_button.connect("toggled", on_circle_toggled)
+        table.attach(create_label(u"Other options"), 0, 1, 4, 5, gtk.FILL, gtk.FILL)
+        on_circle = lambda b: self._on_update("circle", b.get_active())
+        self.circle_button = create_check_button(u"Display circle"
+            , active=properties["circle"], f_toggle=on_circle)
         table.attach(self.circle_button, 1, 3, 4, 5)
 
-        main = gtk.VBox(False, 0)
+        main = gtk.VBox()
         main.set_spacing(6)
-        label = gtk.Label()
-        label.set_markup("<b>Properties</b>")
-        label.set_alignment(0, 0.5)
-        main.pack_start(label, False, False, 0)
+        main.pack_start(create_label(u"<b>Properties</b>"), False, False, 0)
         main.pack_start(table, False, False, 0)
-        content = gtk.HBox(False, 0)
+        content = gtk.HBox()
         content.set_border_width(6)
         content.set_spacing(6)
-        content.pack_start(main, True, True, 0)
+        content.pack_start(main)
         
         self.previews = []
-        prevs = gtk.VBox(False, 0)
-        for m, h in ([(constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
-            , (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")]):
+        prevs = gtk.VBox()
+        p1 = (constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
+        p2 = (constants.VIEW_MODE_PREVIEW_SOLUTION, "Solution")
+        for m, h in [p1, p2]:
             p = GridPreview(mode=m, header=h, cell_size=96)
             p.set_size_request(164, 164)
-            align = gtk.Alignment(0, 0)
+            align = gtk.Alignment()
             align.add(p)
             self.previews.append(p)
             p.display(self.grid)
@@ -277,14 +251,9 @@ class CellPropertiesDialog(gtk.Dialog):
             p.refresh()
             prevs.pack_start(align, False, False, 0)
         content.pack_start(prevs, False, False, 0)
-
-        hbox = gtk.VBox(False, 0)
-        hbox.set_border_width(12)
-        hbox.set_spacing(9)
-        hbox.pack_start(content, True, True, 0)
+        self.pack(content)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
-        self.vbox.add(hbox)
         
     def on_color_reset(self, button, key):
         color = self.properties["defaults"][key]
@@ -301,9 +270,8 @@ class CellPropertiesDialog(gtk.Dialog):
     
     def gather_appearance(self):
         a = {}
-        for key in self.colors:
+        for title, key in self.colors:
             attr = '_'.join(list(key) + ["button"])
-            c = getattr(self, attr).get_color()
-            a[key] = (c.red, c.green, c.blue)
+            a[key] = color_tuple(getattr(self, attr))
         a["circle"] = self.circle_button.get_active()
         return a
