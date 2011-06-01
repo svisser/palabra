@@ -195,10 +195,10 @@ def compute_filters(include_all=False):
     filters = []
     for key in FILETYPES['keys']:
         description = FILETYPES[key]['description']
-        pattern = FILETYPES[key]['pattern']
+        pattern = '*' + FILETYPES[key]['pattern']
         f = gtk.FileFilter()
-        f.set_name(description + ' (*' + pattern + ')')
-        f.add_pattern('*' + pattern)
+        f.set_name(description + ' (' + pattern + ')')
+        f.add_pattern(pattern)
         filters.append((key, f))
     if include_all:
         f = gtk.FileFilter()
@@ -795,7 +795,7 @@ class PalabraWindow(gtk.Window):
                 self.puzzle.grid.assign_numbers()
             if transform >= constants.TRANSFORM_CONTENT:
                 # reload all word/clue items and select current word
-                grid = self.puzzle_manager.current_puzzle.grid
+                grid = self.puzzle.grid
                 selection = e_settings.selection
                 p, q = grid.get_start_word(*selection)
                 e_tools["clue"].load_items(grid)
@@ -1169,11 +1169,8 @@ class PalabraWindow(gtk.Window):
     def create_help_menu(self):
         menu = gtk.Menu()
         
-        def on_help_about_activate(widget):
-            d = PalabraAboutDialog(self)
-            d.show_all()
         menu.append(self._create_menu_item(
-            on_help_about_activate
+            lambda w: launch_dialog(PalabraAboutDialog, self)
             , u"About this program"
             , image=gtk.STOCK_ABOUT))
         
