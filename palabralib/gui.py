@@ -824,7 +824,6 @@ class PalabraWindow(gtk.Window):
         self.panel.queue_draw()
         
     def refresh_editor(self):
-        # TODO fix design
         if self.puzzle is None:
             return
         self.puzzle.view.grid = self.puzzle.grid

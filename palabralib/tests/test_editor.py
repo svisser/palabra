@@ -23,6 +23,7 @@ from palabralib.grid import Grid
 from palabralib.puzzle import Puzzle
 import palabralib.constants as constants
 import palabralib.editor as editor
+import palabralib.word as word
 
 class EditorMockWindow:
     def __init__(self):
@@ -364,16 +365,19 @@ class EditorTestCase(unittest.TestCase):
             self.assertEqual(more[i], (0, 5, []))
             
     def testSearchArgsInvalid(self):
+        """No search arguments are computed for an invalid cell."""
         result = editor.compute_search_args(Grid(5, 5), (-1, -1, "across"), True)
         self.assertEqual(result, None)
         
     def testSearchArgsLengthOne(self):
+        """No search arguments are computed for a slot of length 1."""
         g = Grid(5, 5)
         g.set_block(1, 0, True)
         result = editor.compute_search_args(g, (0, 0, "across"), True)
         self.assertEqual(result, None)
         
     def testSearchArgsFullyFilledIn(self):
+        """When a slot is fully filled in, no search arguments are returned."""
         g = Grid(5, 5)
         g.set_char(0, 0, 'A')
         g.set_char(1, 0, 'A')
@@ -827,6 +831,33 @@ class EditorTestCase(unittest.TestCase):
         a2 = editor.EditorAction('chars', {'cells': [(3, 3, 'A')]})
         editor.process_editor_actions(window, self.puzzle, self.e_settings, [a2])
         self.assertEqual(window.called, 0)
+        
+    def testComputeWordsForDisplay(self):
+        """Each word is presented together with score and intersection boolean."""
+        wlist = word.CWordList(["abcde", "bcdef"])
+        words = editor.compute_words(Grid(5, 5), [wlist], self.e_settings.selection)
+        self.assertTrue(("abcde", 0, False) in words)
+        self.assertTrue(("bcdef", 0, False) in words)
+        cPalabra.postprocess()
+        
+    def testComputeWordsForDisplayLengthOne(self):
+        """When words are queried for a slot of length 1 then no words are returned."""
+        g = Grid(3, 3)
+        g.set_block(1, 0, True)
+        wlist = word.CWordList(["aaa", "bbb", "ccc"])
+        words = editor.compute_words(g, [wlist], self.e_settings.selection)
+        self.assertEqual(words, [])
+        cPalabra.postprocess()
+        
+    def testComputeWordsForDisplayInvalidCell(self):
+        """When words are queried for an unavailable cell, no words are returned."""
+        g = Grid(3, 3)
+        g.set_block(1, 0, True)
+        wlist = word.CWordList(["aaa", "bbb", "ccc"])
+        self.e_settings.selection = editor.Selection(1, 0, "across")
+        words = editor.compute_words(g, [wlist], self.e_settings.selection)
+        self.assertEqual(words, [])
+        cPalabra.postprocess()
         
     # TODO: if user clicks an invalid cell, selection dir must be reset to across
     # TODO: if new puzzle is opened, editor settings should be reset
