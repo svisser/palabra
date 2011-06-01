@@ -58,6 +58,16 @@ class PuzzleTestCase(unittest.TestCase):
         p = Puzzle(Grid(14, 14))
         p.grid = Grid(30, 30)
         self.assertNotEquals(self.puzzle, p)
+    
+    def testUpdateType(self):
+        """When updating the type of a puzzle, the extension is added if needed."""
+        p = Puzzle(Grid(15, 15))
+        p.update_type("bla_type", "bla_filename", ".bla")
+        self.assertEqual(p.type, "bla_type")
+        self.assertEqual(p.filename, "bla_filename.bla")
+        p.update_type("bla_type", "bla_filename.bla", ".bla")
+        self.assertEqual(p.type, "bla_type")
+        self.assertEqual(p.filename, "bla_filename.bla")
 
 class GridTestCase(unittest.TestCase):
     def setUp(self):
