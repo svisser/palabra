@@ -575,7 +575,7 @@ class PalabraWindow(gtk.Window):
         menu.append(gtk.SeparatorMenuItem())
         
         menu.append(self._create_menu_item(
-            lambda item: self.view_puzzle_properties()
+            lambda item: launch_dialog(PropertiesWindow, self, self.puzzle)
             , u"View the properties of the current puzzle"
             , image=gtk.STOCK_PROPERTIES
             , is_puzzle_sensitive=True))
