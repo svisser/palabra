@@ -543,6 +543,10 @@ class GridEditor(PalabraDialog):
         self.fill_combo.set_sensitive(option == "fill")
         
     def display_pattern(self, pattern=None):
+        """
+        Display a pattern in the preview. If pattern=None then 
+        an empty Grid is displayed.
+        """
         self.ok_button.set_sensitive(pattern is not None)
         self.grid = Grid(*self.size)
         if pattern:
@@ -550,6 +554,7 @@ class GridEditor(PalabraDialog):
         self.preview.display(self.grid)
         
     def on_tile_changed(self, combo):
+        """Create and display a tiled pattern in the preview."""
         index = combo.get_active()
         if index == 0:
             self.display_pattern(None)
@@ -559,6 +564,7 @@ class GridEditor(PalabraDialog):
         self.display_pattern(pattern)
         
     def on_fill_changed(self, combo):
+        """Fill the entire grid with the specified content."""
         index = combo.get_active()
         if index == 0:
             self.display_pattern(None)
