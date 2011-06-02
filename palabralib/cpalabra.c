@@ -480,7 +480,11 @@ void clear_slot(Cell *cgrid, int width, int height, Slot *slots, int n_slots, in
         int m = get_slot_index(slots, n_slots, cx, cy, slot.dir == DIR_ACROSS ? 1 : 0);
         int is_inter_ok = 1;
         if (m >= 0) {
-            is_inter_ok = 1; // TODO can_clear_char(cgrid, width, height, slots[m]);
+            // a char can be cleared if the intersecting slot is not done or
+            // when it has one or more missing characters (these are not mutually
+            // exclusive as a slot can be fully filled in but not yet marked as done:
+            // the content of the slot may not be a valid word)
+            is_inter_ok = !slots[m].done || can_clear_char(cgrid, width, height, slots[m]);
         }
         Cell *cell = &cgrid[cx + cy * width];
         if (is_inter_ok && cell->c != CONSTRAINT_EMPTY) {
@@ -588,7 +592,7 @@ int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, 
                 continue;
             }
             Slot *bslot = &slots[blank];
-            //printf("Removing: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
+            //printf("About to clear: (%i, %i, %s)\n", bslot->x, bslot->y, bslot->dir == DIR_ACROSS ? "across" : "down");
             cleared++;
             clear_slot(cgrid, width, height, slots, n_slots, blank);
             bslot->count = determine_count(words, cgrid, width, height, bslot);
