@@ -254,6 +254,7 @@ class AccidentalWordsDialog(PalabraDialog):
         self.wordlists = parent.wordlists
         self.index = 0
         self.collapse = True
+        self.timer = None
         wlist_hbox = gtk.HBox(False, 0)
         wlist_hbox.pack_start(create_label(u"Check for words in list:"), True, True, 0)
         def on_wordlist_changed(widget):
@@ -281,6 +282,8 @@ class AccidentalWordsDialog(PalabraDialog):
         self.launch_accidental(puzzle.grid)
         
     def launch_accidental(self, grid):
+        if self.timer is not None:
+            glib.source_remove(self.timer)
         highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.store.clear()
         self.store.append([LOADING_TEXT, ''])
