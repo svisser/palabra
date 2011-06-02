@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple
+import glib
 import gobject
 import gtk
 import operator
@@ -178,10 +179,15 @@ class ClueTool:
     def __init__(self, parent):
         self.parent = parent
         self.settings = {"use_scrolling": True}
+        self.timer = None
     
     def create_entry(self, vbox, key, title):
         entry = gtk.Entry()
-        changed = lambda w: self.on_clue_changed(key, w.get_text())
+        def changed(widget):
+            if self.timer is not None:
+                glib.source_remove(self.timer)
+            self.timer = glib.timeout_add(constants.INPUT_DELAY_VERY_SHORT
+            , self.on_clue_changed, key, widget.get_text())
         c_id = entry.connect("changed", changed)
         entry.set_sensitive(False)
         vbox.pack_start(create_label(title), False, False, 3)

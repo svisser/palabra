@@ -184,6 +184,7 @@ COLOR_SECONDARY_ACTIVE = "color_secondary_active"
 
 INPUT_DELAY = 350
 INPUT_DELAY_SHORT = 250
+INPUT_DELAY_VERY_SHORT = 50
 
 PREF_COPY_BEFORE_SAVE = "backup_copy_before_save"
 PREF_INITIAL_HEIGHT = "new_initial_height"
