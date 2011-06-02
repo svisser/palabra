@@ -714,9 +714,9 @@ class Editor:
         
     def fill(self):
         for wlist in self.window.wordlists:
-            #backup = copy.deepcopy(self.window.puzzle.grid)
+            backup = copy.deepcopy(self.window.puzzle.grid)
             results = fill(self.window.puzzle.grid, wlist.words, self.fill_options)
-            if False:
+            if True:
                 w = FillDebugDialog(self.window, [backup] + results)
                 w.show_all()
                 w.run()
