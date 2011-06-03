@@ -350,8 +350,8 @@ class FindWordsDialog(PalabraDialog):
             self.pattern = pattern
             self.store.clear()
             self.set_n_label(len(result))
-            for name, word, score in result:
-                t1 = '<span font_desc="Monospace 12">' + word + '</span>'
+            for name, w, score in result:
+                t1 = '<span font_desc="Monospace 12">' + w + '</span>'
                 self.store.append([t1, name, score])
             return False
         self.timer = glib.timeout_add(constants.INPUT_DELAY, find_words, pattern)
