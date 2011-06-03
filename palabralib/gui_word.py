@@ -18,6 +18,7 @@
 import gtk
 import glib
 import operator
+import pango
 import pangocairo
 import sys
 
@@ -554,6 +555,7 @@ class WordListManager(PalabraDialog):
             word = widget.get_text().strip()
             self.word_widget.update(word, self.selected_offset)
         self.word_entry = create_entry(on_word_changed)
+        self.word_entry.modify_font(pango.FontDescription('monospace'))
         self.word_entry.set_sensitive(False)
         vbox.pack_start(self.word_entry, False, False)
         hbox = gtk.HBox()
