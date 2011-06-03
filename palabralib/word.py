@@ -453,7 +453,7 @@ class CWordList:
         """Write the contents of this word list to a file."""
         with open(self.path, 'w') as f:
             text = []
-            for l in self.words.keys():
+            for l in sorted(self.words.keys()):
                 text.extend([w + "," + str(score) + "\n" for w, score in self.words[l]])
             f.write(''.join(text))
             

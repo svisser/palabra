@@ -485,6 +485,7 @@ class WordTestCase2(unittest.TestCase):
         cPalabra.postprocess()
         
     def testAverageWordScore(self):
+        """The average score of words in a word list can be computed."""
         w1 = CWordList([])
         self.assertEqual(w1.average_word_score(), 0)
         w2 = CWordList([("a", 3), ("b", 4), ("c", 5), ("d", 6), ("e", 7)])
@@ -492,3 +493,17 @@ class WordTestCase2(unittest.TestCase):
         w3 = CWordList([("a", 3), ("b", 4), ("c", 5), ("d", 6), ("e", 7), ("f", 8)])
         self.assertEqual(w3.average_word_score(), 5.5)
         cPalabra.postprocess()
+        
+    def testWriteToFile(self):
+        """An individual word list can be written to and read from a file."""
+        LOC = "palabralib/tests/test_wordlist.txt"
+        w1 = CWordList([("abc", 0), ("palabra", 50), ("australia", 100)])
+        w1.path = LOC
+        w1.write_to_file()
+        w2 = CWordList(LOC)
+        self.assertTrue(('abc', 0) in w2.words[3])
+        self.assertTrue(('palabra', 50) in w2.words[7])
+        self.assertTrue(('australia', 100) in w2.words[9])
+        cPalabra.postprocess()
+        if os.path.exists(LOC):
+            os.remove(LOC)
