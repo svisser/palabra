@@ -515,4 +515,22 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(('palabra', 33) in w1.words[7])
         results = search_wordlists([w1], 7, "palabra")
         self.assertEqual(results, [('palabra', 33, True)])
+        self.assertEqual(w1.count_words(), 1)
+        cPalabra.postprocess()
+    
+    def testRemoveWord(self):
+        """A word can be removed from a word list."""
+        w1 = CWordList([("palabra", 33), ("palabra", 50)])
+        w1.remove_word("palabra", 50)
+        self.assertTrue(w1.words[7], [('palabra', 33)])
+        results = search_wordlists([w1], 7, "palabra")
+        self.assertEqual(results, [('palabra', 33, True)])
+        self.assertEqual(w1.count_words(), 1)
+        cPalabra.postprocess()
+        
+    def testRemoveNotExistWord(self):
+        """Requesting to remove a word that is not in the word list is possible."""
+        w1 = CWordList(["koala"])
+        w1.remove_word("steam", 33)
+        self.assertEqual(w1.words[5], [('koala', 0)])
         cPalabra.postprocess()

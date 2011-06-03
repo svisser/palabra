@@ -503,3 +503,10 @@ class CWordList:
         key = len(word)
         self.words[key].append((word, score))
         cPalabra.insert_word(self.index, len(word), word, score)
+    
+    def remove_word(self, word, score):
+        """Remove a word from the word list."""
+        key = len(word)
+        item = (word, score)
+        if item in self.words[key]:
+            self.words[key].remove(item)
