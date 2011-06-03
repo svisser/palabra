@@ -32,12 +32,16 @@ PACKAGE_DATA = [
 'resources/icon2.png'
 ]
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 setup(name="palabra"
     , version=constants.VERSION
     , license="GNU General Public License (GPL)"
     , author="Simeon Visser"
     , author_email="simeonvisser@gmail.com"
     , description="A free crossword editor"
+    , long_description=read('README')
     , url=constants.WEBSITE
     , requires=['lxml']
     , packages=['palabralib']
