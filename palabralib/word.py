@@ -504,9 +504,19 @@ class CWordList:
         self.words[key].append((word, score))
         cPalabra.insert_word(self.index, len(word), word, score)
     
-    def remove_word(self, word, score):
-        """Remove a word from the word list."""
-        key = len(word)
-        item = (word, score)
-        if item in self.words[key]:
-            self.words[key].remove(item)
+    def remove_words(self, words):
+        """
+        Remove a list of words from the word list.
+        This method removes the words and rebuilds the word list.
+        """
+        rebuild = False
+        for item in words:
+            key = len(item[0])
+            if item in self.words[key]:
+                self.words[key].remove(item)
+                rebuild = True
+        if rebuild:
+            new_words = []
+            for l in self.words.keys():
+                new_words.extend(self.words[l])
+            self.words = cPalabra.preprocess(new_words, self.index)
