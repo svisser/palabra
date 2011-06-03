@@ -460,6 +460,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                     if (duplicates[t]) added_offset++;
                     char *word_t = get_constraints(cgrid, width, height, &slots[t]);
                     if (word_t && strcmp(word, word_t) == 0) {
+                        PyMem_Free(word_t);
                         duplicates[t] = 1;
                         added_offset++;
                         word = find_candidate(cs_i, results, slot, slot->cs, OPTION_NICE, slot->offset + added_offset);
