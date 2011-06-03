@@ -36,6 +36,7 @@ from palabralib.tests.test_prefs import PrefsTestCase
 from palabralib.tests.test_transform import TransformTestCase
 from palabralib.tests.test_view import ViewTestCase
 from palabralib.tests.test_word import WordTestCase
+from palabralib.tests.test_word2 import WordTestCase2
 
 cases = [ ActionTestCase
     , ClueTestCase
@@ -47,7 +48,9 @@ cases = [ ActionTestCase
     , PrefsTestCase
     , TransformTestCase
     , ViewTestCase
-    , WordTestCase]
+    , WordTestCase
+    , WordTestCase2
+]
 suites = [unittest.TestLoader().loadTestsFromTestCase(c) for c in cases]
 
 alltests = unittest.TestSuite(suites)
