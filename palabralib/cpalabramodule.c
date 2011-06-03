@@ -441,7 +441,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         
         //printf("Trying for %i %i %i\n", slot->x, slot->y, slot->dir);
         char* word = find_candidate(cs_i, results, slot, slot->cs, OPTION_NICE, slot->offset);
-        if (word) printf("before %s at %i %i %i from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
+        //if (word) printf("before %s at %i %i %i from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
         if (0) {
             PyObject *val = Py_BuildValue("(ssiiii)", "before", word, slot->x, slot->y, slot->dir, slot->offset);
             PyList_Append(result, val);
@@ -472,7 +472,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
                 if (!next) break;
             }
         }
-        if (word) printf("after %s at %i %i %i from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
+        //if (word) printf("after %s at %i %i %i from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
         if (0 && word) {
             PyObject *val = Py_BuildValue("(ssiiii)", "after", word, slot->x, slot->y, slot->dir, slot->offset);
             PyList_Append(result, val);
