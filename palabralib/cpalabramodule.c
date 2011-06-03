@@ -291,7 +291,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     PyObject* data = PyObject_GetAttrString(grid, "data");
     
-    const int OUTPUT_DEBUG = 1;
+    const int OUTPUT_DEBUG = 0;
     
     int x;
     int y;

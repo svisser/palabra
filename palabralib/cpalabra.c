@@ -524,21 +524,15 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     if (!cs) {
         return NULL;
     }
-    int dx = slot->dir == DIR_ACROSS ? 1 : 0;
-    int dy = slot->dir == DIR_DOWN ? 1 : 0;
+    const int dx = slot->dir == DIR_ACROSS ? 1 : 0;
+    const int dy = slot->dir == DIR_DOWN ? 1 : 0;
     int x = slot->x;
     int y = slot->y;
-    int count = 0;
-    while (is_available(cgrid, width, height, x, y)) {
-        //printf("Setting %i for %i %i to %c\n", count, x, y, cgrid[x + y * height].c);
-        cs[count] = cgrid[x + y * width].c;
-        if (dx == 1 && is_valid(x + dx, y, width, height) && cgrid[(x + dx) + y * width].left_bar == 1)
-            break;
-        if (dy == 1 && is_valid(x, y + dy, width, height) && cgrid[x + (y + dy) * width].top_bar == 1)
-            break;
+    int j;
+    for (j = 0; j < slot->length; j++) {
+        cs[j] = cgrid[x + y * width].c;
         x += dx;
         y += dy;
-        count++;
     }
     cs[slot->length] = '\0';
     return cs;
