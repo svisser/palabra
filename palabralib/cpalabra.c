@@ -524,32 +524,34 @@ char* get_constraints(Cell *cgrid, int width, int height, Slot *slot) {
     if (!cs) {
         return NULL;
     }
+    get_constraints_i(cgrid, width, height, slot, cs);
+    return cs;
+}
+
+void get_constraints_i(Cell *cgrid, int width, int height, Slot *slot, char *cs) {
     const int dx = slot->dir == DIR_ACROSS ? 1 : 0;
     const int dy = slot->dir == DIR_DOWN ? 1 : 0;
-    int x = slot->x;
-    int y = slot->y;
     int j;
     for (j = 0; j < slot->length; j++) {
-        cs[j] = cgrid[x + y * width].c;
-        x += dx;
-        y += dy;
+        cs[j] = cgrid[(slot->x + j * dx) + (slot->y + j * dy) * width].c;
     }
     cs[slot->length] = '\0';
-    return cs;
 }
 
 int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot) {
     int prev = slot->count;
-    char *ds = get_constraints(cgrid, width, height, slot);
-    if (!ds) {
-        printf("Warning: determine_count failed to obtain constraints.\n");
+    // TODO reduce these malloc calls
+    //printf("Constraint search\n");
+    char* cs = PyMem_Malloc(slot->length * sizeof(char) + 1);
+    if (!cs) {
         return -1;
     }
-    int count = count_words(words, slot->length, ds);
+    get_constraints_i(cgrid, width, height, slot, cs);
+    int count = count_words(words, slot->length, cs);
     if (DEBUG && count == 0) {
         printf("WARNING: slot (%i, %i, %i): from %i to %i\n", slot->x, slot->y, slot->dir, prev, count);
     }
-    PyMem_Free(ds);
+    PyMem_Free(cs);
     return count;
 }
 

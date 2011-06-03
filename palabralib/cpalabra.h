@@ -66,6 +66,7 @@ typedef struct Slot {
     int done; // {0, 1}
     Py_ssize_t offset;
     PyObject *words;
+    char *cs;
 } Slot;
 
 // for commonly used wordlists and one special wordlist for search on the fly
@@ -96,6 +97,7 @@ extern int is_intersecting(Slot *slot1, Slot *slot2);
 extern int is_valid(int x, int y, int width, int height);
 extern int is_available(Cell *cgrid, int width, int height, int x, int y);
 extern char* get_constraints(Cell *cgrid, int width, int height, Slot *slot);
+extern void get_constraints_i(Cell *cgrid, int width, int height, Slot *slot, char *cs);
 extern int determine_count(PyObject *words, Cell *cgrid, int width, int height, Slot *slot);
 extern int backtrack(PyObject *words, Cell *cgrid, int width, int height, Slot *slots, int n_slots, int* order, int n_done_slots, int index);
 extern PyObject* gather_fill(Cell *cgrid, int width, int height);
