@@ -9,6 +9,9 @@ This is a list of changes since the initial release of Palabra.
 * Added dialog for editing page headers.
 * Added more options for PDF export.
 * Added ability to lookup clues in clue tab.
+* Added dialog for managing clue databases.
+* Added ability to sort words in main word control by alphabet and score.
+* Added next / previous buttons for editing clues.
 
 0.1.6 (May 17, 2011)
 * Added ability to store an explanation for a clue (XPF).
