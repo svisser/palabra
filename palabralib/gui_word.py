@@ -39,17 +39,7 @@ from gui_common import (
     create_stock_button,
 )
 import preferences
-from word import (
-    create_wordlists,
-    check_accidental_words,
-    accidental_entries,
-    search_wordlists,
-    search_wordlists_by_pattern,
-    similar_entries,
-    similar_words,
-    remove_wordlist,
-    rename_wordlists,
-)
+import word
 
 LOADING_TEXT = "Loading..."
 
@@ -205,7 +195,7 @@ class SimilarWordsDialog(PalabraDialog):
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
-        self.entries = similar_entries(similar_words(puzzle.grid))
+        self.entries = word.similar_entries(word.similar_words(puzzle.grid))
         self.load_entries(self.entries)
         
     def load_entries(self, entries):
@@ -294,9 +284,9 @@ class AccidentalWordsDialog(PalabraDialog):
     def load_words(self, grid, wlist):
         """Compute and display the words of the grid found in the word list."""
         self.results = [(d, cells) for d, cells in
-            check_accidental_words([wlist], grid) if len(cells) > 1]
+            word.check_accidental_words([wlist], grid) if len(cells) > 1]
         self.store.clear()
-        for s, count, str_indices in accidental_entries(self.results, self.collapse, True):
+        for s, count, str_indices in word.accidental_entries(self.results, self.collapse, True):
             text = s.lower()
             if count > 1:
                 text += " (" + str(count) + "x)"
@@ -356,7 +346,7 @@ class FindWordsDialog(PalabraDialog):
         def find_words(pattern=None):
             if pattern is None:
                 return False
-            result = search_wordlists_by_pattern(self.wordlists, pattern, sort=self.sort_option)
+            result = word.search_wordlists_by_pattern(self.wordlists, pattern, sort=self.sort_option)
             self.pattern = pattern
             self.store.clear()
             self.set_n_label(len(result))
@@ -583,7 +573,7 @@ class WordListManager(PalabraDialog):
             , NewWordListDialog)
         if value is not None:
             preferences.prefs[constants.PREF_WORD_FILES].append(value)
-            self.palabra_window.wordlists = create_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
+            self.palabra_window.wordlists = word.create_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
                 , previous=self.palabra_window.wordlists)
             self.display_wordlists()
         
@@ -605,7 +595,7 @@ class WordListManager(PalabraDialog):
         d.show_all()
         response = d.run()
         if response == gtk.RESPONSE_OK:
-            rename_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
+            word.rename_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
                 , self.palabra_window.wordlists
                 , path, d.given_name)
             self.store[it][0] = d.given_name
@@ -615,7 +605,7 @@ class WordListManager(PalabraDialog):
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store[it][1]
-        n_prefs, n_wlists = remove_wordlist(preferences.prefs[constants.PREF_WORD_FILES]
+        n_prefs, n_wlists = word.remove_wordlist(preferences.prefs[constants.PREF_WORD_FILES]
             , self.palabra_window.wordlists, path)
         preferences.prefs[constants.PREF_WORD_FILES] = n_prefs
         self.palabra_window.wordlists = n_wlists
