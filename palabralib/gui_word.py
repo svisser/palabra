@@ -530,24 +530,42 @@ class WordListManager(PalabraDialog):
     def create_contents_tab(self):
         self.selected_word = None
         self.selected_offset = None
-        def on_select_word(word=None, offset=None):
-            self.selected_word = word
+        def on_select_word(item, offset=None):
+            self.selected_word = None if item is None else item[0]
             self.selected_offset = offset
-            self.word_entry.set_sensitive(word is not None)
-            if word is not None:
+            self.word_entry.set_sensitive(item is not None)
+            self.word_spinner.set_sensitive(item is not None)
+            if item is not None:
+                word, score, h = item
                 self.word_entry.set_text(word)
+                self.word_spinner.set_value(score)
         self.word_widget = EditWordWidget(on_select_word)
         vbox = gtk.VBox()
         vbox.set_border_width(6)
         vbox.set_spacing(6)
         vbox.pack_start(create_scroll(self.word_widget, True, size=(300, -1)))
+        
+        edit_hbox = gtk.HBox()
+        
         def on_word_changed(widget):
             word = widget.get_text().strip()
             self.word_widget.update(word, self.selected_offset)
         self.word_entry = create_entry(on_word_changed)
         self.word_entry.modify_font(pango.FontDescription('monospace'))
         self.word_entry.set_sensitive(False)
-        vbox.pack_start(self.word_entry, False, False)
+        
+        adj = gtk.Adjustment(0, 0, 100, 1, 0, 0)
+        self.word_spinner = gtk.SpinButton(adj, 0.0, 0)
+        def on_update(widget):
+            score = widget.get_value_as_int()
+            self.word_widget.update_score(score, self.selected_offset)
+        self.word_spinner.connect("value-changed", on_update)
+        self.word_spinner.set_sensitive(False)
+        
+        edit_hbox.pack_start(self.word_entry)
+        edit_hbox.pack_start(self.word_spinner, False, False)
+        
+        vbox.pack_start(edit_hbox, False, False)
         hbox = gtk.HBox()
         hbox.set_spacing(6)
         vbox.pack_start(hbox, False, False, 0)
@@ -626,8 +644,9 @@ class WordListManager(PalabraDialog):
         self.word_widget.set_words([])
 
 class WordWidget(gtk.DrawingArea):
-    def __init__(self):
+    def __init__(self, show_score=False):
         super(WordWidget, self).__init__()
+        self.show_score = show_score
         self.STEP = 24
         self.set_words([])
         self.connect('expose_event', self.expose)
@@ -637,6 +656,12 @@ class WordWidget(gtk.DrawingArea):
         self.selection = None
         self.set_size_request(-1, self.STEP * len(self.words))
         self.queue_draw()
+        self.max_word_length = -1
+        if self.show_score:
+            for w, score, h in words:
+                l_word = len(w)
+                if l_word > self.max_word_length:
+                    self.max_word_length = l_word
 
     def get_word_offset(self, y):
         return max(0, int(y / self.STEP))
@@ -658,6 +683,10 @@ class WordWidget(gtk.DrawingArea):
                 ctx.set_source_rgb(65535, 0, 0)
                 markup += [' underline="single"']
             markup += [">", w, "</span>"]
+            if self.show_score:
+                markup += ['<span font_desc="Monospace 12">']
+                padding = self.max_word_length - len(w) + 3
+                markup += [" " * padding, str(score), "</span>"]
             pcr_layout.set_markup(''.join(markup))
             ctx.move_to(5, n * self.STEP)
             pcr.show_layout(pcr_layout)
@@ -675,7 +704,7 @@ class WordWidget(gtk.DrawingArea):
 
 class EditWordWidget(WordWidget):
     def __init__(self, on_select_word):
-        super(EditWordWidget, self).__init__()
+        super(EditWordWidget, self).__init__(show_score=True)
         self.on_select_word = on_select_word
         self.set_flags(gtk.CAN_FOCUS)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -686,17 +715,22 @@ class EditWordWidget(WordWidget):
         self.words[offset] = word, score, h
         self.queue_draw()
         
+    def update_score(self, score, offset):
+        w, old_score, h = self.words[offset]
+        self.words[offset] = w, score, h
+        self.queue_draw()
+        
     def on_button_press(self, widget, event):
         offset = self.get_word_offset(event.y)
         if offset >= len(self.words):
             self.selection = None
-            self.on_select_word(self.get_selected_word(), offset)
+            self.on_select_word(None, offset)
             self.queue_draw()
             return True
         word = self.words[offset][0]
         if event.button == 1:
             self.selection = offset
-            self.on_select_word(self.get_selected_word(), offset)
+            self.on_select_word(self.words[offset], offset)
         self.queue_draw()
         return True
 
