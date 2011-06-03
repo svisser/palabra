@@ -415,7 +415,7 @@ class PalabraWindow(gtk.Window):
         
         tab_word = (e_tools["word"].create(), u"Word")
         tab_clue = (e_tools["clue"].create(self.puzzle), u"Clue")
-        tab_fill = (e_tools["fill"].create(), u"Fill")
+        #tab_fill = (e_tools["fill"].create(), u"Fill")
         e_tools["clue"].set_clue_editor_status(False)
         def on_switch_page(tabs, do_not_use, num):
             if num == 0:
@@ -425,7 +425,7 @@ class PalabraWindow(gtk.Window):
             else:
                 self.editor.set_overlay(None)
                 e_tools["word"].deselect()
-        pages = [tab_word, tab_clue, tab_fill]
+        pages = [tab_word, tab_clue]#, tab_fill]
         tabs = create_notebook(pages, border=(16, 8), f_switch=on_switch_page)
         tabs.set_border_width(8)
         tabs.set_size_request(375, -1)
