@@ -497,3 +497,9 @@ class CWordList:
         for s, count in scores.items():
             total += (s * count)
         return total / n_words
+        
+    def add_word(self, word, score):
+        """Add a word to the word list."""
+        key = len(word)
+        self.words[key].append((word, score))
+        cPalabra.insert_word(self.index, len(word), word, score)

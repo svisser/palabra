@@ -202,6 +202,18 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
 }
 
 static PyObject*
+cPalabra_insert_word(PyObject *self, PyObject *args) {
+    const int index;
+    const int length;
+    char *word;
+    const int score;
+    if (!PyArg_ParseTuple(args, "iisi", &index, &length, &word, &score))
+        return NULL;
+    trees[index][length] = insert1(trees[index][length], word, word, score);
+    return Py_None;
+}
+
+static PyObject*
 cPalabra_postprocess(PyObject *self, PyObject *args) {
     int i;
     for (i = 0; i < MAX_WORD_LISTS + 1; i++) {
@@ -1248,6 +1260,7 @@ static PyMethodDef methods[] = {
     {"get_contained_words", cPalabra_get_contained_words, METH_VARARGS, "get_contained_words"},
     {"verify_contained_words", cPalabra_verify_contained_words, METH_VARARGS, "verify_contained_words"},
     {"update_score", cPalabra_update_score, METH_VARARGS, "update_score"},
+    {"insert_word", cPalabra_insert_word, METH_VARARGS, "insert_word"},
     {NULL, NULL, 0, NULL}
 };
 

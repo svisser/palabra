@@ -507,3 +507,12 @@ class WordTestCase2(unittest.TestCase):
         cPalabra.postprocess()
         if os.path.exists(LOC):
             os.remove(LOC)
+        
+    def testAddWord(self):
+        """A word can be added to a word list."""
+        w1 = CWordList([])
+        w1.add_word("palabra", 33)
+        self.assertTrue(('palabra', 33) in w1.words[7])
+        results = search_wordlists([w1], 7, "palabra")
+        self.assertEqual(results, [('palabra', 33, True)])
+        cPalabra.postprocess()
