@@ -451,9 +451,14 @@ class CWordList:
     
     def change_scores(self, change, value):
         """Change all scores in this word list using the given modification."""
-        if change == "to":
-            pass
-        elif change == "by":
+        for l in self.words.keys():
+            for i, (w, score) in enumerate(self.words[l]):
+                if change == "to":
+                    next_score = value
+                elif change == "by":
+                    next_score = score + value
+                self.words[l][i] = (w, next_score)
+                cPalabra.update_score(w, len(w), next_score, self.index)
         
     def write_to_file(self):
         """Write the contents of this word list to a file."""

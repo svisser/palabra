@@ -534,3 +534,25 @@ class WordTestCase2(unittest.TestCase):
         w1.remove_words([("steam", 33)])
         self.assertEqual(w1.words[5], [('koala', 0)])
         cPalabra.postprocess()
+    
+    def testChangeAllScoresTo(self):
+        """All scores in a word list can be changed to a specified value."""
+        words = ["koala", "wombat", "australia"]
+        w1 = CWordList(words)
+        for w in words:
+            self.assertTrue((w, 0) in w1.words[len(w)])
+        w1.change_scores("to", 44)
+        for w in words:
+            self.assertTrue((w, 44) in w1.words[len(w)])
+        cPalabra.postprocess()
+    
+    def testChangeAllScoresBy(self):
+        """All scores in a word list can be changed by a specified delta."""
+        words = [("singapore", 50), ("malaysia", 40), ("australia", 30)]
+        w1 = CWordList(words)
+        for item in words:
+            self.assertTrue(item in w1.words[len(item[0])])
+        w1.change_scores("by", -4)
+        for w, score in words:
+            self.assertTrue((w, score - 4) in w1.words[len(w)])
+        cPalabra.postprocess()
