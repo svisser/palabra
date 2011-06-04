@@ -612,6 +612,7 @@ class WordListManager(PalabraDialog):
                 , self.current_wlist, f_done=on_done)
             if response == gtk.RESPONSE_APPLY:
                 self.current_wlist.change_scores(*settings)
+                self.word_widget.set_words(get_words_by_length(self.current_wlist))
         self.scores_button = create_button(u"Edit scores", f_click=on_edit_scores, align=(0, 0))
         self.wlist_sensitives.append(self.scores_button)
         self.scores_button.set_sensitive(False)
