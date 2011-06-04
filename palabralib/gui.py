@@ -388,7 +388,7 @@ class PalabraWindow(gtk.Window):
             | gtk.gdk.KEY_PRESS_MASK
             | gtk.gdk.KEY_RELEASE_MASK
             | gtk.gdk.POINTER_MOTION_HINT_MASK
-            )
+        )
         self.puzzle.view.refresh_visual_size(self.drawing_area)
         self.drawing_area.queue_draw()
         self.editor = Editor(self)
