@@ -594,14 +594,12 @@ class WordListManager(PalabraDialog):
         self.word_entry.modify_font(pango.FontDescription('monospace'))
         self.word_entry.set_sensitive(False)
         
-        adj = gtk.Adjustment(0, 0, 100, 1, 0, 0)
-        self.word_spinner = gtk.SpinButton(adj, 0.0, 0)
         def on_update(widget):
             score = widget.get_value_as_int()
             self.word_widget.update_score(score, self.selected_offset)
             word = self.word_widget.get_selected_word()
             self.current_wlist.update_score(word, score)
-        self.word_spinner.connect("value-changed", on_update)
+        self.word_spinner = create_spinner(0, 0, 100, f_change=on_update)
         self.word_spinner.set_sensitive(False)
         
         edit_hbox.pack_start(self.word_entry)
