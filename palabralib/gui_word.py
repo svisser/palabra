@@ -32,6 +32,7 @@ from gui_common import (
     create_notebook,
     create_entry,
     PalabraDialog,
+    PalabraPropertiesDialog,
     PalabraMessageDialog,
     NameFileDialog,
     obtain_file,
@@ -431,34 +432,24 @@ class NewWordListDialog(NameFileDialog):
             self.p_message2 = u"Please give the word list a new name:"
         super(NewWordListDialog, self).__init__(parent, path, name)
 
-class PalabraPropertiesDialog(PalabraDialog):
-    def __init__(self, parent, title):
-        super(PalabraPropertiesDialog, self).__init__(parent, title)
-
-class WordListPropertiesDialog(PalabraDialog):
+class WordListPropertiesDialog(PalabraPropertiesDialog):
     def __init__(self, parent, wlist):
-        super(WordListPropertiesDialog, self).__init__(parent, u"Word list properties")
-        table = gtk.Table(4, 2)
-        table.set_col_spacings(6)
-        table.set_row_spacings(6)
-        def create_row(y, title, info):
-            table.attach(create_label(title), 0, 1, y, y + 1)
-            info_label = create_label(info, align=(1, 0.5))
-            table.attach(info_label, 1, 2, y, y + 1)
-            return info_label
-        create_row(0, u"Word list:", wlist.name)
-        self.n_words_label = create_row(1, u"Number of words:", u"0")
-        self.avg_word_label = create_row(2, u"Average word length:", u"0")
-        self.avg_score_label = create_row(3, u"Average word score:", u"0")
+        n_words = str(wlist.count_words())
+        avg_length = "%.2f" % wlist.average_word_length()
+        avg_score = "%.2f" % wlist.average_word_score()
+        props = [(u"Word list:", wlist.name)
+            , (u"Number of words:", n_words)
+            , (u"Average word length:", avg_length)
+            , (u"Average word score:", avg_score)
+        ]
+        super(WordListPropertiesDialog, self).__init__(parent, u"Word list properties", props)
         self.counts_store, tree, l_window = create_tree((int, int)
             , [(u"Length", 0), (u"Count", 1)], window_size=(300, 300))
         self.score_store, score_tree, s_window = create_tree((int, int)
             , [(u"Score", 0), (u"Count", 1)], window_size=(300, 300))
-        self.pack(table)
         pages = [(l_window, u"Words by length"), (s_window, u"Words by score")]
         self.main.pack_start(create_notebook(pages))
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.n_words_label.set_text(str(wlist.count_words()))
         counts = wlist.get_word_counts()
         scores = wlist.get_score_counts()
         for l in sorted(wlist.words.keys()):
@@ -467,8 +458,6 @@ class WordListPropertiesDialog(PalabraDialog):
             self.counts_store.append([l, counts[l]])
         for k in sorted(scores.keys()):
             self.score_store.append([k, scores[k]])
-        self.avg_word_label.set_text("%.2f" % wlist.average_word_length())
-        self.avg_score_label.set_text("%.2f" % wlist.average_word_score())
 
 class DuplicateWordListDialog(PalabraMessageDialog):
     def __init__(self, parent):

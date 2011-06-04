@@ -36,6 +36,18 @@ class PalabraDialog(gtk.Dialog):
         args = (True, True) if expand else (False, False)
         self.main.pack_start(widget, *args)
 
+class PalabraPropertiesDialog(PalabraDialog):
+    def __init__(self, parent, title, props):
+        super(PalabraPropertiesDialog, self).__init__(parent, title)
+        table = gtk.Table(len(props), 2)
+        table.set_col_spacings(6)
+        table.set_row_spacings(6)
+        for y, (title, info) in enumerate(props):
+            table.attach(create_label(title), 0, 1, y, y + 1)
+            info_label = create_label(info, align=(1, 0.5))
+            table.attach(info_label, 1, 2, y, y + 1)
+        self.pack(table)
+
 class PalabraMessageDialog(gtk.MessageDialog):
     def __init__(self, parent, title, message):
         gtk.MessageDialog.__init__(self, parent, gtk.DIALOG_MODAL

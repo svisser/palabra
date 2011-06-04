@@ -33,6 +33,7 @@ from gui_common import (
     NameFileDialog,
     obtain_file,
     create_stock_button,
+    PalabraPropertiesDialog,
 )
 import preferences
 import transform
@@ -90,21 +91,12 @@ class ClueFileDialog(NameFileDialog):
             self.p_message2 = u"Please give the clue database a new name:"
         NameFileDialog.__init__(self, parent, path, name)
 
-# TODO refactor with WordListPropertiesDialog
-class CluePropertiesDialog(PalabraDialog):
+class CluePropertiesDialog(PalabraPropertiesDialog):
     def __init__(self, parent, clue_db):
-        super(CluePropertiesDialog, self).__init__(parent, "Clue database properties")
+        props = [("Clue database:", clue_db.name)
+        ]
+        super(CluePropertiesDialog, self).__init__(parent, "Clue database properties", props)
         self.set_size_request(480, 320)
-        table = gtk.Table(1, 2)
-        table.set_col_spacings(6)
-        table.set_row_spacings(6)
-        def create_row(y, title, info):
-            table.attach(create_label(title), 0, 1, y, y + 1)
-            info_label = create_label(info, align=(1, 0.5))
-            table.attach(info_label, 1, 2, y, y + 1)
-            return info_label
-        create_row(0, "Clue database:", clue_db.name)
-        self.pack(table)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
 
 class ManageCluesDialog(PalabraDialog):
