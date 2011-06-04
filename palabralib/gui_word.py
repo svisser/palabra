@@ -592,7 +592,6 @@ class WordListManager(PalabraDialog):
             self.word_widget.update(word, self.selected_offset)
         self.word_entry = create_entry(on_word_changed)
         self.word_entry.modify_font(pango.FontDescription('monospace'))
-        self.word_entry.set_sensitive(False)
         
         def on_update(widget):
             score = widget.get_value_as_int()
@@ -600,7 +599,8 @@ class WordListManager(PalabraDialog):
             word = self.word_widget.get_selected_word()
             self.current_wlist.update_score(word, score)
         self.word_spinner = create_spinner(0, 0, 100, f_change=on_update)
-        self.word_spinner.set_sensitive(False)
+        
+        self.clear_word_edit_controls()
         
         edit_hbox.pack_start(self.word_entry)
         edit_hbox.pack_start(self.word_spinner, False, False)
@@ -611,6 +611,7 @@ class WordListManager(PalabraDialog):
             response, settings = launch_dialog(WordListScoreDialog, self
                 , self.current_wlist, f_done=on_done)
             if response == gtk.RESPONSE_APPLY:
+                self.clear_word_edit_controls()
                 self.current_wlist.change_scores(*settings)
                 self.word_widget.set_words(get_words_by_length(self.current_wlist))
         self.scores_button = create_button(u"Edit scores", f_click=on_edit_scores, align=(0, 0))
@@ -622,6 +623,13 @@ class WordListManager(PalabraDialog):
         hbox.set_spacing(6)
         vbox.pack_start(hbox, False, False)
         return vbox
+    
+    def clear_word_edit_controls(self):
+        """Reset the text entry and score spinner for editing a word's details."""
+        self.word_entry.set_sensitive(False)
+        self.word_entry.set_text('')
+        self.word_spinner.set_sensitive(False)
+        self.word_spinner.set_value(0)
         
     # TODO not in use
     def on_edit_score(self, cell, path, value):
