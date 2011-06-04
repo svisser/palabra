@@ -555,4 +555,7 @@ class WordTestCase2(unittest.TestCase):
         w1.change_scores("by", -4)
         for w, score in words:
             self.assertTrue((w, score - 4) in w1.words[len(w)])
+        w1.change_scores("by", 40)
+        for w, score in words:
+            self.assertTrue((w, score - 4 + 40) in w1.words[len(w)])
         cPalabra.postprocess()
