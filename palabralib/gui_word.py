@@ -37,6 +37,7 @@ from gui_common import (
     obtain_file,
     create_combo,
     create_stock_button,
+    launch_dialog,
 )
 import preferences
 import word
@@ -483,6 +484,12 @@ def iterate_word_lists():
     for wlist in sorted(wlists, key=operator.itemgetter(0)):
         yield wlist
 
+class WordListScoreDialog(PalabraDialog):
+    def __init__(self, parent):
+        super(WordListScoreDialog, self).__init__(parent, u"Edit scores of words in word list")
+        self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+
 class WordListManager(PalabraDialog):
     def __init__(self, parent):
         super(WordListManager, self).__init__(parent, u"Manage word lists")
@@ -564,11 +571,16 @@ class WordListManager(PalabraDialog):
         
         edit_hbox.pack_start(self.word_entry)
         edit_hbox.pack_start(self.word_spinner, False, False)
-        
         vbox.pack_start(edit_hbox, False, False)
+        
+        def on_edit_scores(button):
+            launch_dialog(WordListScoreDialog, self)
+        scores_button = create_button(u"Edit scores", f_click=on_edit_scores, align=(0, 0))
+        vbox.pack_start(scores_button, False, False)
+        
         hbox = gtk.HBox()
         hbox.set_spacing(6)
-        vbox.pack_start(hbox, False, False, 0)
+        vbox.pack_start(hbox, False, False)
         return vbox
         
     # TODO not in use
