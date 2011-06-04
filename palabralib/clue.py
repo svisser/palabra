@@ -24,6 +24,7 @@ import os
 
 import constants
 from gui_common import (
+    launch_dialog,
     create_button,
     create_tree,
     create_label,
@@ -88,7 +89,24 @@ class ClueFileDialog(NameFileDialog):
         if name is not None:
             self.p_message2 = u"Please give the clue database a new name:"
         NameFileDialog.__init__(self, parent, path, name)
-    
+
+# TODO refactor with WordListPropertiesDialog
+class CluePropertiesDialog(PalabraDialog):
+    def __init__(self, parent, clue_db):
+        super(CluePropertiesDialog, self).__init__(parent, "Clue database properties")
+        self.set_size_request(480, 320)
+        table = gtk.Table(1, 2)
+        table.set_col_spacings(6)
+        table.set_row_spacings(6)
+        def create_row(y, title, info):
+            table.attach(create_label(title), 0, 1, y, y + 1)
+            info_label = create_label(info, align=(1, 0.5))
+            table.attach(info_label, 1, 2, y, y + 1)
+            return info_label
+        create_row(0, "Clue database:", clue_db.name)
+        self.pack(table)
+        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+
 class ManageCluesDialog(PalabraDialog):
     def __init__(self, parent):
         PalabraDialog.__init__(self, parent, u"Manage clue databases")
@@ -102,16 +120,28 @@ class ManageCluesDialog(PalabraDialog):
         buttonbox.set_layout(gtk.BUTTONBOX_START)
         self.add_file_button = create_stock_button(gtk.STOCK_ADD
             , f_click=lambda b: self.on_add_clue_db())
-        buttonbox.pack_start(self.add_file_button, False, False, 0)
+        buttonbox.pack_start(self.add_file_button, False, False)
+        self.props_button = create_stock_button(gtk.STOCK_PROPERTIES, f_click=lambda b: self.on_properties())
+        buttonbox.pack_start(self.props_button, False, False)
+        self.props_button.set_sensitive(False)
         self.remove_button = create_stock_button(gtk.STOCK_REMOVE
             , f_click=lambda b: self.on_remove_db())
-        buttonbox.pack_start(self.remove_button, False, False, 0)
+        buttonbox.pack_start(self.remove_button, False, False)
         self.remove_button.set_sensitive(False)
         self.pack(buttonbox)
         label = create_label(u"These clue databases are loaded when you start " + constants.TITLE + ".")
         self.pack(label, False)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_clue_files(parent.clues)
+    
+    def on_properties(self):
+        store, it = self.tree.get_selection().get_selected()
+        path = self.store[it][1]
+        for f in self.pwindow.clues:
+            if f.path == path:
+                clue_db = f
+                break
+        launch_dialog(CluePropertiesDialog, self, clue_db)
     
     def on_add_clue_db(self):
         paths = [p["path"]["value"] for p in preferences.prefs[constants.PREF_CLUE_FILES]]
@@ -134,6 +164,7 @@ class ManageCluesDialog(PalabraDialog):
         
     def on_file_selected(self, selection):
         store, it = selection.get_selected()
+        self.props_button.set_sensitive(it is not None)
         self.remove_button.set_sensitive(it is not None)
         
     def load_clue_files(self, clues):

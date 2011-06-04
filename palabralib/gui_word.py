@@ -431,6 +431,10 @@ class NewWordListDialog(NameFileDialog):
             self.p_message2 = u"Please give the word list a new name:"
         super(NewWordListDialog, self).__init__(parent, path, name)
 
+class PalabraPropertiesDialog(PalabraDialog):
+    def __init__(self, parent, title):
+        super(PalabraPropertiesDialog, self).__init__(parent, title)
+
 class WordListPropertiesDialog(PalabraDialog):
     def __init__(self, parent, wlist):
         super(WordListPropertiesDialog, self).__init__(parent, u"Word list properties")
@@ -439,7 +443,7 @@ class WordListPropertiesDialog(PalabraDialog):
         table.set_row_spacings(6)
         def create_row(y, title, info):
             table.attach(create_label(title), 0, 1, y, y + 1)
-            info_label = create_label(info, align=(1, 0))
+            info_label = create_label(info, align=(1, 0.5))
             table.attach(info_label, 1, 2, y, y + 1)
             return info_label
         create_row(0, u"Word list:", wlist.name)
@@ -450,7 +454,7 @@ class WordListPropertiesDialog(PalabraDialog):
             , [(u"Length", 0), (u"Count", 1)], window_size=(300, 300))
         self.score_store, score_tree, s_window = create_tree((int, int)
             , [(u"Score", 0), (u"Count", 1)], window_size=(300, 300))
-        self.main.pack_start(table)
+        self.pack(table)
         pages = [(l_window, u"Words by length"), (s_window, u"Words by score")]
         self.main.pack_start(create_notebook(pages))
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
