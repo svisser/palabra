@@ -40,6 +40,17 @@ import transform
 
 ClueFile = namedtuple('ClueFile', ['path', 'name', 'data'])
 
+def compute_n_clues(clue_db):
+    """Compute the number of clues in the clue database."""
+    n_clues = 0
+    for word in clue_db.data.keys():
+        n_clues += len(clue_db.data[word])
+    return n_clues
+
+def compute_n_words(clue_db):
+    """Compute the number of words in the clue database."""
+    return len(clue_db.data.keys())
+
 def read_clues(path):
     if not os.path.exists(path):
         return {}
@@ -93,7 +104,9 @@ class ClueFileDialog(NameFileDialog):
 
 class CluePropertiesDialog(PalabraPropertiesDialog):
     def __init__(self, parent, clue_db):
-        props = [("Clue database:", clue_db.name)
+        props = [(u"Clue database:", clue_db.name)
+            , (u"Number of words:", str(compute_n_words(clue_db)))
+            , (u"Number of clues:", str(compute_n_clues(clue_db)))
         ]
         super(CluePropertiesDialog, self).__init__(parent, "Clue database properties", props)
         self.set_size_request(480, 320)
