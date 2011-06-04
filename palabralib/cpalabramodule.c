@@ -135,6 +135,7 @@ cPalabra_preprocess_all(PyObject *self, PyObject *args) {
             trees[n][m] = NULL;
         }
     }
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -210,6 +211,7 @@ cPalabra_insert_word(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "iisi", &index, &length, &word, &score))
         return NULL;
     trees[index][length] = insert1(trees[index][length], word, word, score);
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -226,6 +228,7 @@ cPalabra_postprocess(PyObject *self, PyObject *args) {
             }
         }
     }
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -1242,6 +1245,7 @@ cPalabra_update_score(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "Oiii", &word, &word_length, &score, &wlist_index))
         return NULL;
     update_score(trees[wlist_index][word_length], PyString_AsString(word), score);
+    Py_INCREF(Py_None); // needed for reference counting
     return Py_None;
 }
 
