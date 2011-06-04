@@ -158,3 +158,19 @@ class ClueTestCase(unittest.TestCase):
         self.assertEqual(store[it][0], "2")
         it = clue.store_get_item("previous", store, store.iter_nth_child(None, 0))
         self.assertEqual(store[it][0], "3")
+    
+    def testCountWords(self):
+        """The number of words in a clue database can be counted."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,clue\nword2,value2\nword2,value3")
+        prefs = [{"path": {"value": self.LOCATION}, "name": {"value": "ClueFile"}}]
+        result = clue.create_clues(prefs)
+        self.assertEqual(clue.count_n_words(result[0]), 2)
+    
+    def testCountClues(self):
+        """The number of clues in a clue database can be counted."""
+        with open(self.LOCATION, 'w') as f:
+            f.write("word,clue\nword2,value2\nword2,value3")
+        prefs = [{"path": {"value": self.LOCATION}, "name": {"value": "ClueFile"}}]
+        result = clue.create_clues(prefs)
+        self.assertEqual(clue.count_n_clues(result[0]), 3)
