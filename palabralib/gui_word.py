@@ -599,6 +599,8 @@ class WordListManager(PalabraDialog):
         def on_update(widget):
             score = widget.get_value_as_int()
             self.word_widget.update_score(score, self.selected_offset)
+            word = self.word_widget.get_selected_word()
+            self.current_wlist.update_score(word, score)
         self.word_spinner.connect("value-changed", on_update)
         self.word_spinner.set_sensitive(False)
         
