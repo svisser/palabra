@@ -205,6 +205,21 @@ def create_drawing_area(f_expose):
     drawing_area = gtk.DrawingArea()
     drawing_area.connect("expose_event", f_expose)
     return drawing_area
+
+def create_radio(label, f_toggle=None, f_arg=None, prev=None, active=None):
+    button = gtk.RadioButton(prev, label)
+    if active is not None:
+        button.set_active(active)
+    if f_toggle is not None:
+        button.connect("toggled", f_toggle, f_arg)
+    return button
+
+def create_spinner(value, v_min=0, v_max=100, f_change=None):
+    adj = gtk.Adjustment(value, v_min, v_max, 1, 0, 0)
+    spinner = gtk.SpinButton(adj, 0.0, 0)
+    if f_change is not None:
+        spinner.connect("value-changed", f_change)
+    return spinner
     
 def launch_dialog(dialog, arg0, arg1=None, arg2=None, f_done=None):
     if arg1 is None:

@@ -448,6 +448,12 @@ class CWordList:
         index = self.words[l_word].index(item)
         self.words[l_word][index] = (word, new_score)
         cPalabra.update_score(word, len(word), new_score, self.index)
+    
+    def change_scores(self, change, value):
+        """Change all scores in this word list using the given modification."""
+        if change == "to":
+            pass
+        elif change == "by":
         
     def write_to_file(self):
         """Write the contents of this word list to a file."""

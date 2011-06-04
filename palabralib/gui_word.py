@@ -38,6 +38,8 @@ from gui_common import (
     create_combo,
     create_stock_button,
     launch_dialog,
+    create_radio,
+    create_spinner,
 )
 import preferences
 import word
@@ -485,10 +487,45 @@ def iterate_word_lists():
         yield wlist
 
 class WordListScoreDialog(PalabraDialog):
-    def __init__(self, parent):
+    def __init__(self, parent, wlist):
         super(WordListScoreDialog, self).__init__(parent, u"Edit scores of words in word list")
+        self.set_size_request(480, -1)
+        self.wlist = wlist
+        self.pack(create_label(u"Currently editing: " + wlist.path + " (" + wlist.name + ")"))
+        
+        def on_select_option(widget, arg):
+            if widget.get_active() == 1:
+                self.spin_to.set_sensitive(arg == "to")
+                self.spin_by.set_sensitive(arg == "by")
+        
+        b1 = create_radio(u"Change all scores to:", active=True, f_toggle=on_select_option, f_arg="to")
+        self.spin_to = create_spinner(50)
+        self.spin_to.set_sensitive(True)
+        b2 = create_radio(u"Change all score by:", prev=b1, f_toggle=on_select_option, f_arg="by")
+        self.spin_by = create_spinner(-1, -50, 50)
+        self.spin_by.set_sensitive(False)
+
+        table = gtk.Table(2, 2)
+        table.set_col_spacings(6)
+        table.set_row_spacings(6)
+        table.attach(b1, 0, 1, 0, 1)
+        align = gtk.Alignment()
+        align.add(self.spin_to)
+        table.attach(align, 1, 2, 0, 1)
+        table.attach(b2, 0, 1, 1, 2)
+        align = gtk.Alignment()
+        align.add(self.spin_by)
+        table.attach(align, 1, 2, 1, 2)
+        self.pack(table)
+        
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-        self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_APPLY)
+    
+    def get_settings(self):
+        widgets = [("to", self.spin_to), ("by", self.spin_by)]
+        for key, w in widgets:
+            if w.get_property('sensitive'):
+                return key, w.get_value_as_int()
 
 class WordListManager(PalabraDialog):
     def __init__(self, parent):
@@ -503,12 +540,8 @@ class WordListManager(PalabraDialog):
         self.current_wlist = None
         self.add_wlist_button = create_stock_button(gtk.STOCK_ADD, lambda b: self.add_word_list())
         self.rename_button = create_button(u"Rename", f_click=lambda b: self.rename_word_list())
-        def show_word_list_props():
-            w = WordListPropertiesDialog(self, self.current_wlist)
-            w.show_all()
-            w.run()
-            w.destroy()
-        self.props_button = create_stock_button(gtk.STOCK_PROPERTIES, lambda b: show_word_list_props())
+        show_word_list_props = lambda b: launch_dialog(WordListPropertiesDialog, self, self.current_wlist)
+        self.props_button = create_stock_button(gtk.STOCK_PROPERTIES, show_word_list_props)
         self.remove_button = create_stock_button(gtk.STOCK_REMOVE, lambda b: self.remove_word_list())
         buttonbox = gtk.HButtonBox()
         buttonbox.set_layout(gtk.BUTTONBOX_START)
@@ -574,9 +607,15 @@ class WordListManager(PalabraDialog):
         vbox.pack_start(edit_hbox, False, False)
         
         def on_edit_scores(button):
-            launch_dialog(WordListScoreDialog, self)
-        scores_button = create_button(u"Edit scores", f_click=on_edit_scores, align=(0, 0))
-        vbox.pack_start(scores_button, False, False)
+            on_done = lambda window: window.get_settings()
+            response, settings = launch_dialog(WordListScoreDialog, self
+                , self.current_wlist, f_done=on_done)
+            if response == gtk.RESPONSE_APPLY:
+                self.current_wlist.change_scores(*settings)
+        self.scores_button = create_button(u"Edit scores", f_click=on_edit_scores, align=(0, 0))
+        self.wlist_sensitives.append(self.scores_button)
+        self.scores_button.set_sensitive(False)
+        vbox.pack_start(self.scores_button, False, False)
         
         hbox = gtk.HBox()
         hbox.set_spacing(6)
