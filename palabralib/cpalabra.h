@@ -104,5 +104,6 @@ extern PyObject* gather_fill(Cell *cgrid, int width, int height);
 extern int find_initial_slot(Slot *slots, int n_slots, int option_start);
 extern int find_slot(Slot *slots, int n_slots, int* order);
 extern int find_nice_slot(PyObject *words, Slot *slots, int n_slots, int width, int height, int* order);
+extern void c_insert_word(int index, int length, char *word, int score);
 
 #endif

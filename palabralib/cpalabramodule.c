@@ -196,7 +196,7 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
             if (!PyArg_ParseTuple(w_word, "Oi", &w_str, &w_score))
                 return NULL;
             char *c_word = PyString_AsString(w_str);
-            trees[index][m] = insert1(trees[index][m], c_word, c_word, w_score);
+            c_insert_word(index, m, c_word, w_score);
         }
     }
     return dict;
@@ -210,9 +210,17 @@ cPalabra_insert_word(PyObject *self, PyObject *args) {
     const int score;
     if (!PyArg_ParseTuple(args, "iisi", &index, &length, &word, &score))
         return NULL;
-    trees[index][length] = insert1(trees[index][length], word, word, score);
+    c_insert_word(index, length, word, score);
     Py_INCREF(Py_None);
     return Py_None;
+}
+
+void c_insert_word(int index, int length, char *word, int score) {
+    // we need to make a copy to prevent errors when we modify the
+    // list later on (see CWordList.update_score)
+    PyObject *use_word = PyString_FromStringAndSize(word, length);
+    char *c_use_word = PyString_AsString(use_word);
+    trees[index][length] = insert1(trees[index][length], c_use_word, c_use_word, score);
 }
 
 static PyObject*
