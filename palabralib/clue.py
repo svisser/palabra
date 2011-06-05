@@ -109,7 +109,7 @@ class CluePropertiesDialog(PalabraPropertiesDialog):
             , (u"Number of clues:", str(count_n_clues(clue_db)))
         ]
         super(CluePropertiesDialog, self).__init__(parent, "Clue database properties", props)
-        self.set_size_request(480, 320)
+        self.set_size_request(320, -1)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
 
 class ManageCluesDialog(PalabraDialog):
