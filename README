@@ -25,23 +25,23 @@ How to install/run
 - In the directory of Palabra, run the following command:
 
   python setup.py build
-  
+
 - You can now install Palabra using:
 
   python setup.py install
-  
+
 - After that, you can run palabra using:
 
   palabra
-  
+
 If you have trouble installing and you get errors about missing distribution
 options, try upgrading the setup script with:
 
   sudo python ez_setup.py -U setuptools
-  
+
 For the latest installation instructions, visit:
 
-  https://bitbucket.org/svisser/palabra/wiki/Home
+  https://github.com/svisser/palabra
 
 
 Getting started
@@ -69,7 +69,7 @@ Deleting a character:
 
 Jump to the first cell of a slot:
     - Press HOME.
-    
+
 Jump to the last cell of a slot:
     - Press END.
 
@@ -99,8 +99,8 @@ Development
 
 Development takes place at:
 
-  http://bitbucket.org/svisser/palabra/
+  https://github.com/svisser/palabra
 
 For reporting issues and requesting features:
-  
+
   http://bitbucket.org/svisser/palabra/issues/
