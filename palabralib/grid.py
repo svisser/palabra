@@ -41,7 +41,7 @@ class Grid:
     def __init__(self, width, height, initialize=True, number_mode=constants.NUMBERING_AUTO):
         """Construct a grid with the given dimensions."""
         self.initialize(width, height, initialize, number_mode)
-        
+
     def initialize(self, width, height, initialize=True, number_mode=constants.NUMBERING_AUTO):
         """Reset the grid to the given dimensions with all empty cells."""
         self.width = width
@@ -51,7 +51,7 @@ class Grid:
         self.number_mode = number_mode
         if initialize and number_mode == constants.NUMBERING_AUTO:
             self.assign_numbers()
-        
+
     def _default_cell(self):
         return {
             "bar": {"top": False, "left": False}
@@ -62,7 +62,7 @@ class Grid:
             , "void": False
             , "rebus": None
         }
-        
+
     def __eq__(self, other):
         if other is None:
             return False
@@ -72,10 +72,10 @@ class Grid:
             if self.cell(x, y) != other.cell(x, y):
                 return False
         return True
-        
+
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def __str__(self):
         s = []
         for y in xrange(self.height):
@@ -89,11 +89,11 @@ class Grid:
                     s.append(c if c else ' ')
             s.append('\n')
         return ''.join(s)
-        
+
     def assign_numbers(self):
         """Assign word numbers to cells as they are commonly numbered."""
         cPalabra.assign_numbers(self)
-            
+
     def is_start_word(self, x, y, direction=None):
         """Return True when a word begins in the cell (x, y)."""
         width, height, data = self.width, self.height, self.data
@@ -117,7 +117,7 @@ class Grid:
             if after:
                 return True
         return False
-        
+
     def get_start_word(self, x, y, direction):
         """Return the first cell of a word in the given direction that contains the cell (x, y)."""
         data = self.data
@@ -141,13 +141,13 @@ class Grid:
             x += dx
             y += dy
         return (x, y)
-            
+
     def get_end_word(self, x, y, direction):
         """Return the last cell of a word in the given direction that contains the cell (x, y)."""
         if not self.is_available(x, y):
             return x, y
         return [(x, y) for x, y in self.in_direction(x, y, direction)][-1]
-        
+
     def get_check_count_all(self):
         """Return the check count for all cells."""
         data = self.data
@@ -189,11 +189,11 @@ class Grid:
                 if (x, y) in ver_counts:
                     counts[x, y] += 1
         return counts
-        
+
     def get_check_count(self, x, y):
         """
         Return the number of words that contain the cell (x, y).
-        
+
         Return values:
         -1 : A block or void
         0 : An isolated cell: no words contain this cell
@@ -209,7 +209,7 @@ class Grid:
             if self.is_part_of_word(x, y, d):
                 count += 1
         return count
-        
+
     def is_part_of_word(self, x, y, direction):
         """Return True if the specified (x, y, direction) is part of a word (2+ letters)."""
         data = self.data
@@ -260,7 +260,7 @@ class Grid:
                 or data[y + 1][x]["bar"]["top"])
             return after
         #return before or after
-        
+
     def determine_status(self, full=False):
         """Return a dictionary with the grid's properties."""
         status = {}
@@ -302,7 +302,7 @@ class Grid:
             status["connected"] = self.is_connected()
             status["complete_count"] = self.count_complete()
         return status
-        
+
     def determine_word_counts(self):
         """Calculate the number of words by direction and by length."""
         status = {}
@@ -325,7 +325,7 @@ class Grid:
                 count = 0
             status["total"].append((length, count))
         return status
-        
+
     def words_by_direction(self, direction):
         """Iterate over the words in the grid by direction."""
         height = self.height
@@ -336,7 +336,7 @@ class Grid:
             for x in xrange(width):
                 if is_start_word(x, y, direction):
                     yield data[y][x]["number"], x, y
-                    
+
     def clues(self, direction):
         """Iterate over the clues of the grid by direction."""
         data = self.data
@@ -345,15 +345,15 @@ class Grid:
                 yield n, x, y, data[y][x]["clues"][direction]
             except KeyError:
                 yield n, x, y, {}
-    
+
     def words(self, allow_duplicates=False, include_dir=False):
         """
         Iterate over the words of the grid.
-        
+
         allow_duplicates: If True, cells that contain the start
         of two words are encountered twice when iterating. Otherwise,
         they are encountered only once.
-        
+
         include_dir: If True, include the direction in the output.
         allow_duplicates must be True for this to work.
         """
@@ -370,13 +370,13 @@ class Grid:
                             yield n, x, y
             elif is_start_word(x, y):
                 yield n, x, y
-    
+
     def entries(self):
         """Return all entries in alphabetical order."""
         entries = [item[4] for item in self.gather_words()]
         entries.sort()
         return entries
-        
+
     def slot(self, x, y, direction):
         """
         Iterate over all cells of a slot that contains (x, y) in an unspecified order.
@@ -384,13 +384,13 @@ class Grid:
         sx, sy = self.get_start_word(x, y, direction)
         for p, q in self.in_direction(sx, sy, direction):
             yield p, q
-                    
+
     def cells(self):
         """Iterate over the cells of the grid in left-to-right, top-to-bottom order."""
         for y in xrange(self.height):
             for x in xrange(self.width):
                 yield x, y
-                
+
     def gather_word(self, x, y, direction, empty_char=constants.MISSING_CHAR):
         """Return the word starting at (x, y) in the given direction."""
         word = ""
@@ -399,20 +399,20 @@ class Grid:
             c = data[q][p]["char"]
             word += (empty_char if c == "" else c)
         return word
-            
+
     def gather_constraints(self, x, y, direction):
         """Create a list of all chars by position of the specified word."""
         word = self.gather_word(x, y, direction, constants.MISSING_CHAR)
         return [(i, c.lower()) for i, c in enumerate(word) if c != constants.MISSING_CHAR]
-    
+
     def gather_all_constraints(self, x, y, direction, g_cs=None, g_lengths=None):
         """
         Gather constraints of all intersecting words of the word at (x, y).
-        
+
         This function returns a list with tuples that contain the
         letters and positions of intersecting words. The item at place i of
         the list corresponds to the intersecting word at position i.
-        
+
         Each tuple contains the position at which the word at
         (x, y, direction) intersects the intersecting word, the length
         of the intersecting word and the constraints.
@@ -439,7 +439,7 @@ class Grid:
                 cs = gather_constraints(p, q, other)
             result.append((index, length, cs))
         return result
-                
+
     def gather_words(self, direction=None):
         """Iterate over the word data in the given direction."""
         words_by_direction = self.words_by_direction
@@ -458,7 +458,7 @@ class Grid:
                     explanation = ""
                 word = gather_word(x, y, d)
                 yield n, x, y, d, word, clue, explanation
-        
+
     def word_length(self, x, y, direction):
         """Return the length of the word starting at (x, y) in the given direction."""
         dx = 1 if direction == "across" else 0
@@ -478,7 +478,7 @@ class Grid:
             x += dx
             y += dy
         return count
-        
+
     def in_direction(self, x, y, direction, reverse=False):
         """Iterate in the given direction from (x, y) while cells are available."""
         dx = 1 if direction == "across" else 0
@@ -507,7 +507,7 @@ class Grid:
                 break
             x += dx
             y += dy
-            
+
     def count_blocks(self):
         """Return the number of blocks in the grid."""
         total = 0
@@ -516,11 +516,11 @@ class Grid:
                 if self.data[y][x]["block"]:
                     total += 1
         return total
-        
+
     def neighbors(self, x, y, diagonals=False):
         """
         Iterate over all neighboring cells of a cell.
-        
+
         If diagonals is True, the diagonal neighbors will be included as well.
         """
         width = self.width
@@ -532,7 +532,7 @@ class Grid:
         for dx, dy in neighbors:
             if 0 <= x + dx < width and 0 <= y + dy < height:
                 yield x + dx, y + dy
-        
+
     def compute_open_squares(self, count=False):
         """
         Return a list of open squares in this grid.
@@ -554,7 +554,7 @@ class Grid:
                 else:
                     result.append((x, y))
         return result
-        
+
     def is_connected(self):
         """
         Return True when all character cells are connected with each
@@ -585,7 +585,7 @@ class Grid:
                 if availables[cell]:
                     check.append(cell)
         return a_count == len(done)
-        
+
     def count_voids(self):
         """Return the number of voids in the grid."""
         total = 0
@@ -594,13 +594,13 @@ class Grid:
                 if self.data[y][x]["void"]:
                     total += 1
         return total
-        
+
     def get_cell_of_slot(self, slot, target):
         if target == "start":
             return self.get_start_word(*slot)
         elif target == "end":
             return self.get_end_word(*slot)
-        
+
     def count_words(self):
         """Return the number of words in the grid."""
         count = 0
@@ -630,7 +630,7 @@ class Grid:
                 if length == 2:
                     count += 1
         return count
-        
+
     def count_chars(self, include_blanks=True, _return_at_one=False):
         """Return the number of chars in the grid."""
         count = 0
@@ -643,11 +643,11 @@ class Grid:
                     if _return_at_one:
                         return count
         return count
-        
+
     def has_chars(self):
         """Return True iff the grid has at least one character."""
         return self.count_chars(include_blanks=False, _return_at_one=True) == 1
-            
+
     def mean_word_length(self, check_counts=None):
         """Return the mean length of the words in the grid."""
         word_count = self.count_words()
@@ -658,11 +658,11 @@ class Grid:
         else:
             char_counts = [check_counts[x, y] for x, y in self.cells() if self.is_available(x, y)]
         return float(sum(char_counts)) / float(word_count)
-        
+
     def generate_diagonals(self, direction=0):
         """
         Generate all sequences of diagonal character cells of length 2+.
-        
+
         Direction: 0 = north-east, 1 = south-east.
         """
         data = self.data
@@ -701,7 +701,7 @@ class Grid:
                 sr.append(t)
             result.extend([i for i in sr if len(i) >= 2])
         return result
-        
+
     def generate_all_slots(self):
         """
         Generate all sequences of cells of length 2+ in the directions across,
@@ -732,7 +732,7 @@ class Grid:
                 slots.append((d, t1))
                 slots.append((opp[d], t2))
         return slots
-        
+
     def convert_to_shape(self):
         """
         Compute the cells to remove from the grid
@@ -766,30 +766,30 @@ class Grid:
     def resize(self, width, height, make_dirty=True):
         """
         Resize the grid to the given dimensions.
-        
+
         Content of the grid within these boundaries will be preserved.
         Content of the grid outside these boundaries will be lost.
         """
         ndata = [[self._default_cell() for x in range(width)] for y in range(height)]
-        
+
         if make_dirty:
             a = [(x, y, "across") for x, y in self.cells()
                 if x >= min(width - 1, self.width - 1)]
             d = [(x, y, "down") for x, y in self.cells()
                 if y >= min(height - 1, self.height - 1)]
             self._clear_clues(a + d)
-        
+
         for x in range(width):
             for y in range(height):
                 if self.is_valid(x, y):
                     ndata[y][x] = self.data[y][x]
-                    
+
         self.data = ndata
         self.width = width
         self.height = height
         # invalidate lines
         self.lines = None
-        
+
     def count_complete(self):
         """Compute the number of complete words for each direction."""
         in_direction = self.in_direction
@@ -802,7 +802,7 @@ class Grid:
             else:
                 r[d] += 1
         return r
-        
+
     def _clear_clues(self, dirty_cells):
         """Remove the clues of the words that contain a dirty cell."""
         for x, y, direction in dirty_cells:
@@ -811,12 +811,12 @@ class Grid:
                 del self.data[q][p]["clues"][direction]
             except KeyError:
                 pass
-                    
+
     def _clear_clues_related_to_cell(self, x, y):
         sx, sy = self.get_start_word(x, y, "across")
         tx, ty = self.get_start_word(x, y, "down")
         self._clear_clues([(sx, sy, "across"), (tx, ty, "down")])
-        
+
     def insert_row(self, y, insert_above=True):
         """Insert a row above or below the row at vertical coordinate y."""
         dirty = [(x, y, "down") for x in xrange(self.width)]
@@ -836,16 +836,16 @@ class Grid:
                     self.data[y][x]["bar"]["top"] = True
         else:
             self.data = self.data[:y + 1] + row + self.data[y + 1:]
-            
+
     def insert_column(self, x, insert_left=True):
         """Insert a column to the left or right of the horizontal coordinate x."""
         dirty = [(x, y, "across") for y in xrange(self.height)]
-        
+
         nx = x - 1 if insert_left else x + 1
         nots = [y for y in xrange(self.height) if not self.is_available(x, y)]
         dirty += [(nx, y, "across") for y in nots if self.is_valid(nx, y)]
         self._clear_clues(dirty)
-        
+
         self.resize(self.width + 1, self.height, False)
         if insert_left:
             f = lambda row: row[:x] + [self._default_cell()] + row[x:]
@@ -857,7 +857,7 @@ class Grid:
                 if self.has_bar(x + 1, y, "left"):
                     self.data[y][x + 1]["bar"]["left"] = False
                     self.data[y][x]["bar"]["left"] = True
-            
+
     def remove_column(self, x):
         """Remove the column at horizontal coordinate x."""
         dirty = [(x, y, "across") for y in xrange(self.height)]
@@ -865,10 +865,10 @@ class Grid:
         for p in [x - 1, x + 1]:
             dirty += [(p, y, "across") for y in nots if self.is_valid(p, y)]
         self._clear_clues(dirty)
-        
+
         self.data = map(lambda row: row[:x] + row[x + 1:], self.data)
         self.width -= 1
-            
+
     def remove_row(self, y):
         """Remove the row at vertical coordinate y."""
         dirty = [(x, y, "down") for x in xrange(self.width)]
@@ -876,14 +876,14 @@ class Grid:
         for q in [y - 1, y + 1]:
             dirty += [(x, q, "down") for x in nots if self.is_valid(x, q)]
         self._clear_clues(dirty)
-        
+
         self.data = self.data[:y] + self.data[y + 1:]
         self.height -= 1
-        
+
     def shift_up(self):
         """
         Move the content of the grid up by one cell.
-        
+
         The content of the top row will be lost.
         An empty row will be inserted at the bottom.
         """
@@ -892,22 +892,22 @@ class Grid:
         self.data = self.data[1:] + [[self._default_cell() for x in range(self.width)]]
         for x in xrange(self.width):
             self.data[0][x]["bar"]["top"] = False
-        
+
     def shift_down(self):
         """
         Move the content of the grid down by one cell.
-        
+
         The content of the bottom row will be lost.
         An empty row will be inserted at the top.
         """
         dirty = [(x, y, "down") for x in xrange(self.width) for y in [0, self.height - 1]]
         self._clear_clues(dirty)
         self.data = [[self._default_cell() for x in range(self.width)]] + self.data[:-1]
-        
+
     def shift_left(self):
         """
         Move the content of the grid left by one cell.
-        
+
         The content of the left column will be lost.
         An empty column will be inserted at the right.
         """
@@ -920,14 +920,14 @@ class Grid:
     def shift_right(self):
         """
         Move the content of the grid right by one cell.
-        
+
         The content of the right column will be lost.
         An empty column will be inserted at the left.
         """
         dirty = [(x, y, "across") for y in xrange(self.height) for x in [0, self.width - 1]]
         self._clear_clues(dirty)
         self.data = map(lambda x: [self._default_cell()] + x[:-1], self.data)
-        
+
     def horizontal_flip(self):
         """Flip the content of the grid horizontally and clear the clues."""
         for y in xrange(self.height):
@@ -936,7 +936,7 @@ class Grid:
                 second = self.data[y][self.width - 1 - x]
                 self.data[y][x] = second
                 self.data[y][self.width - 1 - x] = first
-                
+
         # correct bars
         for y in xrange(self.height):
             for x in xrange(self.width - 1, -1, -1):
@@ -944,7 +944,7 @@ class Grid:
                     self.data[y][x]["bar"]["left"] = False
                     self.data[y][x + 1]["bar"]["left"] = True
         self.clear_clues()
-        
+
     def vertical_flip(self):
         """Flip the content of the grid vertically and clear the clues."""
         for x in xrange(self.width):
@@ -953,7 +953,7 @@ class Grid:
                 second = self.data[self.height -1 - y][x]
                 self.data[y][x] = second
                 self.data[self.height - 1 - y][x] = first
-                
+
         # correct bars
         for x in xrange(self.width):
             for y in xrange(self.height - 1, -1, -1):
@@ -961,13 +961,13 @@ class Grid:
                     self.data[y][x]["bar"]["top"] = False
                     self.data[y + 1][x]["bar"]["top"] = True
         self.clear_clues()
-        
+
     def diagonal_flip(self):
         """Flip the content of the grid diagonally."""
-        
+
         # for now
         assert self.width == self.height
-        
+
         def flip_bars(cell):
             """Turn all top bars into left bars and vice versa."""
             if cell["bar"]["top"] and cell["bar"]["left"]:
@@ -978,18 +978,18 @@ class Grid:
             elif cell["bar"]["left"]:
                 cell["bar"]["left"] = False
                 cell["bar"]["top"] = True
-        
+
         for x in xrange(self.width):
             for y in xrange(x, self.height):
                 first = self.data[y][x]
                 second = self.data[x][y]
-                
+
                 # correct all bars but don't flip the
                 # bars of cells on the diagonal twice
                 flip_bars(first)
                 if x != y:
                     flip_bars(second)
-                
+
                 self.data[y][x] = second
                 self.data[x][y] = first
 
@@ -1006,41 +1006,41 @@ class Grid:
                             self.data[p][q]["clues"][dir2] = clue1
                         except KeyError:
                             pass
-        
+
     def clear(self):
         """Clear the content of the grid."""
         self.initialize(self.width, self.height)
-        
+
     def clear_bars(self):
         """Clear the bars of the grid."""
         for x, y in self.cells():
             self.set_bar(x, y, "top", False)
             self.set_bar(x, y, "left", False)
-            
+
     def clear_blocks(self):
         """Clear the blocks of the grid."""
         for x, y in self.cells():
             self.set_block(x, y, False)
-            
+
     def clear_voids(self):
         """Clear the void cells of the grid."""
         for x, y in self.cells():
             self.set_void(x, y, False)
-                
+
     def clear_chars(self):
         """Clear the characters of the grid."""
         for x, y in self.cells():
             self.clear_char(x, y)
-                
+
     def clear_clues(self):
         """Clear the clues of the grid."""
         for x, y in self.cells():
             self.cell(x, y)["clues"] = {}
-                
+
     def store_clue(self, x, y, direction, key, value):
         """
         Store the given key/value pair as clue property of (x, y, direction).
-        
+
         This function cleans the 'clues' dictionary if needed: if a value
         is empty, the key will be deleted. If no key/value pairs remain,
         the clue entry for this direction will be deleted.
@@ -1051,19 +1051,19 @@ class Grid:
         except KeyError:
             clues[direction] = {}
             clue = clues[direction]
-        
+
         if len(value) > 0:
             clues[direction][key] = value
         elif key in clue:
             del clues[direction][key]
-         
+
         if len(clue) == 0:
             del clues[direction]
-        
+
     def is_valid(self, x, y):
         """Return True if the given (x, y) is within the grid's boundaries."""
         return 0 <= x < self.width and 0 <= y < self.height
-        
+
     def is_available(self, x, y):
         """Return True if the given (x, y) is valid and not a block or a void."""
         is_valid = 0 <= x < self.width and 0 <= y < self.height
@@ -1072,49 +1072,49 @@ class Grid:
         is_block = self.data[y][x]["block"]
         is_void = self.data[y][x]["void"]
         return not is_block and not is_void
-        
+
     def get_size(self):
         """Return a tuple containing the width and height of the grid."""
         return (self.width, self.height)
-        
+
     size = property(get_size)
-    
+
     def cell(self, x, y):
         return self.data[y][x]
-    
+
     def get_clues(self, x, y):
         return self.data[y][x]["clues"]
-        
+
     def set_block(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["block"] = status
         self.data[y][x]["void"] = False
-        
+
     def is_block(self, x, y):
         return self.data[y][x]["block"]
-        
+
     def clear_char(self, x, y):
         self.set_char(x, y, "")
-        
+
     def set_char(self, x, y, char):
         self._clear_clues_related_to_cell(x, y)
         self.data[y][x]["char"] = char
-        
+
     def get_char(self, x, y):
         return self.data[y][x]["char"]
-        
+
     def is_char(self, x, y):
         return self.data[y][x]["char"] != ''
-        
+
     def set_number(self, x, y, n):
         self.data[y][x]["number"] = n
-        
+
     def get_number(self, x, y):
         return self.data[y][x]["number"]
-        
+
     def has_bar(self, x, y, side):
         return self.data[y][x]["bar"][side]
-        
+
     def set_bar(self, x, y, side, status):
         if side == "top":
             tx, ty = self.get_start_word(x, y, "down")
@@ -1123,20 +1123,20 @@ class Grid:
             sx, sy = self.get_start_word(x, y, "across")
             self._clear_clues([(sx, sy, "across")])
         self.data[y][x]["bar"][side] = status
-        
+
     def is_void(self, x, y):
         return self.data[y][x]["void"]
-        
+
     def set_void(self, x, y, status):
         self._on_cell_type_change(x, y, status)
         self.data[y][x]["void"] = status
-        
+
     def has_rebus(self, x, y):
         return self.data[y][x]["rebus"] is not None
-        
+
     def set_rebus(self, x, y, short, full):
         self.data[y][x]["rebus"] = (short, full)
-        
+
     def _on_cell_type_change(self, x, y, status):
         if status:
             self._clear_clues_related_to_cell(x, y)

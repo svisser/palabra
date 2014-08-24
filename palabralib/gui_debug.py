@@ -29,11 +29,11 @@ class FillDebugDialog(gtk.Dialog):
         self.initial = content[0]
         main = gtk.HBox()
         main.set_spacing(5)
-        
+
         self.drawing_area = gtk.DrawingArea()
         self.drawing_area.set_size_request(600, 500)
         main.pack_start(self.drawing_area, True, True, 0)
-        
+
         self.store = gtk.ListStore(str, int)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
@@ -53,7 +53,7 @@ class FillDebugDialog(gtk.Dialog):
         main.pack_start(self.d_label)
         self.d_label2 = gtk.Label()
         main.pack_start(self.d_label2)
-        
+
         self.offsets = {}
         prev = {}
         g = copy.deepcopy(self.initial)
@@ -87,10 +87,10 @@ class FillDebugDialog(gtk.Dialog):
                 self.offsets[i] = next
             elif isinstance(c, list):
                 self.store.append(["Grid", i])
-        
+
         self.vbox.pack_start(main)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
     def on_tree_selection_changed(self, selection):
         store, it = selection.get_selected()
         if it is not None:
@@ -120,7 +120,7 @@ class FillDebugDialog(gtk.Dialog):
                         value = self.offsets[index][key]
                         txt.append(str(key) + ": " + str(value) + "\n")
                 self.a_label.set_text(''.join(txt))
-                txt = []                
+                txt = []
                 for n, x, y, d in [item for item in slots if item[3] == "across"][20:]:
                     if d == "across":
                         key = (x, y, 0)

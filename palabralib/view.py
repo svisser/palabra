@@ -108,16 +108,16 @@ class CellStyle:
     def __init__(self):
         self._data = {}
         self._data.update(DEFAULTS_CELL)
-        
+
     def __getitem__(self, key):
         return self._data[key]
-        
+
     def __setitem__(self, key, value):
         self._data[key] = value
-        
+
     def __eq__(self, other):
         return other is not None and self._data == other._data
-        
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
@@ -125,24 +125,24 @@ class GridViewProperties:
     def __init__(self, grid, styles=None, gstyles=None):
         self.grid = grid
         self.margin = 10, 10
-        
+
         self.styles = styles if styles else {}
         self._data = {}
         self._data.update(DEFAULTS)
         if gstyles:
             for key, value in gstyles.items():
                 self[key] = value
-                
+
     def __setitem__(self, key, value):
         self._data[key] = value
         if key == ("cell", "size"):
             for k in [("char", "size"), ("number", "size")]:
                 s = self._data[k]
                 self._data[k] = (s[0], _relative_to(("cell", "size"), s[0] / 100.0, d=self._data))
-            
+
     def __getitem__(self, key):
         return self._data[key]
-        
+
     def update(self, x, y, items):
         for k, v in items:
             if self[k] != v:
@@ -159,7 +159,7 @@ class GridViewProperties:
                     break
             else:
                 del self.styles[x, y]
-        
+
     def style(self, x=None, y=None):
         if x is not None and y is not None and (x, y) in self.styles:
             return self.styles[x, y]
@@ -167,7 +167,7 @@ class GridViewProperties:
         default = CellStyle()
         default._data.update(self._data)
         return default
-        
+
     def get_non_defaults(self):
         props = [("Bar", "Width", ("bar", "width"))
             , ("Border", "Width", ("border", "width"))
@@ -194,7 +194,7 @@ class GridViewProperties:
                 else:
                     visuals[elem].append((attr, value))
         return visuals
-    
+
     def grid_to_screen(self, x=None, y=None, include_padding=True):
         """
         Return the x-coordinate and/or y-coordinate of the cell's upper-left corner.
@@ -213,7 +213,7 @@ class GridViewProperties:
             return sx
         elif y is not None:
             return sy
-        
+
     def screen_to_grid(self, screen_x, screen_y):
         """
         Return the coordinates of the cell based on the coordinates on screen.
@@ -232,7 +232,7 @@ class GridViewProperties:
                 j = y
                 break
         return i, j
-        
+
     def visual_size(self, include_padding=True):
         """
         Return the visual size, possibly including padding, as shown on screen.
@@ -253,10 +253,10 @@ class GridView:
         self.grid = grid
         self.properties = GridViewProperties(grid, styles, gstyles)
         self.select_mode(constants.VIEW_MODE_EDITOR)
-        
+
         self.overlay = []
         self.highlights = []
-        
+
     def select_mode(self, mode):
         """Select the render mode for future render calls."""
         self.settings = {}
@@ -278,15 +278,15 @@ class GridView:
             self.settings.update(SETTINGS_PREVIEW_CELL)
         elif mode == constants.VIEW_MODE_PREVIEW_SOLUTION:
             self.settings.update(SETTINGS_PREVIEW_SOLUTION)
-    
+
     def pdf_reset(self, prevs):
         self.properties["cell", "size"] = prevs["cell", "size"]
         self.properties.margin = prevs["margin"]
-        
+
     def render(self, context, mode=None):
         """
         Render the grid in the current render mode.
-        
+
         The current render mode can be specified as argument
         or it has been specified earlier by a select_mode call.
         """
@@ -316,21 +316,21 @@ class GridView:
         else:
             default = props.style()
             style = props.style
-        
+
             x0, y0 = props.grid_to_screen(0, 0, False)
             x1, y1 = props.grid_to_screen(self.grid.width - 1, self.grid.height - 1, False)
             context.set_source_rgb(*[c / 65535.0 for c in default["cell", "color"]])
             rsize = props["cell", "size"]
-            
+
             # rsize + 1, rsize + 1)
             rwidth = (x1 + rsize + 1) - x0
             rheight = (y1 + rsize + 1) - y0
-            
+
             # -0.5 for coordinates and +1 for size
             # are needed to render seamlessly in PDF
             context.rectangle(x0 - 0.5, y0 - 0.5, rwidth, rheight)
             context.fill()
-            
+
             styles = props.styles
             for p, q in cells:
                 if (p, q) not in styles:
@@ -340,7 +340,7 @@ class GridView:
         if has_padding:
             mx, my = props.margin
             context.translate(-1 * mx, -1 * my)
-        
+
     def render_top(self, context, cells):
         grid = self.grid
         data = grid.data
@@ -349,7 +349,7 @@ class GridView:
         if settings["has_padding"]:
             context.translate(*props.margin)
         cur_color = None
-        
+
         default = props._data
         default_char_font = default["char", "font"]
         default_char_size = default["char", "size"]
@@ -360,9 +360,9 @@ class GridView:
         default_number_font = default["number", "font"]
         default_number_size = default["number", "size"]
         default_circle = default["circle"]
-        
+
         styles = props.styles
-        
+
         screen_xs, screen_ys = self.comp_screen()
         pcr = pangocairo.CairoContext(context)
         pcr_layout = pcr.create_layout()
@@ -426,10 +426,10 @@ class GridView:
                 cur_color = color
                 ctx_set_source_rgb(*[cc / 65535.0 for cc in color])
             _render_char(p, q, c, extents)
-        
+
         cell_size = props["cell", "size"]
         line_width = props["line", "width"]
-        
+
         # highlights
         highlights = self.highlights
         if highlights:
@@ -486,7 +486,7 @@ class GridView:
                     rsize -= (2 * offset)
                     ctx_rectangle(rx + offset, ry + offset, rsize, rsize)
                 context.fill()
-        
+
         # number
         if settings["show_numbers"]:
             numbers = [(p, q) for p, q in cells if data[q][p]["number"] > 0]
@@ -524,7 +524,7 @@ class GridView:
                 context.new_sub_path()
                 context.arc(rx, ry, rsize / 2, 0, 2 * math.pi)
                 context.stroke()
-        
+
         # lines
         if len(cells) < grid.width * grid.height:
             cls = [c for c in cells]
@@ -536,12 +536,12 @@ class GridView:
         if settings["has_padding"]:
             mx, my = props.margin
             context.translate(-1 * mx, -1 * my)
-    
+
     def render_all_lines_of_cell(self, context, x, y, screen_xs, screen_ys):
         """Render the lines that surround a cell (all four sides)."""
         cells = [(x, y)] + list(self.grid.neighbors(x, y, diagonals=True))
         self.render_lines_of_cells(context, cells, screen_xs, screen_ys)
-                
+
     def comp_screen(self):
         """Compute screen coordinates of cells."""
         to_screen = self.properties.grid_to_screen
@@ -572,7 +572,7 @@ class GridView:
         width = grid.width
         height = grid.height
         data = grid.data
-        
+
         if not grid.lines:
             grid.lines = cPalabra.compute_lines(grid)
             grid.v_lines = []
@@ -632,7 +632,7 @@ class GridView:
                 ctx_move_to(rx, ry)
                 ctx_rel_line_to(rdx, rdy)
         ctx_stroke()
-        
+
     def render_locations(self, context, cells):
         """Render one or more cells."""
         has_padding = self.settings["has_padding"]
@@ -652,7 +652,7 @@ class GridView:
             context.fill()
         if has_padding:
             context.translate(-1 * mx, -1 * my)
-        
+
     # needs manual queue_draw() on drawing_area afterwards
     def refresh_visual_size(self, drawing_area):
         """Recalculate the visual width and height and resize the drawing area."""
@@ -673,12 +673,12 @@ class GridPreview(gtk.VBox):
         self.scrolled_window = create_scroll(self.drawing_area, viewport=True)
         self.pack_start(create_label("<b>" + header + "</b>"), False, False, 6)
         self.pack_start(self.scrolled_window)
-        
+
     def display(self, grid):
         self.view = GridView(grid)
         self.preview_surface = None
         self.refresh()
-        
+
     def refresh(self, force=False):
         if force:
             self.preview_surface = None
@@ -687,12 +687,12 @@ class GridPreview(gtk.VBox):
                 self.view.properties["cell", "size"] = self.cell_size
             self.view.refresh_visual_size(self.drawing_area)
             self.drawing_area.queue_draw()
-        
+
     def clear(self):
         self.view = None
         self.preview_surface = None
         self.drawing_area.queue_draw()
-        
+
     def on_expose_event(self, drawing_area, event):
         if self.view is not None:
             if not self.preview_surface:

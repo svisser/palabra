@@ -30,7 +30,7 @@ class Puzzle:
         self.filename = None
         self.metadata = {}
         self.notepad = ""
-        
+
     def __eq__(self, other):
         if (other is None
             or self.type != other.type
@@ -40,10 +40,10 @@ class Puzzle:
             or self.grid != other.grid):
             return False
         return True
-        
+
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def update_type(self, filetype, filename, extension):
         if not filename.endswith(extension):
             filename = filename + extension
@@ -53,10 +53,10 @@ class Puzzle:
 class PuzzleManager:
     def __init__(self):
         self.current_puzzle = None
-        
+
     def new_puzzle(self, configuration):
         if configuration["type"] == "crossword":
-                
+
             if "grid" in configuration:
                 grid = configuration["grid"]
                 self.current_puzzle = Puzzle(grid)

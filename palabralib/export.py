@@ -40,10 +40,10 @@ class Format:
         self.outputs = outputs
         self.allow_multiple = allow_multiple
         self.settings = []
-        
+
     def add(self, s):
         self.settings.append(s)
-        
+
 class Setting:
     def __init__(self, tab, type, title, key, default, properties=None, editable=None):
         self.tab = tab
@@ -102,7 +102,7 @@ class HeaderEditor(gtk.Dialog):
         self.vbox.pack_start(content_box, True, True, 0)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
     def on_code_clicked(self, widget, event, code):
         buff = self.text.get_buffer()
         start, end = buff.get_bounds()
@@ -115,7 +115,7 @@ class HeaderEditor(gtk.Dialog):
                 buff.set_text(header + " " + code)
         else:
             buff.insert_at_cursor(code)
-        
+
     def on_header_changed(self, buff):
         start, end = buff.get_bounds()
         self.header = buff.get_text(start, end).strip()
@@ -158,8 +158,8 @@ class ExportWindow(gtk.Dialog):
         png = Format("png", u"PNG (png)", ["grid", "solution"], False)
         self.formats = [pdf, png]
         self.outputs = {}
-        self.format = None        
-        
+        self.format = None
+
         items = gtk.ListStore(str)
         for format in self.formats:
             items.append([format.title])
@@ -174,28 +174,28 @@ class ExportWindow(gtk.Dialog):
         tree_window = gtk.ScrolledWindow(None, None)
         tree_window.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         tree_window.add(tree)
-        
+
         self.options_window = gtk.VBox(False, 0)
-        
+
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
-        
+
         main = gtk.HBox(False, 0)
         main.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
-        
+
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup(u"<b>Export to:</b>")
         format_vbox = gtk.VBox(False, 0)
         format_vbox.pack_start(label, False, False, 6)
         format_vbox.pack_start(tree_window, True, True, 6)
-        
+
         main.pack_start(format_vbox, False, False, 0)
         main.pack_start(self.options_window, True, True, 0)
         self.vbox.pack_start(hbox, True, True, 0)
-        
+
         def _text_callback(entry, key):
             self.options["settings"][key] = entry.get_text()
         def _bool_callback(button, key):
@@ -212,14 +212,14 @@ class ExportWindow(gtk.Dialog):
                     , "spin": _spin_callback
                 }[s.type]
         self.reset_options()
-        
+
         starting_index = 0
         tree.get_selection().select_path(starting_index)
         self.select_format(starting_index)
-        
+
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.ok_button = self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
     def reset_options(self):
         self.options = {}
         self.options["format"] = None
@@ -228,7 +228,7 @@ class ExportWindow(gtk.Dialog):
         for f in self.formats:
             for s in f.settings:
                 self.options["settings"][s.key] = s.default
-        
+
     def select_format(self, index):
         if self.format is not None:
             for w in self.removes:
@@ -257,7 +257,7 @@ class ExportWindow(gtk.Dialog):
             self.options["output"][data] = widget.get_active()
             self.check_ok_button(check=self.format.allow_multiple)
         self._create_output_options(self.option, self.format, callback)
-        self.removes = []        
+        self.removes = []
         label = gtk.Label()
         label.set_alignment(0, 0)
         label.set_markup(u"<b>Settings:</b>")
@@ -275,7 +275,7 @@ class ExportWindow(gtk.Dialog):
         self.options_window.pack_start(self.option, False, False, 0)
         self.removes.append(self.option)
         self.options_window.show_all()
-        
+
     def on_tree_clicked(self, treeview, event):
         if event.button != 1:
             return True
@@ -284,7 +284,7 @@ class ExportWindow(gtk.Dialog):
             item = treeview.get_path_at_pos(*pos)
             if item is not None:
                 self.select_format(item[0][0])
-                
+
     def check_ok_button(self, check=True):
         try:
             sensitive = True
@@ -294,7 +294,7 @@ class ExportWindow(gtk.Dialog):
             self.ok_button.set_sensitive(sensitive)
         except AttributeError:
             pass
-            
+
     def on_edit_header(self, item, puzzle):
         cur_header = self.options["settings"]["page_header_text"]
         w = HeaderEditor(self, puzzle, cur_header)
@@ -302,7 +302,7 @@ class ExportWindow(gtk.Dialog):
         if w.run() == gtk.RESPONSE_OK:
             self.options["settings"]["page_header_text"] = w.header
         w.destroy()
-            
+
     def _create_output_options(self, main, format, callback):
         label = gtk.Label()
         label.set_alignment(0, 0)
@@ -331,7 +331,7 @@ class ExportWindow(gtk.Dialog):
                 align.add(button)
                 main.pack_start(align, False, False, 0)
         self.check_ok_button(check=format.allow_multiple)
-        
+
     @staticmethod
     def _create_settings(main, settings, puzzle):
         if not settings:

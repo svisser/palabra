@@ -37,7 +37,7 @@ class WordTool:
         self.show_intersect = False
         self.show_used = True
         self.show_order = 0
-    
+
     def create(self):
         img = gtk.Image()
         img.set_from_file(get_real_filename("resources/icon1.png"))
@@ -48,7 +48,7 @@ class WordTool:
         toggle_button.set_property("image", img)
         toggle_button.set_tooltip_text(u"Show only words with intersecting words")
         toggle_button.connect("toggled", lambda b: on_button_toggled(self, b))
-        
+
         img = gtk.Image()
         img.set_from_file(get_real_filename("resources/icon2.png"))
         def on_button2_toggled(self, button):
@@ -58,22 +58,22 @@ class WordTool:
         toggle_button2.set_property("image", img)
         toggle_button2.set_tooltip_text(u"Show only unused words")
         toggle_button2.connect("toggled", lambda b: on_button2_toggled(self, b))
-        
+
         buttons = gtk.HButtonBox()
         buttons.set_layout(gtk.BUTTONBOX_START)
         buttons.add(toggle_button)
         buttons.add(toggle_button2)
-        
+
         self.main = gtk.VBox(False, 0)
         self.main.set_spacing(9)
         self.main.pack_start(buttons, False, False, 0)
-        
+
         self.view = EditorWordWidget(self.parent)
         sw = gtk.ScrolledWindow(None, None)
         sw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         sw.add_with_viewport(self.view)
         self.main.pack_start(sw, True, True, 0)
-        
+
         show_hbox = gtk.HBox()
         show_hbox.pack_start(create_label(u"Sort words by:"))
         def on_show_changed(widget):
@@ -84,13 +84,13 @@ class WordTool:
             , f_change=on_show_changed)
         show_hbox.pack_start(show_combo)
         self.main.pack_start(show_hbox, False, False, 0)
-        
+
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
         hbox.set_spacing(6)
         hbox.pack_start(self.main, True, True, 0)
         return hbox
-        
+
     def display_words(self, words=None):
         if words is not None:
             self.words = words
@@ -99,10 +99,10 @@ class WordTool:
             , show_intersect=self.show_intersect
             , show_order=self.show_order)
         self.view.set_words(shown)
-        
+
     def get_selected_word(self):
         return self.view.get_selected_word()
-        
+
     def deselect(self):
         self.view.selection = None
 
@@ -114,16 +114,16 @@ class FillTool:
             , (constants.FILL_START_AT_AUTO, "Suitably chosen slot")
         ]
         self.editor.fill_options.update(DEFAULT_FILL_OPTIONS)
-        
+
     def create(self):
         main = gtk.VBox(False, 0)
         main.set_spacing(9)
-        
+
         def on_fill_button_clicked(button):
             self.editor.fill()
         button = create_button(u"Fill", f_click=on_fill_button_clicked)
         main.pack_start(button, False, False, 0)
-        
+
         start_combo = gtk.combo_box_new_text()
         for i, (c, txt) in enumerate(self.starts):
             start_combo.append_text(txt)
@@ -132,10 +132,10 @@ class FillTool:
         def on_start_changed(combo):
             self.editor.fill_options[constants.FILL_OPTION_START] = self.starts[combo.get_active()][0]
         start_combo.connect("changed", on_start_changed)
-        
+
         main.pack_start(create_label(u"Start filling from:"), False, False, 0)
         main.pack_start(start_combo, False, False, 0)
-        
+
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(6)
         hbox.set_spacing(6)

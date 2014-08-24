@@ -71,7 +71,7 @@ class WordListEditor(PalabraDialog):
             self.store.append([wlist.name, wlist.path])
         self.main.pack_start(s_window, True, True, 0)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
     def on_tree_selection_changed(self, selection):
         store, it = selection.get_selected()
 
@@ -86,7 +86,7 @@ class WordUsageDialog(PalabraDialog):
         self.main.pack_start(create_notebook(pages, border=(8, 4)))
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
     def create_blacklist(self, parent):
         vbox = gtk.VBox()
         vbox.set_border_width(9)
@@ -99,7 +99,7 @@ class WordUsageDialog(PalabraDialog):
         vbox.pack_start(create_label(u"Word list to be used as blacklist:"), False, False, 0)
         vbox.pack_start(self.blacklist_combo, False, False, 0)
         return vbox
-        
+
     def create_find_words(self, parent):
         hbox = gtk.HBox()
         hbox.set_spacing(9)
@@ -109,7 +109,7 @@ class WordUsageDialog(PalabraDialog):
             , f_sel=self.on_tree_selection_changed
             , window_size=(256, 196))
         hbox.pack_start(s_window, True, True, 0)
-        
+
         button_vbox = gtk.VBox()
         self.add_wlist_button = gtk.Button(stock=gtk.STOCK_ADD)
         self.add_wlist_button.connect("clicked", self.on_add_clicked)
@@ -120,14 +120,14 @@ class WordUsageDialog(PalabraDialog):
         self.add_wlist_button.set_sensitive(False)
         self.remove_wlist_button.set_sensitive(False)
         hbox.pack_start(button_vbox, True, True, 0)
-        
+
         # name path
         self.store2, self.tree2, s_window2 = create_tree((str, str)
             , [("Word lists for finding words", 0)]
             , f_sel=self.on_tree2_selection_changed
             , window_size=(256, 196))
-        hbox.pack_start(s_window2, True, True, 0)        
-        
+        hbox.pack_start(s_window2, True, True, 0)
+
         # populate list stores
         c_find = preferences.prefs[constants.PREF_FIND_WORD_FILES]
         wlists1 = [w for w in parent.wordlists if w.path not in c_find]
@@ -136,7 +136,7 @@ class WordUsageDialog(PalabraDialog):
             self.store.append([wlist.name, wlist.path])
         for wlist in wlists2:
             self.store2.append([wlist.name, wlist.path])
-        
+
         vbox = gtk.VBox()
         vbox.set_border_width(9)
         vbox.set_spacing(9)
@@ -152,28 +152,28 @@ class WordUsageDialog(PalabraDialog):
         label = create_label(u"These settings are loaded when you start " + constants.TITLE + ".")
         vbox.pack_start(label, False, False, 0)
         return vbox
-        
+
     def on_tree_selection_changed(self, selection):
         store, it = selection.get_selected()
         self.add_wlist_button.set_sensitive(it is not None)
-        
+
     def on_tree2_selection_changed(self, selection):
         store, it = selection.get_selected()
         self.remove_wlist_button.set_sensitive(it is not None)
-        
+
     def on_add_clicked(self, button):
         self._move_to_store(self.tree, self.store2)
-            
+
     def on_remove_clicked(self, button):
         self._move_to_store(self.tree2, self.store)
-            
+
     def _move_to_store(self, tree_from, store_to):
         store, it = tree_from.get_selection().get_selected()
         if it is not None:
             name, path = store[it][0], store[it][1]
             store_to.append([name, path])
             store.remove(it)
-            
+
     def get_configuration(self):
         # this dict gets updated to preferences.prefs
         c = {}
@@ -201,7 +201,7 @@ class SimilarWordsDialog(PalabraDialog):
         self.connect("destroy", destroy)
         self.entries = word.similar_entries(word.similar_words(puzzle.grid))
         self.load_entries(self.entries)
-        
+
     def load_entries(self, entries):
         self.store.clear()
         items = entries.items()
@@ -214,7 +214,7 @@ class SimilarWordsDialog(PalabraDialog):
                     txt += ', '
             txt += '</span>'
             self.store.append([key, txt])
-    
+
     def on_selection_changed(self, selection):
         """Highlight all cells associated with the selected entry."""
         store, it = selection.get_selected()
@@ -275,7 +275,7 @@ class AccidentalWordsDialog(PalabraDialog):
         destroy = lambda w: highlight_cells(self.pwindow, self.puzzle, clear=True)
         self.connect("destroy", destroy)
         self.launch_accidental(puzzle.grid)
-        
+
     def launch_accidental(self, grid):
         if self.timer is not None:
             glib.source_remove(self.timer)
@@ -284,7 +284,7 @@ class AccidentalWordsDialog(PalabraDialog):
         self.store.append([LOADING_TEXT, ''])
         self.timer = glib.timeout_add(constants.INPUT_DELAY_SHORT
             , self.load_words, grid, self.wordlists[self.index])
-        
+
     def load_words(self, grid, wlist):
         """Compute and display the words of the grid found in the word list."""
         self.results = [(d, cells) for d, cells in
@@ -297,7 +297,7 @@ class AccidentalWordsDialog(PalabraDialog):
             t1 = '<span font_desc="Monospace 12">' + text + '</span>'
             self.store.append([t1, str_indices])
         return False
-    
+
     def on_selection_changed(self, selection):
         """Highlight all cells associated with the selected entry."""
         store, it = selection.get_selected()
@@ -337,11 +337,11 @@ class FindWordsDialog(PalabraDialog):
         self.pack(sort_hbox, False)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.launch_pattern(None)
-        
+
     def set_n_label(self, n):
         """Display the number of words that match the user's pattern."""
         self.n_label.set_text(u"Number of matching words: " + str(n))
-        
+
     def launch_pattern(self, pattern=None):
         """Start a timer and display the words when the timer has expired."""
         self.store.clear()
@@ -364,15 +364,15 @@ class AnagramDialog(gtk.Dialog):
     def __init__(self, parent):
         gtk.Dialog.__init__(self, u"Find anagrams", parent, gtk.DIALOG_MODAL)
         self.wordlists = parent.wordlists
-        
+
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
-        
+
         main.pack_start(create_entry(f_change=self.on_buffer_changed), False, False, 0)
-        
+
         self.store = gtk.ListStore(str)
         self.tree = gtk.TreeView(self.store)
         cell = gtk.CellRendererText()
@@ -384,20 +384,20 @@ class AnagramDialog(gtk.Dialog):
         scrolled_window.set_size_request(300, 300)
         main.pack_start(scrolled_window, True, True, 0)
         hbox.pack_start(main, True, True, 0)
-        
+
         self.vbox.pack_start(hbox, True, True, 0)
-        
+
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
         self.timer = glib.timeout_add(INPUT_DELAY, self.find_words)
-        
+
     def on_buffer_changed(self, widget):
         glib.source_remove(self.timer)
         self.store.clear()
         self.store.append([LOADING_TEXT])
         word = widget.get_text().strip()
         self.timer = glib.timeout_add(INPUT_DELAY, self.find_words, word)
-        
+
     def load_contained_words(self, word=None):
         if word is None:
             return
@@ -409,7 +409,7 @@ class AnagramDialog(gtk.Dialog):
         f_result = verify_contained_words(self.wordlists, pairs)
         self._display([s1 + " (" + s2 + ")" for s1, s2 in f_result])
         return False
-        
+
     def find_words(self, pattern=None):
         if pattern is not None:
             result = []
@@ -417,7 +417,7 @@ class AnagramDialog(gtk.Dialog):
                 result.extend(wlist.find_by_pattern(pattern))
             self._display(result)
         return False
-        
+
     def _display(self, strings):
         self.store.clear()
         for s in strings:
@@ -485,12 +485,12 @@ class WordListScoreDialog(PalabraDialog):
         self.set_size_request(480, -1)
         self.wlist = wlist
         self.pack(create_label(u"Currently editing: " + wlist.path + " (" + wlist.name + ")"))
-        
+
         def on_select_option(widget, arg):
             if widget.get_active() == 1:
                 self.spin_to.set_sensitive(arg == "to")
                 self.spin_by.set_sensitive(arg == "by")
-        
+
         b1 = create_radio(u"Change all score by:", active=True, f_toggle=on_select_option, f_arg="by")
         self.spin_by = create_spinner(-1, -50, 50)
         self.spin_by.set_sensitive(True)
@@ -510,10 +510,10 @@ class WordListScoreDialog(PalabraDialog):
         align.add(self.spin_to)
         table.attach(align, 1, 2, 1, 2)
         self.pack(table)
-        
+
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_APPLY)
-    
+
     def get_settings(self):
         widgets = [("to", self.spin_to), ("by", self.spin_by)]
         for key, w in widgets:
@@ -559,7 +559,7 @@ class WordListManager(PalabraDialog):
         self.main.pack_start(label, False, False, 0)
         self.display_wordlists()
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        
+
     def create_contents_tab(self):
         self.selected_word = None
         self.selected_offset = None
@@ -577,28 +577,28 @@ class WordListManager(PalabraDialog):
         vbox.set_border_width(6)
         vbox.set_spacing(6)
         vbox.pack_start(create_scroll(self.word_widget, True, size=(300, -1)))
-        
+
         edit_hbox = gtk.HBox()
-        
+
         def on_word_changed(widget):
             word = widget.get_text().strip()
             self.word_widget.update(word, self.selected_offset)
         self.word_entry = create_entry(on_word_changed)
         self.word_entry.modify_font(pango.FontDescription('monospace'))
-        
+
         def on_update(widget):
             score = widget.get_value_as_int()
             self.word_widget.update_score(score, self.selected_offset)
             word = self.word_widget.get_selected_word()
             self.current_wlist.update_score(word, score)
         self.word_spinner = create_spinner(0, 0, 100, f_change=on_update)
-        
+
         self.clear_word_edit_controls()
-        
+
         edit_hbox.pack_start(self.word_entry)
         edit_hbox.pack_start(self.word_spinner, False, False)
         vbox.pack_start(edit_hbox, False, False)
-        
+
         def on_edit_scores(button):
             on_done = lambda window: window.get_settings()
             response, settings = launch_dialog(WordListScoreDialog, self
@@ -611,19 +611,19 @@ class WordListManager(PalabraDialog):
         self.wlist_sensitives.append(self.scores_button)
         self.scores_button.set_sensitive(False)
         vbox.pack_start(self.scores_button, False, False)
-        
+
         hbox = gtk.HBox()
         hbox.set_spacing(6)
         vbox.pack_start(hbox, False, False)
         return vbox
-    
+
     def clear_word_edit_controls(self):
         """Reset the text entry and score spinner for editing a word's details."""
         self.word_entry.set_sensitive(False)
         self.word_entry.set_text('')
         self.word_spinner.set_sensitive(False)
         self.word_spinner.set_value(0)
-        
+
     # TODO not in use
     def on_edit_score(self, cell, path, value):
         it = self.w_store.get_iter(path)
@@ -636,7 +636,7 @@ class WordListManager(PalabraDialog):
                 self.modifications.add(self.current_wlist)
         except ValueError:
             pass
-        
+
     def add_word_list(self):
         paths = [p["path"]["value"] for p in preferences.prefs[constants.PREF_WORD_FILES]]
         value = obtain_file(self, u"Add word list", paths
@@ -647,7 +647,7 @@ class WordListManager(PalabraDialog):
             self.palabra_window.wordlists = word.create_wordlists(preferences.prefs[constants.PREF_WORD_FILES]
                 , previous=self.palabra_window.wordlists)
             self.display_wordlists()
-        
+
     def on_selection_changed(self, selection):
         store, it = selection.get_selected()
         for b in self.wlist_sensitives:
@@ -658,7 +658,7 @@ class WordListManager(PalabraDialog):
                 if wlist.path == path:
                     self.current_wlist = wlist
                     self.word_widget.set_words(get_words_by_length(wlist))
-        
+
     def rename_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         name, path = self.store[it][0], self.store[it][1]
@@ -672,7 +672,7 @@ class WordListManager(PalabraDialog):
             self.store[it][0] = d.given_name
             self.tree.columns_autosize()
         d.destroy()
-        
+
     def remove_word_list(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store[it][1]
@@ -687,7 +687,7 @@ class WordListManager(PalabraDialog):
             preferences.prefs[constants.PREF_FIND_WORD_FILES].remove(path)
         self.palabra_window.refresh_words(True)
         self.display_wordlists()
-        
+
     def display_wordlists(self):
         self.store.clear()
         wlists = list(iterate_word_lists())
@@ -718,7 +718,7 @@ class WordWidget(gtk.DrawingArea):
 
     def get_word_offset(self, y):
         return max(0, int(y / self.STEP))
-    
+
     def expose(self, widget, event):
         ctx = widget.window.cairo_create()
         pcr = pangocairo.CairoContext(ctx)
@@ -743,7 +743,7 @@ class WordWidget(gtk.DrawingArea):
             pcr_layout.set_markup(''.join(markup))
             ctx.move_to(5, n * self.STEP)
             pcr.show_layout(pcr_layout)
-            
+
     def visible_words(self, y):
         offset = self.get_word_offset(y)
         n_rows = 30 #(height / self.STEP) + 1
@@ -762,17 +762,17 @@ class EditWordWidget(WordWidget):
         self.set_flags(gtk.CAN_FOCUS)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect("button_press_event", self.on_button_press)
-    
+
     def update(self, word, offset):
         w, score, h = self.words[offset]
         self.words[offset] = word, score, h
         self.queue_draw()
-        
+
     def update_score(self, score, offset):
         w, old_score, h = self.words[offset]
         self.words[offset] = w, score, h
         self.queue_draw()
-        
+
     def on_button_press(self, widget, event):
         offset = self.get_word_offset(event.y)
         if offset >= len(self.words):
@@ -794,7 +794,7 @@ class EditorWordWidget(WordWidget):
         self.set_flags(gtk.CAN_FOCUS)
         self.add_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.connect("button_press_event", self.on_button_press)
-        
+
     def on_button_press(self, widget, event):
         offset = self.get_word_offset(event.y)
         if offset >= len(self.words):
@@ -811,25 +811,25 @@ class EditorWordWidget(WordWidget):
             self.editor.set_overlay(word)
         self.queue_draw()
         return True
-            
+
 class WordPropertiesDialog(gtk.Dialog):
     def __init__(self, palabra_window, properties):
         gtk.Dialog.__init__(self, u"Word properties", palabra_window
             , gtk.DIALOG_MODAL)
         self.palabra_window = palabra_window
         self.set_size_request(384, 256)
-        
+
         label = gtk.Label()
         label.set_markup(''.join(['<b>', properties["word"], '</b>']))
-        
+
         main = gtk.VBox(False, 0)
         main.set_spacing(18)
         main.pack_start(label, True, True, 0)
-        
+
         hbox = gtk.HBox(False, 0)
         hbox.set_border_width(12)
         hbox.set_spacing(18)
         hbox.pack_start(main, True, True, 0)
-        
+
         self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT)
         self.vbox.add(hbox)

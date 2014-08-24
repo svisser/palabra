@@ -53,42 +53,42 @@ class AppearanceDialog(PalabraDialog):
         self.on_update()
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
-        
+
     def create_content(self, properties):
         main = gtk.VBox()
         main.set_spacing(6)
-        
+
         table = gtk.Table(10, 3)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
         main.pack_start(table)
-        
+
         def create_label(label):
             align = gtk.Alignment(0, 0.5)
             align.set_padding(0, 0, 12, 0)
             align.add(gtk.Label(label))
             return align
-            
+
         def create_width_spinner(current):
             adj = gtk.Adjustment(current, 1, constants.MAX_LINE_WIDTH, 1, 0, 0)
             button = gtk.SpinButton(adj, 0.0, 0)
             return button
-            
+
         def create_row(table, y, label, c1, c2=None):
             table.attach(label, 0, 1, y, y + 1, gtk.FILL, gtk.FILL)
             table.attach(c1, 1, 2, y, y + 1, 0, 0)
             if c2 is not None:
                 table.attach(c2, 2, 3, y, y + 1, 0, 0)
-        
+
         table.attach(create_label(u"Color"), 1, 2, 0, 1, gtk.FILL, gtk.FILL)
         table.attach(create_label(u"Width (px)"), 2, 3, 0, 1, gtk.FILL, gtk.FILL)
-        
+
         def create_line_controls(title, key_color, key_width):
             label = create_label(title)
             button = create_color_button(properties[key_color], self.on_update)
             spinner = create_width_spinner(properties[key_width])
             return label, button, spinner
-        
+
         # borders and lines
         widgets = create_line_controls(u"Border:", ("border", "color"), ("border", "width"))
         self.border_color_button = widgets[1]
@@ -111,10 +111,10 @@ class AppearanceDialog(PalabraDialog):
         self.border_width_spinner.connect("value-changed", on_border_width_update)
         self.line_width_spinner.connect("value_changed", self.on_update)
         cap_line_width_at(properties["border", "width"])
-        
+
         table.attach(create_label(u"Color"), 1, 2, 3, 4, gtk.FILL, gtk.FILL)
         table.attach(create_label(u"Size (%)"), 2, 3, 3, 4, gtk.FILL, gtk.FILL)
-        
+
         def create_font_controls(title, key_color, key_size):
             label = create_label(title)
             button = create_color_button(properties[key_color], self.on_update)
@@ -122,7 +122,7 @@ class AppearanceDialog(PalabraDialog):
             spinner = gtk.SpinButton(adj)
             spinner.connect("value-changed", self.on_update)
             return label, button, spinner
-        
+
         # letters and numbers
         widgets = create_font_controls(u"Letter:", ("char", "color"), ("char", "size"))
         self.char_color_button = widgets[1]
@@ -132,22 +132,22 @@ class AppearanceDialog(PalabraDialog):
         self.number_color_button = widgets[1]
         self.number_size_spinner = widgets[2]
         create_row(table, 5, *widgets)
-        
+
         # cells
         table.attach(create_label(u"Color"), 1, 2, 6, 7, gtk.FILL, gtk.FILL)
         table.attach(create_label(u"Size (px)"), 2, 3, 6, 7, gtk.FILL, gtk.FILL)
-        
+
         label = create_label(u"Cell:")
         self.cell_color_button = create_color_button(properties["cell", "color"], self.on_update)
         adj = gtk.Adjustment(properties["cell", "size"], 32, 128, 1, 0, 0)
         self.cell_size_spinner = gtk.SpinButton(adj, 0.0, 0)
         self.cell_size_spinner.connect("value-changed", self.on_update)
         create_row(table, 7, label, self.cell_color_button, self.cell_size_spinner)
-        
+
         # blocks
         table.attach(create_label(u"Color"), 1, 2, 8, 9, gtk.FILL, gtk.FILL)
         table.attach(create_label(u"Margin (%)"), 2, 3, 8, 9, gtk.FILL, gtk.FILL)
-        
+
         current = properties["block", "margin"]
         label = create_label(u"Block:")
         self.block_color_button = create_color_button(properties["block", "color"], self.on_update)
@@ -156,12 +156,12 @@ class AppearanceDialog(PalabraDialog):
         self.block_margin_spinner.connect("value-changed", self.on_update)
         create_row(table, 9, label, self.block_color_button, self.block_margin_spinner)
         return main
-        
+
     def on_update(self, widget=None):
         for k, v in self.gather_appearance().items():
             self.preview.view.properties[k] = v
         self.preview.refresh(force=True)
-        
+
     def gather_appearance(self):
         a = {}
         a["block", "margin"] = self.block_margin_spinner.get_value_as_int()
@@ -192,10 +192,10 @@ class CellPropertiesDialog(PalabraDialog):
         c3 = (u"Letter color", ("char", "color"))
         c4 = (u"Number color", ("number", "color"))
         self.colors = [c1, c2, c3, c4]
-        
+
         self.grid = Grid(1, 1)
         self.grid.data[0][0].update(properties["grid"].data[y][x])
-        
+
         table = gtk.Table(3, 3, False)
         table.set_col_spacings(6)
         table.set_row_spacings(6)
@@ -206,7 +206,7 @@ class CellPropertiesDialog(PalabraDialog):
             table.attach(create_label(title), x, x + 1, y, y + 1, gtk.FILL, gtk.FILL)
             table.attach(b_align, x + 1, x + 2, y, y + 1)
             table.attach(r_align, x + 2, x + 3, y, y + 1)
-        on_color_set = lambda button, key: self._on_update(key, color_tuple(button))    
+        on_color_set = lambda button, key: self._on_update(key, color_tuple(button))
         for i, (title, key) in enumerate(self.colors):
             attr = '_'.join(list(key) + ["button"])
             setattr(self, attr, create_color_button(properties[key]))
@@ -219,7 +219,7 @@ class CellPropertiesDialog(PalabraDialog):
             r_align = gtk.Alignment(0, 0.5)
             r_align.add(getattr(self, attr2))
             create_color_row(table, title, b_align, r_align, 0, i)
-        
+
         table.attach(create_label(u"Other options"), 0, 1, 4, 5, gtk.FILL, gtk.FILL)
         on_circle = lambda b: self._on_update("circle", b.get_active())
         self.circle_button = create_check_button(u"Display circle"
@@ -234,7 +234,7 @@ class CellPropertiesDialog(PalabraDialog):
         content.set_border_width(6)
         content.set_spacing(6)
         content.pack_start(main)
-        
+
         self.previews = []
         prevs = gtk.VBox()
         p1 = (constants.VIEW_MODE_PREVIEW_CELL, "Puzzle")
@@ -254,7 +254,7 @@ class CellPropertiesDialog(PalabraDialog):
         self.pack(content)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_OK)
-        
+
     def on_color_reset(self, button, key):
         color = self.properties["defaults"][key]
         button = getattr(self, '_'.join(list(key) + ["button"]))
@@ -262,12 +262,12 @@ class CellPropertiesDialog(PalabraDialog):
         c.red, c.green, c.blue = color
         button.set_color(c)
         self._on_update(key, color)
-            
+
     def _on_update(self, key, value):
         for p in self.previews:
             p.view.properties[key] = value
             p.refresh(force=True)
-    
+
     def gather_appearance(self):
         a = {}
         for title, key in self.colors:

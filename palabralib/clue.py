@@ -138,7 +138,7 @@ class ManageCluesDialog(PalabraDialog):
         self.pack(label, False)
         self.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
         self.load_clue_files(parent.clues)
-    
+
     def on_properties(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store[it][1]
@@ -147,7 +147,7 @@ class ManageCluesDialog(PalabraDialog):
                 clue_db = f
                 break
         launch_dialog(CluePropertiesDialog, self, clue_db)
-    
+
     def on_add_clue_db(self):
         paths = [p["path"]["value"] for p in preferences.prefs[constants.PREF_CLUE_FILES]]
         value = obtain_file(self, u"Add clue database", paths
@@ -157,7 +157,7 @@ class ManageCluesDialog(PalabraDialog):
             preferences.prefs[constants.PREF_CLUE_FILES].append(value)
             self.pwindow.clues = create_clues(preferences.prefs[constants.PREF_CLUE_FILES])
             self.load_clue_files(self.pwindow.clues)
-    
+
     def on_remove_db(self):
         store, it = self.tree.get_selection().get_selected()
         path = self.store[it][1]
@@ -166,12 +166,12 @@ class ManageCluesDialog(PalabraDialog):
         n_clues = [f for f in self.pwindow.clues if f.path != path]
         self.pwindow.clues = n_clues
         self.load_clue_files(n_clues)
-        
+
     def on_file_selected(self, selection):
         store, it = selection.get_selected()
         self.props_button.set_sensitive(it is not None)
         self.remove_button.set_sensitive(it is not None)
-        
+
     def load_clue_files(self, clues):
         self.store.clear()
         for f in sorted(clues, key=operator.attrgetter('name')):
@@ -216,7 +216,7 @@ class ClueTool:
         self.parent = parent
         self.settings = {"use_scrolling": True}
         self.timer = None
-    
+
     def create_entry(self, vbox, key, title):
         entry = gtk.Entry()
         def changed(widget):
@@ -229,14 +229,14 @@ class ClueTool:
         vbox.pack_start(create_label(title), False, False, 3)
         vbox.pack_start(entry, False, False, 0)
         return entry, c_id
-        
+
     def create(self, puzzle):
         vbox = gtk.VBox()
         vbox.set_spacing(6)
         vbox.set_border_width(6)
         result = self.create_entry(vbox, "text", u"<b>Clue</b>")
         self.clue_entry, self.c_changed_id = result
-        
+
         def on_cycle_clue(target):
             it = store_get_item(target, *self.tree.get_selection().get_selected())
             self.select_iter(self.tree.get_model(), it)
@@ -250,7 +250,7 @@ class ClueTool:
         align = gtk.Alignment(1, 0.5)
         align.add(np_box)
         vbox.pack_start(align, False, False, 0)
-        
+
         # number x y direction word clue explanation displayed_string
         types = (int, int, int, str, str, str, str, str)
         self.store, self.tree, window, self.selection_id = create_tree(types
@@ -258,13 +258,13 @@ class ClueTool:
             , f_sel=self.on_selection_changed
             , return_id=True)
         vbox.pack_start(gtk.HSeparator(), False, False, 0)
-        
+
         o_vbox = gtk.VBox()
         o_vbox.set_spacing(6)
         o_vbox.set_border_width(6)
         result = self.create_entry(o_vbox, "explanation", u"<b>Explanation</b>")
         self.explanation_entry, self.e_changed_id = result
-        
+
         w_hbox = gtk.HBox()
         w_hbox.set_spacing(6)
         w_hbox.pack_start(create_label(u"Word:"), False, False, 0)
@@ -273,11 +273,11 @@ class ClueTool:
             self.load_clues_for_word(widget.get_text().strip())
         w_entry.connect("changed", on_word_changed)
         w_hbox.pack_start(w_entry)
-        
+
         l_vbox = gtk.VBox()
         l_vbox.set_spacing(6)
         l_vbox.set_border_width(6)
-        
+
         l_vbox.pack_start(create_label(u"<b>Lookup clues</b>"), False, False, 0)
         l_vbox.pack_start(w_hbox, False, False, 0)
         self.c_store, self.c_tree, c_window = create_tree(str
@@ -288,7 +288,7 @@ class ClueTool:
             , align=(0, 0.5), f_click=self.on_use_clicked)
         self.use_clue_button.set_sensitive(False)
         l_vbox.pack_start(self.use_clue_button, False, False, 0)
-                
+
         pages = [(window, u"Words and clues")
             , (l_vbox, u"Lookup")
             , (o_vbox, u"Advanced")
@@ -297,25 +297,25 @@ class ClueTool:
         self.tree.set_headers_visible(False)
         self.load_items(puzzle.grid)
         return vbox
-        
+
     def select_iter(self, store, it):
         x, y, d = store[it][1], store[it][2], store[it][3]
         self.parent.set_selection(x=x, y=y, direction=d)
-        
+
     def on_clue_selected(self, selection):
         store, it = selection.get_selected()
         store, it_main = self.tree.get_selection().get_selected()
         self.use_clue_button.set_sensitive(it is not None and it_main is not None)
-    
+
     def on_use_clicked(self, button):
         store, it = self.c_tree.get_selection().get_selected()
         self.clue_entry.set_text(store[it][0])
-        
+
     def load_clues_for_word(self, word):
         self.c_store.clear()
         for c in sorted(lookup_clues(self.parent.clues, word)):
             self.c_store.append([gobject.markup_escape_text(c)])
-        
+
     def on_clue_changed(self, key, value):
         """
         Update the ListStore/tree and create or update an undoable action.
@@ -352,13 +352,13 @@ class ClueTool:
                 self.store.append(item)
         selection = self.tree.get_selection()
         self.perform_while_locked(selection, locked)
-        
+
     def update_current_word(self, clue, explanation):
         """Put the clue data of the word at (x, y, direction) in the text entries."""
         self.set_clue_editor_status(True)
         self.clue_entry.set_text(clue)
         self.explanation_entry.set_text(explanation)
-            
+
     def set_clue_editor_status(self, status):
         """Enable or disable the text entries for editing clue data."""
         self.clue_entry.set_sensitive(status)
@@ -391,7 +391,7 @@ class ClueTool:
             self.parent.set_selection(x, y, direction, full_update=False)
             self.settings["use_scrolling"] = True
         self.perform_while_locked(selection, locked)
-        
+
     def select(self, x, y, direction):
         """Select the word starting at the given (x, y, direction)."""
         if x < 0 or y < 0:
@@ -405,11 +405,11 @@ class ClueTool:
                         self.tree.scroll_to_cell(row.path)
                     self.update_current_word(row[5], row[6])
                 self.perform_while_locked(selection, locked)
-        
+
     def deselect(self):
         """Deselect all word/clue items in the list."""
         self.tree.get_selection().unselect_all()
-        
+
     def perform_while_locked(self, selection, code):
         """
         Execute the given code while preventing GTK callbacks from running.

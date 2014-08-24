@@ -46,7 +46,7 @@ def visible_entries(words, grid, show_used=True, show_intersect=False, show_orde
     entries = []
     if not show_used:
         entries = [e.lower() for e in grid.entries() if constants.MISSING_CHAR not in e]
-    shown = [row for row in words if 
+    shown = [row for row in words if
         not ( (show_intersect and not row[2]) or (not show_used and row[0] in entries) ) ]
     if show_order == 1: # sort by score
         shown.sort(key=itemgetter(1), reverse=True)
@@ -125,12 +125,12 @@ def read_wordlist(path, default_score):
                 word, score = line
             word = word.replace(" ", '')
             if len(word) > constants.MAX_WORD_LENGTH:
-                continue    
+                continue
             for c in word:
                 if c not in ords:
                     ord_c = ords[c] = ord(c)
                 else:
-                    ord_c = ords[c]                
+                    ord_c = ords[c]
                 if not (ord_A <= ord_c <= ord_Z
                     or ord_a <= ord_c <= ord_z):
                     break
@@ -140,7 +140,7 @@ def read_wordlist(path, default_score):
                 except ValueError:
                     pass
     return words
-    
+
 def check_accidental_words(wordlists, grid):
     """
     Given a grid, check it for accidental occurences of words in
@@ -176,7 +176,7 @@ def seq_to_cells(seq):
     if p_r:
         p.append((len(seqs) - len(p_r), p_r))
     return [i for i in p if len(i[1]) >= 2]
-        
+
 def check_accidental_word(wordlists, seq):
     """
     Given a list of (x, y, c) tuples, check it for occurrences of words
@@ -190,7 +190,7 @@ def check_accidental_word(wordlists, seq):
         if r:
             result.extend(r)
     return result
-    
+
 def check_str_for_words(wordlists, offset, s):
     """
     Given a string s, returns pairs of (offset, length) of words that
@@ -209,7 +209,7 @@ def produce_word_counts(word):
         else:
             counts[c] += 1
     return counts
-    
+
 def get_contained_words(wordlists, word):
     """
     Produce all words w, where len(w) > len(word), such that
@@ -221,7 +221,7 @@ def get_contained_words(wordlists, word):
         for l in xrange(len(word) + 1, constants.MAX_WORD_LENGTH):
             result.extend(cPalabra.get_contained_words(wlist.index, l, c_items, len(c_items)))
     return c_items, result
-    
+
 def verify_contained_words(wordlists, pairs):
     """
     Given pairs (a, b), produce all pairs such that all
@@ -254,7 +254,7 @@ def similar_words(grid, min_length=3):
             if s in word:
                 substrings[s].append((x, y, d, word))
     return substrings
-    
+
 def create_wordlists(prefs, previous=None):
     """
     Convert preference data of word files into CWordLists.
@@ -287,7 +287,7 @@ def remove_wordlist(prefs, wordlists, path):
     n_prefs = [p for p in prefs if p["path"]["value"] != path]
     n_wordlists = [wlist for wlist in wordlists if wlist.path != path]
     return n_prefs, n_wordlists
-    
+
 def rename_wordlists(prefs, wordlists, path, name):
     """
     Rename the word list with the given path to the given name
@@ -306,21 +306,21 @@ def search_wordlists(wordlists, length, constraints, more=None, sort=True, optio
     """
     Search the specified wordlists for words that match
     the constraints and the given length.
-    
+
     This function returns a list with tuples, (str, score, bool).
     The first value is the word, the third value is whether all
     positions of the word have a matching word, when the
     more_constraints (more) argument is specified.
     If more is not specified, the second value
     in a tuple is True.
-    
+
     If more is specified, then constraints must be
     specified for ALL intersecting words.
-    
+
     constraints and more must match with each other
     (i.e., if intersecting word at position 0 starts with 'a' then
     main word must also have a constraint 'a' at position 0).
-    
+
     Words are returned in alphabetical order.
     """
     def cs_to_str(l, cs):
@@ -339,7 +339,7 @@ def search_wordlists(wordlists, length, constraints, more=None, sort=True, optio
     if sort and len(indices) > 1:
         result.sort(key=itemgetter(0))
     return result
-    
+
 def search_wordlists_by_pattern(wordlists, pattern, sort=None):
     """
     Give all (descr, word) pairs of words in wordlists that match the
@@ -357,7 +357,7 @@ def search_wordlists_by_pattern(wordlists, pattern, sort=None):
         elif sort == 2: # score
             result.sort(key=itemgetter(2), reverse=True)
     return result
-    
+
 def analyze_words(grid, g_words, g_cs, g_lengths, words):
     cs = {}
     for n, x, y, d in g_words:
@@ -374,7 +374,7 @@ def analyze_words(grid, g_words, g_cs, g_lengths, words):
         result[x, y, d] = [t[0] for t in sorted(data, key=itemgetter(1))]
         #print x, y, d, result[x, y, d], data
     return result
-    
+
 def write_wordlists(wlists):
     """Write the given word lists to a file. Return errors if they occur."""
     fail = []
@@ -414,7 +414,7 @@ class CWordList:
         # values = list of words of that length with (word, score)
         self.index = index
         self.name = name
-        
+
     def find_by_pattern(self, pattern):
         """
         Find all words that match the specified pattern.
@@ -431,13 +431,13 @@ class CWordList:
         for l, words in self.words.items():
             result.extend([item for item in words if prog.match(item[0])])
         return result
-        
+
     def search(self, length, constraints, more=None, options=None):
         """
         Search for words that match the given criteria.
         """
         return search_wordlists([self], length, constraints, more, options)
-        
+
     def update_score(self, word, new_score):
         """Update the first occurrence of word with the new score."""
         l_word = len(word)
@@ -448,7 +448,7 @@ class CWordList:
         index = self.words[l_word].index(item)
         self.words[l_word][index] = (word, new_score)
         cPalabra.update_score(word, l_word, new_score, self.index)
-    
+
     def change_scores(self, change, value):
         """Change all scores in this word list using the given modification."""
         for length in self.words.keys():
@@ -459,7 +459,7 @@ class CWordList:
                     next_score = score + value
                 self.words[length][i] = (w, next_score)
                 cPalabra.update_score(w, length, next_score, self.index)
-        
+
     def write_to_file(self):
         """Write the contents of this word list to a file."""
         with open(self.path, 'w') as f:
@@ -467,15 +467,15 @@ class CWordList:
             for l in sorted(self.words.keys()):
                 text.extend([w + "," + str(score) + "\n" for w, score in self.words[l]])
             f.write(''.join(text))
-            
+
     def count_words(self):
         """Return the number of words in this word list."""
         return sum([len(self.words[i]) for i in self.words.keys()])
-        
+
     def get_word_counts(self):
         """Return the number of words in this word list by length."""
         return dict([(k, len(ws)) for k, ws in self.words.items()])
-    
+
     def get_score_counts(self):
         """Return the number of words in this word list by score."""
         scores = {}
@@ -486,7 +486,7 @@ class CWordList:
                 else:
                     scores[s] = 1
         return scores
-        
+
     def average_word_length(self):
         """Return the average length of a word in this word list."""
         counts = self.get_word_counts()
@@ -497,7 +497,7 @@ class CWordList:
         for l in self.words.keys():
             total += (l * counts[l])
         return total / n_words
-        
+
     def average_word_score(self):
         """Return the average score of a word in this word list."""
         scores = self.get_score_counts()
@@ -508,13 +508,13 @@ class CWordList:
         for s, count in scores.items():
             total += (s * count)
         return total / n_words
-        
+
     def add_word(self, word, score):
         """Add a word to the word list."""
         key = len(word)
         self.words[key].append((word, score))
         cPalabra.insert_word(self.index, len(word), word, score)
-    
+
     def remove_words(self, words):
         """
         Remove a list of words from the word list.

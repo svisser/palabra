@@ -41,7 +41,7 @@ def modify_chars(content, chars):
     g = content.grid if isinstance(content, Puzzle) else content
     for x, y, c in chars:
         g.set_char(x, y, c)
-    
+
 def modify_clue(puzzle, x, y, direction, key, value):
     """Store the given clue data at the given (x, y) and direction."""
     modify_clue.__setattr__('type', constants.TRANSFORM_CONTENT)

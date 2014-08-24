@@ -121,7 +121,7 @@ def determine_file_type(filename):
         if root.tag == "Puzzles":
             t = constants.PUZZLE_XPF
     return t
-    
+
 def read_containers(files):
     def load_container(f):
         f = get_real_filename(f)
@@ -138,7 +138,7 @@ def write_containers(patterns):
 
 def export_to_csv(puzzle, filename, outputs, settings):
     f = open(filename, 'w')
-    
+
     def write_csv_grid(output):
         line = [output, settings["separator"]
             , str(puzzle.grid.width), settings["separator"]
@@ -162,7 +162,7 @@ def export_to_csv(puzzle, filename, outputs, settings):
                     line.append(settings["separator"])
             line.append("\n")
             f.write(''.join(line))
-    
+
     if "grid" in outputs:
         write_csv_grid("grid")
     if "solution" in outputs:
@@ -172,7 +172,7 @@ def export_to_csv(puzzle, filename, outputs, settings):
             [("across", puzzle.grid.horizontal_clues())
             ,("down", puzzle.grid.vertical_clues())
             ]
-            
+
         for direction, clue_iterable in clues:
             for n, x, y, clue in clue_iterable:
                 line = [direction, settings["separator"]
@@ -183,7 +183,7 @@ def export_to_csv(puzzle, filename, outputs, settings):
                 except KeyError:
                     line.append("")
                 line.append(settings["separator"])
-                
+
                 try:
                     line.append(clue["explanation"])
                 except KeyError:
@@ -222,12 +222,12 @@ def compute_header(puzzle, header, page_n=None):
                 value = str(puzzle.grid.count_blocks())
             header = header.replace(code, value)
     return header
-    
+
 class PangoCairoTable():
     def __init__(self, columns, margin):
         self.columns = columns
         self.margin = margin
-        
+
     def render_rows(self, context, rows, height, offset=0):
         y = 0
         for i, (r_1, r_2) in enumerate(rows[offset:]):
@@ -238,7 +238,7 @@ class PangoCairoTable():
                 self.render(context, 2, y, r_2)
             y += r_y #(r_y / 2) # TODO why divide by 2
         return True, None
-        
+
     def render(self, context, x, y, text, wrap=False):
         pcr = pangocairo.CairoContext(context)
         layout = pcr.create_layout()
@@ -251,20 +251,20 @@ class PangoCairoTable():
         pcr.show_layout(layout)
         w, h = layout.get_pixel_size()
         return h
-                    
+
 def export_to_pdf(puzzle, filename, outputs, settings):
     paper_size = gtk.PaperSize(gtk.PAPER_NAME_A4)
     width = paper_size.get_width(gtk.UNIT_POINTS)
     height = paper_size.get_height(gtk.UNIT_POINTS)
     mm_unit = width / paper_size.get_width(gtk.UNIT_MM)
-    
+
     margin_left = settings["margin_left"] * mm_unit
     margin_right = settings["margin_right"] * mm_unit
     margin_top = settings["margin_top"] * mm_unit
     margin_bottom = settings["margin_bottom"] * mm_unit
     c_width = width - margin_left - margin_right
     c_height = height - margin_top - margin_bottom
-    
+
     surface = cairo.PDFSurface(filename, width, height)
     context = cairo.Context(surface)
     def pdf_header(header):
@@ -555,7 +555,7 @@ def export_to_pdf(puzzle, filename, outputs, settings):
             context.restore()
             done = count == len(funcs)
     surface.finish()
-    
+
 def export_to_png(puzzle, filename, output, settings):
     width, height = puzzle.view.properties.visual_size(False)
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
@@ -566,7 +566,7 @@ def export_to_png(puzzle, filename, output, settings):
     surface.write_to_png(filename)
     surface.finish()
 
-# http://www.ipuz.org/    
+# http://www.ipuz.org/
 def read_ipuz(filename, warnings=True):
     results = []
     content = None
@@ -1034,7 +1034,7 @@ def read_xpf(filename, warnings=True):
         p.notepad = r_notepad
         results.append(p)
     return results
-    
+
 def write_xpf(content, backup=True, filename=None, compact=False):
     """Accepts a Puzzle object or a list of Puzzle objects."""
     root = etree.Element("Puzzles")
@@ -1056,7 +1056,7 @@ def color_to_hex(color, include=True):
     if include:
         return '#' + hx
     return hx
-    
+
 def hex_to_color(colorhex):
     o = 0 if len(colorhex) == 6 else 1 # len = 6 or 7
     split = (colorhex[o:o + 2], colorhex[o + 2:o + 4], colorhex[o + 4:o + 6])
@@ -1064,7 +1064,7 @@ def hex_to_color(colorhex):
 
 def _write_xpf_xml(root, puzzle, compact=False):
     main = etree.SubElement(root, "Puzzle")
-    
+
     for dc, e in [(b, a) for a, b in XPF_META_ELEMS.items()]:
         if dc in puzzle.metadata and puzzle.metadata[dc]:
             child = etree.SubElement(main, e)
@@ -1074,7 +1074,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
     rows.text = str(puzzle.grid.height)
     cols = etree.SubElement(size, "Cols")
     cols.text = str(puzzle.grid.width)
-    
+
     def calc_char(x, y):
         cell = puzzle.grid.cell(x, y)
         if cell["block"]:
@@ -1089,7 +1089,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
         erow = etree.SubElement(egrid, "Row")
         chars = [calc_char(x, y) for x in xrange(puzzle.grid.width)]
         erow.text = ''.join(chars)
-    
+
     if not compact:
         props = puzzle.view.properties
         styles = props.styles
@@ -1132,7 +1132,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
                 eclue.text = clue
         e = etree.SubElement(main, "Notepad")
         e.text = etree.CDATA(puzzle.notepad)
-        
+
         epal = etree.SubElement(main, "Palabra")
         epal.set("Version", constants.VERSION)
         for n, x, y, d, word, clue, explanation in puzzle.grid.gather_words():
@@ -1154,7 +1154,7 @@ def _write_xpf_xml(root, puzzle, compact=False):
                         text = color_to_hex(value)
                     evisual.set(attr, text)
     return etree.tostring(root, xml_declaration=True, encoding="UTF-8")
-    
+
 def _write_puzzle(filename, contents, backup=True):
     """
     Store the contents in the specified file. If a file in that location
@@ -1169,7 +1169,7 @@ def _write_puzzle(filename, contents, backup=True):
             print "Warning: Failed to create a backup copy before saving."
     with open(filename, "w") as f:
         f.write(contents)
-    
+
 FILETYPES = {}
 FILETYPES['keys'] = [constants.PUZZLE_XPF, constants.PUZZLE_IPUZ]
 FILETYPES[constants.PUZZLE_XPF] = {

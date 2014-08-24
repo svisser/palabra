@@ -31,7 +31,7 @@ class PalabraDialog(gtk.Dialog):
         self.main.set_spacing(9)
         hbox.pack_start(self.main)
         self.vbox.pack_start(hbox)
-        
+
     def pack(self, widget, expand=True):
         args = (True, True) if expand else (False, False)
         self.main.pack_start(widget, *args)
@@ -70,7 +70,7 @@ class NameFileDialog(PalabraDialog):
         if name is not None:
             self.entry.set_text(name)
         self.store_name(name)
-    
+
     def store_name(self, name=None):
         self.given_name = name
         self.ok_button.set_sensitive(False if name is None else len(name) > 0)
@@ -81,7 +81,7 @@ def obtain_file(parent, file_dialog_title, paths, msg_duplicate, dialog_name):
         , gtk.FILE_CHOOSER_ACTION_OPEN
         , (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL
         , gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-    d.show_all() 
+    d.show_all()
     if d.run() != gtk.RESPONSE_OK:
         d.destroy()
         return
@@ -136,7 +136,7 @@ def create_scroll(widget, viewport=False, size=None):
     if size is not None:
         w.set_size_request(*size)
     return w
-    
+
 def create_label(text, align=None, padding=None):
     label = gtk.Label()
     label.set_markup(text)
@@ -147,7 +147,7 @@ def create_label(text, align=None, padding=None):
     if padding is not None:
         label.set_padding(*padding)
     return label
-    
+
 def create_button(text, align=None, f_click=None):
     button = gtk.Button(text)
     if f_click is not None:
@@ -182,7 +182,7 @@ def create_notebook(pages, border=None, f_switch=None):
     if f_switch is not None:
         tabs.connect("switch-page", f_switch)
     return tabs
-    
+
 def create_color_button(color, f=None):
     color = gtk.gdk.Color(*color)
     button = gtk.ColorButton()
@@ -190,7 +190,7 @@ def create_color_button(color, f=None):
     if f is not None:
         button.connect("color-set", f)
     return button
-    
+
 def create_combo(options, active=None, f_change=None):
     combo = gtk.combo_box_new_text()
     for o in options:
@@ -232,7 +232,7 @@ def create_spinner(value, v_min=0, v_max=100, f_change=None):
     if f_change is not None:
         spinner.connect("value-changed", f_change)
     return spinner
-    
+
 def launch_dialog(dialog, arg0, arg1=None, arg2=None, f_done=None):
     if arg1 is None:
         w = dialog(arg0)
@@ -248,7 +248,7 @@ def launch_dialog(dialog, arg0, arg1=None, arg2=None, f_done=None):
     if f_done is not None:
         return response, result
     return response
-    
+
 def launch_file_dialog(dialog, parent):
     w = dialog(parent)
     w.show_all()

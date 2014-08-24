@@ -113,7 +113,7 @@ _INT_PREFS = [
     (constants.PREF_INITIAL_HEIGHT, 15)
     , (constants.PREF_INITIAL_WIDTH, 15)
     , (constants.PREF_FIND_WORD_MIN_SCORE, 0)
-#    , (constants.PREF_UNDO_STACK_SIZE, 50)    
+#    , (constants.PREF_UNDO_STACK_SIZE, 50)
 ]
 for k, color in (_COLOR_ATTRS + _OTHER_COLOR_PREFS):
     if isinstance(color, tuple):

@@ -64,7 +64,7 @@ class EditorSettings:
             self.warnings[w] = False
         self.force_redraw = True
         self.reset_controls()
-        
+
     def reset_controls(self):
         self.selection = Selection(-1, -1, "across")
         self.current = (-1, -1)
@@ -73,7 +73,7 @@ e_tools = {}
 
 def get_char_slots(grid, c):
     return [(x, y, "across", 1) for x, y in grid.cells() if grid.data[y][x]["char"] == c]
-    
+
 def get_length_slots(grid, length):
     cells = []
     for d in ["across", "down"]:
@@ -81,10 +81,10 @@ def get_length_slots(grid, length):
             if grid.word_length(x, y, d) == length:
                 cells.append((x, y, d, length))
     return cells
-    
+
 def get_open_slots(grid):
     return [(x, y, "across", 1) for x, y in grid.compute_open_squares()]
-    
+
 def expand_slots(slots):
     cells = []
     for x, y, d, l in slots:
@@ -177,7 +177,7 @@ def attempt_fill(grid, words):
     """
     Return a grid with possibly the given words filled in.
     This is not intended as full-blown search so keep len(words) small.
-    """ 
+    """
     clist = CWordList(words, index=constants.MAX_WORD_LISTS)
     options = {}
     options.update(DEFAULT_FILL_OPTIONS)
@@ -382,7 +382,7 @@ def determine_editor_actions(grid, selection, key, arrows_change_dir=False):
     else:
         actions = on_typing(grid, key, selection)
     return actions
-    
+
 def process_editor_actions(window, puzzle, e_settings, actions):
     """
     Process all the editor actions and apply them to the grid and editor controls.
@@ -471,7 +471,7 @@ def set_selection(window, puzzle, e_settings
     """
     prev = e_settings.selection
     nx, ny, ndir = compute_selection(prev, x, y, direction, other_dir)
-    
+
     # update the selection of the clue tool when the grid selection changes
     grid = puzzle.grid
     clue_tool = e_tools["clue"]
@@ -547,7 +547,7 @@ def highlight_cells(window, puzzle, f=None, arg=None, clear=False):
     render = list(set(expand_slots(old + cells)))
     _render_cells(puzzle, render, e_settings, window.drawing_area)
     return cells
-    
+
 def on_button_press(grid, event, prev, next):
     prev_x, prev_y = prev
     x, y = next
@@ -656,7 +656,7 @@ def on_motion_notify_event(drawing_area, event, window, puzzle, e_settings):
         , estate & gtk.gdk.SHIFT_MASK, mouse_buttons_down)
     process_editor_actions(window, puzzle, e_settings, actions)
     return True
-    
+
 def compute_motion_actions(puzzle, symmetries, previous, current, shift_down, mouse_buttons_down):
     """Compute all editor actions that take place when mouse cursor is moved."""
     actions = []
@@ -711,7 +711,7 @@ class Editor:
         self.blacklist = []
         self.fill_options = {}
         self.fill_options.update(DEFAULT_FILL_OPTIONS)
-        
+
     def fill(self):
         for wlist in self.window.wordlists:
             #backup = copy.deepcopy(self.window.puzzle.grid)
@@ -724,12 +724,12 @@ class Editor:
                 break
             self.window.transform_grid(transform.modify_chars, chars=results[0])
             break
-        
+
     def insert(self, word):
         """Insert a word in the selected slot."""
         actions = insert(self.window.puzzle.grid, e_settings.selection, word)
         process_editor_actions(self.window, self.window.puzzle, e_settings, actions)
-            
+
     def set_overlay(self, word=None):
         """
         Display the word in the selected slot without storing it the grid.

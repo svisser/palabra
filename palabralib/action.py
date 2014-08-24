@@ -24,19 +24,19 @@ class State:
         self.grid = cPickle.dumps(source)
         # needed for clues
         self.clue_slot = clue_slot
-        
+
 class StateStack():
     def __init__(self):
         self.clear()
-        
+
     def clear(self):
         """Remove all states from the stack."""
         self.undo_stack = []
         self.redo_stack = []
-        
+
         # non-zero = puzzle has unsaved changes
         self.distance_from_saved = 0
-    
+
     def push(self, state, initial=False):
         # clue modifications are merged with previous ones if needed
         if state.clue_slot is not None:
@@ -49,7 +49,7 @@ class StateStack():
         self.redo_stack = []
         if not initial:
             self.distance_from_saved += 1
-        
+
     def undo(self, puzzle):
         state = self.undo_stack.pop()
         self.redo_stack.append(state)
@@ -58,20 +58,20 @@ class StateStack():
         self.undo_stack.append(prev)
         self.distance_from_saved -= 1
         return state
-        
+
     def redo(self, puzzle):
         state = self.redo_stack.pop()
         self.undo_stack.append(state)
         puzzle.grid = cPickle.loads(state.grid)
         self.distance_from_saved += 1
         return state
-        
+
     def peek(self):
         return self.undo_stack[-1] if len(self.undo_stack) > 0 else None
-        
+
     def has_undo(self):
         return len(self.undo_stack) > 1
-        
+
     def has_redo(self):
         return len(self.redo_stack) > 0
 
