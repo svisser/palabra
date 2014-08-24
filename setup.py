@@ -5,9 +5,6 @@ import sys
 if sys.version_info < (2, 6):
     sys.exit("ERROR: Python 2.6 is required to run Palabra.")
 
-from ez_setup import use_setuptools
-use_setuptools()
-
 from setuptools import setup
 from distutils.core import Extension
 import palabralib.constants as constants
