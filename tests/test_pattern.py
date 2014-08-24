@@ -23,7 +23,7 @@ import palabralib.pattern as pattern
 class PatternTestCase(unittest.TestCase):
     def setUp(self):
         self.grid = Grid(15, 15)
-        
+
     def testApplyPattern(self):
         """A pattern consists of blocks, voids and bars."""
         pat = pattern.Pattern()
@@ -34,7 +34,7 @@ class PatternTestCase(unittest.TestCase):
         self.assertEqual(self.grid.is_block(0, 0), True)
         self.assertEqual(self.grid.is_void(5, 5), True)
         self.assertEqual(self.grid.has_bar(7, 7, "top"), True)
-        
+
     def testTilePatternTopLeft(self):
         """A tiled pattern from (0, 0) has 64 blocks."""
         pat = pattern.tile_from_cell(15, 15, 0, 0)
@@ -44,7 +44,7 @@ class PatternTestCase(unittest.TestCase):
         for x, y in pat.blocks:
             self.assertTrue(y % 2 == 0)
             self.assertTrue(x % 2 == 0)
-            
+
     def testTilePatternOneZero(self):
         """A tiled pattern from (1, 0) has 56 blocks."""
         pat = pattern.tile_from_cell(15, 15, 1, 0)
@@ -54,7 +54,7 @@ class PatternTestCase(unittest.TestCase):
         for x, y in pat.blocks:
             self.assertTrue(y % 2 == 0)
             self.assertTrue(x % 2 == 1)
-            
+
     def testFillWithContentBlocks(self):
         """An entire grid can be filled with blocks."""
         pat = pattern.fill_with_content(15, 15, "block")
@@ -62,7 +62,7 @@ class PatternTestCase(unittest.TestCase):
         self.assertEqual(pat.bars, [])
         for cell in self.grid.cells():
             self.assertTrue(cell in pat.blocks)
-            
+
     def testFillWithContentVoids(self):
         """An entire grid can be filled with voids."""
         pat = pattern.fill_with_content(15, 15, "void")

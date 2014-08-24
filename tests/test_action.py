@@ -27,7 +27,7 @@ class ActionTestCase(unittest.TestCase):
         self.grid = Grid(15, 15)
         self.puzzle = Puzzle(self.grid)
         self.stack = StateStack()
-        
+
     def testDistance(self):
         self.assertEqual(self.stack.distance_from_saved, 0)
         self.stack.push(State(self.grid), initial=True)
@@ -35,7 +35,7 @@ class ActionTestCase(unittest.TestCase):
         for i in xrange(1, 10):
             self.stack.push(State(self.grid))
             self.assertEqual(self.stack.distance_from_saved, i)
-            
+
     def testDistanceUndo(self):
         self.stack.push(State(self.grid), initial=True)
         for i in xrange(10):
@@ -43,7 +43,7 @@ class ActionTestCase(unittest.TestCase):
         for i in xrange(10):
             self.stack.undo(self.puzzle)
             self.assertEqual(self.stack.distance_from_saved, 9 - i)
-            
+
     def testUndoRedo(self):
         self.stack.push(State(self.grid), initial=True)
         self.grid.set_block(0, 0, True)
@@ -53,19 +53,19 @@ class ActionTestCase(unittest.TestCase):
         self.assertEqual(self.puzzle.grid.is_block(0, 0), False)
         self.stack.redo(self.puzzle)
         self.assertEqual(self.puzzle.grid.is_block(0, 0), True)
-        
+
     def testPeek(self):
         self.assertEqual(self.stack.peek(), None)
         self.stack.push(State(self.grid), initial=True)
         self.assertTrue(self.stack.peek() is not None)
-        
+
     def testHasUndo(self):
         self.stack.push(State(self.grid), initial=True)
         self.assertEqual(self.stack.has_undo(), False)
         for i in xrange(10):
             self.stack.push(State(self.grid))
             self.assertEqual(self.stack.has_undo(), True)
-            
+
     def testHasRedo(self):
         self.stack.push(State(self.grid), initial=True)
         self.assertEqual(self.stack.has_redo(), False)
@@ -76,7 +76,7 @@ class ActionTestCase(unittest.TestCase):
         self.assertEqual(self.stack.has_redo(), True)
         self.stack.redo(self.puzzle)
         self.assertEqual(self.stack.has_redo(), False)
-        
+
     def testUndoGrid(self):
         self.stack.push(State(self.grid), initial=True)
         self.grid.set_char(0, 0, 'A')
@@ -86,7 +86,7 @@ class ActionTestCase(unittest.TestCase):
         self.assertEqual(self.puzzle.grid, self.grid)
         self.stack.undo(self.puzzle)
         self.assertEqual(self.puzzle.grid, Grid(15, 15))
-        
+
     def testUndoGridMultiple(self):
         self.stack.push(State(self.grid), initial=True)
         self.grid.set_char(0, 0, 'A')
@@ -105,7 +105,7 @@ class ActionTestCase(unittest.TestCase):
         self.assertEqual(self.puzzle.grid.get_char(0, 0), 'A')
         self.stack.undo(self.puzzle)
         self.assertEqual(self.puzzle.grid, Grid(15, 15))
-        
+
     def testUndoRedoMultiple(self):
         self.stack.push(State(self.grid), initial=True)
         for i in xrange(10):
@@ -117,7 +117,7 @@ class ActionTestCase(unittest.TestCase):
         for i in xrange(5):
             self.stack.redo(self.puzzle)
         self.assertEqual(self.puzzle.grid.count_blocks(), 10)
-        
+
     def testMergeClueActions(self):
         """Repeated clue modifications to the same slot are merged."""
         self.stack.push(State(self.grid), initial=True)

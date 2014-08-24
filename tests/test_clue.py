@@ -31,11 +31,11 @@ class ClueTestCase(unittest.TestCase):
             os.remove(self.LOCATION)
         if os.path.exists(self.LOCATION2):
             os.remove(self.LOCATION2)
-            
+
     def testReadCluesDoesNotExist(self):
         """If the clue database does not exist then an empty dict is returned."""
         self.assertEqual(clue.read_clues("/this/path/does/not/exist"), {})
-    
+
     def testReadClues(self):
         """A clue database is a dict with key = word, value = list of clues."""
         with open(self.LOCATION, 'w') as f:
@@ -47,7 +47,7 @@ class ClueTestCase(unittest.TestCase):
         self.assertTrue("clue" in result["word"])
         self.assertTrue("clue2" in result["word"])
         self.assertTrue("clue3" in result["otherword"])
-        
+
     def testReadCluesStripClue(self):
         """Spaces are stripped from a clue."""
         with open(self.LOCATION, 'w') as f:
@@ -55,7 +55,7 @@ class ClueTestCase(unittest.TestCase):
         result = clue.read_clues(self.LOCATION)
         self.assertTrue("word" in result)
         self.assertEqual(result["word"], ["so much space"])
-        
+
     def testReadCluesUpperCase(self):
         """Upper case characters in a word are converted to lower case."""
         with open(self.LOCATION, 'w') as f:
@@ -63,25 +63,25 @@ class ClueTestCase(unittest.TestCase):
         result = clue.read_clues(self.LOCATION)
         self.assertTrue("word" in result)
         self.assertEqual(result["word"], ["clue"])
-        
+
     def testReadCluesTooLongWord(self):
         """Too long words in clue databases are rejected."""
         with open(self.LOCATION, 'w') as f:
             f.write("a" * (constants.MAX_WORD_LENGTH + 1) + ",clue")
         self.assertEqual(clue.read_clues(self.LOCATION), {})
-        
+
     def testReadCluesMalformedLines(self):
         """Lines that do not have 1 word and 1 clue are rejected."""
         with open(self.LOCATION, 'w') as f:
             f.write("word\nword,\n,clue\n,\n\n")
         self.assertEqual(clue.read_clues(self.LOCATION), {})
-        
+
     def testReadCluesRejectCompound(self): # for now, reject compound
         with open(self.LOCATION, 'w') as f:
             f.write("This is a compound word,clue")
         result = clue.read_clues(self.LOCATION)
         self.assertEqual(result, {})
-        
+
     def testCreateClueFiles(self):
         """Clue files can be read."""
         with open(self.LOCATION, 'w') as f:
@@ -91,7 +91,7 @@ class ClueTestCase(unittest.TestCase):
         self.assertEqual(result[0].path, self.LOCATION)
         self.assertEqual(result[0].name, "ClueFile")
         self.assertEqual(result[0].data, {"word": ["clue"]})
-        
+
     def testLookupWordForClues(self):
         """Looking up for a word in clue files results in a list of clues."""
         with open(self.LOCATION, 'w') as f:
@@ -99,7 +99,7 @@ class ClueTestCase(unittest.TestCase):
         prefs = [{"path": {"value": self.LOCATION}, "name": {"value": "ClueFile"}}]
         files = clue.create_clues(prefs)
         self.assertEqual(clue.lookup_clues(files, "word"), ["This is a clue"])
-        
+
     def testLookupWordForCluesMultiple(self):
         """Clues from multiple files are merged into one list."""
         with open(self.LOCATION, 'w') as f:
@@ -116,7 +116,7 @@ class ClueTestCase(unittest.TestCase):
         result = clue.lookup_clues(files, "foobar")
         self.assertEqual(len(result), 1)
         self.assertTrue("Clue for foobar" in result)
-        
+
     def testLookupCluesCaseInsensitive(self):
         """Looking up clues is case insensitive."""
         with open(self.LOCATION, 'w') as f:
@@ -127,7 +127,7 @@ class ClueTestCase(unittest.TestCase):
         result2 = clue.lookup_clues(files, "Word")
         self.assertEqual(result1, result2)
         self.assertTrue("clue" in result1)
-    
+
     def testClueWithComma(self):
         """A clue can have a comma in it."""
         with open(self.LOCATION, 'w') as f:
@@ -136,7 +136,7 @@ class ClueTestCase(unittest.TestCase):
         files = clue.create_clues([p1])
         result = clue.lookup_clues(files, "word")
         self.assertEqual(result, ["clue, with comma"])
-        
+
     def testClueIterNext(self):
         """It is possible to cycle forward through a list store."""
         store = gtk.ListStore(str)
@@ -147,7 +147,7 @@ class ClueTestCase(unittest.TestCase):
         self.assertEqual(store[it][0], "2")
         it = clue.store_get_item("next", store, store.iter_nth_child(None, 2))
         self.assertEqual(store[it][0], "1")
-        
+
     def testClueIterPrevious(self):
         """It is possible to cycle backward through a list store."""
         store = gtk.ListStore(str)
@@ -158,7 +158,7 @@ class ClueTestCase(unittest.TestCase):
         self.assertEqual(store[it][0], "2")
         it = clue.store_get_item("previous", store, store.iter_nth_child(None, 0))
         self.assertEqual(store[it][0], "3")
-    
+
     def testCountWords(self):
         """The number of words in a clue database can be counted."""
         with open(self.LOCATION, 'w') as f:
@@ -166,7 +166,7 @@ class ClueTestCase(unittest.TestCase):
         prefs = [{"path": {"value": self.LOCATION}, "name": {"value": "ClueFile"}}]
         result = clue.create_clues(prefs)
         self.assertEqual(clue.count_n_words(result[0]), 2)
-    
+
     def testCountClues(self):
         """The number of clues in a clue database can be counted."""
         with open(self.LOCATION, 'w') as f:
