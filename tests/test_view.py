@@ -24,25 +24,25 @@ from palabralib.view import GridView, DEFAULTS, CellStyle
 class ViewTestCase(unittest.TestCase):
     def setUp(self):
         self.puzzle = Puzzle(Grid(13, 14))
-        
+
     def testGetSet(self):
         props = self.puzzle.view.properties
         for key, value in DEFAULTS.items():
-            self.assertEquals(props[key], value)
+            self.assertEqual(props[key], value)
         for i, (key, value) in enumerate(DEFAULTS.items()):
             props[key] = i
-            self.assertEquals(props[key], i)
-            
+            self.assertEqual(props[key], i)
+
     def testGridToScreen(self):
         props = self.puzzle.view.properties
         props["border", "width"] = 5
         props["cell", "size"] = 64
         props["line", "width"] = 3
         sx, sy = 5 + 7 * (64 + 3), 5 + 7 * (64 + 3)
-        self.assertEquals(props.grid_to_screen(x=7, include_padding=False), sx)
-        self.assertEquals(props.grid_to_screen(y=7, include_padding=False), sy)
-        self.assertEquals(props.grid_to_screen(x=7, y=7, include_padding=False), (sx, sy))
-        
+        self.assertEqual(props.grid_to_screen(x=7, include_padding=False), sx)
+        self.assertEqual(props.grid_to_screen(y=7, include_padding=False), sy)
+        self.assertEqual(props.grid_to_screen(x=7, y=7, include_padding=False), (sx, sy))
+
     def testScreenToGrid(self):
         props = self.puzzle.view.properties
         props.margin = 12, 21
@@ -59,17 +59,17 @@ class ViewTestCase(unittest.TestCase):
             return sx, sy
         for cell in [(0, 0), (5, 5), (5, 7)]:
             sx, sy = get_sxy(*cell)
-            self.assertEquals(props.screen_to_grid(sx, sy), cell)
+            self.assertEqual(props.screen_to_grid(sx, sy), cell)
         sx, sy = get_sxy(*self.puzzle.grid.size)
-        self.assertEquals(props.screen_to_grid(sx, sy), (-1, -1))
-        
+        self.assertEqual(props.screen_to_grid(sx, sy), (-1, -1))
+
     def testCompScreen(self):
         xs, ys = self.puzzle.view.comp_screen()
         xxs = [x for x in xrange(self.puzzle.grid.width + 1)]
         yys = [y for y in xrange(self.puzzle.grid.height + 1)]
-        self.assertEquals(all([p in xxs for p in xs]), True)
-        self.assertEquals(all([q in yys for q in ys]), True)
-        
+        self.assertEqual(all([p in xxs for p in xs]), True)
+        self.assertEqual(all([q in yys for q in ys]), True)
+
     def testCellStyle(self):
         items = [(("block", "color"), "bla")
             , (("block", "margin"), 23)
@@ -83,28 +83,28 @@ class ViewTestCase(unittest.TestCase):
         s = CellStyle()
         for k, v in items:
             s[k] = v
-            self.assertEquals(s[k], v)
+            self.assertEqual(s[k], v)
         s = CellStyle()
         t = CellStyle()
-        self.assertEquals(s, t)
+        self.assertEqual(s, t)
         s["circle"] = True
         self.assertNotEquals(s, t)
         self.assertTrue(s != t)
-        
+
     def testCellProps(self):
         props = self.puzzle.view.properties
         props["cell", "color"] = (65535, 0, 0)
         props.update(5, 5, [(("cell", "color"), (65535, 0, 0))])
         props["cell", "color"] = (65535, 65535, 65535)
-        self.assertEquals(props.style(5, 5)["cell", "color"], (65535, 65535, 65535))
-        
+        self.assertEqual(props.style(5, 5)["cell", "color"], (65535, 65535, 65535))
+
         props.update(1, 1, [("circle", True)])
-        self.assertEquals(props.style(1, 1)["circle"], True)
+        self.assertEqual(props.style(1, 1)["circle"], True)
         props.update(1, 1, [("circle", False)])
-        self.assertEquals(props.style(1, 1)["circle"], False)
+        self.assertEqual(props.style(1, 1)["circle"], False)
         props["circle"] = True
-        self.assertEquals(props.style(1, 1)["circle"], True)
-        
+        self.assertEqual(props.style(1, 1)["circle"], True)
+
     def testFontSize(self):
         """Updating cell size also updates font sizes."""
         keys = [("char", "size"), ("number", "size")]
@@ -116,9 +116,9 @@ class ViewTestCase(unittest.TestCase):
         for k in keys:
             post.append(self.puzzle.view.properties[k])
         for i_pre, i_post in zip(pre, post):
-            self.assertEquals(i_pre[0], i_post[0])
+            self.assertEqual(i_pre[0], i_post[0])
             self.assertNotEquals(i_pre[1], i_post[1])
-            
+
     def testVisualSize(self):
         """
         The visual dimensions of a 1x1 grid equals 2x border width + cell width.
@@ -128,7 +128,7 @@ class ViewTestCase(unittest.TestCase):
         props["border", "width"] = 5
         props["cell", "size"] = 64
         self.assertEqual(props.visual_size(False), (5 + 64 + 5, 5 + 64 + 5))
-        
+
     def testVisualSizeTwo(self):
         """The visual dimensions can vary for width and height."""
         p = Puzzle(Grid(3, 2))
@@ -139,7 +139,7 @@ class ViewTestCase(unittest.TestCase):
         width = 5 + 64 + 3 + 64 + 3 + 64 + 5
         height = 5 + 64 + 3 + 64 + 5
         self.assertEqual(props.visual_size(False), (width, height))
-        
+
     def testVisualSizePadding(self):
         p = Puzzle(Grid(2, 1))
         props = p.view.properties

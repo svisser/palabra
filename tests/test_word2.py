@@ -34,40 +34,40 @@ class WordTestCase2(unittest.TestCase):
         seq2 = ("down", [(3, 3, 'A'), (3, 4, 'B'), (3, 5, 'C')])
         seqs = [seq1, seq2]
         entries = list(word.accidental_entries(seqs, True))
-        self.assertEquals(len(entries), 1)
+        self.assertEqual(len(entries), 1)
         s0, count0, indices0 = entries[0]
-        self.assertEquals(s0, "ABC")
-        self.assertEquals(count0, 2)
-        self.assertEquals(indices0, "0,1")
-        
+        self.assertEqual(s0, "ABC")
+        self.assertEqual(count0, 2)
+        self.assertEqual(indices0, "0,1")
+
     def testAccidentalGridPalindrome(self):
         """A palindrome is counted only once as accidental word."""
         seq1 = ("across", [(0, 0, 'N'), (1, 0, 'O'), (2, 0, 'N')])
         seq2 = ("acrossr", [(2, 0, 'N'), (1, 0, 'O'), (0, 0, 'N')])
         seqs = [seq1, seq2]
         entries = list(word.accidental_entries(seqs, True, True))
-        self.assertEquals(len(entries), 1)
+        self.assertEqual(len(entries), 1)
         s0, count0, indices0 = entries[0]
-        self.assertEquals(s0, "NON")
-        self.assertEquals(count0, 1)
-        self.assertEquals(indices0, "0")
-        
+        self.assertEqual(s0, "NON")
+        self.assertEqual(count0, 1)
+        self.assertEqual(indices0, "0")
+
     def testAccidentalEntriesPreserveIndices(self):
         seq1 = ("across", [(0, 0, 'N'), (1, 0, 'O'), (2, 0, 'N')])
         seq2 = ("acrossr", [(2, 0, 'N'), (1, 0, 'O'), (0, 0, 'N')])
         seq3 = ("across", [(0, 4, 'X'), (1, 4, 'Y'), (2, 4, 'Z')])
         seqs = [seq1, seq2, seq3]
         entries = list(word.accidental_entries(seqs, True, True))
-        self.assertEquals(len(entries), 2)
+        self.assertEqual(len(entries), 2)
         s0, count0, indices0 = entries[0]
         s1, count1, indices1 = entries[1]
-        self.assertEquals(s0, "NON")
-        self.assertEquals(s1, "XYZ")
-        self.assertEquals(count0, 1)
-        self.assertEquals(count1, 1)
-        self.assertEquals(indices0, "0")
-        self.assertEquals(indices1, "2")
-        
+        self.assertEqual(s0, "NON")
+        self.assertEqual(s1, "XYZ")
+        self.assertEqual(count0, 1)
+        self.assertEqual(count1, 1)
+        self.assertEqual(indices0, "0")
+        self.assertEqual(indices1, "2")
+
     def testSimilarWords(self):
         """Words are similar when they share a substring of length 3+."""
         # A B C D
@@ -87,17 +87,17 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue("AB" not in result)
         self.assertTrue("BC" not in result)
         self.assertTrue("CD" not in result)
-        
+
     def testSimilarWordsToItself(self):
         """A word is not similar to itself."""
         g = Grid(6, 1)
         test_insert(g, "TAMTAM")
         result = word.similar_words(g)
         # unique substrings of length 3, 4, 5
-        self.assertEquals(len(result), 3 + 3 + 2)
+        self.assertEqual(len(result), 3 + 3 + 2)
         for s, words in result.items():
             self.assertTrue(len(words), 1)
-            
+
     def testSimilarWordsLengths(self):
         """The minimum length of similar words can be specified."""
         # G R A N I T E
@@ -112,8 +112,8 @@ class WordTestCase2(unittest.TestCase):
         result = word.similar_words(g, min_length=4)
         self.assertTrue("ITE" not in result)
         result = word.similar_words(g, min_length=10)
-        self.assertEquals(result, {})
-        
+        self.assertEqual(result, {})
+
     def testSimilarEntries(self):
         """A substring in only one word does not appear as similar entry."""
         g = Grid(5, 2)
@@ -122,7 +122,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue("CDE" in similar)
         entries = word.similar_entries(similar)
         self.assertTrue("CDE" not in entries)
-        
+
     def testSimilarEntriesPartial(self):
         """A substring with missing characters does not appear as similar entry."""
         g = Grid(4, 4)
@@ -131,7 +131,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue("A??" in similar)
         entries = word.similar_entries(similar)
         self.assertTrue("A??" not in entries)
-        
+
     def testSimilarEntriesOffsets(self):
         """Similar entries have (x, y, d, word, offset) of the common substrings."""
         g = Grid(4, 2)
@@ -141,7 +141,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(len(entries["BCD"]), 2)
         self.assertTrue((0, 0, "across", "abcd", 1) in entries["BCD"])
         self.assertTrue((0, 1, "across", "bcde", 0) in entries["BCD"])
-        
+
     def testSearchMultipleListsIntersection(self):
         """Intersection boolean in search result can be due to other word list."""
         w1 = CWordList(["worda"], index=0)
@@ -156,7 +156,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "worda", css)
         self.assertTrue(("worda", 0, True) in result)
         cPalabra.postprocess()
-        
+
     def testSearchMultipleListsIntersectionTwo(self):
         """Intersection boolean in search result can be due to multiple lists."""
         w1 = CWordList(["steam", "ttttt", "aaaaa"], index=0)
@@ -171,7 +171,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "steam", css)
         self.assertTrue(("steam", 0, True) in result)
         cPalabra.postprocess()
-        
+
     def testSearchMultipleListsIntersectionN(self):
         """Intersection boolean in search result can be due to N lists."""
         w1 = CWordList(["reach"], index=0)
@@ -199,7 +199,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "realm", css)
         self.assertTrue(("realm", 0, False) in result)
         cPalabra.postprocess()
-        
+
     def testSearchIntersectionCountMultipleTimes(self):
         """A word can be used multiple times as intersecting word."""
         w1 = CWordList(["aaaaa"], index=0)
@@ -215,24 +215,24 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists(wordlists, 5, "ab...", css)
         self.assertTrue(("abaaa", 0, True) in result)
         cPalabra.postprocess()
-        
+
     def testCWordListIndex(self):
         """The same index of a CWordList can be used again."""
         w1 = CWordList(["aaaaa"], index=0)
         w2 = CWordList(["bbbbb"], index=0)
         # now w1 works the same as w2
-        self.assertEquals(search_wordlists([w1], 5, "aaaaa"), [])
-        self.assertEquals(search_wordlists([w2], 5, "aaaaa"), [])
-        self.assertEquals(search_wordlists([w1], 5, "bbbbb"), [("bbbbb", 0, True)])
-        self.assertEquals(search_wordlists([w2], 5, "bbbbb"), [("bbbbb", 0, True)])
+        self.assertEqual(search_wordlists([w1], 5, "aaaaa"), [])
+        self.assertEqual(search_wordlists([w2], 5, "aaaaa"), [])
+        self.assertEqual(search_wordlists([w1], 5, "bbbbb"), [("bbbbb", 0, True)])
+        self.assertEqual(search_wordlists([w2], 5, "bbbbb"), [("bbbbb", 0, True)])
         cPalabra.postprocess()
-        
+
     def testCWordListIndexArbitrary(self):
         """A CWordList can be created with an arbitrary index (< MAX_WORD_LISTS)."""
         w1 = CWordList(["abcde"], index=33)
-        self.assertEquals(search_wordlists([w1], 5, "abcde"), [("abcde", 0, True)])
+        self.assertEqual(search_wordlists([w1], 5, "abcde"), [("abcde", 0, True)])
         cPalabra.postprocess()
-        
+
     def testCWordListIndexArbitraryCSS(self):
         """A CWordList with arbitrary index can be searched with all constraints."""
         w1 = CWordList(["abcde", "bcdef", "cdefg", "defgh", "efghi"], index=33)
@@ -244,7 +244,7 @@ class WordTestCase2(unittest.TestCase):
         ]
         self.assertEqual(search_wordlists([w1], 5, "abcde", css), [("abcde", 0, True)])
         cPalabra.postprocess()
-        
+
     def testRenameWordlists(self):
         """A word list can be renamed in preferences and wordlists data."""
         w1 = {'path': {'value': '/the/path'}, 'name': {'value': "The Word List"}}
@@ -255,7 +255,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(prefs[0]["name"]["value"], "The New Word List")
         self.assertTrue(wordlists[0].name, "The New Word List")
         cPalabra.postprocess()
-        
+
     def testRenameWordListMissingPath(self):
         """When a specific path is not present, nothing happens when renaming."""
         w1 = {'path': {'value': '/the/path'}, 'name': {'value': "The Word List"}}
@@ -266,7 +266,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(prefs[0]["name"]["value"], "The Word List")
         self.assertTrue(wordlists[0].name, "The Word List")
         cPalabra.postprocess()
-        
+
     def testSearchWordlistsScore(self):
         """Words are stored with a score."""
         w1 = CWordList(["aaaaa", ("bbbbb", 5)])
@@ -274,14 +274,14 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(("aaaaa", 0, True) in result)
         self.assertTrue(("bbbbb", 5, True) in result)
         cPalabra.postprocess()
-        
+
     def testSearchWordListsDefaultScore(self):
         """CWordLists can be created with a default score other than zero."""
         w1 = CWordList(["aaaaa"], score=77)
         result = search_wordlists([w1], 5, ".....")
         self.assertTrue(("aaaaa", 77, True) in result)
         cPalabra.postprocess()
-        
+
     def testSearchScores(self):
         """CWordLists can have the same word with different scores."""
         w1 = CWordList([("aaaaa", 0), ("aaaaa", 5), ("aaaaa", 10)])
@@ -290,7 +290,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(("aaaaa", 5, True) in result)
         self.assertTrue(("aaaaa", 10, True) in result)
         cPalabra.postprocess()
-    
+
     def testSearchDuplicate(self):
         """When inserting a word twice then data structures and search have same length."""
         w1 = CWordList(["abcd", "abcd"])
@@ -298,14 +298,14 @@ class WordTestCase2(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(len(w1.words[4]), 2)
         cPalabra.postprocess()
-        
+
     def testSearchDuplicateSameScores(self):
         """It is possible to insert the same (word, score) more than once."""
         w1 = CWordList([("foobar", 30), ("foobar", 30), ("foobar", 30)])
         result = search_wordlists([w1], 6, "......")
         self.assertEqual(result, [("foobar", 30, True)] * 3)
         cPalabra.postprocess()
-        
+
     def testNegativeWordScores(self):
         """Words can have negative scores."""
         w1 = CWordList([("word", -1), ("foobar", -100)])
@@ -314,7 +314,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists([w1], 6, "......")
         self.assertTrue(("foobar", -100, True) in result)
         cPalabra.postprocess()
-        
+
     def testSearchOptionsMinScore(self):
         """A minimum score can be specified for word search."""
         options = {constants.SEARCH_OPTION_MIN_SCORE: 5}
@@ -324,7 +324,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists([w1], 3, "...", options=options)
         self.assertEqual(result, [])
         cPalabra.postprocess()
-        
+
     def testSearchOptionsScoreEqualToMinScore(self):
         """A word that is equal to the minimum word score will be included."""
         options = {constants.SEARCH_OPTION_MIN_SCORE: 50}
@@ -334,7 +334,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(("bar", 50, True) in result)
         self.assertTrue(("baz", 100, True) in result)
         cPalabra.postprocess()
-        
+
     def testVisibleEntries(self):
         """With no options active then the words are returned identically as visible words."""
         words = [("aaaaa", 0, True), ("ccccc", 0, False), ("bbbbb", 10, True)]
@@ -342,7 +342,7 @@ class WordTestCase2(unittest.TestCase):
         result = word.visible_entries(words, grid
             , show_used=True, show_intersect=False, show_order=0)
         self.assertEqual(result, words)
-        
+
     def testVisibleEntriesScore(self):
         """The visible words can be sorted by score, high-to-low."""
         words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
@@ -351,7 +351,7 @@ class WordTestCase2(unittest.TestCase):
             , show_used=True, show_intersect=False, show_order=1)
         words2 = [("bbbbb", 10, True), ("aaaaa", 0, True), ("ccccc", 0, False)]
         self.assertEqual(result, words2)
-        
+
     def testVisibleEntriesShowUsed(self):
         """With show_used=False then words already used are not shown as visible word."""
         words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
@@ -364,7 +364,7 @@ class WordTestCase2(unittest.TestCase):
         result = word.visible_entries(words, grid
             , show_used=False, show_intersect=False, show_order=0)
         self.assertEqual(result, [("bbbbb", 10, True), ("ccccc", 0, False)])
-        
+
     def testVisibleEntriesShowIntersect(self):
         """With show_intersect=True then words with no intersecting words are not shown."""
         words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
@@ -372,7 +372,7 @@ class WordTestCase2(unittest.TestCase):
         result = word.visible_entries(words, grid
             , show_used=True, show_intersect=True, show_order=0)
         self.assertEqual(result, [("aaaaa", 0, True), ("bbbbb", 10, True)])
-        
+
     def testVisibleEntriesAllOptions(self):
         """The various options of visible_entries can be combined."""
         words = [("aaaaa", 0, True), ("bbbbb", 10, True), ("ccccc", 0, False)]
@@ -380,7 +380,7 @@ class WordTestCase2(unittest.TestCase):
         result = word.visible_entries(words, grid
             , show_used=False, show_intersect=True, show_order=1)
         self.assertEqual(result, [("bbbbb", 10, True), ("aaaaa", 0, True)])
-    
+
     def testMinimumWordScoreIntersection(self):
         """
         The minimum word score influences
@@ -399,7 +399,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists([w1], 3, "abc", css, options=options)
         self.assertEqual(result, [("abc", 1, False)])
         cPalabra.postprocess()
-        
+
     def testSearchWordlistsFullIntersectingWord(self):
         """
         A fully filled in intersectin word is effectively ignored for
@@ -412,7 +412,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(("abc", 0, True) in result)
         self.assertTrue(("aaa", 0, True) in result)
         cPalabra.postprocess()
-        
+
     def testUpdateScore(self):
         """The score of a word can be updated."""
         w1 = CWordList([("abc", 10), ("abc", 20), ("def", 0)])
@@ -421,7 +421,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(("abc", 20) in w1.words[3])
         self.assertTrue(("def", 0) in w1.words[3])
         cPalabra.postprocess()
-        
+
     def testUpdateScoreSearchAfterwards(self):
         """When searching for words after updating a score, the new score is returned."""
         w1 = CWordList([("score", 10)])
@@ -429,7 +429,7 @@ class WordTestCase2(unittest.TestCase):
         result = search_wordlists([w1], 5, "score")
         self.assertTrue(("score", 40, True) in result)
         cPalabra.postprocess()
-        
+
     def testWriteWordLists(self):
         """Word lists can be written to file."""
         LOC = "palabralib/tests/test_wordlist.txt"
@@ -444,7 +444,7 @@ class WordTestCase2(unittest.TestCase):
         cPalabra.postprocess()
         if os.path.exists(LOC):
             os.remove(LOC)
-            
+
     def testCountWords(self):
         """The number of words in a word list can be computed."""
         w1 = CWordList([], index=0)
@@ -452,7 +452,7 @@ class WordTestCase2(unittest.TestCase):
         w2 = CWordList(["a", "ab", "abc", "abcd"], index=1)
         self.assertEqual(w2.count_words(), 4)
         cPalabra.postprocess()
-        
+
     def testComputeWordCounts(self):
         """The number of words by length can be computed."""
         w1 = CWordList(["a", "bc", "def", "klm", "ghij"])
@@ -463,7 +463,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertTrue(counts[3], 2)
         self.assertTrue(counts[4], 1)
         cPalabra.postprocess()
-        
+
     def testComputeScoreCounts(self):
         """The number of words by score can be computed."""
         w1 = CWordList([("a", 3), ("bc", 4), ("def", 3), ("klm", 4), "ghij"])
@@ -473,7 +473,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertEqual(scores[4], 2)
         self.assertEqual(scores[0], 1)
         cPalabra.postprocess()
-        
+
     def testAverageWordLength(self):
         """The average word length of words in a word list can be computed."""
         w1 = CWordList([])
@@ -483,7 +483,7 @@ class WordTestCase2(unittest.TestCase):
         w3 = CWordList(["abc", "abcd", "abcde", "abcdef", "abcdefg", "abcdefgh"])
         self.assertEqual(w3.average_word_length(), 5.5)
         cPalabra.postprocess()
-        
+
     def testAverageWordScore(self):
         """The average score of words in a word list can be computed."""
         w1 = CWordList([])
@@ -493,7 +493,7 @@ class WordTestCase2(unittest.TestCase):
         w3 = CWordList([("a", 3), ("b", 4), ("c", 5), ("d", 6), ("e", 7), ("f", 8)])
         self.assertEqual(w3.average_word_score(), 5.5)
         cPalabra.postprocess()
-        
+
     def testWriteToFile(self):
         """An individual word list can be written to and read from a file."""
         LOC = "palabralib/tests/test_wordlist.txt"
@@ -507,7 +507,7 @@ class WordTestCase2(unittest.TestCase):
         cPalabra.postprocess()
         if os.path.exists(LOC):
             os.remove(LOC)
-        
+
     def testAddWord(self):
         """A word can be added to a word list."""
         w1 = CWordList([])
@@ -517,7 +517,7 @@ class WordTestCase2(unittest.TestCase):
         self.assertEqual(results, [('palabra', 33, True)])
         self.assertEqual(w1.count_words(), 1)
         cPalabra.postprocess()
-    
+
     def testRemoveWords(self):
         """One or more words can be removed from a word list."""
         w1 = CWordList([("palabra", 33), ("palabra", 50)])
@@ -527,14 +527,14 @@ class WordTestCase2(unittest.TestCase):
         self.assertEqual(results, [('palabra', 33, True)])
         self.assertEqual(w1.count_words(), 1)
         cPalabra.postprocess()
-        
+
     def testRemoveNotExistWord(self):
         """Requesting to remove a word that is not in the word list is possible."""
         w1 = CWordList(["koala"])
         w1.remove_words([("steam", 33)])
         self.assertEqual(w1.words[5], [('koala', 0)])
         cPalabra.postprocess()
-    
+
     def testChangeAllScoresTo(self):
         """All scores in a word list can be changed to a specified value."""
         words = ["koala", "wombat", "australia"]
@@ -545,7 +545,7 @@ class WordTestCase2(unittest.TestCase):
         for w in words:
             self.assertTrue((w, 44) in w1.words[len(w)])
         cPalabra.postprocess()
-    
+
     def testChangeAllScoresBy(self):
         """All scores in a word list can be changed by a specified delta."""
         words = [("singapore", 50), ("malaysia", 40), ("australia", 30)]
