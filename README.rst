@@ -34,11 +34,6 @@ How to install/run
 
   palabra
 
-If you have trouble installing and you get errors about missing distribution
-options, try upgrading the setup script with:
-
-  sudo python ez_setup.py -U setuptools
-
 For the latest installation instructions, visit:
 
   https://github.com/svisser/palabra
