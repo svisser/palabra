@@ -1,8 +1,8 @@
 import os
 import sys
 
-if sys.version_info < (2, 6):
-    sys.exit("ERROR: Python 2.6 is required to run Palabra.")
+if sys.version_info < (2, 7):
+    sys.exit("ERROR: Python 2.7 is required to run Palabra.")
 
 from setuptools import setup
 from distutils.core import Extension

@@ -10,7 +10,7 @@ License, version 3 or any later version.
 Requirements
 ============
 
-- Python 2.6
+- Python 2.7
 - PyGTK 2.14
 - lxml package, also known as python-lxml in repositories.
   It can also be found here: http://pypi.python.org/pypi/lxml.
