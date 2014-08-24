@@ -2,6 +2,10 @@
 #include <Python.h>
 #include "cpalabra.h"
 
+// for commonly used wordlists and one special wordlist for search on the fly
+// initialized in cPalabra_preprocess_all
+Tptr trees[MAX_WORD_LISTS + 1][MAX_WORD_LENGTH];
+
 // TODO return C object
 PyObject* find_matches(PyObject *list, Tptr p, char *s)
 {
@@ -186,7 +190,7 @@ int process_constraints(PyObject* constraints, char *cs) {
 // return 0 if constraints don't matches, 1 if they do
 inline int check_constraints(char *word, char *cs) {
     //debug_checked++;
-    int i = 0;                
+    int i = 0;
     while (*word != '\0') {
         if (cs[i] != CONSTRAINT_EMPTY && *word != cs[i]) {
             return 0;
@@ -362,14 +366,14 @@ void free_tree(Tptr p) {
 int calc_is_available(PyObject *grid, int x, int y) {
     int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
-    
+
     if (!(0 <= x && x < width && 0 <= y && y < height))
         return 0;
-    
+
     PyObject* data = PyObject_GetAttrString(grid, "data");
     PyObject* col = PyObject_GetItem(data, PyInt_FromLong(y));
     PyObject* cell = PyObject_GetItem(col, PyInt_FromLong(x));
-    
+
     int is_block = PyObject_IsTrue(PyObject_GetItem(cell, PyString_FromString("block")));
     if (is_block != 0)
         return 0;
@@ -384,11 +388,11 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
     int available = calc_is_available(grid, x, y);
     if (available == 0)
         return 0;
-    
+
     PyObject *bar_str = PyString_FromString("bar");
     PyObject *side_left = PyString_FromString("left");
     PyObject *side_top = PyString_FromString("top");
-    
+
     // 0 = across, 1 = down
     int e;
     for (e = 0; e < 2; e++) {
@@ -397,7 +401,7 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
         int adx = e == 0 ? 1 : 0;
         int ady = e == 0 ? 0 : 1;
         PyObject *side = e == 0 ? side_left : side_top;
-        
+
         // both conditions of after
         if (calc_is_available(grid, x + adx, y + ady) == 0)
             continue;
@@ -407,7 +411,7 @@ int calc_is_start_word(PyObject *grid, int x, int y) {
         PyObject* bars = PyObject_GetItem(cell, bar_str);
         if (PyObject_IsTrue(PyObject_GetItem(bars, side)) == 1)
             continue;
-        
+
         // both conditions of before
         if (calc_is_available(grid, x + bdx, y + bdy) == 0)
             return 1;

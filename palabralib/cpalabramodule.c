@@ -11,13 +11,15 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-  
+
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <Python.h>
 #include "cpalabra.h"
+
+extern Tptr trees[MAX_WORD_LISTS + 1][MAX_WORD_LENGTH];
 
 static PyObject*
 cPalabra_search(PyObject *self, PyObject *args) {
@@ -32,7 +34,7 @@ cPalabra_search(PyObject *self, PyObject *args) {
         return PyList_New(0);
     char *cons_str = PyString_AS_STRING(constraints);
     const Py_ssize_t n_indices = PyList_Size(indices);
-    
+
     const int HAS_OPTIONS = options != Py_None;
     int OPTION_MIN_SCORE = -9999; // TODO ugly
     if (HAS_OPTIONS) {
@@ -145,7 +147,7 @@ cPalabra_preprocess(PyObject *self, PyObject *args) {
     const int index;
     if (!PyArg_ParseTuple(args, "Oi", &words, &index))
         return NULL;
-    
+
     // create dict
     // keys = word lengths
     // values = list with words of that length
@@ -263,9 +265,9 @@ cPalabra_assign_numbers(PyObject *self, PyObject *args) {
     PyObject *py_height = PyObject_GetAttrString(grid, "height");
     int height = (int) PyInt_AsLong(py_height);
     Py_DECREF(py_height);
-    
+
     PyObject* data = PyObject_GetAttrString(grid, "data");
-    
+
     int n = 1;
     int x;
     int y;
@@ -277,7 +279,7 @@ cPalabra_assign_numbers(PyObject *self, PyObject *args) {
             PyObject *py_x = PyInt_FromLong(x);
             PyObject* cell = PyObject_GetItem(col, py_x);
             Py_DECREF(py_x);
-            
+
             PyObject* key = PyString_FromString("number");
             if (calc_is_start_word(grid, x, y) == 1) {
                 PyObject *py_n = PyInt_FromLong(n);
@@ -304,7 +306,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     PyObject *options;
     if (!PyArg_ParseTuple(args, "OOOO", &grid, &words, &meta, &options))
         return NULL;
-        
+
     const int OPTION_START = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("start")));
     const int OPTION_NICE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("nice")));
     const int OPTION_DUPLICATE = (int) PyInt_AsLong(PyDict_GetItem(options, PyString_FromString("duplicate")));
@@ -313,9 +315,9 @@ cPalabra_fill(PyObject *self, PyObject *args) {
     const int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
     PyObject* data = PyObject_GetAttrString(grid, "data");
-    
+
     const int OUTPUT_DEBUG = 0;
-    
+
     int x;
     int y;
     Cell cgrid[width * height];
@@ -360,7 +362,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
         slots[m].dir = dir;
         slots[m].length = length;
         slots[m].words = s_words;
-        
+
         Py_ssize_t c_i;
         for (c_i = 0; c_i < PyList_Size(constraints); c_i++) {
             PyObject *item = PyList_GET_ITEM(constraints, c_i);
@@ -374,7 +376,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             cgrid[index].c = c_c[0];
             cgrid[index].fixed = 1;
         }
-        
+
         slots[m].cs = PyMem_Malloc(length * sizeof(char) + 1);
         if (!slots[m].cs) {
             printf("Warning: fill failed to obtain constraints.\n");
@@ -394,13 +396,13 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             n_done_slots++;
         }
     }
-    
+
     int order[n_slots];
     int o;
     for (o = 0; o < n_slots; o++) {
         order[o] = -1;
     }
-    
+
     int attempts = 0;
     PyObject *result = PyList_New(0);
     PyObject *best_fill = NULL;
@@ -420,7 +422,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             printf("Searching word for (%i, %i, %s, %i) at index %i: \n", slot->x, slot->y, slot->dir == 0 ? "across" : "down", slot->count, index);
         }
         get_constraints_i(cgrid, width, height, slot, slot->cs);
-        
+
         char *cs_i[slot->length];
         for (m = 0; m < slot->length; m++) {
             cs_i[m] = NULL;
@@ -454,14 +456,14 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             // TODO min_score
             analyze_intersect_slot2(results, skipped, offsets, cs_i, slot->length, 0, -9999);
         }
-        
+
         int is_word_ok = 1;
-        
+
         /*int s;
         for (s = 0; s < n_slots; s++) {
             printf("%i %i %i (%i), ", slots[s].x, slots[s].y, slots[s].dir, slots[s].offset);
         }*/
-        
+
         //printf("Trying for %i %i %i\n", slot->x, slot->y, slot->dir);
         char* word = find_candidate(cs_i, results, slot, slot->cs, OPTION_NICE, slot->offset);
         //if (word) printf("before %s at %i %i %i from %i\n", word, slot->x, slot->y, slot->dir, slot->offset);
@@ -470,7 +472,7 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             PyList_Append(result, val);
             Py_DECREF(val);
         }
-        
+
         if (word && OPTION_DUPLICATE) {
             int duplicates[n_slots];
             for (t = 0; t < n_slots; t++) {
@@ -501,20 +503,20 @@ cPalabra_fill(PyObject *self, PyObject *args) {
             PyList_Append(result, val);
             Py_DECREF(val);
         }
-        
+
         for (m = 0; m < slot->length; m++) {
             if (cs_i[m] != NULL) {
                 PyMem_Free(cs_i[m]);
             }
         }
-        
+
         for (t = 0; t < slot->length; t++) {
             if (skipped[t] == 0 && results[t] != NULL) {
                 PyMem_Free(results[t]->chars);
                 PyMem_Free(results[t]);
             }
         }
-        
+
         int is_backtrack = 0;
         if (!word) {
             is_backtrack = 1;
@@ -628,9 +630,9 @@ cPalabra_compute_lines(PyObject *self, PyObject *args) {
     PyObject *py_height = PyObject_GetAttrString(grid, "height");
     int height = (int) PyInt_AsLong(py_height);
     Py_DECREF(py_height);
-    
+
     PyObject* lines = PyDict_New();
-    
+
     PyObject* str_data = PyString_FromString("data");
     PyObject* data = PyObject_GetAttr(grid, str_data);
     Py_DECREF(str_data);
@@ -640,7 +642,7 @@ cPalabra_compute_lines(PyObject *self, PyObject *args) {
     for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
             PyObject *result = PyList_New(0);
-            
+
             // is_void
             PyObject* py_y = PyInt_FromLong(y);
             PyObject* col = PyObject_GetItem(data, py_y);
@@ -653,12 +655,12 @@ cPalabra_compute_lines(PyObject *self, PyObject *args) {
             int v0 = PyObject_IsTrue(item);
             Py_DECREF(item);
             Py_DECREF(py_void);
-            
+
             // e == 0 (left) or e == 1 (top)
             for (e = 0; e < 2; e++) {
                 int dx = e == 0 ? -1 : 0;
                 int dy = e == 0 ? 0 : -1;
-                
+
                 int nx = x + dx;
                 int ny = y + dy;
                 if (0 <= nx && nx < width && 0 <= ny && ny < height) {
@@ -762,10 +764,10 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
         , &sx, &sy, &line_width, &border_width, &cell_size))
         return NULL;
     PyObject* result = PyList_New(0);
-    
+
     const int width = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "width"));
     const int height = (int) PyInt_AsLong(PyObject_GetAttrString(grid, "height"));
-    
+
     Py_ssize_t a;
     Py_ssize_t n_lines = PyList_Size(all_lines);
     int all_x[n_lines];
@@ -794,10 +796,10 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
         if (!PyArg_ParseTuple(cell, "ii", &x, &y))
             return NULL;
         PyObject *cell_lines = PyDict_GetItem(grid_lines, cell);
-        
+
         int has_left_border_line = 0;
         int has_right_border_line = 0;
-        
+
         // peek at cell to the right to see if there's a border
         Py_ssize_t m;
         for (m = 0; m < n_lines; m++) {
@@ -821,7 +823,7 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 return NULL;
             char *str_ltype = PyString_AsString(ltype);
             char *str_side = PyString_AsString(side);
-            
+
             PyObject *py_p = PyInt_FromLong(p);
             PyObject *py_q = PyInt_FromLong(q);
             PyObject *py_sx_p = PyObject_GetItem(sx, py_p);
@@ -845,14 +847,14 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 Py_DECREF(item);
                 bar = PyObject_IsTrue(b_item);
                 Py_DECREF(b_item);
-            }            
+            }
             const int l_is_normal = strcmp(str_side, "normal") == 0;
             const int l_is_outer = strcmp(str_side, "outerborder") == 0;
             const int l_is_inner = strcmp(str_side, "innerborder") == 0;
             const int l_is_top = strcmp(str_ltype, "top") == 0;
             const int l_is_left = strcmp(str_ltype, "left") == 0;
             const int l_is_border = l_is_outer || l_is_inner;
-            
+
             float start = 0;
             if (l_is_normal) {
                 start = -0.5 * line_width;
@@ -936,15 +938,15 @@ cPalabra_compute_render_lines(PyObject *self, PyObject *args) {
                 // exclude cases in which lb or rb is not needed
                 if (x1_y1_left_outerborder || x1_y_left_outerborder) is_rb = 0;
                 if (x_y1_left_innerborder || x_y_left_innerborder) is_lb = 0;
-                
+
                 // corners on left side
                 if (xm1_y_top_innerborder && x_y_left_outerborder) is_lb = 0;
                 if (xm1_y_top_outerborder && x_ym1_left_outerborder) is_lb = 0;
-                
+
                 // corners on right side
                 if (x1_y_left_innerborder && x1_y_top_innerborder) is_rb = 0;
                 if (x1_ym1_left_innerborder && x1_y_top_outerborder) is_rb = 0;
-                
+
                 float rx = sx_p;
                 float ry = sy_q + start;
                 float rdx = cell_size;
@@ -1004,13 +1006,13 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
     PyObject *key;
     if (!PyArg_ParseTuple(args, "OOOO", &words, &cs, &counts, &key))
         return NULL;
-        
+
     PyObject *py_lengths[MAX_WORD_LENGTH];
     int m;
     for (m = 0; m < MAX_WORD_LENGTH; m++) {
         py_lengths[m] = PyInt_FromLong(m);
     }
-    
+
     PyObject *result = PyList_New(0);
     Py_ssize_t w;
     for (w = 0; w < PyList_GET_SIZE(words); w++) {
@@ -1025,10 +1027,10 @@ cPalabra_compute_distances(PyObject *self, PyObject *args) {
             PyObject *py_l_i = PyTuple_GET_ITEM(cs_item_i, 0);
             const int l = (int) PyInt_AS_LONG(py_l);
             const int l_i = (int) PyInt_AS_LONG(py_l_i);
-            
+
             PyObject *a_l = PyDict_GetItem(counts, py_lengths[l]);
             PyObject *a_l_i = PyDict_GetItem(a_l, py_lengths[l_i]);
-            
+
             int occurs = 0;
             int j;
             for (j = 0; j < PyList_GET_SIZE(a_l_i); j++) {
@@ -1178,7 +1180,7 @@ cPalabra_get_contained_words(PyObject *self, PyObject *args) {
     int counts_i[counts_length];
     if (!read_counts(counts_c, counts_i, counts))
         return NULL;
-    
+
     char cons_str[length + 1];
     int i;
     for (i = 0; i < length; i++) {
@@ -1217,7 +1219,7 @@ cPalabra_verify_contained_words(PyObject *self, PyObject *args) {
     PyObject *pairs;
     if (!PyArg_ParseTuple(args, "iO", &index, &pairs))
         return NULL;
-    int test = 0;    
+    int test = 0;
     PyObject *result = PyList_New(0);
     Py_ssize_t p;
     for (p = 0; p < PyList_Size(pairs); p++) {
@@ -1228,7 +1230,7 @@ cPalabra_verify_contained_words(PyObject *self, PyObject *args) {
             return NULL;
         char *w1_word = PyString_AsString(w1);
         char *w2_word = PyString_AsString(w2);
-        
+
         test++;
         PyObject *res = find_matches_i(index, w2_word);
         Py_ssize_t mm;

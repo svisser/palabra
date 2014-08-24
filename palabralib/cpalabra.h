@@ -69,10 +69,6 @@ typedef struct Slot {
     char *cs;
 } Slot;
 
-// for commonly used wordlists and one special wordlist for search on the fly
-// initialized in cPalabra_preprocess_all
-Tptr trees[MAX_WORD_LISTS + 1][MAX_WORD_LENGTH];
-
 extern void update_score(Tptr p, char *s, int score);
 extern PyObject *find_matches_i(int index, char *s);
 extern void check_intersect(char *word, char **cs, int length, Sptr *results, int is_char_ok[MAX_WORD_LENGTH]);
